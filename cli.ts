@@ -9,6 +9,9 @@ declare var process;
 var Path = require('path');
 var fs = require('fs');
 var Q = require('q');
+var btoa = require('btoa');
+var atob = require('atob');
+
 import vfs = require('./vfs');
 import dropboxvfs = require('./dropboxvfs');
 import onepass = require('./onepass');
@@ -41,6 +44,11 @@ if (credentials) {
 
 authenticated.promise.then(() => {
 	var contents = Q.defer();
+	var encKeys = Q.defer();
+
+	var vaultItems : onepass.Item[] = [];
+	var vaultKeys : onepass.EncryptionKeyEntry[] = [];
+
 	testVfs.search('.agilekeychain', (files: vfs.FileInfo[]) => {
 		files.forEach((file: vfs.FileInfo) => {
 			console.log('Found keychain: ' + file.path);
@@ -49,6 +57,14 @@ authenticated.promise.then(() => {
 				var entries = JSON.parse(content);
 				console.log('Read ' + entries.length + ' entries');
 				contents.resolve(entries);
+			});
+			testVfs.read(Path.join(file.path, 'data/default/encryptionKeys.js'), (error, content:string) => {
+				console.log('Read encryptionKeys.js file');
+				var keyList = JSON.parse(content);
+				if (!keyList.list) {
+					console.log('Missing `list` entry in encryptionKeys.js file');
+				}
+				encKeys.resolve(keyList.list);
 			});
 		});
 	});
@@ -63,8 +79,36 @@ authenticated.promise.then(() => {
 			item.updatedAt = entry[4];
 			item.folderUuid = entry[5];
 			item.trashed = entry[7] === "Y";
+			vaultItems.push(item);
+		});
+	});
+	encKeys.promise.then((entries) => {
+		entries.forEach((entry : any) => {
+			var item = new onepass.EncryptionKeyEntry;
+			item.data = atob(entry.data);
+			item.identifier = entry.identifier;
+			item.iterations = entry.iterations;
+			item.level = entry.level;
+			item.validation = atob(entry.validation);
+			vaultKeys.push(item);
 
-			console.log('found item ' + item.title + ' (' + item.typeName + ')');
+			if (item.level != 'SL5') {
+				return;
+			}
+
+			console.log('data len ' + item.data.length);
+			console.log('validation len ' + item.validation.length);
+
+			// test key decryption
+			// TODO - Investigate non-determinism here
+			try {
+				var masterPwd = fs.readFileSync('master-pwd');
+				var saltCipher = onepass.extractSaltAndCipherText(item.data);
+				var decrypted = onepass.decryptKey(masterPwd, saltCipher[1], saltCipher[0], item.iterations, item.validation);
+				console.log('successfully decrypted key ' + entry.level);
+			} catch (ex) {
+				console.log('failed to decrypt key ' + entry.level + ex);
+			}
 		});
 	});
 }, (err) => {
