@@ -1,4 +1,4 @@
-/// <reference path="typings/node.d.ts" />
+/// <reference path="typings/node/node.d.ts" />
 
 var fs = require('fs');
 var Path = require('path');
@@ -18,6 +18,13 @@ export interface VFS {
 	login(cb: (error:any, account: string) => any);
 	/** Returns true if the user is logged in */
 	isLoggedIn(): boolean;
+	/** Returns credentials for the logged in account.
+	 * This is an opaque object which can later be restored.
+	 */
+	credentials() : Object;
+	/** Sets the login credentials */
+	setCredentials(credentials : Object);
+
 	/** Search for files whose name contains @p namePattern */
 	search(namePattern: string, cb: (files: FileInfo[]) => any);
 	/** Read the contents of a file at @p path */
@@ -105,9 +112,16 @@ export class FileVFS implements VFS {
 		cb(null, '');
 	}
 
-	/** Returns true if the user is logged in */
 	isLoggedIn() : boolean {
 		return true;
+	}
+
+	credentials() : Object {
+		return {};
+	}
+
+	setCredentials(credentials : Object) {
+		// unused
 	}
 
 	private absPath(path: string) {

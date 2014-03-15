@@ -1,4 +1,4 @@
-/// <reference path="typings/node.d.ts" />
+/// <reference path="typings/node/node.d.ts" />
 
 var dropbox = require('dropbox');
 var fs = require('fs');
@@ -70,6 +70,14 @@ export class DropboxVFS implements vfs.VFS {
 		this.client.remove(path, (error) => {
 			cb(error);
 		});
+	}
+
+	credentials() : Object {
+		return this.client.credentials();
+	}
+
+	setCredentials(credentials : Object) {
+		this.client.setCredentials(credentials);
 	}
 
 	private toVfsFile(file) : vfs.FileInfo {
