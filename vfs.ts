@@ -1,7 +1,8 @@
-declare var require;
+/// <reference path="typings/node.d.ts" />
 
 var fs = require('fs');
 var Path = require('path');
+var dropbox = require('dropbox');
 
 /** Holds details of a file retrieved by a VFS implementation */
 export class FileInfo {
@@ -13,6 +14,10 @@ export class FileInfo {
 /** Interface for async file system access.
  */
 export interface VFS {
+	/** Logs in to the VFS service */
+	login(cb: (error:any, account: string) => any);
+	/** Returns true if the user is logged in */
+	isLoggedIn(): boolean;
 	/** Search for files whose name contains @p namePattern */
 	search(namePattern: string, cb: (files: FileInfo[]) => any);
 	/** Read the contents of a file at @p path */
@@ -94,6 +99,15 @@ export class FileVFS implements VFS {
 
 	rm(path: string, cb: (error: any) => any) {
 		fs.unlink(this.absPath(path), cb);
+	}
+
+	login(cb: (error:any, account: string) => any) {
+		cb(null, '');
+	}
+
+	/** Returns true if the user is logged in */
+	isLoggedIn() : boolean {
+		return true;
 	}
 
 	private absPath(path: string) {
