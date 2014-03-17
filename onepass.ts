@@ -18,6 +18,16 @@ export class Item {
 	trashed : boolean;
 }
 
+export class SaltedCipherText {
+	constructor(public salt: string, public cipherText: string) {
+	}
+}
+
+export class AesKeyParams {
+	constructor(public key: string, public iv: string) {
+	}
+}
+
 export class EncryptionKeyEntry {
 	data : string;
 	identifier : string;
@@ -72,30 +82,25 @@ export class ItemUrl {
 	url : string;
 }
 
-function aesCbcDecrypt(key:string, cipherText: string, iv: string) : any {
+function aesCbcDecrypt(key:string, cipherText: string, iv: string) : string {
 	var decipher = crypto.createDecipheriv('AES-128-CBC', key, iv);
 	var result = '';
 	result += decipher.update(cipherText, 'binary', 'binary');
 	result += decipher.final('binary');
 	return result;
-	/*return CryptoJS.AES.decrypt(cipherText, key, {
-		mode : CryptoJS.mode.CBC,
-		padding : CryptoJS.pad.Pkcs7,
-		iv : iv
-	});*/
 }
 
 function pbkdf2(masterPwd: string, salt: string, iterCount: number, keyLen: number) : string {
 	return crypto.pbkdf2Sync(masterPwd, salt, iterCount, keyLen).toString('binary');
 }
 
-export function extractSaltAndCipherText(input : string) : string[] {
+export function extractSaltAndCipherText(input: string) : SaltedCipherText {
 	var salt = input.substring(8, 16);
 	var cipher = input.substring(16);
-	return [salt, cipher];
+	return new SaltedCipherText(salt, cipher);
 }
 
-function openSslKey(password: string, salt: string) : string[] {
+function openSslKey(password: string, salt: string) : AesKeyParams {
 	var md5er = crypto.createHash('md5');
 	var data = password + salt;
 	md5er.update(data);
@@ -104,10 +109,10 @@ function openSslKey(password: string, salt: string) : string[] {
 	md5er = crypto.createHash('md5');
 	md5er.update(key + data);
 	var iv = md5er.digest('binary');
-	return [key, iv];
+	return new AesKeyParams(key, iv);
 }
 
-function strChars(str: string) {
+function strChars(str: string) : string {
 	var result = [];
 	for (var i=0; i < str.length; i++) {
 		result.push(str.charCodeAt(i));
@@ -115,23 +120,16 @@ function strChars(str: string) {
 	return '[' + result.join(' ') + ']';
 }
 
-export function decryptKey(masterPwd : any, encryptedKey : string, salt : string, iterCount : number, validation : string) : string {
+export function decryptKey(masterPwd: any, encryptedKey: string, salt: string, iterCount: number, validation: string) : string {
 	var KEY_LEN = 32;
 	var derivedKey = pbkdf2(masterPwd, salt, iterCount, KEY_LEN);
 	var aesKey = derivedKey.substring(0, 16);
 	var iv = derivedKey.substring(16, 32);
 	var decryptedKey = aesCbcDecrypt(aesKey, encryptedKey, iv);
-	decryptedKey = decryptedKey.toString(CryptoJS.enc.Latin1);
+	var validationSaltCipher : SaltedCipherText = extractSaltAndCipherText(validation);
 
-	var validationParts : string[] = extractSaltAndCipherText(validation);
-	var validationSalt = validationParts[0];
-	var validationCipherText = validationParts[1];
-
-	var keyParts = openSslKey(decryptedKey, validationSalt);
-	var validationAesKey = keyParts[0];
-	var validationIv = keyParts[1];
-
-	var decryptedValidation = aesCbcDecrypt(validationAesKey, validationCipherText, validationIv);
+	var keyParams : AesKeyParams = openSslKey(decryptedKey, validationSaltCipher.salt);
+	var decryptedValidation = aesCbcDecrypt(keyParams.key, validationSaltCipher.cipherText, keyParams.iv);
 
 	if (decryptedValidation != decryptedKey) {
 		throw 'Failed to decrypt key';

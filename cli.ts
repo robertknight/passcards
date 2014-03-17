@@ -90,7 +90,7 @@ authenticated.promise.then(() => {
 			try {
 				var masterPwd = fs.readFileSync('master-pwd').toString('binary').trim();
 				var saltCipher = onepass.extractSaltAndCipherText(item.data);
-				var decrypted = onepass.decryptKey(masterPwd, saltCipher[1], saltCipher[0], item.iterations, item.validation);
+				var decrypted = onepass.decryptKey(masterPwd, saltCipher.cipherText, saltCipher.salt, item.iterations, item.validation);
 				console.log('successfully decrypted key ' + entry.level);
 			} catch (ex) {
 				console.log('failed to decrypt key ' + entry.level + ex);

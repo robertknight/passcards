@@ -124,7 +124,7 @@ export class FileVFS implements VFS {
 		// unused
 	}
 
-	private absPath(path: string) {
+	private absPath(path: string) : string {
 		if (path.indexOf(this.root) != 0) {
 			return Path.join(this.root, path);
 		} else {
