@@ -1,8 +1,11 @@
-var CryptoJS = require('crypto-js');
-var crypto = require('crypto');
+/// <reference path="typings/node/node.d.ts" />
+
 var btoa = require('btoa');
 var atob = require('atob');
 var MD5 = require('crypto-js/md5');
+
+import crypto = require('./crypto');
+var cryptoImpl = new crypto.NodeCrypto();
 
 export class Item {
 	updatedAt : number;
@@ -82,18 +85,6 @@ export class ItemUrl {
 	url : string;
 }
 
-function aesCbcDecrypt(key:string, cipherText: string, iv: string) : string {
-	var decipher = crypto.createDecipheriv('AES-128-CBC', key, iv);
-	var result = '';
-	result += decipher.update(cipherText, 'binary', 'binary');
-	result += decipher.final('binary');
-	return result;
-}
-
-function pbkdf2(masterPwd: string, salt: string, iterCount: number, keyLen: number) : string {
-	return crypto.pbkdf2Sync(masterPwd, salt, iterCount, keyLen).toString('binary');
-}
-
 export function extractSaltAndCipherText(input: string) : SaltedCipherText {
 	var salt = input.substring(8, 16);
 	var cipher = input.substring(16);
@@ -101,14 +92,9 @@ export function extractSaltAndCipherText(input: string) : SaltedCipherText {
 }
 
 function openSslKey(password: string, salt: string) : AesKeyParams {
-	var md5er = crypto.createHash('md5');
 	var data = password + salt;
-	md5er.update(data);
-	var key = md5er.digest('binary');
-
-	md5er = crypto.createHash('md5');
-	md5er.update(key + data);
-	var iv = md5er.digest('binary');
+	var key = cryptoImpl.md5Digest(data);
+	var iv = cryptoImpl.md5Digest(key + data);
 	return new AesKeyParams(key, iv);
 }
 
@@ -122,14 +108,14 @@ function strChars(str: string) : string {
 
 export function decryptKey(masterPwd: any, encryptedKey: string, salt: string, iterCount: number, validation: string) : string {
 	var KEY_LEN = 32;
-	var derivedKey = pbkdf2(masterPwd, salt, iterCount, KEY_LEN);
+	var derivedKey = cryptoImpl.pbkdf2(masterPwd, salt, iterCount, KEY_LEN);
 	var aesKey = derivedKey.substring(0, 16);
 	var iv = derivedKey.substring(16, 32);
-	var decryptedKey = aesCbcDecrypt(aesKey, encryptedKey, iv);
+	var decryptedKey = cryptoImpl.aesCbcDecrypt(aesKey, encryptedKey, iv);
 	var validationSaltCipher : SaltedCipherText = extractSaltAndCipherText(validation);
 
 	var keyParams : AesKeyParams = openSslKey(decryptedKey, validationSaltCipher.salt);
-	var decryptedValidation = aesCbcDecrypt(keyParams.key, validationSaltCipher.cipherText, keyParams.iv);
+	var decryptedValidation = cryptoImpl.aesCbcDecrypt(keyParams.key, validationSaltCipher.cipherText, keyParams.iv);
 
 	if (decryptedValidation != decryptedKey) {
 		throw 'Failed to decrypt key';
