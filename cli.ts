@@ -88,8 +88,7 @@ authenticated.promise.then(() => {
 			vaultKeys.push(item);
 
 			try {
-				var masterPwd = fs.readFileSync('master-pwd');
-				masterPwd = masterPwd.slice(0, masterPwd.length-1);
+				var masterPwd = fs.readFileSync('master-pwd').toString('binary').trim();
 				var saltCipher = onepass.extractSaltAndCipherText(item.data);
 				var decrypted = onepass.decryptKey(masterPwd, saltCipher[1], saltCipher[0], item.iterations, item.validation);
 				console.log('successfully decrypted key ' + entry.level);
