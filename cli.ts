@@ -22,22 +22,22 @@ if (fs.existsSync(credFile)) {
 	credentials = JSON.parse(fs.readFileSync(credFile));
 }
 
-var testVfs : vfs.VFS = new dropboxvfs.DropboxVFS();
+var storage : vfs.VFS = new vfs.FileVFS(process.env.HOME + '/Dropbox/1Password');
 var authenticated = Q.defer();
 
 if (credentials) {
-	testVfs.setCredentials(credentials);
-	authenticated.resolve(testVfs);
+	storage.setCredentials(credentials);
+	authenticated.resolve(storage);
 } else {
 	console.log('Logging into Dropbox...');
-	testVfs.login((err, account:string) => {
+	storage.login((err, account:string) => {
 		if (err) {
 			console.log('Dropbox login failed');
 			authenticated.reject(err);
 		} else {
 			console.log('Dropbox login success');
-			fs.writeFileSync('dropbox-credentials.json', JSON.stringify(testVfs.credentials()));
-			authenticated.resolve(testVfs);
+			fs.writeFileSync('dropbox-credentials.json', JSON.stringify(storage.credentials()));
+			authenticated.resolve(storage);
 		}
 	});
 }
@@ -49,17 +49,13 @@ authenticated.promise.then(() => {
 	var vaultItems : onepass.Item[] = [];
 	var vaultKeys : onepass.EncryptionKeyEntry[] = [];
 
-	testVfs.search('.agilekeychain', (files: vfs.FileInfo[]) => {
+	storage.search('.agilekeychain', (files: vfs.FileInfo[]) => {
 		files.forEach((file: vfs.FileInfo) => {
-			console.log('Found keychain: ' + file.path);
-			testVfs.read(Path.join(file.path, 'data/default/contents.js'), (error, content:string) => {
-				console.log('Read contents.js file');
+			storage.read(Path.join(file.path, 'data/default/contents.js'), (error, content:string) => {
 				var entries = JSON.parse(content);
-				console.log('Read ' + entries.length + ' entries');
 				contents.resolve(entries);
 			});
-			testVfs.read(Path.join(file.path, 'data/default/encryptionKeys.js'), (error, content:string) => {
-				console.log('Read encryptionKeys.js file');
+			storage.read(Path.join(file.path, 'data/default/encryptionKeys.js'), (error, content:string) => {
 				var keyList = JSON.parse(content);
 				if (!keyList.list) {
 					console.log('Missing `list` entry in encryptionKeys.js file');
@@ -69,7 +65,6 @@ authenticated.promise.then(() => {
 		});
 	});
 	contents.promise.then((entries) => {
-		console.log('Found ' + entries.length + ' entries');
 		entries.forEach((entry : any[]) => {
 			var item = new onepass.Item;
 			item.uuid = entry[0];
@@ -92,17 +87,9 @@ authenticated.promise.then(() => {
 			item.validation = atob(entry.validation);
 			vaultKeys.push(item);
 
-			if (item.level != 'SL5') {
-				return;
-			}
-
-			console.log('data len ' + item.data.length);
-			console.log('validation len ' + item.validation.length);
-
-			// test key decryption
-			// TODO - Investigate non-determinism here
 			try {
 				var masterPwd = fs.readFileSync('master-pwd');
+				masterPwd = masterPwd.slice(0, masterPwd.length-1);
 				var saltCipher = onepass.extractSaltAndCipherText(item.data);
 				var decrypted = onepass.decryptKey(masterPwd, saltCipher[1], saltCipher[0], item.iterations, item.validation);
 				console.log('successfully decrypted key ' + entry.level);
