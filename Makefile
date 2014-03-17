@@ -1,2 +1,2 @@
 build/cli.js: *.ts
-	tsc --outDir build -m commonjs cli.ts
+	tsc --noImplicitAny --outDir build -m commonjs cli.ts

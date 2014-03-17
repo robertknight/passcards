@@ -4,8 +4,6 @@
 /// <reference path="typings/node/node.d.ts" />
 /// <reference path="typings/q/Q.d.ts" />
 
-declare var process;
-
 var Path = require('path');
 var fs = require('fs');
 var Q = require('q');
@@ -30,7 +28,7 @@ if (credentials) {
 	authenticated.resolve(storage);
 } else {
 	console.log('Logging into Dropbox...');
-	storage.login((err, account:string) => {
+	storage.login((err: any, account:string) => {
 		if (err) {
 			console.log('Dropbox login failed');
 			authenticated.reject(err);
@@ -51,11 +49,11 @@ authenticated.promise.then(() => {
 
 	storage.search('.agilekeychain', (files: vfs.FileInfo[]) => {
 		files.forEach((file: vfs.FileInfo) => {
-			storage.read(Path.join(file.path, 'data/default/contents.js'), (error, content:string) => {
+			storage.read(Path.join(file.path, 'data/default/contents.js'), (error: any, content:string) => {
 				var entries = JSON.parse(content);
 				contents.resolve(entries);
 			});
-			storage.read(Path.join(file.path, 'data/default/encryptionKeys.js'), (error, content:string) => {
+			storage.read(Path.join(file.path, 'data/default/encryptionKeys.js'), (error: any, content:string) => {
 				var keyList = JSON.parse(content);
 				if (!keyList.list) {
 					console.log('Missing `list` entry in encryptionKeys.js file');
@@ -64,8 +62,8 @@ authenticated.promise.then(() => {
 			});
 		});
 	});
-	contents.promise.then((entries) => {
-		entries.forEach((entry : any[]) => {
+	contents.promise.then((entries: any[][]) => {
+		entries.forEach((entry: any[]) => {
 			var item = new onepass.Item;
 			item.uuid = entry[0];
 			item.typeName = entry[1];
@@ -77,8 +75,8 @@ authenticated.promise.then(() => {
 			vaultItems.push(item);
 		});
 	});
-	encKeys.promise.then((entries) => {
-		entries.forEach((entry : any) => {
+	encKeys.promise.then((entries: any[]) => {
+		entries.forEach((entry: any) => {
 			var item = new onepass.EncryptionKeyEntry;
 			item.data = atob(entry.data);
 			item.identifier = entry.identifier;
@@ -97,7 +95,7 @@ authenticated.promise.then(() => {
 			}
 		});
 	});
-}, (err) => {
+}, (err: any) => {
 	console.log('authentication failed');
 });
 

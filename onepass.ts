@@ -113,7 +113,7 @@ function openSslKey(password: string, salt: string) : AesKeyParams {
 }
 
 function strChars(str: string) : string {
-	var result = [];
+	var result : number[] = [];
 	for (var i=0; i < str.length; i++) {
 		result.push(str.charCodeAt(i));
 	}

@@ -1,6 +1,6 @@
 /// <reference path="typings/node/node.d.ts" />
 
-var fs = require('fs');
+import fs = require('fs');
 var Path = require('path');
 var dropbox = require('dropbox');
 
@@ -15,7 +15,7 @@ export class FileInfo {
  */
 export interface VFS {
 	/** Logs in to the VFS service */
-	login(cb: (error:any, account: string) => any);
+	login(cb: (error:any, account: string) => any) : void;
 	/** Returns true if the user is logged in */
 	isLoggedIn(): boolean;
 	/** Returns credentials for the logged in account.
@@ -23,18 +23,18 @@ export interface VFS {
 	 */
 	credentials() : Object;
 	/** Sets the login credentials */
-	setCredentials(credentials : Object);
+	setCredentials(credentials : Object) : void;
 
 	/** Search for files whose name contains @p namePattern */
-	search(namePattern: string, cb: (files: FileInfo[]) => any);
+	search(namePattern: string, cb: (files: FileInfo[]) => any) : void;
 	/** Read the contents of a file at @p path */
-	read(path: string, cb: (error: any, content:string) => any);
+	read(path: string, cb: (error: any, content:string) => any) : void;
 	/** Write the contents of a file at @p path */
-	write(path: string, content: string, cb: (error:any) => any);
+	write(path: string, content: string, cb: (error:any) => any) : void;
 	/** List the contents of a directory */
-	list(path: string, cb: (error: any, files: FileInfo[]) => any);
+	list(path: string, cb: (error: any, files: FileInfo[]) => any) : void;
 	/** Remove a file */
-	rm(path: string, cb: (error: any) => any);
+	rm(path: string, cb: (error: any) => any) : void;
 }
 
 /** VFS implementation which operates on the local filesystem */
@@ -45,8 +45,8 @@ export class FileVFS implements VFS {
 		this.root = _root;
 	}
 
-	searchIn(path: string, namePattern: string, cb: (files: FileInfo[]) => any) {
-		this.list(path, (error, files: FileInfo[]) => {
+	searchIn(path: string, namePattern: string, cb: (files: FileInfo[]) => any) : void {
+		this.list(path, (error: any, files: FileInfo[]) => {
 			files.forEach((file : FileInfo) => {
 				if (file.name.indexOf(namePattern) != -1) {
 					cb([file]);
@@ -59,21 +59,23 @@ export class FileVFS implements VFS {
 		});
 	}
 
-	search(namePattern: string, cb: (files: FileInfo[]) => any) {
+	search(namePattern: string, cb: (files: FileInfo[]) => any) : void {
 		this.searchIn('', namePattern, cb);
 	}
 
-	read(path: string, cb: (error: any, content:string) => any) {
-		fs.readFile(this.absPath(path), cb);
+	read(path: string, cb: (error: any, content:string) => any) : void {
+		fs.readFile(this.absPath(path), (error: any, content: NodeBuffer) => {
+			cb(error, content.toString('binary'));
+		});
 	}
 
-	write(path: string, content: string, cb: (error:any) => any) {
+	write(path: string, content: string, cb: (error:any) => any) : void {
 		fs.writeFile(this.absPath(path), content, cb)
 	}
 
-	list(path: string, cb: (error: any, files: FileInfo[]) => any) {
+	list(path: string, cb: (error: any, files: FileInfo[]) => any) : void {
 		var absPath : string = this.absPath(path);
-		fs.readdir(absPath, (err, files: string[]) => {
+		fs.readdir(absPath, (err: any, files: string[]) => {
 			if (err) {
 				console.log('Unable to read dir ' + absPath);
 				return;
@@ -83,7 +85,7 @@ export class FileVFS implements VFS {
 			var infoList : FileInfo[] = [];
 			files.forEach((name : string) => {
 				var filePath : string = Path.join(absPath, name);
-				fs.stat(filePath, (err, info) => {
+				fs.stat(filePath, (err:any, info:fs.Stats) => {
 					if (err) {
 						console.log('Unable to stat ' + filePath);
 						return;
