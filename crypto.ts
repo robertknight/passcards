@@ -1,6 +1,11 @@
 /// <reference path="typings/node/node.d.ts" />
 
 import crypto = require('crypto');
+var sjcl = require('sjcl-full');
+var atob = require('atob');
+var btoa = require('btoa');
+
+var CryptoJS = require('crypto-js');
 
 // functions in Node.js' crypto lib which
 // are missing from node.d.ts
@@ -28,13 +33,83 @@ export class NodeCrypto implements CryptoImpl {
 	}
 
 	pbkdf2(masterPwd: string, salt: string, iterCount: number, keyLen: number) : string {
-		return (<CryptoExtras>(crypto)).pbkdf2Sync(masterPwd, salt, iterCount, keyLen).toString('binary');
+		var derivedKey = (<CryptoExtras>(crypto)).pbkdf2Sync(masterPwd, salt, iterCount, keyLen);
+		return derivedKey.toString('binary');
 	}
 
 	md5Digest(input: string) : string {
 		var md5er = crypto.createHash('md5');
 		md5er.update(input);
 		return md5er.digest('binary');
+	}
+}
+
+export class CryptoJsCrypto implements CryptoImpl {
+	fallbackCrypto : CryptoImpl
+	encoding : any
+
+	constructor() {
+		this.fallbackCrypto = new SjclCrypto();
+		this.encoding = CryptoJS.enc.Latin1;
+	}
+
+	aesCbcDecrypt(key:string, cipherText: string, iv: string) : string {
+		var keyArray = this.encoding.parse(key);
+		var ivArray = this.encoding.parse(iv);
+		var cipherArray = this.encoding.parse(cipherText);
+		var cipherParams = CryptoJS.lib.CipherParams.create({
+			ciphertext: cipherArray
+		});
+		return CryptoJS.AES.decrypt(cipherParams, keyArray, {
+			mode : CryptoJS.mode.CBC,
+			padding : CryptoJS.pad.Pkcs7,
+			iv: ivArray
+		}).toString(this.encoding);
+	}
+
+	pbkdf2(masterPwd: string, salt: string, iterCount: number, keyLen: number) : string {
+		return this.fallbackCrypto.pbkdf2(masterPwd, salt, iterCount, keyLen);
+	}
+	
+	md5Digest(input: string) : string {
+		var encoding = CryptoJS.enc.Latin1;
+		return CryptoJS.MD5(this.encoding.parse(input)).toString(this.encoding);
+	}
+}
+
+export class SjclCrypto implements CryptoImpl {
+	fallbackCrypto : CryptoImpl
+
+	constructor() {
+		this.fallbackCrypto = new NodeCrypto();
+	}
+
+	aesCbcDecrypt(key:string, cipherText: string, iv: string) : string {
+		var keyBits = sjcl.codec.base64.toBits(btoa(key));
+		var cipherBits = sjcl.codec.base64.toBits(btoa(cipherText));
+		var ivBits = sjcl.codec.base64.toBits(btoa(iv));
+		var aesCipher = new sjcl.cipher.aes(keyBits);
+		var result = sjcl.mode.cbc.decrypt(aesCipher, cipherBits, ivBits);
+		return result;
+	}
+
+	pbkdf2(masterPwd: string, salt: string, iterCount: number, keyLen: number) : string {
+		var hmacSha1 = function(key: any) { 
+			return sjcl.misc.hmac.call(this, key, sjcl.hash.sha1);
+		};
+		hmacSha1.prototype = sjcl.misc.hmac.prototype;
+
+		var pwdBits = sjcl.codec.base64.toBits(btoa(masterPwd));
+		var saltBits = sjcl.codec.base64.toBits(btoa(salt));
+		var derivedKeyBits = sjcl.misc.pbkdf2(pwdBits, saltBits, iterCount, keyLen * 8 /* convert bytes to bits */,
+		  hmacSha1);
+		var result = atob(sjcl.codec.base64.fromBits(derivedKeyBits));
+
+		return result;
+	}
+
+	md5Digest(input: string) : string {
+		return this.fallbackCrypto.md5Digest(input);
 	}
 }
 
