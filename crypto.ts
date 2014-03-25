@@ -68,6 +68,10 @@ export class CryptoJsCrypto implements CryptoImpl {
 	}
 
 	pbkdf2(masterPwd: string, salt: string, iterCount: number, keyLen: number) : string {
+		// FIXME - CryptoJS' implementation of PKBDF2 scales poorly as the number
+		// of iterations increases (see https://github.com/dominictarr/crypto-bench/blob/master/results.md)
+		// Current versions of 1Password use 80K iterations of PBKDF2 so this needs
+		// to be fast to be usable
 		return this.fallbackCrypto.pbkdf2(masterPwd, salt, iterCount, keyLen);
 	}
 	
