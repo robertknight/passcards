@@ -1,11 +1,24 @@
 /// <reference path="typings/node/node.d.ts" />
+/// <reference path="typings/q/Q.d.ts" />
 
 var btoa = require('btoa');
 var atob = require('atob');
 var MD5 = require('crypto-js/md5');
+var Q = require('q');
+var Path = require('path');
 
 import crypto = require('./crypto');
-var cryptoImpl = new crypto.NodeCrypto();
+import vfs = require('./vfs');
+var cryptoImpl = new crypto.CryptoJsCrypto();
+
+export class EncryptionKeyEntry {
+	data : string;
+	identifier : string;
+	iterations : number;
+	level : string;
+	validation : string;
+	key : string;
+}
 
 export class Item {
 	updatedAt : number;
@@ -19,6 +32,106 @@ export class Item {
 	folderUuid : string;
 	faveIndex : number;
 	trashed : boolean;
+
+	private vault : Vault;
+	
+	getContent() : ItemContent {
+		return null;
+	}
+
+	static decryptData(key: string, data: string) : string {
+		return "";
+	}
+}
+
+export class Vault {
+	private fs: vfs.VFS;
+	private path: string;
+
+	// map from security level (string)
+	// to encryption key
+	private keys: Object;
+
+	constructor(fs: vfs.VFS, path: string) {
+		this.fs = fs;
+		this.path = path;
+	}
+
+	unlock(pwd: string) : Q.IPromise<boolean> {
+		var result : Q.Deferred<boolean> = Q.defer();
+		var keys : Q.Deferred<EncryptionKeyEntry[]> = Q.defer();
+
+		this.fs.read(Path.join(this.path, 'data/default/encryptionKeys.js'), (error: any, content:string) => {
+			if (error) {
+				result.reject(error);
+				return;
+			}
+			var keyList = JSON.parse(content);
+			if (!keyList.list) {
+				result.reject('Missing `list` entry in encryptionKeys.js file');
+				return;
+			}
+			var vaultKeys : EncryptionKeyEntry[] = [];
+			keyList.list.forEach((entry:any) => {
+				var item = new EncryptionKeyEntry;
+				item.data = atob(entry.data);
+				item.identifier = entry.identifier;
+				item.iterations = entry.iterations;
+				item.level = entry.level;
+				item.validation = atob(entry.validation);
+
+				try {
+					var saltCipher = extractSaltAndCipherText(item.data);
+					item.key = decryptKey(pwd, saltCipher.cipherText, saltCipher.salt, item.iterations, item.validation);
+					vaultKeys.push(item);
+				} catch (ex) {
+					result.reject('failed to decrypt key ' + entry.level + ex);
+					return;
+				}
+			});
+			keys.resolve(vaultKeys);
+			result.resolve(true);
+		});
+
+		keys.promise.then((keys: EncryptionKeyEntry[]) => {
+			this.keys = keys;
+		});
+
+		return result.promise;
+	}
+
+	lock() : void {
+		this.keys = null;
+	}
+
+	isLocked() : boolean {
+		return this.keys === null;
+	}
+
+	listItems() : Q.IPromise<Item[]> {
+		var items : Q.Deferred<Item[]> = Q.defer();
+		this.fs.read(Path.join(this.path, 'data/default/contents.js'), (error: any, content:string) => {
+			if (error) {
+				items.reject(error);
+				return;
+			}
+			var entries = JSON.parse(content);
+			var vaultItems : Item[] = [];
+			entries.forEach((entry: any[]) => {
+				var item = new Item;
+				item.uuid = entry[0];
+				item.typeName = entry[1];
+				item.title = entry[2];
+				item.location = entry[3];
+				item.updatedAt = entry[4];
+				item.folderUuid = entry[5];
+				item.trashed = entry[7] === "Y";
+				vaultItems.push(item);
+			});
+			items.resolve(vaultItems);
+		});
+		return items.promise;
+	}
 }
 
 export class SaltedCipherText {
@@ -29,14 +142,6 @@ export class SaltedCipherText {
 export class AesKeyParams {
 	constructor(public key: string, public iv: string) {
 	}
-}
-
-export class EncryptionKeyEntry {
-	data : string;
-	identifier : string;
-	iterations : number;
-	level : string;
-	validation : string;
 }
 
 export class ItemType {

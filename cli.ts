@@ -41,58 +41,21 @@ if (credentials) {
 }
 
 authenticated.promise.then(() => {
-	var contents = Q.defer();
-	var encKeys = Q.defer();
-
-	var vaultItems : onepass.Item[] = [];
-	var vaultKeys : onepass.EncryptionKeyEntry[] = [];
-
+	var vault : Q.Deferred<onepass.Vault> = Q.defer();
 	storage.search('.agilekeychain', (files: vfs.FileInfo[]) => {
 		files.forEach((file: vfs.FileInfo) => {
-			storage.read(Path.join(file.path, 'data/default/contents.js'), (error: any, content:string) => {
-				var entries = JSON.parse(content);
-				contents.resolve(entries);
-			});
-			storage.read(Path.join(file.path, 'data/default/encryptionKeys.js'), (error: any, content:string) => {
-				var keyList = JSON.parse(content);
-				if (!keyList.list) {
-					console.log('Missing `list` entry in encryptionKeys.js file');
-				}
-				encKeys.resolve(keyList.list);
-			});
+			vault.resolve(new onepass.Vault(storage, file.path));
 		});
 	});
-	contents.promise.then((entries: any[][]) => {
-		entries.forEach((entry: any[]) => {
-			var item = new onepass.Item;
-			item.uuid = entry[0];
-			item.typeName = entry[1];
-			item.title = entry[2];
-			item.location = entry[3];
-			item.updatedAt = entry[4];
-			item.folderUuid = entry[5];
-			item.trashed = entry[7] === "Y";
-			vaultItems.push(item);
+	
+	vault.promise.then((vault: onepass.Vault) => {
+		console.log('vault located - unlocking');
+		var masterPwd = fs.readFileSync('master-pwd').toString('binary').trim();
+		vault.unlock(masterPwd).then(() => {
+			console.log('vault unlocked: ' + !vault.isLocked());
 		});
-	});
-	encKeys.promise.then((entries: any[]) => {
-		entries.forEach((entry: any) => {
-			var item = new onepass.EncryptionKeyEntry;
-			item.data = atob(entry.data);
-			item.identifier = entry.identifier;
-			item.iterations = entry.iterations;
-			item.level = entry.level;
-			item.validation = atob(entry.validation);
-			vaultKeys.push(item);
-
-			try {
-				var masterPwd = fs.readFileSync('master-pwd').toString('binary').trim();
-				var saltCipher = onepass.extractSaltAndCipherText(item.data);
-				var decrypted = onepass.decryptKey(masterPwd, saltCipher.cipherText, saltCipher.salt, item.iterations, item.validation);
-				console.log('successfully decrypted key ' + entry.level);
-			} catch (ex) {
-				console.log('failed to decrypt key ' + entry.level + ex);
-			}
+		vault.listItems().then((items : onepass.Item[]) => {
+			console.log('vault contains ' + items.length + ' items');
 		});
 	});
 }, (err: any) => {
