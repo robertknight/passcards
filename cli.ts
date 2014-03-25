@@ -14,6 +14,7 @@ import vfs = require('./vfs');
 import dropboxvfs = require('./dropboxvfs');
 import onepass = require('./onepass');
 
+// connect to sync service and open vault
 var credFile : string = 'dropbox-credentials.json';
 var credentials : Object = null;
 if (fs.existsSync(credFile)) {
@@ -40,30 +41,38 @@ if (credentials) {
 	});
 }
 
+// open vault
+var vault : Q.Deferred<onepass.Vault> = Q.defer();
+var currentVault : onepass.Vault;
 authenticated.promise.then(() => {
-	var vault : Q.Deferred<onepass.Vault> = Q.defer();
 	storage.search('.agilekeychain', (files: vfs.FileInfo[]) => {
 		files.forEach((file: vfs.FileInfo) => {
 			vault.resolve(new onepass.Vault(storage, file.path));
 		});
 	});
-	
-	vault.promise.then((vault: onepass.Vault) => {
-		console.log('vault located - unlocking');
-		var masterPwd = fs.readFileSync('master-pwd').toString('binary').trim();
-		vault.unlock(masterPwd).then(() => {
-			console.log('vault unlocked: ' + !vault.isLocked());
-		});
-		vault.listItems().then((items : onepass.Item[]) => {
-			console.log('vault contains ' + items.length + ' items');
-			items[0].getContent().then((content: onepass.ItemContent) => {
-				console.log(content);
-			}), (err:any) => {
-				console.log('retrieving content failed ' + err);
-			}
-		});
-	});
 }, (err: any) => {
 	console.log('authentication failed');
+});
+
+// unlock vault
+var unlocked : Q.Deferred<boolean> = Q.defer();
+vault.promise.then((vault: onepass.Vault) => {
+	console.log('Unlocking vault...');
+	var masterPwd = fs.readFileSync('master-pwd').toString('binary').trim();
+	vault.unlock(masterPwd).then(() => {
+		unlocked.resolve(true);
+	});
+	currentVault = vault;
+});
+
+// process commands
+unlocked.promise.then(() => {
+	currentVault.listItems().then((items : onepass.Item[]) => {
+		items[0].getContent().then((content: onepass.ItemContent) => {
+			console.log(content);
+		}), (err:any) => {
+			console.log('retrieving content failed ' + err);
+		}
+	});
 });
 
