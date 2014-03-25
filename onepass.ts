@@ -35,22 +35,24 @@ export class Item {
 
 	private vault : Vault;
 	
-	getContent() : ItemContent {
-		return null;
+	constructor(vault : Vault) {
+		this.vault = vault;
 	}
 
-	static decryptData(key: string, data: string) : string {
-		return "";
+	getContent() : Q.IPromise<ItemContent> {
+		var itemContent : Q.Deferred<ItemContent> = Q.defer();
+		this.vault.loadItem(this.uuid).then((item:Item) => {
+			var content : string = this.vault.decryptItemData(item.securityLevel, item.encrypted);
+			itemContent.resolve(JSON.parse(content));
+		});
+		return itemContent.promise;
 	}
 }
 
 export class Vault {
 	private fs: vfs.VFS;
 	private path: string;
-
-	// map from security level (string)
-	// to encryption key
-	private keys: Object;
+	private keys: EncryptionKeyEntry[];
 
 	constructor(fs: vfs.VFS, path: string) {
 		this.fs = fs;
@@ -108,6 +110,20 @@ export class Vault {
 		return this.keys === null;
 	}
 
+	loadItem(uuid: string) : Q.IPromise<Item> {
+		var item : Q.Deferred<Item> = Q.defer();
+		this.fs.read(Path.join(this.path, 'data/default/' + uuid + '.1password'), (error: any, content: string) => {
+			if (error) {
+				item.reject(error);
+				return;
+			}
+			var rawItem : Item = JSON.parse(content);
+			rawItem.encrypted = atob(rawItem.encrypted);
+			item.resolve(rawItem);
+		});
+		return item.promise;
+	}
+
 	listItems() : Q.IPromise<Item[]> {
 		var items : Q.Deferred<Item[]> = Q.defer();
 		this.fs.read(Path.join(this.path, 'data/default/contents.js'), (error: any, content:string) => {
@@ -118,7 +134,7 @@ export class Vault {
 			var entries = JSON.parse(content);
 			var vaultItems : Item[] = [];
 			entries.forEach((entry: any[]) => {
-				var item = new Item;
+				var item = new Item(this);
 				item.uuid = entry[0];
 				item.typeName = entry[1];
 				item.title = entry[2];
@@ -131,6 +147,21 @@ export class Vault {
 			items.resolve(vaultItems);
 		});
 		return items.promise;
+	}
+
+	decryptItemData(level: string, data: string) : string {
+		var decrypted : string;
+		this.keys.forEach((key:EncryptionKeyEntry) => {
+			if (key.level == level) {
+				var saltCipher : SaltedCipherText = extractSaltAndCipherText(data);
+				var keyParams : AesKeyParams = openSslKey(key.key, saltCipher.salt);
+				decrypted = cryptoImpl.aesCbcDecrypt(keyParams.key, saltCipher.cipherText, keyParams.iv);
+			}
+		});
+		if (!decrypted) {
+			throw 'Key ' + level + ' not found';
+		}
+		return decrypted;
 	}
 }
 

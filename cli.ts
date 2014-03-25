@@ -56,6 +56,11 @@ authenticated.promise.then(() => {
 		});
 		vault.listItems().then((items : onepass.Item[]) => {
 			console.log('vault contains ' + items.length + ' items');
+			items[0].getContent().then((content: onepass.ItemContent) => {
+				console.log(content);
+			}), (err:any) => {
+				console.log('retrieving content failed ' + err);
+			}
 		});
 	});
 }, (err: any) => {
