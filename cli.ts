@@ -25,6 +25,13 @@ var parser = function() {
 		defaultValue: 'file',
 		dest: 'storage'
 	});
+	var subcommands = parser.addSubparsers({dest:'command'});
+
+	var listCommand = subcommands.addParser('list');
+	listCommand.addArgument(['pattern'], {action:'store'})
+
+	var showJSONCommand = subcommands.addParser('show-json');
+	showJSONCommand.addArgument(['pattern'], {action:'store'});
 
 	return parser;
 }();
@@ -86,16 +93,55 @@ vault.promise.then((vault: onepass.Vault) => {
 	currentVault = vault;
 });
 
+function patternMatch(pattern: string, item: onepass.Item) {
+	pattern = pattern.toLowerCase();
+	var titleLower = item.title.toLowerCase();
+	return titleLower.indexOf(pattern) != -1;
+}
+
+function lookupItems(vault: onepass.Vault, pattern: string) : Q.IPromise<onepass.Item[]> {
+	var result : Q.Deferred<onepass.Item[]> = Q.defer();
+	vault.listItems().then((items:onepass.Item[]) => {
+		var matches : onepass.Item[] = [];
+		items.forEach((item) => {
+			if (patternMatch(pattern, item)) {
+				matches.push(item);
+			}
+		});
+		result.resolve(matches);
+	}, (err:any) => {
+		console.log('Looking up items failed');
+	});
+	return result.promise;
+}
+
 // process commands
 unlocked.promise.then(() => {
-	currentVault.listItems().then((items : onepass.Item[]) => {
-		items[0].getContent().then((content: onepass.ItemContent) => {
-			console.log(content);
-			process.exit(0);
-		}), (err:any) => {
-			console.log('retrieving content failed ' + err);
-		}
-	});
+	switch (args.command) {
+		case 'list':
+			currentVault.listItems().then((items : onepass.Item[]) => {
+				items.sort((a:onepass.Item, b:onepass.Item) => {
+					return a.title.localeCompare(b.title);
+				});
+				items.forEach((item) => {
+					if (!args.pattern || patternMatch(args.pattern, item)) {
+						console.log(item.title);
+					}
+				});
+			});
+			break;
+		case 'show-json':
+			lookupItems(currentVault, args.pattern).then((items) => {
+				items.forEach((item) => {
+					item.getContent().then((content) => {
+						console.log(content);
+					});
+				});
+			});
+			break;
+		default:
+			console.log('Unknown command: ' + args.command);
+			break;
+	}
 });
-
 
