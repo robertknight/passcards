@@ -1,15 +1,15 @@
 /// <reference path="typings/DefinitelyTyped/node/node.d.ts" />
 
-var dropbox = require('dropbox');
-var fs = require('fs');
+import fs = require('fs');
 import vfs = require('./vfs');
+var dropbox = require('dropbox');
 
 export class DropboxVFS implements vfs.VFS {
 	// TODO: Typings for dropbox-js
 	private client : any;
 
 	constructor() {
-		var apiKeys = JSON.parse(fs.readFileSync('dropbox-key.json'));
+		var apiKeys : any = JSON.parse(fs.readFileSync('dropbox-key.json').toString());
 		this.client = new dropbox.Client(apiKeys);
 		this.client.authDriver(new dropbox.AuthDriver.NodeServer(8191));
 		this.client.onError.addListener(function(error: any) {

@@ -4,16 +4,16 @@
 /// <reference path="typings/DefinitelyTyped/node/node.d.ts" />
 /// <reference path="typings/DefinitelyTyped/q/Q.d.ts" />
 
-var Path = require('path');
-var fs = require('fs');
-var Q = require('q');
+import Path = require('path');
+import Q = require('q');
+import dropboxvfs = require('./dropboxvfs');
+import fs = require('fs');
+import onepass = require('./onepass');
+import vfs = require('./vfs');
+
 var btoa = require('btoa');
 var atob = require('atob');
 var argparse = require('argparse');
-
-import vfs = require('./vfs');
-import dropboxvfs = require('./dropboxvfs');
-import onepass = require('./onepass');
 
 var parser = function() {
 	var parser = new argparse.ArgumentParser({
@@ -41,7 +41,7 @@ var args = parser.parseArgs();
 var credFile : string = 'dropbox-credentials.json';
 var credentials : Object = null;
 if (fs.existsSync(credFile)) {
-	credentials = JSON.parse(fs.readFileSync(credFile));
+	credentials = JSON.parse(fs.readFileSync(credFile).toString());
 }
 
 var storage : vfs.VFS;
@@ -70,7 +70,7 @@ if (credentials) {
 }
 
 // open vault
-var vault : Q.Deferred<onepass.Vault> = Q.defer();
+var vault = Q.defer<onepass.Vault>();
 var currentVault : onepass.Vault;
 authenticated.promise.then(() => {
 	storage.search('.agilekeychain', (files: vfs.FileInfo[]) => {
@@ -83,7 +83,7 @@ authenticated.promise.then(() => {
 });
 
 // unlock vault
-var unlocked : Q.Deferred<boolean> = Q.defer();
+var unlocked = Q.defer<boolean>();
 vault.promise.then((vault: onepass.Vault) => {
 	console.log('Unlocking vault...');
 	var masterPwd = fs.readFileSync('master-pwd').toString('binary').trim();
@@ -100,7 +100,7 @@ function patternMatch(pattern: string, item: onepass.Item) {
 }
 
 function lookupItems(vault: onepass.Vault, pattern: string) : Q.IPromise<onepass.Item[]> {
-	var result : Q.Deferred<onepass.Item[]> = Q.defer();
+	var result = Q.defer<onepass.Item[]>();
 	vault.listItems().then((items:onepass.Item[]) => {
 		var matches : onepass.Item[] = [];
 		items.forEach((item) => {

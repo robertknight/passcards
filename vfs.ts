@@ -1,7 +1,7 @@
 /// <reference path="typings/DefinitelyTyped/node/node.d.ts" />
 
 import fs = require('fs');
-var Path = require('path');
+import Path = require('path');
 var dropbox = require('dropbox');
 
 /** Holds details of a file retrieved by a VFS implementation */
