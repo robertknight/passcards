@@ -1,4 +1,4 @@
-/// <reference path="typings/node/node.d.ts" />
+/// <reference path="typings/DefinitelyTyped/node/node.d.ts" />
 
 var dropbox = require('dropbox');
 var fs = require('fs');

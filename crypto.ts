@@ -1,4 +1,4 @@
-/// <reference path="typings/node/node.d.ts" />
+/// <reference path="typings/DefinitelyTyped/node/node.d.ts" />
 
 import crypto = require('crypto');
 var sjcl = require('sjcl-full');

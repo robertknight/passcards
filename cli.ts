@@ -1,8 +1,8 @@
 // cli.ts implements a command-line client for 1password
 // using node.js
 
-/// <reference path="typings/node/node.d.ts" />
-/// <reference path="typings/q/Q.d.ts" />
+/// <reference path="typings/DefinitelyTyped/node/node.d.ts" />
+/// <reference path="typings/DefinitelyTyped/q/Q.d.ts" />
 
 var Path = require('path');
 var fs = require('fs');

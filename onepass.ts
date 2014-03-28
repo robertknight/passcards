@@ -1,5 +1,5 @@
-/// <reference path="typings/node/node.d.ts" />
-/// <reference path="typings/q/Q.d.ts" />
+/// <reference path="typings/DefinitelyTyped/node/node.d.ts" />
+/// <reference path="typings/DefinitelyTyped/q/Q.d.ts" />
 
 var btoa = require('btoa');
 var atob = require('atob');
