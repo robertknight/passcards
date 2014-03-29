@@ -28,7 +28,12 @@ var parser = function() {
 	var subcommands = parser.addSubparsers({dest:'command'});
 
 	var listCommand = subcommands.addParser('list');
-	listCommand.addArgument(['pattern'], {action:'store'})
+	listCommand.addArgument(['-p', '--pattern'], {
+		action:'store',
+		dest: 'pattern',
+		nargs: 1,
+		type: 'string'
+	})
 
 	var showJSONCommand = subcommands.addParser('show-json');
 	showJSONCommand.addArgument(['pattern'], {action:'store'});
@@ -80,7 +85,8 @@ authenticated.promise.then(() => {
 	});
 }, (err: any) => {
 	console.log('authentication failed');
-});
+})
+.done();
 
 // unlock vault
 var unlocked = Q.defer<boolean>();
@@ -91,7 +97,8 @@ vault.promise.then((vault: onepass.Vault) => {
 		unlocked.resolve(true);
 	});
 	currentVault = vault;
-});
+})
+.done();
 
 function patternMatch(pattern: string, item: onepass.Item) {
 	pattern = pattern.toLowerCase();
@@ -99,7 +106,7 @@ function patternMatch(pattern: string, item: onepass.Item) {
 	return titleLower.indexOf(pattern) != -1;
 }
 
-function lookupItems(vault: onepass.Vault, pattern: string) : Q.IPromise<onepass.Item[]> {
+function lookupItems(vault: onepass.Vault, pattern: string) : Q.Promise<onepass.Item[]> {
 	var result = Q.defer<onepass.Item[]>();
 	vault.listItems().then((items:onepass.Item[]) => {
 		var matches : onepass.Item[] = [];
@@ -116,6 +123,7 @@ function lookupItems(vault: onepass.Vault, pattern: string) : Q.IPromise<onepass
 }
 
 // process commands
+var exitStatus = Q.defer<number>();
 unlocked.promise.then(() => {
 	switch (args.command) {
 		case 'list':
@@ -124,11 +132,12 @@ unlocked.promise.then(() => {
 					return a.title.localeCompare(b.title);
 				});
 				items.forEach((item) => {
-					if (!args.pattern || patternMatch(args.pattern, item)) {
+					if (!args.pattern || patternMatch(args.pattern[0], item)) {
 						console.log(item.title);
 					}
 				});
-			});
+				exitStatus.resolve(0);
+			}).done();
 			break;
 		case 'show-json':
 			lookupItems(currentVault, args.pattern).then((items) => {
@@ -137,11 +146,18 @@ unlocked.promise.then(() => {
 						console.log(content);
 					});
 				});
-			});
+				exitStatus.resolve(0);
+			}).done();
 			break;
 		default:
 			console.log('Unknown command: ' + args.command);
+			exitStatus.resolve(1);
 			break;
 	}
-});
+})
+.done();
 
+exitStatus.promise.then((status) => {
+	process.exit(status);
+})
+.done();

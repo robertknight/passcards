@@ -39,12 +39,12 @@ export class Item {
 		this.vault = vault;
 	}
 
-	getContent() : Q.IPromise<ItemContent> {
+	getContent() : Q.Promise<ItemContent> {
 		var itemContent : Q.Deferred<ItemContent> = Q.defer();
 		this.vault.loadItem(this.uuid).then((item:Item) => {
 			var content : string = this.vault.decryptItemData(item.securityLevel, item.encrypted);
 			itemContent.resolve(JSON.parse(content));
-		});
+		}).done();
 		return itemContent.promise;
 	}
 }
@@ -59,7 +59,7 @@ export class Vault {
 		this.path = path;
 	}
 
-	unlock(pwd: string) : Q.IPromise<boolean> {
+	unlock(pwd: string) : Q.Promise<boolean> {
 		var result : Q.Deferred<boolean> = Q.defer();
 		var keys : Q.Deferred<EncryptionKeyEntry[]> = Q.defer();
 
@@ -97,7 +97,7 @@ export class Vault {
 
 		keys.promise.then((keys: EncryptionKeyEntry[]) => {
 			this.keys = keys;
-		});
+		}).done();
 
 		return result.promise;
 	}
@@ -110,7 +110,7 @@ export class Vault {
 		return this.keys === null;
 	}
 
-	loadItem(uuid: string) : Q.IPromise<Item> {
+	loadItem(uuid: string) : Q.Promise<Item> {
 		var item : Q.Deferred<Item> = Q.defer();
 		this.fs.read(Path.join(this.path, 'data/default/' + uuid + '.1password'), (error: any, content: string) => {
 			if (error) {
@@ -124,7 +124,7 @@ export class Vault {
 		return item.promise;
 	}
 
-	listItems() : Q.IPromise<Item[]> {
+	listItems() : Q.Promise<Item[]> {
 		var items : Q.Deferred<Item[]> = Q.defer();
 		this.fs.read(Path.join(this.path, 'data/default/contents.js'), (error: any, content:string) => {
 			if (error) {
