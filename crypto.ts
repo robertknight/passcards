@@ -14,6 +14,8 @@ interface CryptoExtras {
 	pbkdf2Sync(pwd: string, salt: string, iterCount: number, keyLen: number) : NodeBuffer;
 }
 
+var cryptoExtras = <CryptoExtras> <any> crypto;
+
 // interface for crypto functions required for
 // working with 1Password vaults
 export interface CryptoImpl {
@@ -25,7 +27,7 @@ export interface CryptoImpl {
 // crypto implementation using Node.js' crypto lib
 export class NodeCrypto implements CryptoImpl {
 	aesCbcDecrypt(key:string, cipherText: string, iv: string) : string {
-		var decipher = (<CryptoExtras>(crypto)).createDecipheriv('AES-128-CBC', key, iv);
+		var decipher = cryptoExtras.createDecipheriv('AES-128-CBC', key, iv);
 		var result = '';
 		result += decipher.update(cipherText, 'binary', 'binary');
 		result += decipher.final('binary');
@@ -33,7 +35,7 @@ export class NodeCrypto implements CryptoImpl {
 	}
 
 	pbkdf2(masterPwd: string, salt: string, iterCount: number, keyLen: number) : string {
-		var derivedKey = (<CryptoExtras>(crypto)).pbkdf2Sync(masterPwd, salt, iterCount, keyLen);
+		var derivedKey = cryptoExtras.pbkdf2Sync(masterPwd, salt, iterCount, keyLen);
 		return derivedKey.toString('binary');
 	}
 
