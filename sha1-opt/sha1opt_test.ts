@@ -10,6 +10,7 @@ var SHA1_TEST_VECTORS = [
 	  digest : "84983e441c3bd26ebaae4aa1f95129e5e54670f1" }
 ];
 
+// from Wikipedia and RFC 2202
 var HMAC_TEST_VECTORS = [
 	{ key : "",
 	  message : "",
@@ -23,6 +24,45 @@ var HMAC_TEST_VECTORS = [
 	  key : "Jefe",
 	  message : "what do ya want for nothing?",
 	  hmac : "effcdf6ae5eb2fa2d27416d5f184df9c259a7c79"
+	}
+];
+
+// from RFC 6070
+var PBKDF2_TEST_VECTORS = [
+	{
+		pass : "password",
+		salt : "salt",
+		iterations : 1,
+		dkLen : 20,
+		key: "0c60c80f961f0e71f3a9b524af6012062fe037a6"
+	},
+	{
+		pass : "password",
+		salt : "salt",
+		iterations : 2,
+		dkLen : 20,
+		key : "ea6c014dc72d6f8ccd1ed92ace1d41f0d8de8957"
+	},
+	{
+		pass : "password",
+		salt : "salt",
+		iterations : 3,
+		dkLen : 20,
+		key : "6b4e26125c25cf21ae35ead955f479ea2e71f6ff"
+	},
+	{
+		pass : "password",
+		salt : "salt",
+		iterations : 4096,
+		dkLen : 20,
+		key : "4b007901b765489abead49d926f721d065a429c1"
+	},
+	{
+		pass : "passwordPASSWORDpassword",
+		salt : "saltSALTsaltSALTsaltSALTsaltSALTsalt",
+		iterations : 4096,
+		dkLen : 25,
+		key : "3d2eec4fe41c849b80c8d83662c0e44a8b291a964cf2f07038"
 	}
 ];
 
@@ -68,6 +108,18 @@ qunit.test('HMAC-SHA1', (assert: any) => {
 		hmac.mac(msgBuf, digest);
 		var actual = fastSha1.hexlify(digest);
 		assert.equal(actual, tst.hmac, 'check HMACs match');
+	});
+});
+
+qunit.test('PBKDF2-HMAC-SHA1', (assert: any) => {
+	var pbkdf2 = new fastSha1.PBKDF2();
+	PBKDF2_TEST_VECTORS.forEach(function(tst) {
+		var passBuf = new Uint8Array(tst.pass.length);
+		fastSha1.FastSha1.strToBuf(tst.pass, passBuf);
+		var saltBuf = new Uint8Array(tst.salt.length);
+		fastSha1.FastSha1.strToBuf(tst.salt, saltBuf);
+		var actualKey = fastSha1.hexlify(pbkdf2.key(passBuf, saltBuf, tst.iterations, tst.dkLen));
+		assert.equal(actualKey, tst.key, 'check PBKDF2 keys match');
 	});
 });
 

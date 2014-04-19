@@ -270,6 +270,10 @@ export class HMAC {
 		}
 	}
 
+	digestLen() : number {
+		return this.hash.digestLen();
+	}
+
 	mac(message: Uint8Array, hmac: Int32Array) {
 		// inner key padding
 		var workSpaceLen = this.blockSize + message.length;
@@ -291,5 +295,48 @@ export class HMAC {
 		}
 		this.hash.hash(this.outerKey, hmac);
 	}
-};
+}
+
+export class PBKDF2 {
+	key(password: Uint8Array, salt: Uint8Array, iterations: number, derivedKeyLen: number) : Uint8Array {
+		var sha1 = new FastSha1();
+		var hmac = new HMAC(sha1, password);
+
+		var result = new Uint8Array(derivedKeyLen);
+		var resultLen = 0;
+
+		var blocks = roundUp(derivedKeyLen, hmac.digestLen()) / hmac.digestLen();
+		for (var blockIndex=0; blockIndex < blocks; blockIndex++) {
+			var paddedSalt = new Uint8Array(salt.length + 4);
+			var paddedSaltView = new DataView(paddedSalt.buffer);
+			for (var i=0; i < salt.length; i++) {
+				paddedSalt[i] = salt[i];
+			}
+			paddedSaltView.setInt32(salt.length, blockIndex+1, false /* big endian */);
+
+			var chunk = new Int32Array(hmac.digestLen() / 4);
+			var chunk8 = new Uint8Array(chunk.buffer);
+
+			hmac.mac(paddedSalt, chunk);
+			var currentBlock = new Int32Array(chunk.length);
+			for (var i=0; i < chunk.length; i++) {
+				currentBlock[i] = chunk[i];
+			}
+			for (var i=1; i < iterations; i++) {
+				hmac.mac(chunk8, chunk);
+				for (var k=0; k < chunk.length; k++) {
+					currentBlock[k] = currentBlock[k] ^ chunk[k];
+				}
+			}
+
+			var currentBlock8 = new Uint8Array(currentBlock.buffer);
+			for (var i=0; i < hmac.digestLen() && resultLen < derivedKeyLen; i++) {
+				result[resultLen] = currentBlock8[i];
+				++resultLen;
+			}
+		}
+
+		return result;
+	}
+}
 
