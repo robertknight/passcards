@@ -7,7 +7,7 @@ var MD5 = require('crypto-js/md5');
 var Q = require('q');
 var Path = require('path');
 
-import crypto = require('./crypto');
+import crypto = require('./onepass_crypto');
 import vfs = require('./vfs');
 var cryptoImpl = new crypto.CryptoJsCrypto();
 
