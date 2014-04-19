@@ -115,11 +115,15 @@ var sha1core = function(stdlib: any, foreign: any, heap: any) : any {
 	return {hash: hash};
 };
 
+export interface Hash {
+	hash(src: Uint8Array, digest:Int32Array) : void;
+};
+
 // asm.js implementation of SHA-1, taken from the RushaCore()
 // function in Rusha.
 // As described in the Rusha documentation, this is a textbook
 // implementation of SHA-1 with some loop unrolling
-export class FastSha1 {
+export class FastSha1 implements Hash {
 	private heap32 : Int32Array
 	private dataView : DataView
 	private core : any // sha1core() instance
@@ -160,7 +164,8 @@ export class FastSha1 {
 		}
 	}
 
-	sha1(src: Uint8Array, srcLen: number, digest: Int32Array) {
+	hash(src: Uint8Array, digest: Int32Array) {
+		var srcLen = src.byteLength;
 		this.initHeap(srcLen);
 		var paddedLength = padLength(srcLen);
 

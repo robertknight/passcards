@@ -34,7 +34,7 @@ qunit.test('SHA-1', (assert: any) => {
 		var srcBuf = new Uint8Array(tst.msg.length);
 		fastSha1.FastSha1.strToBuf(tst.msg, srcBuf);
 		var digest = new Int32Array(5);
-		hash.sha1(srcBuf, srcBuf.length, digest);
+		hash.hash(srcBuf, digest);
 		var actual = fastSha1.hexlify(digest);
 		assert.equal(actual, tst.digest, 'check SHA-1 digests match');
 	});
@@ -57,11 +57,13 @@ qunit.test('SHA-1 benchmark', (assert: any) => {
 	var srcLen = msg.length;
 
 	for (var i=0; i < ITER; i++) {
-		hash.sha1(srcBuf, srcLen, digest);
+		hash.hash(srcBuf, digest);
+		if (srcBuf.length != digestBuf.byteLength) {
+			srcBuf = new Uint8Array(digestBuf.byteLength);
+		}
 		for (var k=0; k < digestBuf.length; k++) {
 			srcBuf[k] = digestBuf[k];
 		}
-		srcLen = digestBuf.length;
 	}
 	var end = new Date().getTime();
 	return end-start;
