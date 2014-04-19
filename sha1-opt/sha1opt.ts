@@ -16,7 +16,7 @@ var padLength = function(len: number) {
 	return bitsToBytes(roundUp(bytesToBits(len) + 1 + 64, 512));
 };
 
-var hexlify = exports.hexlify = function(buf: ArrayBufferView, len: number) {
+var hexlify = exports.hexlify = function(buf: ArrayBufferView, len?: number) {
 	var hex = '';
 	var byteBuf = new Uint8Array(buf.buffer);
 	len = len || byteBuf.length;
@@ -117,6 +117,8 @@ var sha1core = function(stdlib: any, foreign: any, heap: any) : any {
 
 export interface Hash {
 	hash(src: Uint8Array, digest:Int32Array) : void;
+	blockSize() : number;
+	digestLen() : number;
 };
 
 // asm.js implementation of SHA-1, taken from the RushaCore()
@@ -130,6 +132,14 @@ export class FastSha1 implements Hash {
 
 	constructor() {
 		this.initHeap(32);
+	}
+
+	blockSize() : number {
+		return 64;
+	}
+
+	digestLen() : number {
+		return 20;
 	}
 
 	private initHeap(msgSize: number) {
@@ -209,4 +219,77 @@ export class FastSha1 implements Hash {
 		}
 	}
 }
+
+export class HMAC {
+	private hash : Hash;
+	private blockSize : number;
+	private workSpace : Uint8Array;
+	private digest : Int32Array;
+	private digest8 : Uint8Array
+
+	private innerKeyPad : Uint8Array;
+	private outerKey : Uint8Array;
+
+	constructor(hash: Hash, key: Uint8Array) {
+		this.hash = hash;
+		this.blockSize = this.hash.blockSize();
+		this.digest = new Int32Array(this.hash.digestLen() / 4);
+		this.digest8 = new Uint8Array(this.digest.buffer);
+		
+		this.innerKeyPad = new Uint8Array(this.blockSize);
+		this.outerKey = new Uint8Array(this.blockSize + this.digest.byteLength);
+
+		// shorten key if longer than block length
+		if (key.length > this.blockSize) {
+			var shortKey = new Uint8Array(this.blockSize);
+			this.hash.hash(key, this.digest);
+			for (var i=0; i < shortKey.length; i++) {
+				shortKey[i] = this.digest8[i];
+			}
+			key = shortKey;
+		}
+
+		// pad key to block length
+		if (key.length < this.blockSize) {
+			var paddedKey = new Uint8Array(this.blockSize);
+			for (var i=0; i < key.length; i++) {
+				paddedKey[i] = key[i];
+			}
+			key = paddedKey;
+		}
+		for (var i=key.length; i < this.blockSize; i++) {
+			key[i] = 0;
+		}
+
+		// setup inner key padding
+		for (var i=0; i < this.innerKeyPad.length; i++) {
+			this.innerKeyPad[i] = 0x36 ^ key[i];
+		}
+		for (var i=0; i < this.outerKey.length; i++) {
+			this.outerKey[i] = 0x5c ^ key[i];
+		}
+	}
+
+	mac(message: Uint8Array, hmac: Int32Array) {
+		// inner key padding
+		var workSpaceLen = this.blockSize + message.length;
+		if (!this.workSpace || this.workSpace.byteLength != workSpaceLen) {
+			this.workSpace = new Uint8Array(workSpaceLen);
+		}
+
+		for (var i=0; i < this.blockSize; i++) {
+			this.workSpace[i] = this.innerKeyPad[i];
+		}
+		for (var i=0; i < message.length; i++) {
+			this.workSpace[this.blockSize + i] = message[i];
+		}
+		this.hash.hash(this.workSpace, this.digest);
+		
+		// outer key padding
+		for (var i=0; i < this.digest.byteLength; i++) {
+			this.outerKey[this.blockSize + i] = this.digest8[i];
+		}
+		this.hash.hash(this.outerKey, hmac);
+	}
+};
 
