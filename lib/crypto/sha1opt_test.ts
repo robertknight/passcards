@@ -3,14 +3,6 @@
 var qunit = require('qunitjs');
 var fastSha1 = require('./sha1opt');
 
-function bufferFromString(str: string) : Uint8Array {
-	var destBuf = new Uint8Array(str.length);
-	for (var i=0; i < str.length; i++) {
-		destBuf[i] = str.charCodeAt(i);
-	}
-	return destBuf;
-}
-
 var SHA1_TEST_VECTORS = [
 	{ msg : "abc",
 	  digest : "a9993e364706816aba3e25717850c26c9cd0d89d" },
@@ -95,7 +87,7 @@ qunit.log((details: any) => {
 qunit.test('SHA-1', (assert: any) => {
 	var hash = new fastSha1.FastSha1();
 	SHA1_TEST_VECTORS.forEach(function(tst) {
-		var srcBuf = bufferFromString(tst.msg);
+		var srcBuf = fastSha1.bufferFromString(tst.msg);
 		var digest = new Int32Array(5);
 		hash.hash(srcBuf, digest);
 		var actual = fastSha1.hexlify(digest);
@@ -106,8 +98,8 @@ qunit.test('SHA-1', (assert: any) => {
 qunit.test('HMAC-SHA1', (assert: any) => {
 	var sha1 = new fastSha1.FastSha1();
 	HMAC_TEST_VECTORS.forEach(function(tst) {
-		var keyBuf = bufferFromString(tst.key);
-		var msgBuf = bufferFromString(tst.message);
+		var keyBuf = fastSha1.bufferFromString(tst.key);
+		var msgBuf = fastSha1.bufferFromString(tst.message);
 		var digest = new Int32Array(5);
 		var hmac = new fastSha1.HMAC(sha1, keyBuf);
 		hmac.mac(msgBuf, digest);
@@ -119,8 +111,8 @@ qunit.test('HMAC-SHA1', (assert: any) => {
 qunit.test('PBKDF2-HMAC-SHA1', (assert: any) => {
 	var pbkdf2 = new fastSha1.PBKDF2();
 	PBKDF2_TEST_VECTORS.forEach(function(tst) {
-		var passBuf = bufferFromString(tst.pass);
-		var saltBuf = bufferFromString(tst.salt);
+		var passBuf = fastSha1.bufferFromString(tst.pass);
+		var saltBuf = fastSha1.bufferFromString(tst.salt);
 		var actualKey = fastSha1.hexlify(pbkdf2.key(passBuf, saltBuf, tst.iterations, tst.dkLen));
 		assert.equal(actualKey, tst.key, 'check PBKDF2 keys match');
 	});

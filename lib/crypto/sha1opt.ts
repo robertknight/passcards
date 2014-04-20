@@ -1,4 +1,4 @@
-/// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
+/// <reference path="../../typings/DefinitelyTyped/node/node.d.ts" />
 
 interface Buffer {
 	[index: number] : number;
@@ -9,6 +9,22 @@ function copyBuffer(dest: Buffer, src: Buffer) {
 	for (var i=0; i < dest.length; i++) {
 		dest[i] = src[i];
 	}
+}
+
+export function bufferFromString(str: string) : Uint8Array {
+	var destBuf = new Uint8Array(str.length);
+	for (var i=0; i < str.length; i++) {
+		destBuf[i] = str.charCodeAt(i);
+	}
+	return destBuf;
+}
+
+export function stringFromBuffer(buf: Uint8Array) : string {
+	var str = '';
+	for (var i=0; i < buf.length; i++) {
+		str += String.fromCharCode(buf[i]);
+	}
+	return str;
 }
 
 var bitsToBytes = function(n: number) {

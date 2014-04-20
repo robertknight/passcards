@@ -1,7 +1,8 @@
 /// <reference path="typings/DefinitelyTyped/node/node.d.ts" />
 
 import crypto = require('crypto');
-var sjcl = require('sjcl-full');
+import sha1opt = require('./lib/crypto/sha1opt');
+
 var atob = require('atob');
 var btoa = require('btoa');
 
@@ -38,11 +39,9 @@ export class NodeCrypto implements CryptoImpl {
 }
 
 export class CryptoJsCrypto implements CryptoImpl {
-	fallbackCrypto : CryptoImpl
 	encoding : any
 
 	constructor() {
-		this.fallbackCrypto = new SjclCrypto();
 		this.encoding = CryptoJS.enc.Latin1;
 	}
 
@@ -61,52 +60,24 @@ export class CryptoJsCrypto implements CryptoImpl {
 	}
 
 	pbkdf2(masterPwd: string, salt: string, iterCount: number, keyLen: number) : string {
-		// FIXME - CryptoJS' implementation of PKBDF2 scales poorly as the number
+		// CryptoJS' own implementation of PKBDF2 scales poorly as the number
 		// of iterations increases (see https://github.com/dominictarr/crypto-bench/blob/master/results.md)
+		//
 		// Current versions of 1Password use 80K iterations of PBKDF2 so this needs
-		// to be fast to be usable
-		return this.fallbackCrypto.pbkdf2(masterPwd, salt, iterCount, keyLen);
+		// to be fast to be usable, especially on mobile devices.
+		//
+		// Hence we use a custom implementation of PBKDF2 based on Rusha
+
+		var pbkdf2Impl = new sha1opt.PBKDF2();
+		var passBuf = sha1opt.bufferFromString(masterPwd);
+		var saltBuf = sha1opt.bufferFromString(salt);
+		var key = pbkdf2Impl.key(passBuf, saltBuf, iterCount, keyLen);
+		return sha1opt.stringFromBuffer(key);
 	}
 	
 	md5Digest(input: string) : string {
 		var encoding = CryptoJS.enc.Latin1;
 		return CryptoJS.MD5(this.encoding.parse(input)).toString(this.encoding);
-	}
-}
-
-export class SjclCrypto implements CryptoImpl {
-	fallbackCrypto : CryptoImpl
-
-	constructor() {
-		this.fallbackCrypto = new NodeCrypto();
-	}
-
-	aesCbcDecrypt(key:string, cipherText: string, iv: string) : string {
-		var keyBits = sjcl.codec.base64.toBits(btoa(key));
-		var cipherBits = sjcl.codec.base64.toBits(btoa(cipherText));
-		var ivBits = sjcl.codec.base64.toBits(btoa(iv));
-		var aesCipher = new sjcl.cipher.aes(keyBits);
-		var result = sjcl.mode.cbc.decrypt(aesCipher, cipherBits, ivBits);
-		return result;
-	}
-
-	pbkdf2(masterPwd: string, salt: string, iterCount: number, keyLen: number) : string {
-		var hmacSha1 = function(key: any) { 
-			return sjcl.misc.hmac.call(this, key, sjcl.hash.sha1);
-		};
-		hmacSha1.prototype = sjcl.misc.hmac.prototype;
-
-		var pwdBits = sjcl.codec.base64.toBits(btoa(masterPwd));
-		var saltBits = sjcl.codec.base64.toBits(btoa(salt));
-		var derivedKeyBits = sjcl.misc.pbkdf2(pwdBits, saltBits, iterCount, keyLen * 8 /* convert bytes to bits */,
-		  hmacSha1);
-		var result = atob(sjcl.codec.base64.fromBits(derivedKeyBits));
-
-		return result;
-	}
-
-	md5Digest(input: string) : string {
-		return this.fallbackCrypto.md5Digest(input);
 	}
 }
 
