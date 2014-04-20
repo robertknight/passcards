@@ -1,5 +1,16 @@
 /// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
 
+interface Buffer {
+	[index: number] : number;
+	length : number;
+}
+
+function copyBuffer(dest: Buffer, src: Buffer) {
+	for (var i=0; i < dest.length; i++) {
+		dest[i] = src[i];
+	}
+}
+
 var bitsToBytes = function(n: number) {
 	return n >> 3;
 }
@@ -168,12 +179,6 @@ export class FastSha1 implements Hash {
 		}
 	}
 
-	static strToBuf(srcStr: string, destBuf: Uint8Array) {
-		for (var i=0; i < srcStr.length; i++) {
-			destBuf[i] = srcStr.charCodeAt(i);
-		}
-	}
-
 	hash(src: Uint8Array, digest: Int32Array) {
 		var srcLen = src.byteLength;
 		this.initHeap(srcLen);
@@ -309,19 +314,17 @@ export class PBKDF2 {
 		for (var blockIndex=0; blockIndex < blocks; blockIndex++) {
 			var paddedSalt = new Uint8Array(salt.length + 4);
 			var paddedSaltView = new DataView(paddedSalt.buffer);
-			for (var i=0; i < salt.length; i++) {
-				paddedSalt[i] = salt[i];
-			}
+			copyBuffer(paddedSalt, salt);
 			paddedSaltView.setInt32(salt.length, blockIndex+1, false /* big endian */);
 
 			var chunk = new Int32Array(hmac.digestLen() / 4);
 			var chunk8 = new Uint8Array(chunk.buffer);
 
 			hmac.mac(paddedSalt, chunk);
+
 			var currentBlock = new Int32Array(chunk.length);
-			for (var i=0; i < chunk.length; i++) {
-				currentBlock[i] = chunk[i];
-			}
+			copyBuffer(currentBlock, chunk);
+
 			for (var i=1; i < iterations; i++) {
 				hmac.mac(chunk8, chunk);
 				for (var k=0; k < chunk.length; k++) {

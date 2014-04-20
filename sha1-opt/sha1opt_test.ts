@@ -3,6 +3,14 @@
 var qunit = require('qunitjs');
 var fastSha1 = require('./sha1opt');
 
+function bufferFromString(str: string) : Uint8Array {
+	var destBuf = new Uint8Array(str.length);
+	for (var i=0; i < str.length; i++) {
+		destBuf[i] = str.charCodeAt(i);
+	}
+	return destBuf;
+}
+
 var SHA1_TEST_VECTORS = [
 	{ msg : "abc",
 	  digest : "a9993e364706816aba3e25717850c26c9cd0d89d" },
@@ -87,8 +95,7 @@ qunit.log((details: any) => {
 qunit.test('SHA-1', (assert: any) => {
 	var hash = new fastSha1.FastSha1();
 	SHA1_TEST_VECTORS.forEach(function(tst) {
-		var srcBuf = new Uint8Array(tst.msg.length);
-		fastSha1.FastSha1.strToBuf(tst.msg, srcBuf);
+		var srcBuf = bufferFromString(tst.msg);
 		var digest = new Int32Array(5);
 		hash.hash(srcBuf, digest);
 		var actual = fastSha1.hexlify(digest);
@@ -99,10 +106,8 @@ qunit.test('SHA-1', (assert: any) => {
 qunit.test('HMAC-SHA1', (assert: any) => {
 	var sha1 = new fastSha1.FastSha1();
 	HMAC_TEST_VECTORS.forEach(function(tst) {
-		var keyBuf = new Uint8Array(tst.key.length);
-		fastSha1.FastSha1.strToBuf(tst.key, keyBuf);
-		var msgBuf = new Uint8Array(tst.message.length);
-		fastSha1.FastSha1.strToBuf(tst.message, msgBuf);
+		var keyBuf = bufferFromString(tst.key);
+		var msgBuf = bufferFromString(tst.message);
 		var digest = new Int32Array(5);
 		var hmac = new fastSha1.HMAC(sha1, keyBuf);
 		hmac.mac(msgBuf, digest);
@@ -114,44 +119,11 @@ qunit.test('HMAC-SHA1', (assert: any) => {
 qunit.test('PBKDF2-HMAC-SHA1', (assert: any) => {
 	var pbkdf2 = new fastSha1.PBKDF2();
 	PBKDF2_TEST_VECTORS.forEach(function(tst) {
-		var passBuf = new Uint8Array(tst.pass.length);
-		fastSha1.FastSha1.strToBuf(tst.pass, passBuf);
-		var saltBuf = new Uint8Array(tst.salt.length);
-		fastSha1.FastSha1.strToBuf(tst.salt, saltBuf);
+		var passBuf = bufferFromString(tst.pass);
+		var saltBuf = bufferFromString(tst.salt);
 		var actualKey = fastSha1.hexlify(pbkdf2.key(passBuf, saltBuf, tst.iterations, tst.dkLen));
 		assert.equal(actualKey, tst.key, 'check PBKDF2 keys match');
 	});
-});
-
-qunit.test('SHA-1 benchmark', (assert: any) => {
-	qunit.expect(0);
-
-	// SHA-1 benchmark that mirrors usage by 1Password 4's
-	// current default settings of 80K PBKDF2 iterations
-	// using HMAC-SHA1
-	var ITER = 160000;
-	var hash = new fastSha1.FastSha1();
-	var srcBuf = new Uint8Array(500);
-	var digest = new Int32Array(5);
-	var digestBuf = new Uint8Array(digest.buffer);
-	var msg = "password";
-	var start = new Date().getTime();
-	fastSha1.FastSha1.strToBuf(msg, srcBuf);
-	var srcLen = msg.length;
-
-	for (var i=0; i < ITER; i++) {
-		hash.hash(srcBuf, digest);
-		if (srcBuf.length != digestBuf.byteLength) {
-			srcBuf = new Uint8Array(digestBuf.byteLength);
-		}
-		for (var k=0; k < digestBuf.length; k++) {
-			srcBuf[k] = digestBuf[k];
-		}
-	}
-	var end = new Date().getTime();
-	return end-start;
-
-	assert.equal(fastSha1.hexlify(digestBuf), 'dd79feb54a1097f8831511df9dd4522cf61063e8');
 });
 
 if (typeof window == 'undefined') {
