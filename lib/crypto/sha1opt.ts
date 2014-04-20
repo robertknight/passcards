@@ -96,7 +96,7 @@ var hexlify = exports.hexlify = function(buf: ArrayBufferView, len?: number) {
 // due to the use of 'native' typed array support in V8.
 var sha1core = function(stdlib: any, foreign: any, heap: any) : any {
 	// FIXME - The 'use asm' directive here causes a
-	// "'FastSha1.sha1Core' is not a constructor" error when tested
+	// "'sha1Core' is not a constructor" error when tested
 	// under Firefox 28. The code is still compiled with asm.js when
 	// this directive is removed but the code then functions correctly
 	// so it is commented out.
@@ -186,7 +186,7 @@ export interface Hash {
 	digestLen() : number;
 };
 
-export class FastSha1 implements Hash {
+export class SHA1 implements Hash {
 	private heap32 : Int32Array
 	private dataView : DataView
 	private core : any // sha1core() instance
@@ -241,7 +241,7 @@ export class FastSha1 implements Hash {
 
 		// copy message to heap in 32-bit big-endian
 		// words
-		FastSha1.copyMsgToBe32(this.heap32, src, srcLen);
+		SHA1.copyMsgToBe32(this.heap32, src, srcLen);
 
 		// append bit '1' to msg
 		this.heap32[srcLen >> 2] |= 0x80 << (24 - (srcLen % 4 << 3));
@@ -354,7 +354,7 @@ export class HMAC {
 
 export class PBKDF2 {
 	key(password: Uint8Array, salt: Uint8Array, iterations: number, derivedKeyLen: number) : Uint8Array {
-		var sha1 = new FastSha1();
+		var sha1 = new SHA1();
 		var hmac = new HMAC(sha1, password);
 
 		var result = new Uint8Array(derivedKeyLen);

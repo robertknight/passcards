@@ -85,7 +85,7 @@ qunit.log((details: any) => {
 });
 
 qunit.test('SHA-1', (assert: any) => {
-	var hash = new fastSha1.FastSha1();
+	var hash = new fastSha1.SHA1();
 	SHA1_TEST_VECTORS.forEach(function(tst) {
 		var srcBuf = fastSha1.bufferFromString(tst.msg);
 		var digest = new Int32Array(5);
@@ -96,7 +96,7 @@ qunit.test('SHA-1', (assert: any) => {
 });
 
 qunit.test('HMAC-SHA1', (assert: any) => {
-	var sha1 = new fastSha1.FastSha1();
+	var sha1 = new fastSha1.SHA1();
 	HMAC_TEST_VECTORS.forEach(function(tst) {
 		var keyBuf = fastSha1.bufferFromString(tst.key);
 		var msgBuf = fastSha1.bufferFromString(tst.message);
