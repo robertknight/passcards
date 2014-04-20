@@ -3,9 +3,6 @@
 import crypto = require('crypto');
 import sha1opt = require('./lib/crypto/sha1opt');
 
-var atob = require('atob');
-var btoa = require('btoa');
-
 var CryptoJS = require('crypto-js');
 
 // interface for crypto functions required for

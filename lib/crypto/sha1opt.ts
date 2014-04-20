@@ -56,6 +56,16 @@ var hexlify = exports.hexlify = function(buf: ArrayBufferView, len?: number) {
 	return hex;
 };
 
+// asm.js-style implementation of SHA-1, taken from
+// Rusha (https://github.com/srijs/rusha)
+//
+// As described in the Rusha documentation, this is a textbook
+// implementation of SHA-1 with some loop unrolling
+//
+// Node.js note: The performance of this implementation is very
+// much dependent upon the performance of typed arrays in
+// the JS engine. Node.js v0.11 performs >2x faster than Node.js v0.10
+// due to the use of 'native' typed array support in V8.
 var sha1core = function(stdlib: any, foreign: any, heap: any) : any {
 	// FIXME - The 'use asm' directive here causes a
 	// "'FastSha1.sha1Core' is not a constructor" error when tested
@@ -148,10 +158,6 @@ export interface Hash {
 	digestLen() : number;
 };
 
-// asm.js implementation of SHA-1, taken from the RushaCore()
-// function in Rusha.
-// As described in the Rusha documentation, this is a textbook
-// implementation of SHA-1 with some loop unrolling
 export class FastSha1 implements Hash {
 	private heap32 : Int32Array
 	private dataView : DataView
