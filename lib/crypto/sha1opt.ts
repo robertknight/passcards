@@ -275,7 +275,12 @@ export class SHA1 implements Hash {
 	}
 }
 
-export class HMAC {
+export interface MAC {
+	digestLen() : number;
+	mac(message: Uint8Array, result: Int32Array) : void;
+}
+
+export class HMAC implements MAC {
 	private hash : Hash;
 	private blockSize : number;
 	private workSpace : Uint8Array;
@@ -329,6 +334,10 @@ export class HMAC {
 		return this.hash.digestLen();
 	}
 
+	/** Computes the HMAC of @p message using the password
+	  * supplied in the constructor. The resulting digest
+	  * is stored in @p hmac.
+	  */
 	mac(message: Uint8Array, hmac: Int32Array) {
 		// inner key padding
 		var workSpaceLen = this.blockSize + message.length;
@@ -353,36 +362,65 @@ export class HMAC {
 }
 
 export class PBKDF2 {
-	key(password: Uint8Array, salt: Uint8Array, iterations: number, derivedKeyLen: number) : Uint8Array {
-		var sha1 = new SHA1();
-		var hmac = new HMAC(sha1, password);
+	private createMAC : (password: Uint8Array) => MAC;
 
+	/** Construct a PBKDF2 instance which uses @p macFn to
+	  * create a MAC implementation for a given password.
+	  *
+	  * If not specified, HMAC-SHA1 is used.
+	  */
+	constructor(macFn? : (password: Uint8Array) => MAC) {
+		this.createMAC = macFn;
+		if (!this.createMAC) {
+			this.createMAC = (password: Uint8Array) => {
+				return new HMAC(new SHA1(), password);
+			};
+		}
+	}
+
+	/** Computes the blockIndex'th block of the PBKDF2 key for a given salt and
+	  * password.
+	  *
+	  * Returns a key block whose length is the output digest size of the HMAC
+	  * function.
+	  */
+	keyBlock(password: Uint8Array, salt: Uint8Array, iterations: number, blockIndex: number) : ArrayBuffer {
+		var hmac = this.createMAC(password);
+		var paddedSalt = new Uint8Array(salt.length + 4);
+		var paddedSaltView = new DataView(paddedSalt.buffer);
+		copyBuffer(paddedSalt, salt);
+		paddedSaltView.setInt32(salt.length, blockIndex+1, false /* big endian */);
+
+		var chunk = new Int32Array(hmac.digestLen() / 4);
+		var chunk8 = new Uint8Array(chunk.buffer);
+
+		hmac.mac(paddedSalt, chunk);
+
+		var currentBlock = new Int32Array(chunk.length);
+		copyBuffer(currentBlock, chunk);
+
+		for (var i=1; i < iterations; i++) {
+			hmac.mac(chunk8, chunk);
+			for (var k=0; k < chunk.length; k++) {
+				currentBlock[k] = currentBlock[k] ^ chunk[k];
+			}
+		}
+
+		return currentBlock.buffer;
+	}
+
+	/** Computes a key of length @p derivedKeyLen from a given password and salt using
+	  * @p iterations of the PBKDF2 algorithm.
+	  */
+	key(password: Uint8Array, salt: Uint8Array, iterations: number, derivedKeyLen: number) : Uint8Array {
 		var result = new Uint8Array(derivedKeyLen);
 		var resultLen = 0;
+		var hmac = this.createMAC(password);
 
 		var blocks = roundUp(derivedKeyLen, hmac.digestLen()) / hmac.digestLen();
 		for (var blockIndex=0; blockIndex < blocks; blockIndex++) {
-			var paddedSalt = new Uint8Array(salt.length + 4);
-			var paddedSaltView = new DataView(paddedSalt.buffer);
-			copyBuffer(paddedSalt, salt);
-			paddedSaltView.setInt32(salt.length, blockIndex+1, false /* big endian */);
-
-			var chunk = new Int32Array(hmac.digestLen() / 4);
-			var chunk8 = new Uint8Array(chunk.buffer);
-
-			hmac.mac(paddedSalt, chunk);
-
-			var currentBlock = new Int32Array(chunk.length);
-			copyBuffer(currentBlock, chunk);
-
-			for (var i=1; i < iterations; i++) {
-				hmac.mac(chunk8, chunk);
-				for (var k=0; k < chunk.length; k++) {
-					currentBlock[k] = currentBlock[k] ^ chunk[k];
-				}
-			}
-
-			var currentBlock8 = new Uint8Array(currentBlock.buffer);
+			var block = this.keyBlock(password, salt, iterations, blockIndex);
+			var currentBlock8 = new Uint8Array(block);
 			for (var i=0; i < hmac.digestLen() && resultLen < derivedKeyLen; i++) {
 				result[resultLen] = currentBlock8[i];
 				++resultLen;

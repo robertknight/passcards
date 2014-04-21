@@ -3,6 +3,8 @@
 import testLib = require('../test');
 import fastSha1 = require('./sha1opt');
 
+var parallel = require('paralleljs');
+
 var SHA1_TEST_VECTORS = [
 	{ msg : "abc",
 	  digest : "a9993e364706816aba3e25717850c26c9cd0d89d" },
@@ -97,6 +99,48 @@ testLib.addTest('PBKDF2-HMAC-SHA1', (assert) => {
 		var saltBuf = fastSha1.bufferFromString(tst.salt);
 		var actualKey = fastSha1.hexlify(pbkdf2.key(passBuf, saltBuf, tst.iterations, tst.dkLen));
 		assert.equal(actualKey, tst.key, 'check PBKDF2 keys match');
+	});
+});
+
+testLib.addAsyncTest('PBKDF2 Parallel', (assert) => {
+	var params = {
+		pass : "passwordPASSWORDpassword",
+		salt : "saltSALTsaltSALTsaltSALTsaltSALTsalt",
+		iterations : 4096,
+		dkLen : 25,
+		key : "3d2eec4fe41c849b80c8d83662c0e44a8b291a964cf2f07038"
+	};
+
+	var blocks = [
+		{ params : params, blockIndex : 0 },
+		{ params : params, blockIndex : 1 }
+	];
+
+	var pbkdfBlock = (blockParams : any) => {
+		var fastSha1 = require('../../../build/lib/crypto/sha1opt');
+		var pbkdf2 = new fastSha1.PBKDF2();
+		var passBuf = fastSha1.bufferFromString(blockParams.params.pass);
+		var saltBuf = fastSha1.bufferFromString(blockParams.params.salt);
+		return pbkdf2.keyBlock(passBuf,
+		  saltBuf,
+		  blockParams.params.iterations,
+		  blockParams.blockIndex
+		);
+	};
+
+	var par = new parallel(blocks, {
+	});
+	par.map(pbkdfBlock).then((blocks: Uint8Array[]) => {
+		var result = new Uint8Array(params.dkLen);
+		var resultIndex = 0;
+		blocks.forEach((block) => {
+			for (var i=0; resultIndex < params.dkLen && i < block.byteLength; i++) {
+				result[resultIndex] = block[i];
+				++resultIndex;
+			}
+		});
+		assert.equal(fastSha1.hexlify(result), params.key, 'Check PBKDF2 result matches');
+		testLib.continueTests();
 	});
 });
 

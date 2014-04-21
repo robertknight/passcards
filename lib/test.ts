@@ -4,10 +4,19 @@ var qunit = require('qunitjs');
 
 export interface Assert {
 	equal(actual: any, expected: any, message: string) : void;
+	ok(result: boolean) : void;
 }
 
 export function addTest(name : string, testFunc : (assert: Assert) => void) {
 	qunit.test(name, testFunc);
+}
+
+export function addAsyncTest(name : string, testFunc : (assert: Assert) => void) {
+	qunit.asyncTest(name, testFunc);
+}
+
+export function continueTests() {
+	qunit.start();
 }
 
 export function runTests() {
