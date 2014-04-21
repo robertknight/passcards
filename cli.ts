@@ -14,6 +14,7 @@ import vfs = require('./lib/vfs');
 var btoa = require('btoa');
 var atob = require('atob');
 var argparse = require('argparse');
+var sprintf = require('sprintf');
 
 var parser = function() {
 	var parser = new argparse.ArgumentParser({
@@ -40,6 +41,9 @@ var parser = function() {
 
 	var showOverviewCommand = subcommands.addParser('show-overview');
 	showOverviewCommand.addArgument(['pattern'], {action:'store'});
+
+	var showCommand = subcommands.addParser('show');
+	showCommand.addArgument(['pattern'], {action:'store'});
 
 	return parser;
 }();
@@ -138,7 +142,7 @@ handlers['list'] = (args, result) => {
 		});
 		items.forEach((item) => {
 			if (!args.pattern || patternMatch(args.pattern[0], item)) {
-				console.log(item.title);
+				console.log(sprintf('%s (%s, %s)', item.title, item.typeDescription(), item.shortID()));
 			}
 		});
 		result.resolve(0);
@@ -155,7 +159,7 @@ handlers['show-json'] = (args, result) => {
 			contents.forEach((content) => {
 				console.log(content);
 			});
-			exitStatus.resolve(0);
+			result.resolve(0);
 		});
 	}).done();
 };
@@ -169,13 +173,28 @@ handlers['show-overview'] = (args, result) => {
 	}).done();
 };
 
+handlers['show'] = (args, result) => {
+	lookupItems(currentVault, args.pattern).then((items) => {
+		var itemContents : Q.Promise<onepass.ItemContent>[] = [];
+		items.forEach((item) => {
+			itemContents.push(item.getContent());
+		});
+		Q.all(itemContents).then((contents) => {
+			items.forEach((item, index) => {
+				console.log(sprintf('%s (%s)', item.title, item.typeDescription()));
+			});
+			result.resolve(0);
+		});
+	}).done();
+};
+
 // process commands
 var exitStatus = Q.defer<number>();
 unlocked.promise.then(() => {
 	if (handlers[args.command]) {
 		handlers[args.command](args, exitStatus);
 	} else {
-		console.log('Unknown command: ' + args.command);
+		console.log(sprintf('Unknown command: %s', args.command));
 		exitStatus.resolve(1);
 	}
 })

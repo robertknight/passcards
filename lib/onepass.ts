@@ -20,6 +20,102 @@ export class EncryptionKeyEntry {
 	key : string;
 }
 
+export interface ItemType {
+	name : string;
+	shortAlias : string;
+}
+
+export interface ItemTypeMap {
+	[index: string] : ItemType;
+}
+
+/** Map of item type codes to human-readable item type names */
+export var ItemTypes : ItemTypeMap = {
+	"webforms.WebForm": {
+		name:       "Login",
+		shortAlias: "login",
+	},
+	"wallet.financial.CreditCard": {
+		name:       "Credit Card",
+		shortAlias: "card",
+	},
+	"wallet.computer.Router": {
+		name:       "Wireless Router",
+		shortAlias: "router",
+	},
+	"securenotes.SecureNote": {
+		name:       "Secure Note",
+		shortAlias: "note",
+	},
+	"passwords.Password": {
+		name:       "Password",
+		shortAlias: "pass",
+	},
+	"wallet.onlineservices.Email.v2": {
+		name:       "Email Account",
+		shortAlias: "email",
+	},
+	"system.folder.Regular": {
+		name:       "Folder",
+		shortAlias: "folder",
+	},
+	"system.folder.SavedSearch": {
+		name:       "Smart Folder",
+		shortAlias: "smart-folder",
+	},
+	"wallet.financial.BankAccountUS": {
+		name:       "Bank Account",
+		shortAlias: "bank",
+	},
+	"wallet.computer.Database": {
+		name:       "Database",
+		shortAlias: "db",
+	},
+	"wallet.government.DriversLicense": {
+		name:       "Driver's License",
+		shortAlias: "driver",
+	},
+	"wallet.membership.Membership": {
+		name:       "Membership",
+		shortAlias: "membership",
+	},
+	"wallet.government.HuntingLicense": {
+		name:       "Outdoor License",
+		shortAlias: "outdoor",
+	},
+	"wallet.government.Passport": {
+		name:       "Passport",
+		shortAlias: "passport",
+	},
+	"wallet.membership.RewardProgram": {
+		name:       "Reward Program",
+		shortAlias: "reward",
+	},
+	"wallet.computer.UnixServer": {
+		name:       "Unix Server",
+		shortAlias: "server",
+	},
+	"wallet.government.SsnUS": {
+		name:       "Social Security Number",
+		shortAlias: "social",
+	},
+	"wallet.computer.License": {
+		name:       "Software License",
+		shortAlias: "software",
+	},
+	"identities.Identity": {
+		name:       "Identity",
+		shortAlias: "id",
+	},
+	// internal entry type created for items
+	// that have been removed from the trash
+	"system.Tombstone": {
+		name:       "Tombstone",
+		shortAlias: "tombstone",
+	},
+};
+
+/** Represents a single item in a 1Password vault. */
 export class Item {
 	updatedAt : number;
 	title : string;
@@ -39,6 +135,18 @@ export class Item {
 		this.vault = vault;
 	}
 
+	/** Retrieves and decrypts the content of a 1Password item.
+	  *
+	  * In the Agile Keychain format, items are stored in two parts.
+	  * The overview data is stored in both contents.js and replicated
+	  * in the <UUID>.1password file for the item and is unencrypted.
+	  *
+	  * The item content is stored in the <UUID>.1password file and
+	  * is encrypted using the vault's master key.
+	  *
+	  * The item's vault must be unlocked using Vault.unlock() before
+	  * item content can be retrieved.
+	  */
 	getContent() : Q.Promise<ItemContent> {
 		var itemContent : Q.Deferred<ItemContent> = Q.defer();
 		this.vault.loadItem(this.uuid).then((item:Item) => {
@@ -48,21 +156,52 @@ export class Item {
 		return itemContent.promise;
 	}
 
+	/** Returns true if this is a 'tombstone' entry remaining from
+	  * a deleted item. When an item is deleted, all of the properties except
+	  * the UUID are erased and the item's type is changed to 'system.Tombstone'.
+	  *
+	  * These 'tombstone' markers are preserved so that deletions are synced between
+	  * different 1Password clients.
+	  */
 	isTombstone() : boolean {
 		return this.typeName == 'system.Tombstone';
 	}
+
+	/** Returns a shortened version of the item's UUID, suitable for disambiguation
+	  * between different items with the same type and title.
+	  */
+	shortID() : string {
+		return this.uuid.slice(0,4);
+	}
+
+	/** Returns the human-readable type name for this item's type. */
+	typeDescription() : string {
+		if (ItemTypes[this.typeName]) {
+			return ItemTypes[this.typeName].name;
+		} else {
+			return this.typeName;
+		}
+	}
 }
 
+/** Represents a 1Password vault. */
 export class Vault {
 	private fs: vfs.VFS;
 	private path: string;
 	private keys: EncryptionKeyEntry[];
 
+	/** Setup a vault which is stored at @p path in a filesystem.
+	  * @p fs is the filesystem interface through which the
+	  * files that make up the vault are accessed.
+	  */
 	constructor(fs: vfs.VFS, path: string) {
 		this.fs = fs;
 		this.path = path;
 	}
 
+	/** Unlock the vault using the given master password.
+	  * This must be called before item contents can be decrypted.
+	  */
 	unlock(pwd: string) : Q.Promise<boolean> {
 		var result : Q.Deferred<boolean> = Q.defer();
 		var keys : Q.Deferred<EncryptionKeyEntry[]> = Q.defer();
@@ -112,10 +251,16 @@ export class Vault {
 		return result.promise;
 	}
 
+	/** Lock the vault. This discards decrypted master keys for the vault
+	  * created via a call to unlock()
+	  */
 	lock() : void {
 		this.keys = null;
 	}
 
+	/** Returns true if the vault was successfully unlocked using unlock().
+	  * Only once the vault is unlocked can item contents be retrieved using Item.getContents()
+	  */
 	isLocked() : boolean {
 		return this.keys === null;
 	}
@@ -134,6 +279,9 @@ export class Vault {
 		return item.promise;
 	}
 
+	/** Returns a list of overview data for all items in the vault,
+	  * except tombstone markers for deleted items.
+	  */
 	listItems() : Q.Promise<Item[]> {
 		var items : Q.Deferred<Item[]> = Q.defer();
 		this.fs.read(Path.join(this.path, 'data/default/contents.js'), (error: any, content:string) => {
@@ -189,11 +337,6 @@ export class SaltedCipherText {
 export class AesKeyParams {
 	constructor(public key: string, public iv: string) {
 	}
-}
-
-export class ItemType {
-	name : string;
-	shortAlias : string;
 }
 
 export class ItemContent {
