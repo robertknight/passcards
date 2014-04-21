@@ -141,12 +141,16 @@ unlocked.promise.then(() => {
 			break;
 		case 'show-json':
 			lookupItems(currentVault, args.pattern).then((items) => {
+				var itemContents : Q.Promise<onepass.ItemContent>[] = [];
 				items.forEach((item) => {
-					item.getContent().then((content) => {
+					itemContents.push(item.getContent());
+				});
+				Q.all(itemContents).then((contents) => {
+					contents.forEach((content) => {
 						console.log(content);
 					});
+					exitStatus.resolve(0);
 				});
-				exitStatus.resolve(0);
 			}).done();
 			break;
 		default:
