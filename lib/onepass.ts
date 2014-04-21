@@ -83,8 +83,14 @@ export class Vault {
 				item.validation = atob(entry.validation);
 
 				try {
-					var saltCipher = extractSaltAndCipherText(item.data);
-					item.key = decryptKey(pwd, saltCipher.cipherText, saltCipher.salt, item.iterations, item.validation);
+					// Using 1Password v4, there are two entries in the
+					// encryptionKeys.js file, 'SL5' and 'SL3'.
+					// 'SL3' appears to be unused so speed up the unlock
+					// process by skipping it
+					if (item.level != "SL3") {
+						var saltCipher = extractSaltAndCipherText(item.data);
+						item.key = decryptKey(pwd, saltCipher.cipherText, saltCipher.salt, item.iterations, item.validation);
+					}
 					vaultKeys.push(item);
 				} catch (ex) {
 					result.reject('failed to decrypt key ' + entry.level + ex);
