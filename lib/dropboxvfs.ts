@@ -6,13 +6,13 @@ import fs = require('fs');
 import vfs = require('./vfs');
 
 export class DropboxVFS implements vfs.VFS {
-	private client : any;
+	private client : dropbox.Client;
 
 	constructor() {
 		var apiKeys : any = JSON.parse(fs.readFileSync('dropbox-key.json').toString());
 		this.client = new dropbox.Client(apiKeys);
 		this.client.authDriver(new dropbox.AuthDriver.NodeServer(8191));
-		this.client.onError.addListener(function(error: any) {
+		this.client.onError.addListener((error) => {
 			console.log(error);
 		});
 	}
@@ -28,9 +28,9 @@ export class DropboxVFS implements vfs.VFS {
 
 	/** Search for files whose name contains @p namePattern */
 	search(namePattern: string, cb: (files: vfs.FileInfo[]) => any) {
-		this.client.search('/', namePattern, {}, (err: any, files: any[]) => {
+		this.client.search('/', namePattern, {}, (err, files) => {
 			var fileList : vfs.FileInfo[] = [];
-			files.forEach((file:any) => {
+			files.forEach((file) => {
 				fileList.push(this.toVfsFile(file));
 			});
 			cb(fileList);
@@ -39,21 +39,21 @@ export class DropboxVFS implements vfs.VFS {
 
 	/** Read the contents of a file at @p path */
 	read(path: string, cb: (error: any, content:string) => any) {
-		this.client.readFile(path, {}, (error: any, content: string) => {
+		this.client.readFile(path, {}, (error, content) => {
 			cb(error, content);
 		});
 	}
 
 	/** Write the contents of a file at @p path */
 	write(path: string, content: string, cb: (error:any) => any) {
-		this.client.writeFile(path, content, {}, (error:any) => {
+		this.client.writeFile(path, content, {}, (error) => {
 			cb(error);
 		});
 	}
 
 	/** List the contents of a directory */
 	list(path: string, cb: (error: any, files: vfs.FileInfo[]) => any) {
-		this.client.readdir(path, {}, (error:any, names : string[], folderInfo:any, files:any[]) => {
+		this.client.readdir(path, {}, (error, names, folderInfo, files) => {
 			if (error) {
 				cb(error, []);
 				return;
@@ -68,7 +68,7 @@ export class DropboxVFS implements vfs.VFS {
 
 	/** Remove a file */
 	rm(path: string, cb: (error: any) => any) {
-		this.client.remove(path, (error: any) => {
+		this.client.remove(path, (error) => {
 			cb(error);
 		});
 	}
