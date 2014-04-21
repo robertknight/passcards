@@ -2,11 +2,12 @@ TSC=tsc --noImplicitAny
 TSC_NODE=$(TSC) -m commonjs
 NODE=node
 
-ts_srcs=$(wildcard *.ts lib/*.ts lib/crypto/*.ts)
+lib_srcs=$(shell find lib/ -name '*.ts')
+app_srcs=$(wildcard *.ts)
 test_files=$(shell find build/ -name '*_test.js')
 
-all: $(ts_srcs)
-	$(TSC_NODE) --outDir build $(ts_srcs)
+all: $(lib_srcs)
+	$(TSC_NODE) --outDir build $(lib_srcs) $(app_srcs)
 
 test: all
 	$(NODE) $(test_files)

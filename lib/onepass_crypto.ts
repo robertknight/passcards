@@ -1,7 +1,7 @@
-/// <reference path="typings/DefinitelyTyped/node/node.d.ts" />
+/// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
 
 import crypto = require('crypto');
-import sha1opt = require('./lib/crypto/sha1opt');
+import sha1opt = require('./crypto/sha1opt');
 
 var CryptoJS = require('crypto-js');
 
@@ -35,6 +35,8 @@ export class NodeCrypto implements CryptoImpl {
 	}
 }
 
+// crypto implementation using CryptoJS plus the
+// crypto functions in lib/crypto
 export class CryptoJsCrypto implements CryptoImpl {
 	encoding : any
 

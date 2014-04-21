@@ -6,10 +6,10 @@
 
 import Path = require('path');
 import Q = require('q');
-import dropboxvfs = require('./dropboxvfs');
+import dropboxvfs = require('./lib/dropboxvfs');
 import fs = require('fs');
-import onepass = require('./onepass');
-import vfs = require('./vfs');
+import onepass = require('./lib/onepass');
+import vfs = require('./lib/vfs');
 
 var btoa = require('btoa');
 var atob = require('atob');
