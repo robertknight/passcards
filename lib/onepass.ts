@@ -47,6 +47,10 @@ export class Item {
 		}).done();
 		return itemContent.promise;
 	}
+
+	isTombstone() : boolean {
+		return this.typeName == 'system.Tombstone';
+	}
 }
 
 export class Vault {
@@ -148,6 +152,12 @@ export class Vault {
 				item.updatedAt = entry[4];
 				item.folderUuid = entry[5];
 				item.trashed = entry[7] === "Y";
+
+				if (item.isTombstone()) {
+					// skip markers for deleted items
+					return;
+				}
+
 				vaultItems.push(item);
 			});
 			items.resolve(vaultItems);

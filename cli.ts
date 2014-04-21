@@ -38,6 +38,9 @@ var parser = function() {
 	var showJSONCommand = subcommands.addParser('show-json');
 	showJSONCommand.addArgument(['pattern'], {action:'store'});
 
+	var showOverviewCommand = subcommands.addParser('show-overview');
+	showOverviewCommand.addArgument(['pattern'], {action:'store'});
+
 	return parser;
 }();
 var args = parser.parseArgs();
@@ -122,41 +125,58 @@ function lookupItems(vault: onepass.Vault, pattern: string) : Q.Promise<onepass.
 	return result.promise;
 }
 
+interface HandlerMap {
+	[index: string] : (args: any, result : Q.Deferred<number>) => void;
+}
+
+var handlers : HandlerMap = {};
+
+handlers['list'] = (args, result) => {
+	currentVault.listItems().then((items : onepass.Item[]) => {
+		items.sort((a:onepass.Item, b:onepass.Item) => {
+			return a.title.toLowerCase().localeCompare(b.title.toLowerCase());
+		});
+		items.forEach((item) => {
+			if (!args.pattern || patternMatch(args.pattern[0], item)) {
+				console.log(item.title);
+			}
+		});
+		result.resolve(0);
+	}).done();
+};
+
+handlers['show-json'] = (args, result) => {
+	lookupItems(currentVault, args.pattern).then((items) => {
+		var itemContents : Q.Promise<onepass.ItemContent>[] = [];
+		items.forEach((item) => {
+			itemContents.push(item.getContent());
+		});
+		Q.all(itemContents).then((contents) => {
+			contents.forEach((content) => {
+				console.log(content);
+			});
+			exitStatus.resolve(0);
+		});
+	}).done();
+};
+
+handlers['show-overview'] = (args, result) => {
+	lookupItems(currentVault, args.pattern).then((items) => {
+		items.forEach((item) => {
+			console.log(item);
+		});
+		result.resolve(0);
+	}).done();
+};
+
 // process commands
 var exitStatus = Q.defer<number>();
 unlocked.promise.then(() => {
-	switch (args.command) {
-		case 'list':
-			currentVault.listItems().then((items : onepass.Item[]) => {
-				items.sort((a:onepass.Item, b:onepass.Item) => {
-					return a.title.localeCompare(b.title);
-				});
-				items.forEach((item) => {
-					if (!args.pattern || patternMatch(args.pattern[0], item)) {
-						console.log(item.title);
-					}
-				});
-				exitStatus.resolve(0);
-			}).done();
-			break;
-		case 'show-json':
-			lookupItems(currentVault, args.pattern).then((items) => {
-				var itemContents : Q.Promise<onepass.ItemContent>[] = [];
-				items.forEach((item) => {
-					itemContents.push(item.getContent());
-				});
-				Q.all(itemContents).then((contents) => {
-					contents.forEach((content) => {
-						console.log(content);
-					});
-					exitStatus.resolve(0);
-				});
-			}).done();
-			break;
-		default:
-			console.log('Unknown command: ' + args.command);
-			exitStatus.resolve(1);
-			break;
+	if (handlers[args.command]) {
+		handlers[args.command](args, exitStatus);
+	} else {
+		console.log('Unknown command: ' + args.command);
+		exitStatus.resolve(1);
 	}
 })
 .done();
