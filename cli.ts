@@ -3,6 +3,8 @@
 
 /// <reference path="typings/DefinitelyTyped/node/node.d.ts" />
 /// <reference path="typings/DefinitelyTyped/q/Q.d.ts" />
+/// <reference path="typings/argparse.d.ts" />
+/// <reference path="typings/sprintf.d.ts" />
 
 import Path = require('path');
 import Q = require('q');
@@ -10,11 +12,11 @@ import dropboxvfs = require('./lib/dropboxvfs');
 import fs = require('fs');
 import onepass = require('./lib/onepass');
 import vfs = require('./lib/vfs');
+import sprintf = require('sprintf');
+import argparse = require('argparse');
 
 var btoa = require('btoa');
 var atob = require('atob');
-var argparse = require('argparse');
-var sprintf = require('sprintf');
 
 var parser = function() {
 	var parser = new argparse.ArgumentParser({

@@ -1,14 +1,15 @@
 /// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
 
+import Q = require('q');
+import crypto = require('./onepass_crypto');
+import vfs = require('./vfs');
+import Path = require('path');
+
 var btoa = require('btoa');
 var atob = require('atob');
 var MD5 = require('crypto-js/md5');
-var Q = require('q');
-var Path = require('path');
 
-import crypto = require('./onepass_crypto');
-import vfs = require('./vfs');
 var cryptoImpl = new crypto.CryptoJsCrypto();
 
 export class EncryptionKeyEntry {
@@ -148,7 +149,7 @@ export class Item {
 	  * item content can be retrieved.
 	  */
 	getContent() : Q.Promise<ItemContent> {
-		var itemContent : Q.Deferred<ItemContent> = Q.defer();
+		var itemContent : Q.Deferred<ItemContent> = Q.defer<ItemContent>();
 		this.vault.loadItem(this.uuid).then((item:Item) => {
 			var content : string = this.vault.decryptItemData(item.securityLevel, item.encrypted);
 			itemContent.resolve(JSON.parse(content));
@@ -203,8 +204,8 @@ export class Vault {
 	  * This must be called before item contents can be decrypted.
 	  */
 	unlock(pwd: string) : Q.Promise<boolean> {
-		var result : Q.Deferred<boolean> = Q.defer();
-		var keys : Q.Deferred<EncryptionKeyEntry[]> = Q.defer();
+		var result = Q.defer<boolean>();
+		var keys = Q.defer<EncryptionKeyEntry[]>();
 
 		this.fs.read(Path.join(this.path, 'data/default/encryptionKeys.js'), (error: any, content:string) => {
 			if (error) {
@@ -266,7 +267,7 @@ export class Vault {
 	}
 
 	loadItem(uuid: string) : Q.Promise<Item> {
-		var item : Q.Deferred<Item> = Q.defer();
+		var item = Q.defer<Item>();
 		this.fs.read(Path.join(this.path, 'data/default/' + uuid + '.1password'), (error: any, content: string) => {
 			if (error) {
 				item.reject(error);
@@ -283,7 +284,7 @@ export class Vault {
 	  * except tombstone markers for deleted items.
 	  */
 	listItems() : Q.Promise<Item[]> {
-		var items : Q.Deferred<Item[]> = Q.defer();
+		var items = Q.defer<Item[]>();
 		this.fs.read(Path.join(this.path, 'data/default/contents.js'), (error: any, content:string) => {
 			if (error) {
 				items.reject(error);

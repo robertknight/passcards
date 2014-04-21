@@ -2,7 +2,6 @@
 
 import fs = require('fs');
 import Path = require('path');
-var dropbox = require('dropbox');
 
 /** Holds details of a file retrieved by a VFS implementation */
 export class FileInfo {

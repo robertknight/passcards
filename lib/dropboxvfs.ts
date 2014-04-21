@@ -2,10 +2,11 @@
 
 import fs = require('fs');
 import vfs = require('./vfs');
+	
+// TODO: Typings for dropbox-js
 var dropbox = require('dropbox');
 
 export class DropboxVFS implements vfs.VFS {
-	// TODO: Typings for dropbox-js
 	private client : any;
 
 	constructor() {
