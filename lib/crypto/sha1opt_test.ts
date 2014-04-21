@@ -1,7 +1,7 @@
-/// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
+/// <reference path="../../typings/DefinitelyTyped/node/node.d.ts" />
 
-var qunit = require('qunitjs');
-var fastSha1 = require('./sha1opt');
+import testLib = require('../test');
+import fastSha1 = require('./sha1opt');
 
 var SHA1_TEST_VECTORS = [
 	{ msg : "abc",
@@ -66,25 +66,7 @@ var PBKDF2_TEST_VECTORS = [
 	}
 ];
 
-qunit.done((result: any) => {
-	console.log('tests run. total: ' + result.total + ' failed: ' + result.failed);
-	if (typeof process != 'undefined') {
-		if (result.failed > 0) {
-			process.exit(1)
-		} else {
-			process.exit(0);
-		}
-	}
-});
-
-qunit.log((details: any) => {
-	if (!details.result) {
-		console.log('test failed');
-		console.log(details);
-	}
-});
-
-qunit.test('SHA-1', (assert: any) => {
+testLib.addTest('SHA-1', (assert) => {
 	var hash = new fastSha1.SHA1();
 	SHA1_TEST_VECTORS.forEach(function(tst) {
 		var srcBuf = fastSha1.bufferFromString(tst.msg);
@@ -95,7 +77,7 @@ qunit.test('SHA-1', (assert: any) => {
 	});
 });
 
-qunit.test('HMAC-SHA1', (assert: any) => {
+testLib.addTest('HMAC-SHA1', (assert) => {
 	var sha1 = new fastSha1.SHA1();
 	HMAC_TEST_VECTORS.forEach(function(tst) {
 		var keyBuf = fastSha1.bufferFromString(tst.key);
@@ -108,7 +90,7 @@ qunit.test('HMAC-SHA1', (assert: any) => {
 	});
 });
 
-qunit.test('PBKDF2-HMAC-SHA1', (assert: any) => {
+testLib.addTest('PBKDF2-HMAC-SHA1', (assert) => {
 	var pbkdf2 = new fastSha1.PBKDF2();
 	PBKDF2_TEST_VECTORS.forEach(function(tst) {
 		var passBuf = fastSha1.bufferFromString(tst.pass);
@@ -118,7 +100,5 @@ qunit.test('PBKDF2-HMAC-SHA1', (assert: any) => {
 	});
 });
 
-if (typeof window == 'undefined') {
-	qunit.load();
-}
+testLib.runTests();
 

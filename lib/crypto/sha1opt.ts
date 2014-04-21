@@ -71,7 +71,7 @@ var padLength = function(len: number) {
 	return bitsToBytes(roundUp(bytesToBits(len) + 1 + 64, 512));
 };
 
-var hexlify = exports.hexlify = function(buf: ArrayBufferView, len?: number) {
+export function hexlify(buf: ArrayBufferView, len?: number) : string {
 	var hex = '';
 	var byteBuf = new Uint8Array(buf.buffer);
 	len = len || byteBuf.length;
