@@ -1,10 +1,9 @@
 /// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
+/// <reference path="../typings/dropbox.d.ts" />
 
+import dropbox = require('dropbox');
 import fs = require('fs');
 import vfs = require('./vfs');
-	
-// TODO: Typings for dropbox-js
-var dropbox = require('dropbox');
 
 export class DropboxVFS implements vfs.VFS {
 	private client : any;
