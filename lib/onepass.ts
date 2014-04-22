@@ -12,6 +12,12 @@ var MD5 = require('crypto-js/md5');
 
 var cryptoImpl = new crypto.CryptoJsCrypto();
 
+// Converts a UNIX timestamp in milliseconds since
+// the epoch to a JS Date
+function dateFromUNIXDate(timestamp: number) : Date {
+	return new Date(timestamp * 1000);
+}
+
 export class EncryptionKeyEntry {
 	data : string;
 	identifier : string;
@@ -118,13 +124,13 @@ export var ItemTypes : ItemTypeMap = {
 
 /** Represents a single item in a 1Password vault. */
 export class Item {
-	updatedAt : number;
+	updatedAt : Date;
 	title : string;
 	securityLevel : string;
 	encrypted : string;
 	typeName : string;
 	uuid : string;
-	createdAt : number;
+	createdAt : Date;
 	location : string;
 	folderUuid : string;
 	faveIndex : number;
@@ -183,6 +189,28 @@ export class Item {
 		} else {
 			return this.typeName;
 		}
+	}
+
+	/** Parses an Item from JSON data in a .1password file.
+	  *
+	  * The item content is initially encrypted. The decrypted
+	  * contents can be retrieved using getContent()
+	  */
+	static fromAgileKeychainObject(vault: Vault, data: any) : Item {
+		var item = new Item(vault);
+		item.updatedAt = dateFromUNIXDate(data.updatedAt);
+		item.title = data.title;
+		item.securityLevel = data.securityLevel;
+		item.encrypted = atob(data.encrypted);
+		item.typeName = data.typeName;
+		item.uuid = data.uuid;
+		item.createdAt = dateFromUNIXDate(data.createdAt);
+		item.location = data.location;
+		item.folderUuid = data.folderUuid;
+		item.faveIndex = data.faveIndex;
+		item.trashed = data.trashed;
+		item.openContents = data.openContents;
+		return item;
 	}
 }
 
@@ -274,9 +302,7 @@ export class Vault {
 				item.reject(error);
 				return;
 			}
-			var rawItem : Item = JSON.parse(content);
-			rawItem.encrypted = atob(rawItem.encrypted);
-			item.resolve(rawItem);
+			item.resolve(Item.fromAgileKeychainObject(this, JSON.parse(content)));
 		});
 		return item.promise;
 	}
@@ -299,7 +325,7 @@ export class Vault {
 				item.typeName = entry[1];
 				item.title = entry[2];
 				item.location = entry[3];
-				item.updatedAt = entry[4];
+				item.updatedAt = dateFromUNIXDate(entry[4]);
 				item.folderUuid = entry[5];
 				item.trashed = entry[7] === "Y";
 
