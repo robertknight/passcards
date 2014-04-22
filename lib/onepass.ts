@@ -129,6 +129,7 @@ export class Item {
 	folderUuid : string;
 	faveIndex : number;
 	trashed : boolean;
+	openContents : ItemOpenContents;
 
 	private vault : Vault;
 	
@@ -152,7 +153,7 @@ export class Item {
 		var itemContent : Q.Deferred<ItemContent> = Q.defer<ItemContent>();
 		this.vault.loadItem(this.uuid).then((item:Item) => {
 			var content : string = this.vault.decryptItemData(item.securityLevel, item.encrypted);
-			itemContent.resolve(JSON.parse(content));
+			itemContent.resolve(ItemContent.fromAgileKeychainObject(JSON.parse(content)));
 		}).done();
 		return itemContent.promise;
 	}
@@ -348,6 +349,52 @@ export class ItemContent {
 	htmlMethod : string;
 	htmlAction : string;
 	htmlId : string;
+
+	constructor() {
+		this.sections = [];
+		this.urls = [];
+		this.notes = '';
+		this.formFields = [];
+		this.htmlMethod = '';
+		this.htmlAction = '';
+		this.htmlId = '';
+	}
+
+	/** Convert a decrypted JSON `contents` blob from a 1Password item
+	  * into an ItemContent instance.
+	  */
+	static fromAgileKeychainObject(data: any) : ItemContent {
+		var content = new ItemContent();
+		if (data.sections) {
+			data.sections.forEach((section: any) => {
+				content.sections.push(ItemSection.fromAgileKeychainObject(section));
+			});
+		}
+		if (data.URLs) {
+			data.URLs.forEach((url: any) => {
+				content.urls.push(url);
+			});
+		}
+		if (data.notes) {
+			content.notes = data.notes;
+		}
+		if (data.fields) {
+			data.fields.forEach((field: any) => {
+				content.formFields.push(field);
+			});
+		}
+		if (data.htmlAction) {
+			content.htmlAction = data.htmlAction;
+		}
+		if (data.htmlMethod) {
+			content.htmlMethod = data.htmlMethod;
+		}
+		if (data.htmlID) {
+			content.htmlId = data.htmlId;
+		}
+
+		return content;
+	}
 }
 
 export class ItemOpenContents {
@@ -359,6 +406,22 @@ export class ItemSection {
 	name : string;
 	title : string;
 	fields : ItemField[];
+
+	/** Convert a section entry from the JSON contents blob for
+	  * an item into an ItemSection instance.
+	  */
+	static fromAgileKeychainObject(data: any) : ItemSection {
+		var section = new ItemSection();
+		section.name = data.name;
+		section.title = data.title;
+		section.fields = [];
+		if (data.fields) {
+			data.fields.forEach((fieldData: any) => {
+				section.fields.push(ItemField.fromAgileKeychainObject(fieldData));
+			});
+		}
+		return section;
+	}
 }
 
 export class ItemField {
@@ -366,6 +429,19 @@ export class ItemField {
 	name : string;
 	title : string;
 	value : any;
+
+	valueString() : string {
+		return this.value;
+	}
+
+	static fromAgileKeychainObject(fieldData: any) : ItemField {
+		var field = new ItemField;
+		field.kind = fieldData.k;
+		field.name = fieldData.n;
+		field.title = fieldData.t;
+		field.value = fieldData.v;
+		return field;
+	}
 }
 
 export class WebFormField {

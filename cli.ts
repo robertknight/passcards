@@ -183,10 +183,52 @@ handlers['show'] = (args, result) => {
 		});
 		Q.all(itemContents).then((contents) => {
 			items.forEach((item, index) => {
+				if (index > 0) {
+					console.log('');
+				}
 				console.log(sprintf('%s (%s)', item.title, item.typeDescription()));
+				console.log('\nInfo:');
+				console.log(sprintf('  ID: %s', item.uuid));
+				console.log(sprintf('  Updated: %s', item.updatedAt));
+
+				if (item.openContents && item.openContents.tags) {
+					console.log(sprintf('  Tags: %s', item.openContents.tags.join(', ')));
+				}
+
+				var content = contents[index];
+				if (content.sections.length > 0) {
+					console.log('\nSections:');
+					content.sections.forEach((section) => {
+						if (section.title) {
+							console.log(sprintf('  %s', section.title));
+						}
+						section.fields.forEach((field) => {
+							console.log(sprintf('  %s: %s', field.title, field.valueString()));
+						});
+					});
+				}
+
+				if (content.urls.length > 0) {
+					console.log('\nWebsites:');
+					content.urls.forEach((url) => {
+						console.log(sprintf('  %s: %s', url.label, url.url));
+					});
+				}
+
+				if (content.formFields.length > 0) {
+					console.log('\nForm Fields:');
+					content.formFields.forEach((field) => {
+						console.log(sprintf('  %s (%s): %s', field.name, field.type, field.value));
+					});
+				}
+
+				if (content.htmlAction) {
+					console.log(sprintf('\nForm Destination: %s %s', content.htmlMethod.toUpperCase(),
+					  content.htmlAction));
+				}
 			});
 			result.resolve(0);
-		});
+		}).done();
 	}).done();
 };
 
