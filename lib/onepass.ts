@@ -341,6 +341,9 @@ export class AesKeyParams {
 	}
 }
 
+/** Represents the content of an item, usually stored
+  * encrypted in a vault.
+  */
 export class ItemContent {
 	sections : ItemSection[];
 	urls : ItemUrl[];
@@ -397,13 +400,24 @@ export class ItemContent {
 	}
 }
 
+/** Content of an item which is usually stored unencrypted
+  * as part of the overview data.
+  */
 export class ItemOpenContents {
 	tags : string[];
+
+	/** Indicates where this item will be displayed.
+	  * Known values are 'Always' (show everywhere)
+	  * and 'Never' (never shown in browser)
+	  */
 	scope : string;
 }
 
 export class ItemSection {
+	/** Internal name of the section. */
 	name : string;
+		  
+	/** User-visible title for the section. */
 	title : string;
 	fields : ItemField[];
 
@@ -444,14 +458,28 @@ export class ItemField {
 	}
 }
 
+/** Saved value of an input field in a web form. */
 export class WebFormField {
 	value : string;
+
+	/** 'id' attribute of the <input> element */
 	id : string;
+
+	/** Name of the field. For web forms this is the 'name'
+	  * attribute of the <input> element.
+	  */
 	name : string;
+
+	/** Single-char code identifying the type of field value.
+	  * (T)ext, (P)assword, (E)mail, (C)heckbox, (I)nput (eg. button)
+	  */
 	type : string;
+
+	/** Purpose of the field. Known values are 'username', 'password' */
 	designation : string;
 }
 
+/** Entry in an item's 'Websites' list. */
 export class ItemUrl {
 	label : string;
 	url : string;
