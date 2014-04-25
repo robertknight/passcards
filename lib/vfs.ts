@@ -64,7 +64,7 @@ export class FileVFS implements VFS {
 
 	read(path: string, cb: (error: any, content:string) => any) : void {
 		fs.readFile(this.absPath(path), (error: any, content: NodeBuffer) => {
-			cb(error, content.toString('binary'));
+			cb(error, content ? content.toString('binary') : null);
 		});
 	}
 
