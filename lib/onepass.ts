@@ -138,8 +138,9 @@ export class Item {
 	openContents : ItemOpenContents;
 
 	private vault : Vault;
+	private content : ItemContent;
 	
-	constructor(vault : Vault) {
+	constructor(vault? : Vault) {
 		this.vault = vault;
 	}
 
@@ -157,11 +158,27 @@ export class Item {
 	  */
 	getContent() : Q.Promise<ItemContent> {
 		var itemContent : Q.Deferred<ItemContent> = Q.defer<ItemContent>();
+		
+		if (this.content) {
+			itemContent.resolve(this.content);
+			return itemContent.promise;
+		}
+
+		if (!this.vault) {
+			itemContent.reject('content not available');
+			return itemContent.promise;
+		}
+
 		this.vault.loadItem(this.uuid).then((item:Item) => {
 			var content : string = this.vault.decryptItemData(item.securityLevel, item.encrypted);
 			itemContent.resolve(ItemContent.fromAgileKeychainObject(JSON.parse(content)));
 		}).done();
+
 		return itemContent.promise;
+	}
+
+	setContent(content: ItemContent) {
+		this.content = content;
 	}
 
 	/** Returns true if this is a 'tombstone' entry remaining from
@@ -201,7 +218,14 @@ export class Item {
 		item.updatedAt = dateFromUNIXDate(data.updatedAt);
 		item.title = data.title;
 		item.securityLevel = data.securityLevel;
-		item.encrypted = atob(data.encrypted);
+
+		if (data.encrypted) {
+			item.encrypted = atob(data.encrypted);
+		}
+		if (data.secureContents) {
+			item.setContent(ItemContent.fromAgileKeychainObject(data.secureContents));
+		}
+
 		item.typeName = data.typeName;
 		item.uuid = data.uuid;
 		item.createdAt = dateFromUNIXDate(data.createdAt);
