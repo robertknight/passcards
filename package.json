@@ -21,7 +21,8 @@
 	"license" : "BSD-3-Clause",
 	"main" : "build/cli.js",
 	"scripts" : {
-		"prepublish" : "make all"
+		"prepublish" : "make all",
+		"test" : "make test"
 	},
 	"bin" : {
 		"1pass" : "./1pass"
