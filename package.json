@@ -1,5 +1,5 @@
 {
-	"name" : "1pass",
+	"name" : "onepass-cli",
 	"description" : "A 1Password command-line client and library",
 	"version" : "0.1.0",
 	"devDependencies" : {
