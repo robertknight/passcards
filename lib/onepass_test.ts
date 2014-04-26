@@ -160,7 +160,6 @@ testLib.addAsyncTest('Test Vaults', (assert) => {
 	});
 
 	Q.all(done).then(() => {
-		console.log('all tests done');
 		testLib.continueTests();
 	});
 });

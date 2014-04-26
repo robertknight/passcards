@@ -34,16 +34,47 @@ export function continueTests() {
 	qunit.start();
 }
 
+interface AssertionResult {
+	result: boolean
+	actual: Object
+	expected: Object
+	message: string
+	source: string
+	module: string
+	name: string
+}
+
+interface TestResult {
+	name: string
+	module: string
+	failed: number
+	passed: number
+	total: number
+	duration: number
+}
+
+interface TestSuiteResult {
+	failed: number
+	passed: number
+	total: number
+	runtime: number
+}
+
 /** Run all tests queued with addTest() and addAsyncTest() */
 export function runTests() {
-	qunit.log((details: any) => {
+	qunit.log((details: AssertionResult) => {
 		if (!details.result) {
 			console.log('test failed');
 			console.log(details);
 		}
 	});
 
-	qunit.done((result: any) => {
+	qunit.testDone((result: TestResult) => {
+		var summary = result.passed == result.total ? 'PASS ' : 'FAIL';
+		console.log(summary + ': ' + result.name);
+	});
+
+	qunit.done((result: TestSuiteResult) => {
 		console.log('tests run. total: ' + result.total + ' failed: ' + result.failed);
 		if (typeof process != 'undefined') {
 			if (result.failed > 0) {
