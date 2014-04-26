@@ -9,10 +9,12 @@ app_srcs=$(wildcard *.ts)
 all_srcs=$(lib_srcs) $(app_srcs)
 test_files=$(shell find build/ -name '*_test.js')
 
-all: $(all_srcs)
+all: build/cli.js
+
+build/cli.js: $(all_srcs)
 	@$(TSC_NODE) --outDir build $(all_srcs)
 
-test: all
+test: build/cli.js
 	@echo $(test_files) | $(FOREACH_FILE) $(NODE)
 
 lint: $(all_srcs)
