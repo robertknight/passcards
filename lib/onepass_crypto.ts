@@ -75,7 +75,6 @@ export class CryptoJsCrypto implements CryptoImpl {
 	}
 	
 	md5Digest(input: string) : string {
-		var encoding = CryptoJS.enc.Latin1;
 		return CryptoJS.MD5(this.encoding.parse(input)).toString(this.encoding);
 	}
 }

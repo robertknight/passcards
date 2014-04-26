@@ -6,9 +6,7 @@ import crypto = require('./onepass_crypto');
 import vfs = require('./vfs');
 import Path = require('path');
 
-var btoa = require('btoa');
 var atob = require('atob');
-var MD5 = require('crypto-js/md5');
 
 var cryptoImpl = new crypto.CryptoJsCrypto();
 
@@ -546,14 +544,6 @@ function openSslKey(password: string, salt: string) : AesKeyParams {
 	var key = cryptoImpl.md5Digest(data);
 	var iv = cryptoImpl.md5Digest(key + data);
 	return new AesKeyParams(key, iv);
-}
-
-function strChars(str: string) : string {
-	var result : number[] = [];
-	for (var i=0; i < str.length; i++) {
-		result.push(str.charCodeAt(i));
-	}
-	return '[' + result.join(' ') + ']';
 }
 
 export function decryptKey(masterPwd: any, encryptedKey: string, salt: string, iterCount: number, validation: string) : string {

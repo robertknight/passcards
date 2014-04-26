@@ -104,9 +104,6 @@ export function compareObjects(a: any, b: any, expectedAdditions?: string[], exp
 		return [];
 	}
 
-	var additions : string[] = [];
-	var deletions : string[] = [];
-
 	expectedAdditions = expectedAdditions || [];
 	expectedDeletions = expectedDeletions || [];
 
