@@ -1,6 +1,7 @@
 /// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
 
 var qunit = require('qunitjs');
+var xdiff = require('xdiff');
 
 export interface Assert {
 	equal(actual: any, expected: any, message: string) : void;
@@ -41,5 +42,38 @@ export function runTests() {
 	if (typeof window == 'undefined') {
 		qunit.load();
 	}
+}
+
+/** Compares two values (objects or arrays) and outputs a diff
+ * between 'a' and 'b', excluding
+ * any keys which are expected to have been added in 'b' and
+ * any keys which are expected to have been removed in 'b'
+ * expectedAdditions and expectedDeletions are arrays of '/'-separated paths
+ * beginning with 'root/'
+ */
+export function compareObjects(a: any, b: any, expectedAdditions?: string[], expectedDeletions?: string[]) : any[] {
+	var diff = xdiff.diff(a, b);
+	if (!diff) {
+		// objects are exactly equal
+		return [];
+	}
+
+	var additions : string[] = [];
+	var deletions : string[] = [];
+
+	expectedAdditions = expectedAdditions || [];
+	expectedDeletions = expectedDeletions || [];
+
+	return diff.filter((change: any[]) => {
+		var type : string = change[0];
+		var path : string = change[1].join('/');
+
+		if (type == 'set' && expectedAdditions.indexOf(path) != -1) {
+			return false;
+		} else if (type == 'del' && expectedDeletions.indexOf(path) != -1) {
+			return false
+		}
+		return true;
+	});
 }
 

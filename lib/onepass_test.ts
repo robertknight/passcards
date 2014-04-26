@@ -6,8 +6,6 @@ import exportLib = require('./export');
 import vfs = require('./vfs');
 import Q = require('q');
 
-var xdiff = require('xdiff');
-
 class TestCase {
 	/** Relative path to the vault within the test data dir */
 	path : string;
@@ -28,43 +26,77 @@ var TEST_VAULTS : TestCase[] = [
 		itemDataPath : 'test.1pif'
 	}
 ];
+	
+var fs = new vfs.FileVFS('lib/test-data');
 
 class ItemAndContent {
 	item : onepass.Item;
 	content : onepass.ItemContent;
 }
 
-// compares two objects and outputs a diff between 'a' and 'b', excluding
-// any keys which are expected to have been added in 'b' and
-// any keys which are expected to have been removed in 'b'
-//
-// expectedAdditions and expectedDeletions are arrays of '/'-separated paths
-// beginning with 'root/'
-//
-function compareObjects(a: any, b: any, expectedAdditions: string[], expectedDeletions: string[]) : any[] {
-	var diff = xdiff.diff(a, b);
-	var additions : string[] = [];
-	var deletions : string[] = [];
-
-	return diff.filter((change: any[]) => {
-		var type : string = change[0];
-		var path : string = change[1].join('/');
-
-		if (type == 'set' && expectedAdditions.indexOf(path) != -1) {
-			return false;
-		} else if (type == 'del' && expectedDeletions.indexOf(path) != -1) {
-			return false
-		}
-		return true;
-	});
-}
+testLib.addAsyncTest('Import item from .1pif file', (assert) => {
+	var importer = new exportLib.PIFImporter();
+	var actualItems = importer.importItems(fs, 'test.1pif');
+	actualItems.then((items) => {
+		assert.equal(items.length, 1, 'Imported expected number of items');
+		var expectedItem = onepass.Item.fromAgileKeychainObject(null, {
+		  "vault": null,
+		  "updatedAt": "2014-04-25T08:05:20.000Z",
+		  "title": "Facebook",
+		  "securityLevel": "SL5",
+		  "secureContents": {
+			"sections": [],
+			"URLs": [
+			  {
+				"label": "website",
+				"url": "facebook.com"
+			  }
+			],
+			"notes": "",
+			"fields": [
+			  {
+				"value": "john.doe@gmail.com",
+				"id": "",
+				"name": "username",
+				"type": "T",
+				"designation": "username"
+			  },
+			  {
+				"value": "Wwk-ZWc-T9MO",
+				"id": "",
+				"name": "password",
+				"type": "P",
+				"designation": "password"
+			  }
+			],
+			"htmlMethod": "",
+			"htmlAction": "",
+			"htmlId": ""
+		  },
+		  "typeName": "webforms.WebForm",
+		  "uuid": "CA20BB325873446966ED1F4E641B5A36",
+		  "createdAt": "2014-04-25T08:05:20.000Z",
+		  "location": "facebook.com",
+		  "folderUuid": "",
+		  "faveIndex": 0,
+		  "trashed": false,
+		  "openContents": {
+			"tags": null,
+			"scope": ""
+		  }
+		});
+		var diff = testLib.compareObjects(items[0], expectedItem);
+		assert.equal(diff.length, 0, 'Actual/expected imported items match');
+		
+		testLib.continueTests();
+	}).done();
+});
 
 // set of tests which open a vault, unlock it,
 // fetch all items and compare to an expected set
 // of items in .1pif format
 testLib.addAsyncTest('Test Vaults', (assert) => {
 	var done : Q.Promise<boolean>[] = [];
-	var fs = new vfs.FileVFS('lib/test-data');
 	var importer = new exportLib.PIFImporter();
 
 	TEST_VAULTS.forEach((tst) => {
@@ -113,7 +145,7 @@ testLib.addAsyncTest('Test Vaults', (assert) => {
 				var actualItem = actualAry[i].item;
 				actualItem.setContent(actualAry[i].content);
 
-				var diff = compareObjects(expectedItem, actualItem,
+				var diff = testLib.compareObjects(expectedItem, actualItem,
 				  ['root/vault'],
 				  ['root/securityLevel', 'root/createdAt', 'root/faveIndex', 'root/openContents']
 				);
