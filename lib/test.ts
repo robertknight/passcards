@@ -1,7 +1,8 @@
 /// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
+/// <reference path="../typings/xdiff.d.ts" />
 
 var qunit = require('qunitjs');
-var xdiff = require('xdiff');
+import xdiff = require('xdiff');
 
 export interface Assert {
 	equal(actual: any, expected: any, message: string) : void;
