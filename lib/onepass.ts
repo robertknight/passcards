@@ -35,7 +35,7 @@ export interface ItemTypeMap {
 }
 
 /** Map of item type codes to human-readable item type names */
-export var ItemTypes : ItemTypeMap = {
+export var ITEM_TYPES : ItemTypeMap = {
 	"webforms.WebForm": {
 		name:       "Login",
 		shortAlias: "login",
@@ -199,8 +199,8 @@ export class Item {
 
 	/** Returns the human-readable type name for this item's type. */
 	typeDescription() : string {
-		if (ItemTypes[this.typeName]) {
-			return ItemTypes[this.typeName].name;
+		if (ITEM_TYPES[this.typeName]) {
+			return ITEM_TYPES[this.typeName].name;
 		} else {
 			return this.typeName;
 		}

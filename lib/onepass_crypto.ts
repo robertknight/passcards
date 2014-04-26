@@ -3,7 +3,7 @@
 import crypto = require('crypto');
 import sha1opt = require('./crypto/sha1opt');
 
-var CryptoJS = require('crypto-js');
+var cryptoJS = require('crypto-js');
 
 // interface for crypto functions required for
 // working with 1Password vaults
@@ -41,19 +41,19 @@ export class CryptoJsCrypto implements CryptoImpl {
 	encoding : any
 
 	constructor() {
-		this.encoding = CryptoJS.enc.Latin1;
+		this.encoding = cryptoJS.enc.Latin1;
 	}
 
 	aesCbcDecrypt(key:string, cipherText: string, iv: string) : string {
 		var keyArray = this.encoding.parse(key);
 		var ivArray = this.encoding.parse(iv);
 		var cipherArray = this.encoding.parse(cipherText);
-		var cipherParams = CryptoJS.lib.CipherParams.create({
+		var cipherParams = cryptoJS.lib.CipherParams.create({
 			ciphertext: cipherArray
 		});
-		return CryptoJS.AES.decrypt(cipherParams, keyArray, {
-			mode : CryptoJS.mode.CBC,
-			padding : CryptoJS.pad.Pkcs7,
+		return cryptoJS.AES.decrypt(cipherParams, keyArray, {
+			mode : cryptoJS.mode.CBC,
+			padding : cryptoJS.pad.Pkcs7,
 			iv: ivArray
 		}).toString(this.encoding);
 	}
@@ -75,7 +75,7 @@ export class CryptoJsCrypto implements CryptoImpl {
 	}
 	
 	md5Digest(input: string) : string {
-		return CryptoJS.MD5(this.encoding.parse(input)).toString(this.encoding);
+		return cryptoJS.MD5(this.encoding.parse(input)).toString(this.encoding);
 	}
 }
 
