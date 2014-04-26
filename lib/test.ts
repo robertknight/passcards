@@ -9,18 +9,32 @@ export interface Assert {
 	ok(result: boolean) : void;
 }
 
+/** Add a test which completes synchronously.
+  *
+  * See qunit.test()
+  */
 export function addTest(name : string, testFunc : (assert: Assert) => void) {
 	qunit.test(name, testFunc);
 }
 
+/** Add a test which completes asynchronously. @p testFunc must call
+  * continueTests() once all async operations have completed to signal
+  * the end of the test.
+  *
+  * See qunit.asyncTest()
+  */
 export function addAsyncTest(name : string, testFunc : (assert: Assert) => void) {
 	qunit.asyncTest(name, testFunc);
 }
 
+/** Inform the test runner that an async test has finished. This must be called
+  * once all async operations in a test added with addAsyncTest() have completed.
+  */
 export function continueTests() {
 	qunit.start();
 }
 
+/** Run all tests queued with addTest() and addAsyncTest() */
 export function runTests() {
 	qunit.log((details: any) => {
 		if (!details.result) {
