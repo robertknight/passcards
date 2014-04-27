@@ -2,5 +2,7 @@
 
 var cli = require('./build/cli')
 var app = new cli.CLI();
-app.exec();
+app.exec().then(function(status) {
+	process.exit(status);
+}).done();
 

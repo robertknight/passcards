@@ -22,7 +22,13 @@ interface HandlerMap {
 }
 
 export class CLI {
-	exec() {
+	static patternMatch(pattern: string, item: onepass.Item) {
+		pattern = pattern.toLowerCase();
+		var titleLower = item.title.toLowerCase();
+		return titleLower.indexOf(pattern) != -1;
+	}
+
+	exec() : Q.Promise<number> {
 		var parser = function() {
 			var parser = new argparse.ArgumentParser({
 				description: '1Password command-line client'
@@ -79,13 +85,10 @@ export class CLI {
 			storage.setCredentials(credentials);
 			authenticated.resolve(storage);
 		} else {
-			console.log('Logging into Dropbox...');
 			storage.login((err: any, account:string) => {
 				if (err) {
-					console.log('Dropbox login failed');
 					authenticated.reject(err);
 				} else {
-					console.log('Dropbox login success');
 					fs.writeFileSync(credFile, JSON.stringify(storage.credentials()));
 					authenticated.resolve(storage);
 				}
@@ -113,24 +116,21 @@ export class CLI {
 				console.log('Unlocking vault...');
 				vault.unlock(masterPwd).then(() => {
 					unlocked.resolve(true);
+				}, (err) => {
+					console.log('Failed to unlock vault');
+					unlocked.resolve(false);
 				}).done();
 				currentVault = vault;
 			});
 		})
 		.done();
 
-		function patternMatch(pattern: string, item: onepass.Item) {
-			pattern = pattern.toLowerCase();
-			var titleLower = item.title.toLowerCase();
-			return titleLower.indexOf(pattern) != -1;
-		}
-
 		function lookupItems(vault: onepass.Vault, pattern: string) : Q.Promise<onepass.Item[]> {
 			var result = Q.defer<onepass.Item[]>();
 			vault.listItems().then((items:onepass.Item[]) => {
 				var matches : onepass.Item[] = [];
 				items.forEach((item) => {
-					if (patternMatch(pattern, item)) {
+					if (CLI.patternMatch(pattern, item)) {
 						matches.push(item);
 					}
 				});
@@ -149,7 +149,7 @@ export class CLI {
 					return a.title.toLowerCase().localeCompare(b.title.toLowerCase());
 				});
 				items.forEach((item) => {
-					if (!args.pattern || patternMatch(args.pattern[0], item)) {
+					if (!args.pattern || CLI.patternMatch(args.pattern[0], item)) {
 						console.log(sprintf('%s (%s, %s)', item.title, item.typeDescription(), item.shortID()));
 					}
 				});
@@ -240,7 +240,12 @@ export class CLI {
 
 		// process commands
 		var exitStatus = Q.defer<number>();
-		unlocked.promise.then(() => {
+		unlocked.promise.then((isUnlocked) => {
+			if (!isUnlocked) {
+				exitStatus.resolve(2);
+				return;
+			}
+
 			if (handlers[args.command]) {
 				handlers[args.command](args, exitStatus);
 			} else {
@@ -250,10 +255,7 @@ export class CLI {
 		})
 		.done();
 
-		exitStatus.promise.then((status) => {
-			process.exit(status);
-		})
-		.done();
+		return exitStatus.promise;
 	}
 }
 

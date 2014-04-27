@@ -18,8 +18,13 @@ export class DropboxVFS implements vfs.VFS {
 	}
 
 	login(cb: (error:any, account: string) => any) {
-		// TODO : Save credentials
-		this.client.authenticate(cb);
+		console.log('Logging into Dropbox...');
+		this.client.authenticate((err, account) => {
+			if (err) {
+				console.log('Dropbox login failed');
+			}
+			cb(err, account);
+		});
 	}
 
 	isLoggedIn() : boolean {
