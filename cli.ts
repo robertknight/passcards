@@ -1,15 +1,21 @@
 /// <reference path="typings/DefinitelyTyped/node/node.d.ts" />
+/// <reference path="typings/DefinitelyTyped/mkdirp/mkdirp.d.ts" />
 /// <reference path="typings/DefinitelyTyped/q/Q.d.ts" />
+/// <reference path="typings/DefinitelyTyped/promptly/promptly.d.ts" />
+
 /// <reference path="typings/argparse.d.ts" />
 /// <reference path="typings/sprintf.d.ts" />
 
 import Q = require('q');
-import dropboxvfs = require('./lib/dropboxvfs');
+import argparse = require('argparse');
+import mkdirp = require('mkdirp')
 import fs = require('fs');
+import promptly = require('promptly');
+import sprintf = require('sprintf');
+
+import dropboxvfs = require('./lib/dropboxvfs');
 import onepass = require('./lib/onepass');
 import vfs = require('./lib/vfs');
-import sprintf = require('sprintf');
-import argparse = require('argparse');
 
 interface HandlerMap {
 	[index: string] : (args: any, result : Q.Deferred<number>) => void;
@@ -49,10 +55,13 @@ export class CLI {
 			return parser;
 		}();
 
+		var CONFIG_DIR = process.env.HOME + "/.config/onepass-web"
 		var args = parser.parseArgs();
 
+		mkdirp.sync(CONFIG_DIR)
+
 		// connect to sync service and open vault
-		var credFile : string = 'dropbox-credentials.json';
+		var credFile : string = CONFIG_DIR + '/dropbox-credentials.json';
 		var credentials : Object = null;
 		if (fs.existsSync(credFile)) {
 			credentials = JSON.parse(fs.readFileSync(credFile).toString());
@@ -77,7 +86,7 @@ export class CLI {
 					authenticated.reject(err);
 				} else {
 					console.log('Dropbox login success');
-					fs.writeFileSync('dropbox-credentials.json', JSON.stringify(storage.credentials()));
+					fs.writeFileSync(credFile, JSON.stringify(storage.credentials()));
 					authenticated.resolve(storage);
 				}
 			});
@@ -100,12 +109,13 @@ export class CLI {
 		// unlock vault
 		var unlocked = Q.defer<boolean>();
 		vault.promise.then((vault: onepass.Vault) => {
-			console.log('Unlocking vault...');
-			var masterPwd = fs.readFileSync('master-pwd').toString('binary').trim();
-			vault.unlock(masterPwd).then(() => {
-				unlocked.resolve(true);
+			promptly.password('Master password: ', (err, masterPwd) => {
+				console.log('Unlocking vault...');
+				vault.unlock(masterPwd).then(() => {
+					unlocked.resolve(true);
+				}).done();
+				currentVault = vault;
 			});
-			currentVault = vault;
 		})
 		.done();
 
@@ -127,7 +137,7 @@ export class CLI {
 				result.resolve(matches);
 			}, (err:any) => {
 				console.log('Looking up items failed');
-			});
+			}).done();
 			return result.promise;
 		}
 		
