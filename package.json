@@ -36,5 +36,9 @@
 	"author" : {
 		"name" : "Robert Knight",
 		"email" : "robertknight@gmail.com"
-	}
+	},
+	"files" : [
+		"build",
+		"1pass"
+	]
 }
