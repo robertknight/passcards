@@ -1,2 +1,6 @@
-#!/usr/bin/env sh
-node build/cli.js $@
+#!/usr/bin/env node
+
+var cli = require('./build/cli')
+var app = new cli.CLI();
+app.exec();
+
