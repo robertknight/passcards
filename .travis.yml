@@ -2,5 +2,5 @@ language: node_js
 notifications:
     email: false
 node_js:
- - "0.11"
+ # - "0.11" // FIXME - Support node.js v0.11
  - "0.10"
