@@ -24,11 +24,8 @@ export class PIFExporter implements Exporter {
 export class PIFImporter {
 	importItems(fs: vfs.VFS, path: string) : Q.Promise<onepass.Item[]> {
 		var result = Q.defer<onepass.Item[]>();
-		fs.read(path, (err, content) => {
-			if (err) {
-				throw err;
-			}
-			
+		var content = fs.read(path);
+		content.then((content) => {
 			// .1pif files contain unencrypted JSON blobs separated by
 			// '***<uuid>***' markers
 			var re = /\*{3}[0-9a-f\-]{36}\*{3}/
@@ -43,6 +40,8 @@ export class PIFImporter {
 			});
 
 			result.resolve(items);
+		}, (err) => {
+			throw err;
 		});
 		return result.promise;
 	}

@@ -258,11 +258,8 @@ export class Vault {
 		var result = Q.defer<boolean>();
 		var keys = Q.defer<EncryptionKeyEntry[]>();
 
-		this.fs.read(Path.join(this.path, 'data/default/encryptionKeys.js'), (error: any, content:string) => {
-			if (error) {
-				result.reject(error);
-				return;
-			}
+		var content = this.fs.read(Path.join(this.path, 'data/default/encryptionKeys.js'));
+		content.then((content:string) => {
 			var keyList = JSON.parse(content);
 			if (!keyList.list) {
 				result.reject('Missing `list` entry in encryptionKeys.js file');
@@ -294,7 +291,10 @@ export class Vault {
 			});
 			keys.resolve(vaultKeys);
 			result.resolve(true);
-		});
+		}, (err: any) => {
+			result.reject(err);
+		})
+		.done();
 
 		keys.promise.then((keys: EncryptionKeyEntry[]) => {
 			this.keys = keys;
@@ -319,13 +319,15 @@ export class Vault {
 
 	loadItem(uuid: string) : Q.Promise<Item> {
 		var item = Q.defer<Item>();
-		this.fs.read(Path.join(this.path, 'data/default/' + uuid + '.1password'), (error: any, content: string) => {
-			if (error) {
-				item.reject(error);
-				return;
-			}
+		var content = this.fs.read(Path.join(this.path, 'data/default/' + uuid + '.1password'));
+		
+		content.then((content) => {
 			item.resolve(Item.fromAgileKeychainObject(this, JSON.parse(content)));
-		});
+		}, (err: any) => {
+			item.reject(err);
+		})
+		.done();
+
 		return item.promise;
 	}
 
@@ -334,11 +336,8 @@ export class Vault {
 	  */
 	listItems() : Q.Promise<Item[]> {
 		var items = Q.defer<Item[]>();
-		this.fs.read(Path.join(this.path, 'data/default/contents.js'), (error: any, content:string) => {
-			if (error) {
-				items.reject(error);
-				return;
-			}
+		var content = this.fs.read(Path.join(this.path, 'data/default/contents.js'));
+		content.then((content) => {
 			var entries = JSON.parse(content);
 			var vaultItems : Item[] = [];
 			entries.forEach((entry: any[]) => {
@@ -359,7 +358,9 @@ export class Vault {
 				vaultItems.push(item);
 			});
 			items.resolve(vaultItems);
-		});
+		}, (err: any) => {
+			items.reject(err);
+		}).done();
 		return items.promise;
 	}
 

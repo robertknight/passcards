@@ -1,6 +1,8 @@
 /// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
+/// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
 
 import fs = require('fs');
+import Q = require('q');
 import Path = require('path');
 
 /** Holds details of a file retrieved by a VFS implementation */
@@ -27,9 +29,9 @@ export interface VFS {
 	/** Search for files whose name contains @p namePattern */
 	search(namePattern: string, cb: (files: FileInfo[]) => any) : void;
 	/** Read the contents of a file at @p path */
-	read(path: string, cb: (error: any, content:string) => any) : void;
+	read(path: string) : Q.Promise<string>
 	/** Write the contents of a file at @p path */
-	write(path: string, content: string, cb: (error:any) => any) : void;
+	write(path: string, content: string) : Q.Promise<any>;
 	/** List the contents of a directory */
 	list(path: string, cb: (error: any, files: FileInfo[]) => any) : void;
 	/** Remove a file */
@@ -62,14 +64,28 @@ export class FileVFS implements VFS {
 		this.searchIn('', namePattern, cb);
 	}
 
-	read(path: string, cb: (error: any, content:string) => any) : void {
+	read(path: string) : Q.Promise<string> {
+		var result = Q.defer<string>();
 		fs.readFile(this.absPath(path), (error: any, content: NodeBuffer) => {
-			cb(error, content ? content.toString('binary') : null);
+			if (error) {
+				result.reject(error);
+				return;
+			}
+			result.resolve(content.toString('binary'));
 		});
+		return result.promise;
 	}
 
-	write(path: string, content: string, cb: (error:any) => any) : void {
-		fs.writeFile(this.absPath(path), content, cb)
+	write(path: string, content: string) : Q.Promise<void> {
+		var result = Q.defer<void>();
+		fs.writeFile(this.absPath(path), (error: any) => {
+			if (error) {
+				result.reject(error);
+				return;
+			}
+			result.resolve(null);
+		});
+		return result.promise;
 	}
 
 	list(path: string, cb: (error: any, files: FileInfo[]) => any) : void {
