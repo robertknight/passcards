@@ -31,11 +31,11 @@ export interface VFS {
 	/** Read the contents of a file at @p path */
 	read(path: string) : Q.Promise<string>
 	/** Write the contents of a file at @p path */
-	write(path: string, content: string) : Q.Promise<any>;
+	write(path: string, content: string) : Q.Promise<void>;
 	/** List the contents of a directory */
-	list(path: string, cb: (error: any, files: FileInfo[]) => any) : void;
+	list(path: string) : Q.Promise<FileInfo[]>;
 	/** Remove a file */
-	rm(path: string, cb: (error: any) => any) : void;
+	rm(path: string) : Q.Promise<void>;
 }
 
 /** VFS implementation which operates on the local filesystem */
@@ -47,7 +47,8 @@ export class FileVFS implements VFS {
 	}
 
 	searchIn(path: string, namePattern: string, cb: (files: FileInfo[]) => any) : void {
-		this.list(path, (error: any, files: FileInfo[]) => {
+		var fileList = this.list(path);
+		fileList.then((files) => {
 			files.forEach((file : FileInfo) => {
 				if (file.name.indexOf(namePattern) != -1) {
 					cb([file]);
@@ -57,7 +58,9 @@ export class FileVFS implements VFS {
 					this.searchIn(file.path, namePattern, cb);
 				}
 			});
-		});
+		}, (error) => {
+			throw error;
+		}).done();
 	}
 
 	search(namePattern: string, cb: (files: FileInfo[]) => any) : void {
@@ -88,11 +91,12 @@ export class FileVFS implements VFS {
 		return result.promise;
 	}
 
-	list(path: string, cb: (error: any, files: FileInfo[]) => any) : void {
+	list(path: string) : Q.Promise<FileInfo[]> {
+		var result = Q.defer<FileInfo[]>();
 		var absPath : string = this.absPath(path);
 		fs.readdir(absPath, (err: any, files: string[]) => {
 			if (err) {
-				console.log('Unable to read dir ' + absPath);
+				result.reject(err);
 				return;
 			}
 
@@ -114,15 +118,24 @@ export class FileVFS implements VFS {
 					infoList.push(fi);
 					++done;
 					if (done == files.length) {
-						cb(null, infoList);
+						result.resolve(infoList);
 					}
 				});
 			});
 		});
+		return result.promise;
 	}
 
-	rm(path: string, cb: (error: any) => any) {
-		fs.unlink(this.absPath(path), cb);
+	rm(path: string) : Q.Promise<void> {
+		var result = Q.defer<void>();
+		fs.unlink(this.absPath(path), (error) => {
+			if (error) {
+				result.reject(error);
+				return;
+			}
+			result.resolve(null);
+		});
+		return result.promise;
 	}
 
 	login(cb: (error:any, account: string) => any) {

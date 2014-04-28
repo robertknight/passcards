@@ -69,25 +69,33 @@ export class DropboxVFS implements vfs.VFS {
 	}
 
 	/** List the contents of a directory */
-	list(path: string, cb: (error: any, files: vfs.FileInfo[]) => any) {
+	list(path: string) : Q.Promise<vfs.FileInfo[]> {
+		var result = Q.defer<vfs.FileInfo[]>();
 		this.client.readdir(path, {}, (error, names, folderInfo, files) => {
 			if (error) {
-				cb(error, []);
+				result.reject(error);
 				return;
 			}
 			var fileList : vfs.FileInfo[] = [];
 			files.forEach((file) => {
 				fileList.push(this.toVfsFile(file));
 			});
-			cb(null, fileList);
+			result.resolve(fileList);
 		});
+		return result.promise;
 	}
 
 	/** Remove a file */
-	rm(path: string, cb: (error: any) => any) {
+	rm(path: string) : Q.Promise<void> {
+		var result = Q.defer<void>();
 		this.client.remove(path, (error) => {
-			cb(error);
+			if (error) {
+				result.reject(error);
+				return;
+			}
+			result.resolve(null);
 		});
+		return result.promise;
 	}
 
 	credentials() : Object {
