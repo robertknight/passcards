@@ -35,6 +35,18 @@ export class DropboxVFS implements vfs.VFS {
 		return this.client.isAuthenticated();
 	}
 
+	stat(path: string) : Q.Promise<vfs.FileInfo> {
+		var result = Q.defer<vfs.FileInfo>();
+		this.client.stat(path, {}, (err, stat) => {
+			if (err) {
+				result.reject(err);
+				return;
+			}
+			result.resolve(this.toVfsFile(stat));
+		});
+		return result.promise;
+	}
+
 	/** Search for files whose name contains @p namePattern */
 	search(namePattern: string, cb: (files: vfs.FileInfo[]) => any) {
 		this.client.search('/', namePattern, {}, (err, files) => {
@@ -108,6 +120,18 @@ export class DropboxVFS implements vfs.VFS {
 
 	setCredentials(credentials : Object) {
 		this.client.setCredentials(credentials);
+	}
+
+	mkpath(path: string) : Q.Promise<void> {
+		var result = Q.defer<void>();
+		this.client.mkdir(path, (err, stat) => {
+			if (err) {
+				result.reject(err);
+				return;
+			}
+			result.resolve(null);
+		});
+		return result.promise;
 	}
 
 	private toVfsFile(file: any) : vfs.FileInfo {
