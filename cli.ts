@@ -46,6 +46,62 @@ export class CLI {
 		return result.promise;
 	}
 
+	private static createParser() : argparse.ArgumentParser {
+		var parser = new argparse.ArgumentParser({
+			description: '1Password command-line client'
+		});
+		parser.addArgument(['-s', '--storage'], {
+			action: 'store',
+			nargs: 1,
+			defaultValue: 'file',
+			dest: 'storage'
+		});
+		var subcommands = parser.addSubparsers({dest:'command'});
+
+		var listCommand = subcommands.addParser('list');
+		listCommand.addArgument(['-p', '--pattern'], {
+			action:'store',
+			dest: 'pattern',
+			nargs: 1,
+			type: 'string'
+		})
+
+		var showJSONCommand = subcommands.addParser('show-json');
+		showJSONCommand.addArgument(['pattern'], {action:'store'});
+
+		var showOverviewCommand = subcommands.addParser('show-overview');
+		showOverviewCommand.addArgument(['pattern'], {action:'store'});
+
+		var showCommand = subcommands.addParser('show');
+		showCommand.addArgument(['pattern'], {action:'store'});
+
+		return parser;
+	}
+
+	private static openVault(storage: vfs.VFS) : Q.Promise<onepass.Vault> {
+		var vault = Q.defer<onepass.Vault>();
+		storage.search('.agilekeychain', (files: vfs.FileInfo[]) => {
+			files.forEach((file: vfs.FileInfo) => {
+				vault.resolve(new onepass.Vault(storage, file.path));
+			});
+		});
+		return vault.promise;
+	}
+
+	private static unlockVault(vault: onepass.Vault) : Q.Promise<boolean> {
+		var unlocked = Q.defer<boolean>();
+		promptly.password('Master password: ', (err, masterPwd) => {
+			console.log('Unlocking vault...');
+			vault.unlock(masterPwd).then(() => {
+				unlocked.resolve(true);
+			}, (err) => {
+				console.log('Failed to unlock vault');
+				unlocked.resolve(false);
+			}).done();
+		});
+		return unlocked.promise;
+	}
+
 	constructor() {
 		this.configDir = process.env.HOME + "/.config/onepass-web"
 	}
@@ -54,39 +110,7 @@ export class CLI {
 	  * a promise for the exit code.
 	  */
 	exec(argv: string[]) : Q.Promise<number> {
-		var parser = function() {
-			var parser = new argparse.ArgumentParser({
-				description: '1Password command-line client'
-			});
-			parser.addArgument(['-s', '--storage'], {
-				action: 'store',
-				nargs: 1,
-				defaultValue: 'file',
-				dest: 'storage'
-			});
-			var subcommands = parser.addSubparsers({dest:'command'});
-
-			var listCommand = subcommands.addParser('list');
-			listCommand.addArgument(['-p', '--pattern'], {
-				action:'store',
-				dest: 'pattern',
-				nargs: 1,
-				type: 'string'
-			})
-
-			var showJSONCommand = subcommands.addParser('show-json');
-			showJSONCommand.addArgument(['pattern'], {action:'store'});
-
-			var showOverviewCommand = subcommands.addParser('show-overview');
-			showOverviewCommand.addArgument(['pattern'], {action:'store'});
-
-			var showCommand = subcommands.addParser('show');
-			showCommand.addArgument(['pattern'], {action:'store'});
-
-			return parser;
-		}();
-
-		var args = parser.parseArgs(argv);
+		var args = CLI.createParser().parseArgs(argv);
 
 		mkdirp.sync(this.configDir)
 
@@ -103,51 +127,38 @@ export class CLI {
 		} else if (args.storage == 'dropbox') {
 			storage = new dropboxvfs.DropboxVFS();
 		}
-		var authenticated = Q.defer();
+		var authenticated = Q.defer<boolean>();
 
 		if (credentials) {
 			storage.setCredentials(credentials);
-			authenticated.resolve(storage);
+			authenticated.resolve(true);
 		} else {
 			storage.login((err: any, account:string) => {
 				if (err) {
 					authenticated.reject(err);
 				} else {
 					fs.writeFileSync(credFile, JSON.stringify(storage.credentials()));
-					authenticated.resolve(storage);
+					authenticated.resolve(true);
 				}
 			});
 		}
 
-		// open vault
-		var vault = Q.defer<onepass.Vault>();
 		var currentVault : onepass.Vault;
-		authenticated.promise.then(() => {
-			storage.search('.agilekeychain', (files: vfs.FileInfo[]) => {
-				files.forEach((file: vfs.FileInfo) => {
-					vault.resolve(new onepass.Vault(storage, file.path));
-				});
-			});
-		}, (err: any) => {
-			console.log('authentication failed');
-		})
-		.done();
-
-		// unlock vault
 		var unlocked = Q.defer<boolean>();
-		vault.promise.then((vault: onepass.Vault) => {
-			promptly.password('Master password: ', (err, masterPwd) => {
-				console.log('Unlocking vault...');
-				vault.unlock(masterPwd).then(() => {
-					unlocked.resolve(true);
-				}, (err) => {
-					console.log('Failed to unlock vault');
-					unlocked.resolve(false);
-				}).done();
+
+		authenticated.promise.then(() => {
+			var vault = CLI.openVault(storage);
+
+			vault.then((vault: onepass.Vault) => {
 				currentVault = vault;
-			});
-		})
-		.done();
+				return CLI.unlockVault(vault);
+			}).then((isUnlocked: boolean) => {
+				unlocked.resolve(isUnlocked);
+			}).done();
+
+		}, (err: any) => {
+			console.log('authentication failed: ', err);
+		}).done();
 		
 		var handlers : HandlerMap = {};
 
