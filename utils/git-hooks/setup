@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+
+HOOK_DIR=$PWD/utils/git-hooks
+
+ln -i -s $HOOK_DIR/pre-commit .git/hooks/pre-commit
