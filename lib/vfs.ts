@@ -15,8 +15,10 @@ export class FileInfo {
 /** Interface for async file system access.
  */
 export interface VFS {
-	/** Logs in to the VFS service */
-	login(cb: (error:any, account: string) => any) : void;
+	/** Logs in to the VFS service.
+	  * Returns a promise for the account ID
+	  */
+	login(): Q.Promise<string>;
 	/** Returns true if the user is logged in */
 	isLoggedIn(): boolean;
 	/** Returns credentials for the logged in account.
@@ -138,8 +140,8 @@ export class FileVFS implements VFS {
 		return result.promise;
 	}
 
-	login(cb: (error:any, account: string) => any) {
-		cb(null, '');
+	login() : Q.Promise<string> {
+		return Q.resolve<string>(process.env.USER);
 	}
 
 	isLoggedIn() : boolean {

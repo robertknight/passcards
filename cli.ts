@@ -133,14 +133,13 @@ export class CLI {
 			storage.setCredentials(credentials);
 			authenticated.resolve(true);
 		} else {
-			storage.login((err: any, account:string) => {
-				if (err) {
-					authenticated.reject(err);
-				} else {
-					fs.writeFileSync(credFile, JSON.stringify(storage.credentials()));
-					authenticated.resolve(true);
-				}
-			});
+			var account = storage.login();
+			account.then(() => {
+				fs.writeFileSync(credFile, JSON.stringify(storage.credentials()));
+				authenticated.resolve(true);
+			}, (err) => {
+				authenticated.reject(err);
+			}).done();
 		}
 
 		var currentVault : onepass.Vault;
