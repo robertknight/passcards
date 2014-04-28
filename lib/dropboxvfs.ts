@@ -47,7 +47,6 @@ export class DropboxVFS implements vfs.VFS {
 		return result.promise;
 	}
 
-	/** Search for files whose name contains @p namePattern */
 	search(namePattern: string, cb: (files: vfs.FileInfo[]) => any) {
 		this.client.search('/', namePattern, {}, (err, files) => {
 			var fileList : vfs.FileInfo[] = [];
@@ -58,7 +57,6 @@ export class DropboxVFS implements vfs.VFS {
 		});
 	}
 
-	/** Read the contents of a file at @p path */
 	read(path: string) : Q.Promise<string> {
 		var result = Q.defer<string>();
 		this.client.readFile(path, {}, (error, content) => {
@@ -71,7 +69,6 @@ export class DropboxVFS implements vfs.VFS {
 		return result.promise;
 	}
 
-	/** Write the contents of a file at @p path */
 	write(path: string, content: string) : Q.Promise<void> {
 		var result = Q.defer<void>();
 		this.client.writeFile(path, content, {}, (error) => {
@@ -84,7 +81,6 @@ export class DropboxVFS implements vfs.VFS {
 		return result.promise;
 	}
 
-	/** List the contents of a directory */
 	list(path: string) : Q.Promise<vfs.FileInfo[]> {
 		var result = Q.defer<vfs.FileInfo[]>();
 		this.client.readdir(path, {}, (error, names, folderInfo, files) => {
@@ -101,7 +97,6 @@ export class DropboxVFS implements vfs.VFS {
 		return result.promise;
 	}
 
-	/** Remove a file */
 	rm(path: string) : Q.Promise<void> {
 		var result = Q.defer<void>();
 		this.client.remove(path, (error) => {
