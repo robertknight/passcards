@@ -17,9 +17,12 @@ build/cli.js: $(all_srcs)
 test: build/cli.js
 	@echo $(test_files) | $(FOREACH_FILE) $(NODE)
 
-lint: $(all_srcs)
-	@echo $(all_srcs) | $(FOREACH_FILE) $(TSLINT) -f
+LINT_FILES=$(addprefix build/,$(subst .ts,.ts.lint, $(all_srcs)))
+lint: $(LINT_FILES)
 
+build/%.ts.lint: %.ts
+	$(TSLINT) -f $<
+	@touch $@
 	
 clean:
 	rm -rf build/*
