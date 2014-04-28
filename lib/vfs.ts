@@ -71,7 +71,7 @@ export class FileVFS implements VFS {
 
 	read(path: string) : Q.Promise<string> {
 		var result = Q.defer<string>();
-		fs.readFile(this.absPath(path), (error: any, content: NodeBuffer) => {
+		fs.readFile(this.absPath(path), (error, content) => {
 			if (error) {
 				result.reject(error);
 				return;
@@ -83,7 +83,7 @@ export class FileVFS implements VFS {
 
 	write(path: string, content: string) : Q.Promise<void> {
 		var result = Q.defer<void>();
-		fs.writeFile(this.absPath(path), (error: any) => {
+		fs.writeFile(this.absPath(path), content, (error) => {
 			if (error) {
 				result.reject(error);
 				return;
@@ -96,7 +96,7 @@ export class FileVFS implements VFS {
 	list(path: string) : Q.Promise<FileInfo[]> {
 		var result = Q.defer<FileInfo[]>();
 		var absPath : string = this.absPath(path);
-		fs.readdir(absPath, (err: any, files: string[]) => {
+		fs.readdir(absPath, (err, files) => {
 			if (err) {
 				result.reject(err);
 				return;
@@ -104,9 +104,9 @@ export class FileVFS implements VFS {
 
 			var done = 0;
 			var infoList : FileInfo[] = [];
-			files.forEach((name : string) => {
+			files.forEach((name) => {
 				var filePath : string = Path.join(absPath, name);
-				fs.stat(filePath, (err:any, info:fs.Stats) => {
+				fs.stat(filePath, (err, info) => {
 					if (err) {
 						console.log('Unable to stat ' + filePath);
 						return;

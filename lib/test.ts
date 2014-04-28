@@ -5,7 +5,7 @@ var qunit = require('qunitjs');
 import xdiff = require('xdiff');
 
 export interface Assert {
-	equal(actual: any, expected: any, message: string) : void;
+	equal(actual: any, expected: any, message?: string) : void;
 	ok(result: boolean) : void;
 }
 
@@ -120,5 +120,13 @@ export function compareObjects(a: any, b: any, expectedAdditions?: string[], exp
 		}
 		return true;
 	});
+}
+
+export function assertEqual(assert: Assert, a: any, b: any) {
+	var diff = compareObjects(a, b);
+	if (diff.length > 0) {
+		console.log(diff);
+	}
+	assert.equal(diff.length, 0, 'Check objects are equal');
 }
 
