@@ -1,4 +1,4 @@
-TSC=tsc --noImplicitAny
+TSC=tsc --noImplicitAny --sourcemap
 TSC_NODE=$(TSC) -m commonjs
 TSLINT=tslint
 NODE=node
