@@ -36,8 +36,9 @@ testLib.addAsyncTest('Read and write file', (assert) => {
 testLib.addAsyncTest('Stat file', (assert) => {
 	var fs = createFs();
 	fs.then((fs) => {
-		var fileWritten = fs.write('test-stat-file', 'test-content');
-		var fileInfo = fs.stat('test-stat-file');
+		var fileInfo = fs.write('test-stat-file', 'test-content').then(() => {
+			return fs.stat('test-stat-file');
+		});
 		fileInfo.then((info) => {
 			testLib.assertEqual(assert, info, {
 				name: 'test-stat-file',
