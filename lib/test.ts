@@ -62,6 +62,8 @@ interface TestSuiteResult {
 
 /** Run all tests queued with addTest() and addAsyncTest() */
 export function runTests() {
+	qunit.config.testTimeout = 3000;
+
 	qunit.log((details: AssertionResult) => {
 		if (!details.result) {
 			console.log('test failed');
