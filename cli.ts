@@ -22,13 +22,38 @@ interface HandlerMap {
 }
 
 export class CLI {
-	static patternMatch(pattern: string, item: onepass.Item) {
+	private configDir : string
+
+	private static patternMatch(pattern: string, item: onepass.Item) {
 		pattern = pattern.toLowerCase();
 		var titleLower = item.title.toLowerCase();
 		return titleLower.indexOf(pattern) != -1;
 	}
 
-	exec() : Q.Promise<number> {
+	private static lookupItems(vault: onepass.Vault, pattern: string) : Q.Promise<onepass.Item[]> {
+		var result = Q.defer<onepass.Item[]>();
+		vault.listItems().then((items:onepass.Item[]) => {
+			var matches : onepass.Item[] = [];
+			items.forEach((item) => {
+				if (CLI.patternMatch(pattern, item)) {
+					matches.push(item);
+				}
+			});
+			result.resolve(matches);
+		}, (err:any) => {
+			console.log('Looking up items failed');
+		}).done();
+		return result.promise;
+	}
+
+	constructor() {
+		this.configDir = process.env.HOME + "/.config/onepass-web"
+	}
+
+	/** Starts the command-line interface and returns
+	  * a promise for the exit code.
+	  */
+	exec(argv: string[]) : Q.Promise<number> {
 		var parser = function() {
 			var parser = new argparse.ArgumentParser({
 				description: '1Password command-line client'
@@ -61,13 +86,12 @@ export class CLI {
 			return parser;
 		}();
 
-		var CONFIG_DIR = process.env.HOME + "/.config/onepass-web"
-		var args = parser.parseArgs();
+		var args = parser.parseArgs(argv);
 
-		mkdirp.sync(CONFIG_DIR)
+		mkdirp.sync(this.configDir)
 
 		// connect to sync service and open vault
-		var credFile : string = CONFIG_DIR + '/dropbox-credentials.json';
+		var credFile : string = this.configDir + '/dropbox-credentials.json';
 		var credentials : Object = null;
 		if (fs.existsSync(credFile)) {
 			credentials = JSON.parse(fs.readFileSync(credFile).toString());
@@ -124,22 +148,6 @@ export class CLI {
 			});
 		})
 		.done();
-
-		function lookupItems(vault: onepass.Vault, pattern: string) : Q.Promise<onepass.Item[]> {
-			var result = Q.defer<onepass.Item[]>();
-			vault.listItems().then((items:onepass.Item[]) => {
-				var matches : onepass.Item[] = [];
-				items.forEach((item) => {
-					if (CLI.patternMatch(pattern, item)) {
-						matches.push(item);
-					}
-				});
-				result.resolve(matches);
-			}, (err:any) => {
-				console.log('Looking up items failed');
-			}).done();
-			return result.promise;
-		}
 		
 		var handlers : HandlerMap = {};
 
@@ -158,7 +166,7 @@ export class CLI {
 		};
 
 		handlers['show-json'] = (args, result) => {
-			lookupItems(currentVault, args.pattern).then((items) => {
+			CLI.lookupItems(currentVault, args.pattern).then((items) => {
 				var itemContents : Q.Promise<onepass.ItemContent>[] = [];
 				items.forEach((item) => {
 					itemContents.push(item.getContent());
@@ -173,7 +181,7 @@ export class CLI {
 		};
 
 		handlers['show-overview'] = (args, result) => {
-			lookupItems(currentVault, args.pattern).then((items) => {
+			CLI.lookupItems(currentVault, args.pattern).then((items) => {
 				items.forEach((item) => {
 					console.log(item);
 				});
@@ -182,7 +190,7 @@ export class CLI {
 		};
 
 		handlers['show'] = (args, result) => {
-			lookupItems(currentVault, args.pattern).then((items) => {
+			CLI.lookupItems(currentVault, args.pattern).then((items) => {
 				var itemContents : Q.Promise<onepass.ItemContent>[] = [];
 				items.forEach((item) => {
 					itemContents.push(item.getContent());
