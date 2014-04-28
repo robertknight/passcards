@@ -95,5 +95,22 @@ testLib.addAsyncTest('List folder', (assert) => {
 	}).done();
 });
 
+testLib.addAsyncTest('Search folder', (assert) => {
+	var fs = createFs();
+	fs.then((fs) => {
+		var fileWritten = fs.write('test-search-folder', 'test-content');
+		fs.search('search-fold', (files) => {
+			assert.equal(files.length, 1);
+			var expectedFile = {
+				name: 'test-search-folder',
+				path: Path.join(fs.root, 'test-search-folder'),
+				isDir: false
+			};
+			testLib.assertEqual(assert, files[0], expectedFile);
+			testLib.continueTests();
+		});
+	}).done();
+});
+
 testLib.runTests();
 
