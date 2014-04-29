@@ -3,6 +3,9 @@ TSC_NODE=$(TSC) -m commonjs
 TSLINT=tslint
 NODE=node
 FOREACH_FILE=tr ' ' '\n' | xargs -l1
+ROOT_DIR=$(dir $(abspath package.json))
+SILENCE_CMD=1>/dev/null 2>/dev/null
+SILENCE_STDOUT=1>/dev/null
 
 lib_srcs=$(shell find lib/ -name '*.ts')
 app_srcs=$(wildcard *.ts)
@@ -23,6 +26,9 @@ lint: $(LINT_FILES)
 build/%.ts.lint: %.ts
 	$(TSLINT) -f $<
 	@touch $@
+
+test-package: all
+	@cd `mktemp -d` && npm install $(ROOT_DIR) $(SILENCE_CMD) && ./node_modules/onepass-cli/1pass --help $(SILENCE_STDOUT)
 	
 clean:
 	rm -rf build/*
