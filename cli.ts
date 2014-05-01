@@ -87,12 +87,15 @@ export class CLI {
 		return parser;
 	}
 
-	private static findVault(storage: vfs.VFS) : Q.Promise<string> {
+	private findExistingVaultInDropbox(storage: vfs.VFS, dropboxRoot: string) : Q.Promise<string> {
 		var path = Q.defer<string>();
-		storage.search('.agilekeychain', (files: vfs.FileInfo[]) => {
-			files.forEach((file: vfs.FileInfo) => {
-				path.resolve(file.path);
-			});
+		var settingsFilePath = Path.join(dropboxRoot, '.ws.agile.1Password.settings');
+		var rootFile = storage.read(settingsFilePath);
+		rootFile.then((content) => {
+			path.resolve(Path.join(dropboxRoot, content));
+		}, (err) => {
+			this.printf('Unable to find keychain path in %s, using default path', settingsFilePath);
+			path.resolve(Path.join(dropboxRoot, '1Password/1Password.agilekeychain'));
 		});
 		return path.promise;
 	}
@@ -102,6 +105,63 @@ export class CLI {
 		return password.then((password) => {
 			return vault.unlock(password);
 		});
+	}
+
+	private initVault(storageType: string, customVaultPath: string) : Q.Promise<onepass.Vault> {
+		// connect to sync service and open vault
+		var credFile : string = this.configDir + '/dropbox-credentials.json';
+		var credentials : Object = null;
+		if (fs.existsSync(credFile)) {
+			credentials = JSON.parse(fs.readFileSync(credFile).toString());
+		}
+
+		var storage : vfs.VFS;
+		var dropboxRoot : string;
+
+		if (storageType == 'file') {
+			storage = new vfs.FileVFS('/');
+			dropboxRoot = process.env.HOME + '/Dropbox';
+			if (customVaultPath) {
+				customVaultPath = Path.resolve(customVaultPath);
+			}
+		} else if (storageType == 'dropbox') {
+			storage = new dropboxvfs.DropboxVFS();
+			dropboxRoot = '/';
+		}
+
+		var authenticated = Q.defer<void>();
+		if (credentials) {
+			storage.setCredentials(credentials);
+			authenticated.resolve(null);
+		} else {
+			var account = storage.login();
+			account.then(() => {
+				fs.writeFileSync(credFile, JSON.stringify(storage.credentials()));
+				authenticated.resolve(null);
+			}, (err) => {
+				authenticated.reject(err);
+			}).done();
+		}
+
+		var vault = Q.defer<onepass.Vault>();
+
+		authenticated.promise.then(() => {
+			var vaultPath : Q.Promise<string>;
+			if (customVaultPath) {
+				vaultPath = Q.resolve(customVaultPath);
+			} else {
+				vaultPath = this.findExistingVaultInDropbox(storage, dropboxRoot);
+			}
+			vaultPath.then((path) => {
+				vault.resolve(new onepass.Vault(storage, path));
+			}, (err) => {
+				vault.reject(err);
+			}).done();
+		}, (err) => {
+			vault.reject(err);
+		}).done();
+
+		return vault.promise;
 	}
 
 	constructor() {
@@ -114,66 +174,15 @@ export class CLI {
 	  */
 	exec(argv: string[]) : Q.Promise<number> {
 		var args = CLI.createParser().parseArgs(argv);
-
 		mkdirp.sync(this.configDir)
 
-		// connect to sync service and open vault
-		var credFile : string = this.configDir + '/dropbox-credentials.json';
-		var credentials : Object = null;
-		if (fs.existsSync(credFile)) {
-			credentials = JSON.parse(fs.readFileSync(credFile).toString());
-		}
-
-		var storage : vfs.VFS;
-		if (args.storage == 'file') {
-			storage = new vfs.FileVFS(process.env.PWD);
-		} else if (args.storage == 'dropbox') {
-			storage = new dropboxvfs.DropboxVFS();
-		}
-
-		var vaultPath : Q.Promise<string>;
-		if (args.vault) {
-			vaultPath = Q.resolve(args.vault[0]);
-		} else {
-			if (args.storage == 'file') {
-				vaultPath = Q.resolve(Path.relative(process.env.PWD,
-				  process.env.HOME + '/Dropbox/1Password/1Password.agilekeychain'));
-			} else if (args.storage == 'dropbox') {
-				vaultPath = CLI.findVault(storage);
-			}
-		}
-
-		var authenticated = Q.defer<boolean>();
-
-		if (credentials) {
-			storage.setCredentials(credentials);
-			authenticated.resolve(true);
-		} else {
-			var account = storage.login();
-			account.then(() => {
-				fs.writeFileSync(credFile, JSON.stringify(storage.credentials()));
-				authenticated.resolve(true);
-			}, (err) => {
-				authenticated.reject(err);
-			}).done();
-		}
-
 		var currentVault : onepass.Vault;
-		var unlocked = Q.defer<void>();
 
-		authenticated.promise.then(() => {
-			vaultPath.then((path) => {
-				currentVault = new onepass.Vault(storage, path);
-				return this.unlockVault(currentVault);
-			}).then(() => {
-				unlocked.resolve(null);
-			}, (err) => {
-				unlocked.reject(err);
-			}).done();
-
-		}, (err) => {
-			this.printf('authentication failed: ', err);
-		}).done();
+		var vault = this.initVault(args.storage, args.vault ? args.vault[0] : null);
+		var vaultReady = vault.then((vault) => {
+			currentVault = vault;
+			return this.unlockVault(vault);
+		});
 		
 		var handlers : HandlerMap = {};
 
@@ -274,7 +283,7 @@ export class CLI {
 
 		// process commands
 		var exitStatus = Q.defer<number>();
-		unlocked.promise.then(() => {
+		vaultReady.then(() => {
 			if (handlers[args.command]) {
 				handlers[args.command](args, exitStatus);
 			} else {
