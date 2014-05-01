@@ -164,9 +164,9 @@ export class CLI {
 		return vault.promise;
 	}
 
-	constructor() {
+	constructor(io? : consoleio.TermIO) {
 		this.configDir = process.env.HOME + "/.config/onepass-web";
-		this.io = new consoleio.ConsoleIO();
+		this.io = io || new consoleio.ConsoleIO();
 	}
 
 	/** Starts the command-line interface and returns

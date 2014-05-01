@@ -39,3 +39,35 @@ export function printf(out: TermIO, format: string, ...args: any[]) {
 	out.print(sprintf.apply(null, [format].concat(args)));
 }
 
+/** Fake terminal input/output implementation which
+  * returns canned input and stores 'output' for
+  * inspection in tests.
+  */
+export class FakeIO {
+	output : string[]
+	password : string
+
+	constructor() {
+		this.output = [];
+	}
+
+	print(text: string) : void {
+		this.output.push(text);
+	}
+
+	/** Returns a canned password. */
+	readPassword(prompt: string) : Q.Promise<string> {
+		return Q.resolve(this.password);
+	}
+
+	didPrint(pattern: RegExp) : boolean {
+		var match = false;
+		this.output.forEach((line) => {
+			if (line.match(pattern)) {
+				match = true;
+			}
+		});
+		return match;
+	}
+}
+
