@@ -29,4 +29,15 @@ testLib.addAsyncTest('show item', (assert) => {
 	.done();
 });
 
+testLib.addAsyncTest('show overview', (assert) => {
+	app.exec(stdArgs.concat(['show-overview', 'facebook']))
+	.then((status) => {
+		assert.equal(status, 0);
+		assert.ok(fakeTerm.didPrint(/Facebook.*Login/));
+		assert.ok(fakeTerm.didPrint(/ID: CA20BB325873446966ED1F4E641B5A36/));
+		testLib.continueTests();
+	})
+	.done();
+});
+
 testLib.runTests();

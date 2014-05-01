@@ -107,6 +107,50 @@ export class CLI {
 		});
 	}
 
+	private printOverview(item: onepass.Item) {
+		this.printf('%s (%s)', item.title, item.typeDescription());
+		this.printf('\nInfo:');
+		this.printf('  ID: %s', item.uuid);
+		this.printf('  Updated: %s', item.updatedAt);
+
+		if (item.openContents && item.openContents.tags) {
+			this.printf('  Tags: %s', item.openContents.tags.join(', '));
+		}
+	}
+
+	private printDetails(content: onepass.ItemContent) {
+		if (content.sections.length > 0) {
+			this.printf('\nSections:');
+			content.sections.forEach((section) => {
+				if (section.title) {
+					this.printf('  %s', section.title);
+				}
+				section.fields.forEach((field) => {
+					this.printf('  %s: %s', field.title, field.valueString());
+				});
+			});
+		}
+
+		if (content.urls.length > 0) {
+			this.printf('\nWebsites:');
+			content.urls.forEach((url) => {
+				this.printf('  %s: %s', url.label, url.url);
+			});
+		}
+
+		if (content.formFields.length > 0) {
+			this.printf('\nForm Fields:');
+			content.formFields.forEach((field) => {
+				this.printf('  %s (%s): %s', field.name, field.type, field.value);
+			});
+		}
+
+		if (content.htmlAction) {
+			this.printf('\nForm Destination: %s %s', content.htmlMethod.toUpperCase(),
+			  content.htmlAction);
+		}
+	}
+
 	private initVault(storageType: string, customVaultPath: string) : Q.Promise<onepass.Vault> {
 		// connect to sync service and open vault
 		var credFile : string = this.configDir + '/dropbox-credentials.json';
@@ -217,8 +261,11 @@ export class CLI {
 
 		handlers['show-overview'] = (args, result) => {
 			this.lookupItems(currentVault, args.pattern).then((items) => {
-				items.forEach((item) => {
-					this.printf('%s', consoleio.prettyJSON(item));
+				items.forEach((item, index) => {
+					if (index > 0) {
+						this.printf('');
+					}
+					this.printOverview(item);
 				});
 				result.resolve(0);
 			}).done();
@@ -235,46 +282,9 @@ export class CLI {
 						if (index > 0) {
 							this.printf('');
 						}
-						this.printf('%s (%s)', item.title, item.typeDescription());
-						this.printf('\nInfo:');
-						this.printf('  ID: %s', item.uuid);
-						this.printf('  Updated: %s', item.updatedAt);
-
-						if (item.openContents && item.openContents.tags) {
-							this.printf('  Tags: %s', item.openContents.tags.join(', '));
-						}
-
-						var content = contents[index];
-						if (content.sections.length > 0) {
-							this.printf('\nSections:');
-							content.sections.forEach((section) => {
-								if (section.title) {
-									this.printf('  %s', section.title);
-								}
-								section.fields.forEach((field) => {
-									this.printf('  %s: %s', field.title, field.valueString());
-								});
-							});
-						}
-
-						if (content.urls.length > 0) {
-							this.printf('\nWebsites:');
-							content.urls.forEach((url) => {
-								this.printf('  %s: %s', url.label, url.url);
-							});
-						}
-
-						if (content.formFields.length > 0) {
-							this.printf('\nForm Fields:');
-							content.formFields.forEach((field) => {
-								this.printf('  %s (%s): %s', field.name, field.type, field.value);
-							});
-						}
-
-						if (content.htmlAction) {
-							this.printf('\nForm Destination: %s %s', content.htmlMethod.toUpperCase(),
-							  content.htmlAction);
-						}
+						
+						this.printOverview(item);
+						this.printDetails(contents[index]);
 					});
 					result.resolve(0);
 				}).done();
