@@ -8,6 +8,7 @@ import Q = require('q');
 import argparse = require('argparse');
 import mkdirp = require('mkdirp')
 import fs = require('fs');
+import Path = require('path');
 
 import consoleio = require('./lib/console');
 import dropboxvfs = require('./lib/dropboxvfs');
@@ -58,6 +59,12 @@ export class CLI {
 			defaultValue: 'file',
 			dest: 'storage'
 		});
+		parser.addArgument(['-v', '--vault'], {
+			action: 'store',
+			nargs: 1,
+			dest: 'vault'
+		});
+
 		var subcommands = parser.addSubparsers({dest:'command'});
 
 		var listCommand = subcommands.addParser('list');
@@ -80,31 +87,21 @@ export class CLI {
 		return parser;
 	}
 
-	private static openVault(storage: vfs.VFS) : Q.Promise<onepass.Vault> {
-		var vault = Q.defer<onepass.Vault>();
+	private static findVault(storage: vfs.VFS) : Q.Promise<string> {
+		var path = Q.defer<string>();
 		storage.search('.agilekeychain', (files: vfs.FileInfo[]) => {
 			files.forEach((file: vfs.FileInfo) => {
-				vault.resolve(new onepass.Vault(storage, file.path));
+				path.resolve(file.path);
 			});
 		});
-		return vault.promise;
+		return path.promise;
 	}
 
-	private unlockVault(vault: onepass.Vault) : Q.Promise<boolean> {
-		var unlocked = Q.defer<boolean>();
+	private unlockVault(vault: onepass.Vault) : Q.Promise<void> {
 		var password = this.io.readPassword('Master password: ');
-		password.then((password) => {
-			this.printf('Unlocking vault...');
-			vault.unlock(password).then(() => {
-				unlocked.resolve(true);
-			}, (err) => {
-				this.printf('Failed to unlock vault');
-				unlocked.resolve(false);
-			}).done();
-		}, (err) => {
-			unlocked.resolve(false);
+		return password.then((password) => {
+			return vault.unlock(password);
 		});
-		return unlocked.promise;
 	}
 
 	constructor() {
@@ -129,10 +126,23 @@ export class CLI {
 
 		var storage : vfs.VFS;
 		if (args.storage == 'file') {
-			storage = new vfs.FileVFS(process.env.HOME + '/Dropbox/1Password');
+			storage = new vfs.FileVFS(process.env.PWD);
 		} else if (args.storage == 'dropbox') {
 			storage = new dropboxvfs.DropboxVFS();
 		}
+
+		var vaultPath : Q.Promise<string>;
+		if (args.vault) {
+			vaultPath = Q.resolve(args.vault[0]);
+		} else {
+			if (args.storage == 'file') {
+				vaultPath = Q.resolve(Path.relative(process.env.PWD,
+				  process.env.HOME + '/Dropbox/1Password/1Password.agilekeychain'));
+			} else if (args.storage == 'dropbox') {
+				vaultPath = CLI.findVault(storage);
+			}
+		}
+
 		var authenticated = Q.defer<boolean>();
 
 		if (credentials) {
@@ -149,19 +159,19 @@ export class CLI {
 		}
 
 		var currentVault : onepass.Vault;
-		var unlocked = Q.defer<boolean>();
+		var unlocked = Q.defer<void>();
 
 		authenticated.promise.then(() => {
-			var vault = CLI.openVault(storage);
-
-			vault.then((vault: onepass.Vault) => {
-				currentVault = vault;
-				return this.unlockVault(vault);
-			}).then((isUnlocked: boolean) => {
-				unlocked.resolve(isUnlocked);
+			vaultPath.then((path) => {
+				currentVault = new onepass.Vault(storage, path);
+				return this.unlockVault(currentVault);
+			}).then(() => {
+				unlocked.resolve(null);
+			}, (err) => {
+				unlocked.reject(err);
 			}).done();
 
-		}, (err: any) => {
+		}, (err) => {
 			this.printf('authentication failed: ', err);
 		}).done();
 		
@@ -264,18 +274,16 @@ export class CLI {
 
 		// process commands
 		var exitStatus = Q.defer<number>();
-		unlocked.promise.then((isUnlocked) => {
-			if (!isUnlocked) {
-				exitStatus.resolve(2);
-				return;
-			}
-
+		unlocked.promise.then(() => {
 			if (handlers[args.command]) {
 				handlers[args.command](args, exitStatus);
 			} else {
 				this.printf('Unknown command: %s', args.command);
 				exitStatus.resolve(1);
 			}
+		}, (err) => {
+			this.printf('Unlocking failed: %s', err);
+			exitStatus.resolve(2);
 		})
 		.done();
 

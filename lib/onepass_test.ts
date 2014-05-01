@@ -108,8 +108,7 @@ testLib.addAsyncTest('Test Vaults', (assert) => {
 
 		var vault = new onepass.Vault(fs, tst.path);
 		var items : onepass.Item[];
-		vault.unlock(tst.password).then((success) => {
-			assert.ok(success);
+		vault.unlock(tst.password).then(() => {
 			return vault.listItems();
 		}).then((_items) => {
 			items = _items;

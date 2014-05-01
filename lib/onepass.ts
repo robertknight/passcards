@@ -254,8 +254,8 @@ export class Vault {
 	/** Unlock the vault using the given master password.
 	  * This must be called before item contents can be decrypted.
 	  */
-	unlock(pwd: string) : Q.Promise<boolean> {
-		var result = Q.defer<boolean>();
+	unlock(pwd: string) : Q.Promise<void> {
+		var result = Q.defer<void>();
 		var keys = Q.defer<EncryptionKeyEntry[]>();
 
 		var content = this.fs.read(Path.join(this.path, 'data/default/encryptionKeys.js'));
@@ -290,8 +290,9 @@ export class Vault {
 				}
 			});
 			keys.resolve(vaultKeys);
-			result.resolve(true);
-		}, (err: any) => {
+			result.resolve(null);
+		}, (err) => {
+			console.log('unable to get enc keys');
 			result.reject(err);
 		})
 		.done();
