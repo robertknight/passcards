@@ -1,18 +1,15 @@
 /// <reference path="typings/DefinitelyTyped/node/node.d.ts" />
 /// <reference path="typings/DefinitelyTyped/mkdirp/mkdirp.d.ts" />
 /// <reference path="typings/DefinitelyTyped/q/Q.d.ts" />
-/// <reference path="typings/DefinitelyTyped/promptly/promptly.d.ts" />
 
 /// <reference path="typings/argparse.d.ts" />
-/// <reference path="typings/sprintf.d.ts" />
 
 import Q = require('q');
 import argparse = require('argparse');
 import mkdirp = require('mkdirp')
 import fs = require('fs');
-import promptly = require('promptly');
-import sprintf = require('sprintf');
 
+import consoleio = require('./lib/console');
 import dropboxvfs = require('./lib/dropboxvfs');
 import onepass = require('./lib/onepass');
 import vfs = require('./lib/vfs');
@@ -23,6 +20,11 @@ interface HandlerMap {
 
 export class CLI {
 	private configDir : string
+	private io : consoleio.TermIO
+
+	private printf(format: string, ...args: any[]) {
+		consoleio.printf.apply(null, [this.io, format].concat(args));
+	}
 
 	private static patternMatch(pattern: string, item: onepass.Item) {
 		pattern = pattern.toLowerCase();
@@ -30,7 +32,7 @@ export class CLI {
 		return titleLower.indexOf(pattern) != -1;
 	}
 
-	private static lookupItems(vault: onepass.Vault, pattern: string) : Q.Promise<onepass.Item[]> {
+	private lookupItems(vault: onepass.Vault, pattern: string) : Q.Promise<onepass.Item[]> {
 		var result = Q.defer<onepass.Item[]>();
 		vault.listItems().then((items:onepass.Item[]) => {
 			var matches : onepass.Item[] = [];
@@ -41,7 +43,7 @@ export class CLI {
 			});
 			result.resolve(matches);
 		}, (err:any) => {
-			console.log('Looking up items failed');
+			this.printf('Looking up items failed');
 		}).done();
 		return result.promise;
 	}
@@ -88,22 +90,26 @@ export class CLI {
 		return vault.promise;
 	}
 
-	private static unlockVault(vault: onepass.Vault) : Q.Promise<boolean> {
+	private unlockVault(vault: onepass.Vault) : Q.Promise<boolean> {
 		var unlocked = Q.defer<boolean>();
-		promptly.password('Master password: ', (err, masterPwd) => {
-			console.log('Unlocking vault...');
-			vault.unlock(masterPwd).then(() => {
+		var password = this.io.readPassword('Master password: ');
+		password.then((password) => {
+			this.printf('Unlocking vault...');
+			vault.unlock(password).then(() => {
 				unlocked.resolve(true);
 			}, (err) => {
-				console.log('Failed to unlock vault');
+				this.printf('Failed to unlock vault');
 				unlocked.resolve(false);
 			}).done();
+		}, (err) => {
+			unlocked.resolve(false);
 		});
 		return unlocked.promise;
 	}
 
 	constructor() {
-		this.configDir = process.env.HOME + "/.config/onepass-web"
+		this.configDir = process.env.HOME + "/.config/onepass-web";
+		this.io = new consoleio.ConsoleIO();
 	}
 
 	/** Starts the command-line interface and returns
@@ -150,13 +156,13 @@ export class CLI {
 
 			vault.then((vault: onepass.Vault) => {
 				currentVault = vault;
-				return CLI.unlockVault(vault);
+				return this.unlockVault(vault);
 			}).then((isUnlocked: boolean) => {
 				unlocked.resolve(isUnlocked);
 			}).done();
 
 		}, (err: any) => {
-			console.log('authentication failed: ', err);
+			this.printf('authentication failed: ', err);
 		}).done();
 		
 		var handlers : HandlerMap = {};
@@ -168,7 +174,7 @@ export class CLI {
 				});
 				items.forEach((item) => {
 					if (!args.pattern || CLI.patternMatch(args.pattern[0], item)) {
-						console.log(sprintf('%s (%s, %s)', item.title, item.typeDescription(), item.shortID()));
+						this.printf('%s (%s, %s)', item.title, item.typeDescription(), item.shortID());
 					}
 				});
 				result.resolve(0);
@@ -176,14 +182,14 @@ export class CLI {
 		};
 
 		handlers['show-json'] = (args, result) => {
-			CLI.lookupItems(currentVault, args.pattern).then((items) => {
+			this.lookupItems(currentVault, args.pattern).then((items) => {
 				var itemContents : Q.Promise<onepass.ItemContent>[] = [];
 				items.forEach((item) => {
 					itemContents.push(item.getContent());
 				});
 				Q.all(itemContents).then((contents) => {
 					contents.forEach((content) => {
-						console.log(content);
+						this.printf('%s', consoleio.prettyJSON(content));
 					});
 					result.resolve(0);
 				});
@@ -191,16 +197,16 @@ export class CLI {
 		};
 
 		handlers['show-overview'] = (args, result) => {
-			CLI.lookupItems(currentVault, args.pattern).then((items) => {
+			this.lookupItems(currentVault, args.pattern).then((items) => {
 				items.forEach((item) => {
-					console.log(item);
+					this.printf('%s', consoleio.prettyJSON(item));
 				});
 				result.resolve(0);
 			}).done();
 		};
 
 		handlers['show'] = (args, result) => {
-			CLI.lookupItems(currentVault, args.pattern).then((items) => {
+			this.lookupItems(currentVault, args.pattern).then((items) => {
 				var itemContents : Q.Promise<onepass.ItemContent>[] = [];
 				items.forEach((item) => {
 					itemContents.push(item.getContent());
@@ -208,47 +214,47 @@ export class CLI {
 				Q.all(itemContents).then((contents) => {
 					items.forEach((item, index) => {
 						if (index > 0) {
-							console.log('');
+							this.printf('');
 						}
-						console.log(sprintf('%s (%s)', item.title, item.typeDescription()));
-						console.log('\nInfo:');
-						console.log(sprintf('  ID: %s', item.uuid));
-						console.log(sprintf('  Updated: %s', item.updatedAt));
+						this.printf('%s (%s)', item.title, item.typeDescription());
+						this.printf('\nInfo:');
+						this.printf('  ID: %s', item.uuid);
+						this.printf('  Updated: %s', item.updatedAt);
 
 						if (item.openContents && item.openContents.tags) {
-							console.log(sprintf('  Tags: %s', item.openContents.tags.join(', ')));
+							this.printf('  Tags: %s', item.openContents.tags.join(', '));
 						}
 
 						var content = contents[index];
 						if (content.sections.length > 0) {
-							console.log('\nSections:');
+							this.printf('\nSections:');
 							content.sections.forEach((section) => {
 								if (section.title) {
-									console.log(sprintf('  %s', section.title));
+									this.printf('  %s', section.title);
 								}
 								section.fields.forEach((field) => {
-									console.log(sprintf('  %s: %s', field.title, field.valueString()));
+									this.printf('  %s: %s', field.title, field.valueString());
 								});
 							});
 						}
 
 						if (content.urls.length > 0) {
-							console.log('\nWebsites:');
+							this.printf('\nWebsites:');
 							content.urls.forEach((url) => {
-								console.log(sprintf('  %s: %s', url.label, url.url));
+								this.printf('  %s: %s', url.label, url.url);
 							});
 						}
 
 						if (content.formFields.length > 0) {
-							console.log('\nForm Fields:');
+							this.printf('\nForm Fields:');
 							content.formFields.forEach((field) => {
-								console.log(sprintf('  %s (%s): %s', field.name, field.type, field.value));
+								this.printf('  %s (%s): %s', field.name, field.type, field.value);
 							});
 						}
 
 						if (content.htmlAction) {
-							console.log(sprintf('\nForm Destination: %s %s', content.htmlMethod.toUpperCase(),
-							  content.htmlAction));
+							this.printf('\nForm Destination: %s %s', content.htmlMethod.toUpperCase(),
+							  content.htmlAction);
 						}
 					});
 					result.resolve(0);
@@ -267,7 +273,7 @@ export class CLI {
 			if (handlers[args.command]) {
 				handlers[args.command](args, exitStatus);
 			} else {
-				console.log(sprintf('Unknown command: %s', args.command));
+				this.printf('Unknown command: %s', args.command);
 				exitStatus.resolve(1);
 			}
 		})
