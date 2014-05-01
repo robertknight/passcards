@@ -15,7 +15,21 @@ testLib.addAsyncTest('list vault', (assert) => {
 		assert.equal(status, 0);
 		assert.ok(fakeTerm.didPrint(/Facebook.*Login/));
 		testLib.continueTests();
-	});
+	})
+	.done();
+});
+
+testLib.addAsyncTest('wrong password', (assert) => {
+	var term = new consoleio.FakeIO();
+	term.password = 'wrong-password';
+	var app = new cli.CLI(term);
+	app.exec(stdArgs.concat(['list']))
+	.then((status) => {
+		assert.equal(status, 2);
+		assert.ok(term.didPrint(/Unlocking failed/));
+		testLib.continueTests();
+	})
+	.done();
 });
 
 testLib.addAsyncTest('show item', (assert) => {
