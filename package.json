@@ -9,6 +9,7 @@
 		"xdiff" : ">=0.2.11"
 	},
 	"dependencies" : {
+		"assert" : ">=1.1.0",
 		"argparse" : ">=0.1.15",
 		"atob" : ">=1.1",
 		"btoa" : ">=1.1",

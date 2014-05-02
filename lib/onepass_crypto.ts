@@ -1,15 +1,45 @@
 /// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
 
+import assert = require('assert');
 import crypto = require('crypto');
 import sha1opt = require('./crypto/sha1opt');
 
 var cryptoJS = require('crypto-js');
 
-// interface for crypto functions required for
-// working with 1Password vaults
+export class AESKeyParams {
+	constructor(public key: string, public iv: string) {
+	}
+}
+
+/** Derives an AES-128 key and initialization vector from a key of arbitrary length and salt
+  * using.
+  */
+export function openSSLKey(cryptoImpl: CryptoImpl, password: string, salt: string) : AESKeyParams {
+	var data = password + salt;
+	var key = cryptoImpl.md5Digest(data);
+	var iv = cryptoImpl.md5Digest(key + data);
+	return new AESKeyParams(key, iv);
+}
+
+/** Decrypt the encrypted contents of an item stored in the Agile Keychain format. */
+export function decryptAgileKeychainItemData(cryptoImpl: CryptoImpl, key: string, salt: string, cipherText: string) {
+	var keyParams = openSSLKey(cryptoImpl, key, salt);
+	return cryptoImpl.aesCbcDecrypt(keyParams.key, cipherText, keyParams.iv);
+}
+
+/** CryptoImpl is an interface to common crypto algorithms required
+  * to decrypt Agile Keychain vaults.
+  */
 export interface CryptoImpl {
+	/** Decrypt @p cipherText using AES-128 with the given key and initialization vector.
+	  */
 	aesCbcDecrypt(key:string, cipherText: string, iv: string) : string;
+
+	/** Derive a key of length @p keyLen from a password using @p iterCount iterations
+	  * of PBKDF2
+	  */
 	pbkdf2(masterPwd: string, salt: string, iterCount: number, keyLen: number) : string;
+
 	md5Digest(input: string) : string;
 }
 
@@ -45,6 +75,9 @@ export class CryptoJsCrypto implements CryptoImpl {
 	}
 
 	aesCbcDecrypt(key:string, cipherText: string, iv: string) : string {
+		assert.equal(key.length, 16);
+		assert.equal(iv.length, 16);
+
 		var keyArray = this.encoding.parse(key);
 		var ivArray = this.encoding.parse(iv);
 		var cipherArray = this.encoding.parse(cipherText);

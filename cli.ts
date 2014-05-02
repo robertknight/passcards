@@ -22,6 +22,7 @@ interface HandlerMap {
 export class CLI {
 	private configDir : string
 	private io : consoleio.TermIO
+	private keyAgent : onepass.KeyAgent
 
 	private printf(format: string, ...args: any[]) {
 		consoleio.printf.apply(null, [this.io, format].concat(args));
@@ -197,7 +198,7 @@ export class CLI {
 				vaultPath = this.findExistingVaultInDropbox(storage, dropboxRoot);
 			}
 			vaultPath.then((path) => {
-				vault.resolve(new onepass.Vault(storage, path));
+				vault.resolve(new onepass.Vault(storage, path, this.keyAgent));
 			}, (err) => {
 				vault.reject(err);
 			}).done();
@@ -208,9 +209,10 @@ export class CLI {
 		return vault.promise;
 	}
 
-	constructor(io? : consoleio.TermIO) {
+	constructor(io? : consoleio.TermIO, agent? : onepass.KeyAgent) {
 		this.configDir = process.env.HOME + "/.config/onepass-web";
 		this.io = io || new consoleio.ConsoleIO();
+		this.keyAgent = agent || new onepass.SimpleKeyAgent();
 	}
 
 	/** Starts the command-line interface and returns

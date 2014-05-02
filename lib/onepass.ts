@@ -8,7 +8,7 @@ import Path = require('path');
 
 var atob = require('atob');
 
-var cryptoImpl = new crypto.CryptoJsCrypto();
+var defaultCryptoImpl = new crypto.CryptoJsCrypto();
 
 // Converts a UNIX timestamp in milliseconds since
 // the epoch to a JS Date
@@ -22,7 +22,6 @@ export class EncryptionKeyEntry {
 	iterations : number;
 	level : string;
 	validation : string;
-	key : string;
 }
 
 export interface ItemType {
@@ -32,6 +31,71 @@ export interface ItemType {
 
 export interface ItemTypeMap {
 	[index: string] : ItemType;
+}
+
+export enum CryptoAlgorithm {
+	AES128_OpenSSLKey
+}
+
+export class CryptoParams {
+	algo : CryptoAlgorithm;
+	salt : string;
+
+	constructor(algo: CryptoAlgorithm, salt: string) {
+		this.algo = algo;
+		this.salt = salt;
+	}
+}
+
+/** Interface for agent which handles storage of decryption
+  * keys and provides methods to encrypt and decrypt data
+  * using the stored keys.
+  */
+export interface KeyAgent {
+	/** Register a key with the agent for future use when decrypting items. */
+	addKey(id: string, key: string) : Q.Promise<void>;
+	/** Clear all stored keys. */
+	forgetKeys() : Q.Promise<void>;
+	/** Decrypt data for an item using the given key ID and crypto
+	  * parameters.
+	  *
+	  * Returns a promise for the decrypted plaintext.
+	  */
+	decrypt(id: string, cipherText: string, params: CryptoParams) : Q.Promise<string>;
+}
+
+/** A simple key agent which just stores keys in memory */
+export class SimpleKeyAgent {
+	private crypto : crypto.CryptoImpl;
+	private keys : {[id:string] : string};
+
+	constructor(cryptoImpl? : crypto.CryptoImpl) {
+		this.crypto = cryptoImpl || defaultCryptoImpl;
+		this.keys = {};
+	}
+
+	addKey(id: string, key: string) : Q.Promise<void> {
+		this.keys[id] = key;
+		return Q.resolve<void>(null);
+	}
+
+	forgetKeys() : Q.Promise<void> {
+		this.keys = {};
+		return Q.resolve<void>(null);
+	}
+
+	decrypt(id: string, cipherText: string, params: CryptoParams) : Q.Promise<string> {
+		if (!this.keys.hasOwnProperty(id)) {
+			return Q.reject('No such key');
+		}
+		switch (params.algo) {
+			case CryptoAlgorithm.AES128_OpenSSLKey:
+				return Q.resolve(crypto.decryptAgileKeychainItemData(this.crypto,
+					  this.keys[id], params.salt, cipherText));
+			default:
+				return Q.reject('Unknown encryption algorithm');
+		}
+	}
 }
 
 /** Map of item type codes to human-readable item type names */
@@ -155,7 +219,7 @@ export class Item {
 	  * item content can be retrieved.
 	  */
 	getContent() : Q.Promise<ItemContent> {
-		var itemContent : Q.Deferred<ItemContent> = Q.defer<ItemContent>();
+		var itemContent = Q.defer<ItemContent>();
 		
 		if (this.content) {
 			itemContent.resolve(this.content);
@@ -168,9 +232,12 @@ export class Item {
 		}
 
 		this.vault.loadItem(this.uuid).then((item:Item) => {
-			var content : string = this.vault.decryptItemData(item.securityLevel, item.encrypted);
+			return this.vault.decryptItemData(item.securityLevel, item.encrypted);
+		})
+		.then((content) => {
 			itemContent.resolve(ItemContent.fromAgileKeychainObject(JSON.parse(content)));
-		}).done();
+		})
+		.done();
 
 		return itemContent.promise;
 	}
@@ -240,15 +307,18 @@ export class Item {
 export class Vault {
 	private fs: vfs.VFS;
 	private path: string;
-	private keys: EncryptionKeyEntry[];
+	private keyAgent: KeyAgent;
+	private keys : EncryptionKeyEntry[];
 
 	/** Setup a vault which is stored at @p path in a filesystem.
 	  * @p fs is the filesystem interface through which the
 	  * files that make up the vault are accessed.
 	  */
-	constructor(fs: vfs.VFS, path: string) {
+	constructor(fs: vfs.VFS, path: string, keyAgent? : KeyAgent) {
 		this.fs = fs;
 		this.path = path;
+		this.keyAgent = keyAgent || new SimpleKeyAgent(defaultCryptoImpl);
+		this.keys = [];
 	}
 
 	/** Unlock the vault using the given master password.
@@ -281,9 +351,11 @@ export class Vault {
 					// process by skipping it
 					if (item.level != "SL3") {
 						var saltCipher = extractSaltAndCipherText(item.data);
-						item.key = decryptKey(pwd, saltCipher.cipherText, saltCipher.salt, item.iterations, item.validation);
+						var key = decryptKey(pwd, saltCipher.cipherText, saltCipher.salt, item.iterations, item.validation);
+						this.keyAgent.addKey(item.identifier, key);
 					}
 					vaultKeys.push(item);
+
 				} catch (ex) {
 					result.reject('failed to decrypt key ' + entry.level + ex);
 					return;
@@ -365,29 +437,26 @@ export class Vault {
 		return items.promise;
 	}
 
-	decryptItemData(level: string, data: string) : string {
-		var decrypted : string;
-		this.keys.forEach((key:EncryptionKeyEntry) => {
+	decryptItemData(level: string, data: string) : Q.Promise<string> {
+		var result : Q.Promise<string>;
+		this.keys.forEach((key) => {
 			if (key.level == level) {
-				var saltCipher : SaltedCipherText = extractSaltAndCipherText(data);
-				var keyParams : AesKeyParams = openSslKey(key.key, saltCipher.salt);
-				decrypted = cryptoImpl.aesCbcDecrypt(keyParams.key, saltCipher.cipherText, keyParams.iv);
+				var saltCipher = extractSaltAndCipherText(data);
+				var cryptoParams = new CryptoParams(CryptoAlgorithm.AES128_OpenSSLKey, saltCipher.salt);
+				result = this.keyAgent.decrypt(key.identifier, saltCipher.cipherText, cryptoParams);
+				return;
 			}
 		});
-		if (!decrypted) {
-			throw 'Key ' + level + ' not found';
+		if (result) {
+			return result;
+		} else {
+			return Q.reject('No key ' + level + ' found');
 		}
-		return decrypted;
 	}
 }
 
 export class SaltedCipherText {
 	constructor(public salt: string, public cipherText: string) {
-	}
-}
-
-export class AesKeyParams {
-	constructor(public key: string, public iv: string) {
 	}
 }
 
@@ -535,29 +604,22 @@ export class ItemUrl {
 	url : string;
 }
 
-export function extractSaltAndCipherText(input: string) : SaltedCipherText {
+function extractSaltAndCipherText(input: string) : SaltedCipherText {
 	var salt = input.substring(8, 16);
 	var cipher = input.substring(16);
 	return new SaltedCipherText(salt, cipher);
 }
 
-function openSslKey(password: string, salt: string) : AesKeyParams {
-	var data = password + salt;
-	var key = cryptoImpl.md5Digest(data);
-	var iv = cryptoImpl.md5Digest(key + data);
-	return new AesKeyParams(key, iv);
-}
-
 export function decryptKey(masterPwd: any, encryptedKey: string, salt: string, iterCount: number, validation: string) : string {
 	var KEY_LEN = 32;
-	var derivedKey = cryptoImpl.pbkdf2(masterPwd, salt, iterCount, KEY_LEN);
+	var derivedKey = defaultCryptoImpl.pbkdf2(masterPwd, salt, iterCount, KEY_LEN);
 	var aesKey = derivedKey.substring(0, 16);
 	var iv = derivedKey.substring(16, 32);
-	var decryptedKey = cryptoImpl.aesCbcDecrypt(aesKey, encryptedKey, iv);
-	var validationSaltCipher : SaltedCipherText = extractSaltAndCipherText(validation);
+	var decryptedKey = defaultCryptoImpl.aesCbcDecrypt(aesKey, encryptedKey, iv);
+	var validationSaltCipher = extractSaltAndCipherText(validation);
 
-	var keyParams : AesKeyParams = openSslKey(decryptedKey, validationSaltCipher.salt);
-	var decryptedValidation = cryptoImpl.aesCbcDecrypt(keyParams.key, validationSaltCipher.cipherText, keyParams.iv);
+	var keyParams = crypto.openSSLKey(defaultCryptoImpl, decryptedKey, validationSaltCipher.salt);
+	var decryptedValidation = defaultCryptoImpl.aesCbcDecrypt(keyParams.key, validationSaltCipher.cipherText, keyParams.iv);
 
 	if (decryptedValidation != decryptedKey) {
 		throw 'Failed to decrypt key';
