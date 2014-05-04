@@ -1,4 +1,6 @@
-/* Core SHA-1 implementation derived from Rusha  (http://github.com/srijs/rusha)
+/* Optimized implementation of PBKDF2-HMAC-SHA1
+* 
+* Core SHA-1 implementation derived from Rusha  (http://github.com/srijs/rusha)
 *
 * Inspired by Paul Johnstons implementation (http://pajhome.org.uk/crypt/md5).
 *
@@ -25,6 +27,12 @@
 * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 * IN THE SOFTWARE.
 */
+
+// This is an optimized implementation of PBKDF2 in Javascript.
+//
+// It uses a fast version of SHA-1 derived from Rusha, optimized for use
+// in PBKDF2 by minimizing allocations of typed arrays and
+// strings.
 
 /// <reference path="../../typings/DefinitelyTyped/node/node.d.ts" />
 

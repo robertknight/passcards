@@ -1,7 +1,7 @@
 /// <reference path="../../typings/DefinitelyTyped/node/node.d.ts" />
 
 import testLib = require('../test');
-import fastSha1 = require('./sha1opt');
+import pbkdf2Lib = require('./pbkdf2');
 
 var parallel = require('paralleljs');
 
@@ -69,40 +69,40 @@ var PBKDF2_TEST_VECTORS = [
 ];
 
 testLib.addTest('SHA-1', (assert) => {
-	var hash = new fastSha1.SHA1();
+	var hash = new pbkdf2Lib.SHA1();
 	SHA1_TEST_VECTORS.forEach(function(tst) {
-		var srcBuf = fastSha1.bufferFromString(tst.msg);
+		var srcBuf = pbkdf2Lib.bufferFromString(tst.msg);
 		var digest = new Int32Array(5);
 		hash.hash(srcBuf, digest);
-		var actual = fastSha1.hexlify(digest);
+		var actual = pbkdf2Lib.hexlify(digest);
 		assert.equal(actual, tst.digest, 'check SHA-1 digests match');
 	});
 });
 
 testLib.addTest('HMAC-SHA1', (assert) => {
-	var sha1 = new fastSha1.SHA1();
+	var sha1 = new pbkdf2Lib.SHA1();
 	HMAC_TEST_VECTORS.forEach(function(tst) {
-		var keyBuf = fastSha1.bufferFromString(tst.key);
-		var msgBuf = fastSha1.bufferFromString(tst.message);
+		var keyBuf = pbkdf2Lib.bufferFromString(tst.key);
+		var msgBuf = pbkdf2Lib.bufferFromString(tst.message);
 		var digest = new Int32Array(5);
-		var hmac = new fastSha1.HMAC(sha1, keyBuf);
+		var hmac = new pbkdf2Lib.HMAC(sha1, keyBuf);
 		hmac.mac(msgBuf, digest);
-		var actual = fastSha1.hexlify(digest);
+		var actual = pbkdf2Lib.hexlify(digest);
 		assert.equal(actual, tst.hmac, 'check HMACs match');
 	});
 });
 
 testLib.addTest('PBKDF2-HMAC-SHA1', (assert) => {
-	var pbkdf2 = new fastSha1.PBKDF2();
+	var pbkdf2 = new pbkdf2Lib.PBKDF2();
 	PBKDF2_TEST_VECTORS.forEach(function(tst) {
-		var passBuf = fastSha1.bufferFromString(tst.pass);
-		var saltBuf = fastSha1.bufferFromString(tst.salt);
-		var actualKey = fastSha1.hexlify(pbkdf2.key(passBuf, saltBuf, tst.iterations, tst.dkLen));
-		assert.equal(actualKey, tst.key, 'check PBKDF2 keys match');
+		var passBuf = pbkdf2Lib.bufferFromString(tst.pass);
+		var saltBuf = pbkdf2Lib.bufferFromString(tst.salt);
+		var actualKey = pbkdf2Lib.hexlify(pbkdf2.key(passBuf, saltBuf, tst.iterations, tst.dkLen));
+		assert.equal(actualKey, tst.key, 'check pbkdf2Lib keys match');
 	});
 });
 
-testLib.addAsyncTest('PBKDF2 Parallel', (assert) => {
+testLib.addAsyncTest('pbkdf2Lib Parallel', (assert) => {
 	var params = {
 		pass : "passwordPASSWORDpassword",
 		salt : "saltSALTsaltSALTsaltSALTsaltSALTsalt",
@@ -117,10 +117,10 @@ testLib.addAsyncTest('PBKDF2 Parallel', (assert) => {
 	];
 
 	var pbkdfBlock = (blockParams : any) => {
-		var fastSha1 = require('../../../build/lib/crypto/sha1opt');
-		var pbkdf2 = new fastSha1.PBKDF2();
-		var passBuf = fastSha1.bufferFromString(blockParams.params.pass);
-		var saltBuf = fastSha1.bufferFromString(blockParams.params.salt);
+		var pbkdf2Lib = require('../../../build/lib/crypto/pbkdf2');
+		var pbkdf2 = new pbkdf2Lib.PBKDF2();
+		var passBuf = pbkdf2Lib.bufferFromString(blockParams.params.pass);
+		var saltBuf = pbkdf2Lib.bufferFromString(blockParams.params.salt);
 		return pbkdf2.keyBlock(passBuf,
 		  saltBuf,
 		  blockParams.params.iterations,
@@ -139,7 +139,7 @@ testLib.addAsyncTest('PBKDF2 Parallel', (assert) => {
 				++resultIndex;
 			}
 		});
-		assert.equal(fastSha1.hexlify(result), params.key, 'Check PBKDF2 result matches');
+		assert.equal(pbkdf2Lib.hexlify(result), params.key, 'Check pbkdf2Lib result matches');
 		testLib.continueTests();
 	});
 });

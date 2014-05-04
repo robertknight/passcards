@@ -2,7 +2,7 @@
 
 import assert = require('assert');
 import crypto = require('crypto');
-import sha1opt = require('./crypto/sha1opt');
+import pbkdf2Lib = require('./crypto/pbkdf2');
 
 var cryptoJS = require('crypto-js');
 
@@ -100,11 +100,11 @@ export class CryptoJsCrypto implements CryptoImpl {
 		//
 		// Hence we use a custom implementation of PBKDF2 based on Rusha
 
-		var pbkdf2Impl = new sha1opt.PBKDF2();
-		var passBuf = sha1opt.bufferFromString(masterPwd);
-		var saltBuf = sha1opt.bufferFromString(salt);
+		var pbkdf2Impl = new pbkdf2Lib.PBKDF2();
+		var passBuf = pbkdf2Lib.bufferFromString(masterPwd);
+		var saltBuf = pbkdf2Lib.bufferFromString(salt);
 		var key = pbkdf2Impl.key(passBuf, saltBuf, iterCount, keyLen);
-		return sha1opt.stringFromBuffer(key);
+		return pbkdf2Lib.stringFromBuffer(key);
 	}
 	
 	md5Digest(input: string) : string {
