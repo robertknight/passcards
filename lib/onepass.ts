@@ -54,6 +54,8 @@ export class CryptoParams {
 export interface KeyAgent {
 	/** Register a key with the agent for future use when decrypting items. */
 	addKey(id: string, key: string) : Q.Promise<void>;
+	/** Returns the IDs of stored keys. */
+	listKeys() : Q.Promise<string[]>;
 	/** Clear all stored keys. */
 	forgetKeys() : Q.Promise<void>;
 	/** Decrypt data for an item using the given key ID and crypto
@@ -77,6 +79,10 @@ export class SimpleKeyAgent {
 	addKey(id: string, key: string) : Q.Promise<void> {
 		this.keys[id] = key;
 		return Q.resolve<void>(null);
+	}
+
+	listKeys() : Q.Promise<string[]> {
+		return Q.resolve(Object.keys(this.keys));
 	}
 
 	forgetKeys() : Q.Promise<void> {

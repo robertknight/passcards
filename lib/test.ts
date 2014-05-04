@@ -34,6 +34,10 @@ export function continueTests() {
 	qunit.start();
 }
 
+export function teardownSuite(func: () => void) {
+	qunit.done(func);
+}
+
 interface AssertionResult {
 	result: boolean
 	actual: Object
@@ -80,9 +84,9 @@ export function runTests() {
 		console.log('tests run. total: ' + result.total + ' failed: ' + result.failed);
 		if (typeof process != 'undefined') {
 			if (result.failed > 0) {
-				process.exit(1)
-			} else {
-				process.exit(0);
+				process.on('exit', () => {
+					process.exit(1);
+				});
 			}
 		}
 	});
