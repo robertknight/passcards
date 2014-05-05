@@ -69,17 +69,23 @@ class Server {
 			});
 			app.post('/decrypt', (req, res) => {
 				parseJSONRequest(req, res, (params: DecryptRequest) => {
-					logf('decrypting data with key %s', params.id);
 					if (!this.keys.hasOwnProperty(params.id)) {
+						logf('Decrypt failed - unknown key %s', params.id);
 						res.statusCode = 404;
 						res.end('No such key found');
 					}
 					switch (params.algo) {
 						case 'aes-128-openssl':
-							res.end(crypto.decryptAgileKeychainItemData(this.crypto, this.keys[params.id],
-							  params.salt, params.cipherText));
+							var plainText = crypto.decryptAgileKeychainItemData(this.crypto, this.keys[params.id],
+							  params.salt, params.cipherText);
+
+							logf('Decrypted (%d => %d) bytes with key %s', params.cipherText.length,
+							  plainText.length, params.id);
+
+							res.end(plainText);
 							break;
 						default:
+							logf('Decrypt failed - unknown algorithm');
 							res.statusCode = 400;
 							res.end('Unsupported encryption algorithm');
 					}
