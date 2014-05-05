@@ -64,6 +64,19 @@ interface TestSuiteResult {
 	runtime: number
 }
 
+export enum Environment {
+	Browser,
+	NodeJS
+}
+
+export function environment() : Environment {
+	if (typeof window == 'undefined') {
+		return Environment.NodeJS;
+	} else {
+		return Environment.Browser;
+	}
+}
+
 /** Run all tests queued with addTest() and addAsyncTest() */
 export function runTests() {
 	qunit.config.testTimeout = 3000;
@@ -91,7 +104,7 @@ export function runTests() {
 		}
 	});
 
-	if (typeof window == 'undefined') {
+	if (environment() == Environment.NodeJS) {
 		qunit.load();
 	}
 }

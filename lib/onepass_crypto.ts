@@ -21,6 +21,12 @@ export function openSSLKey(cryptoImpl: CryptoImpl, password: string, salt: strin
 	return new AESKeyParams(key, iv);
 }
 
+/** Encrypt the JSON data for an item for storage in the Agile Keychain format. */
+export function encryptAgileKeychainItemData(cryptoImpl: CryptoImpl, key: string, salt: string, plainText: string) {
+	var keyParams = openSSLKey(cryptoImpl, key, salt);
+	return cryptoImpl.aesCbcEncrypt(keyParams.key, plainText, keyParams.iv);
+}
+
 /** Decrypt the encrypted contents of an item stored in the Agile Keychain format. */
 export function decryptAgileKeychainItemData(cryptoImpl: CryptoImpl, key: string, salt: string, cipherText: string) {
 	var keyParams = openSSLKey(cryptoImpl, key, salt);
@@ -34,6 +40,7 @@ export interface CryptoImpl {
 	/** Decrypt @p cipherText using AES-128 with the given key and initialization vector.
 	  */
 	aesCbcDecrypt(key:string, cipherText: string, iv: string) : string;
+	aesCbcEncrypt(key:string, plainText: string, iv: string) : string;
 
 	/** Derive a key of length @p keyLen from a password using @p iterCount iterations
 	  * of PBKDF2
@@ -50,6 +57,14 @@ export class NodeCrypto implements CryptoImpl {
 		var result = '';
 		result += decipher.update(cipherText, 'binary', 'binary');
 		result += decipher.final('binary');
+		return result;
+	}
+
+	aesCbcEncrypt(key:string, plainText: string, iv: string) : string {
+		var cipher = crypto.createCipheriv('AES-128-CBC', key, iv);
+		var result = '';
+		result += cipher.update(plainText, 'binary', 'binary');
+		result += cipher.final('binary');
 		return result;
 	}
 
@@ -72,6 +87,21 @@ export class CryptoJsCrypto implements CryptoImpl {
 
 	constructor() {
 		this.encoding = cryptoJS.enc.Latin1;
+	}
+
+	aesCbcEncrypt(key:string, plainText: string, iv: string) : string {
+		assert.equal(key.length, 16);
+		assert.equal(iv.length, 16);
+
+		var keyArray = this.encoding.parse(key);
+		var ivArray = this.encoding.parse(iv);
+		var plainArray = this.encoding.parse(plainText);
+		var encrypted = cryptoJS.AES.encrypt(plainArray, keyArray, {
+			mode: cryptoJS.mode.CBC,
+			padding: cryptoJS.pad.Pkcs7,
+			iv: ivArray
+		});
+		return encrypted.ciphertext.toString(this.encoding);
 	}
 
 	aesCbcDecrypt(key:string, cipherText: string, iv: string) : string {

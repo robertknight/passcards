@@ -1,5 +1,6 @@
 /// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
 
+import crypto = require('./onepass_crypto');
 import testLib = require('./test');
 import onepass = require('./onepass');
 import exportLib = require('./export');
@@ -160,6 +161,41 @@ testLib.addAsyncTest('Test Vaults', (assert) => {
 
 	Q.all(done).then(() => {
 		testLib.continueTests();
+	});
+});
+
+function createCryptoImpls() : crypto.CryptoImpl[] {
+	var cryptoImpls : crypto.CryptoImpl[] = [];
+	cryptoImpls.push(new crypto.CryptoJsCrypto);
+	if (testLib.environment() == testLib.Environment.NodeJS) {
+		cryptoImpls.push(new crypto.NodeCrypto);
+	}
+	return cryptoImpls;
+}
+
+testLib.addTest('AES encrypt/decrypt', (assert) => {
+	var cryptoImpls = createCryptoImpls();	
+	cryptoImpls.forEach((impl) => {
+		var plainText = 'foo bar';
+		var key = 'ABCDABCDABCDABCD';
+		var iv = 'EFGHEFGHEFGHEFGH';
+
+		var cipherText = impl.aesCbcEncrypt(key, plainText, iv);
+		var decrypted = impl.aesCbcDecrypt(key, cipherText, iv);
+
+		assert.equal(decrypted, plainText);
+	});
+});
+
+testLib.addTest('Encrypt/decrypt item data', (assert) => {
+	var cryptoImpls = createCryptoImpls();
+	cryptoImpls.forEach((impl) => {
+		var itemData = JSON.stringify({secret: 'secret-data'});
+		var itemPass = 'item password';
+		var itemSalt = 'item salt';
+		var encrypted = crypto.encryptAgileKeychainItemData(impl, itemPass, itemSalt, itemData);
+		var decrypted = crypto.decryptAgileKeychainItemData(impl, itemPass, itemSalt, encrypted);
+		assert.equal(decrypted, itemData);
 	});
 });
 
