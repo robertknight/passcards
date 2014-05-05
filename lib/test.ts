@@ -9,12 +9,20 @@ export interface Assert {
 	ok(result: boolean) : void;
 }
 
+interface TestCase {
+	name: string
+	testFunc: (assert: Assert) => void
+	async: boolean
+}
+
+var testList : TestCase[] = [];
+
 /** Add a test which completes synchronously.
   *
   * See qunit.test()
   */
 export function addTest(name : string, testFunc : (assert: Assert) => void) {
-	qunit.test(name, testFunc);
+	testList.push({name: name, testFunc: testFunc, async: false});
 }
 
 /** Add a test which completes asynchronously. @p testFunc must call
@@ -24,7 +32,7 @@ export function addTest(name : string, testFunc : (assert: Assert) => void) {
   * See qunit.asyncTest()
   */
 export function addAsyncTest(name : string, testFunc : (assert: Assert) => void) {
-	qunit.asyncTest(name, testFunc);
+	testList.push({name: name, testFunc: testFunc, async: true});
 }
 
 /** Inform the test runner that an async test has finished. This must be called
@@ -78,7 +86,21 @@ export function environment() : Environment {
 }
 
 /** Run all tests queued with addTest() and addAsyncTest() */
-export function runTests() {
+export function runTests(filter?: string) {
+	if (filter) {
+		testList = testList.filter((testCase) => {
+			return testCase.name.indexOf(filter) != -1;
+		});
+	}
+
+	testList.forEach((testCase) => {
+		if (testCase.async) {
+			qunit.asyncTest(testCase.name, testCase.testFunc);
+		} else {
+			qunit.test(testCase.name, testCase.testFunc);
+		}
+	});
+
 	qunit.config.testTimeout = 3000;
 
 	qunit.log((details: AssertionResult) => {
