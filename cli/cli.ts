@@ -13,6 +13,7 @@ import Path = require('path');
 import consoleio = require('../lib/console');
 import dropboxvfs = require('../lib/dropboxvfs');
 import onepass = require('../lib/onepass');
+import nodefs = require('../lib/nodefs');
 import vfs = require('../lib/vfs');
 
 interface HandlerMap {
@@ -171,7 +172,7 @@ export class CLI {
 		var dropboxRoot : string;
 
 		if (storageType == 'file') {
-			storage = new vfs.FileVFS('/');
+			storage = new nodefs.FileVFS('/');
 			dropboxRoot = process.env.HOME + '/Dropbox';
 			if (customVaultPath) {
 				customVaultPath = Path.resolve(customVaultPath);

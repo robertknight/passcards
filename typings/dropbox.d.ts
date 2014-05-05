@@ -2,7 +2,7 @@
 declare module "dropbox" {
 	export interface ApiKeys {
 		key : string
-		secret : string
+		secret? : string
 	}
 
 	export var Client : {

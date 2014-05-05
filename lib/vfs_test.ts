@@ -1,12 +1,14 @@
 import Path = require('path');
+import Q = require('q');
+
 import testLib = require('./test');
 import vfs = require('./vfs');
-import Q = require('q');
+import nodefs = require('./nodefs');
 
 var createFs = () => {
 	var TEST_DIR = '/tmp/vfs-test';
-	var fs = new vfs.FileVFS(TEST_DIR);
-	var result = Q.defer<vfs.FileVFS>();
+	var fs = new nodefs.FileVFS(TEST_DIR);
+	var result = Q.defer<nodefs.FileVFS>();
 	vfs.VFSUtil.rmrf(fs, TEST_DIR)
 	.then(() => {
 		return fs.mkpath(TEST_DIR);

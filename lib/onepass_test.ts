@@ -4,8 +4,8 @@ import crypto = require('./onepass_crypto');
 import testLib = require('./test');
 import onepass = require('./onepass');
 import exportLib = require('./export');
-import vfs = require('./vfs');
 import Q = require('q');
+import nodefs = require('./nodefs');
 
 class TestCase {
 	/** Relative path to the vault within the test data dir */
@@ -28,7 +28,7 @@ var TEST_VAULTS : TestCase[] = [
 	}
 ];
 	
-var fs = new vfs.FileVFS('lib/test-data');
+var fs = new nodefs.FileVFS('lib/test-data');
 
 class ItemAndContent {
 	item : onepass.Item;
