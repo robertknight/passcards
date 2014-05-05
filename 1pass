@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-var agent = require('./build/agent');
-var cli = require('./build/cli')
+var agent = require('./build/cli/agent');
+var cli = require('./build/cli/cli')
 var keyAgent = new agent.HttpKeyAgent();
 var app = new cli.CLI(null /* console IO */, keyAgent);
 var commandArgs = process.argv.slice(2);

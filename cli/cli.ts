@@ -1,8 +1,8 @@
-/// <reference path="typings/DefinitelyTyped/node/node.d.ts" />
-/// <reference path="typings/DefinitelyTyped/mkdirp/mkdirp.d.ts" />
-/// <reference path="typings/DefinitelyTyped/q/Q.d.ts" />
+/// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
+/// <reference path="../typings/DefinitelyTyped/mkdirp/mkdirp.d.ts" />
+/// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
 
-/// <reference path="typings/argparse.d.ts" />
+/// <reference path="../typings/argparse.d.ts" />
 
 import Q = require('q');
 import argparse = require('argparse');
@@ -10,10 +10,10 @@ import mkdirp = require('mkdirp')
 import fs = require('fs');
 import Path = require('path');
 
-import consoleio = require('./lib/console');
-import dropboxvfs = require('./lib/dropboxvfs');
-import onepass = require('./lib/onepass');
-import vfs = require('./lib/vfs');
+import consoleio = require('../lib/console');
+import dropboxvfs = require('../lib/dropboxvfs');
+import onepass = require('../lib/onepass');
+import vfs = require('../lib/vfs');
 
 interface HandlerMap {
 	[index: string] : (args: any, result : Q.Deferred<number>) => void;

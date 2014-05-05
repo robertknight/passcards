@@ -1,6 +1,6 @@
-/// <reference path="typings/DefinitelyTyped/node/node.d.ts" />
-/// <reference path="typings/DefinitelyTyped/q/Q.d.ts" />
-/// <reference path="typings/DefinitelyTyped/urlrouter/urlrouter.d.ts" />
+/// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
+/// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
+/// <reference path="../typings/DefinitelyTyped/urlrouter/urlrouter.d.ts" />
 
 import child_process = require('child_process');
 import fs = require('fs');
@@ -9,9 +9,9 @@ import path = require('path');
 import Q = require('q');
 import urlrouter = require('urlrouter');
 
-import consoleio = require('./lib/console');
-import crypto = require('./lib/onepass_crypto');
-import streamutil = require('./lib/streamutil');
+import consoleio = require('../lib/console');
+import crypto = require('../lib/onepass_crypto');
+import streamutil = require('../lib/streamutil');
 
 export interface DecryptRequest {
 	id : string;

@@ -1,11 +1,11 @@
-/// <reference path="typings/DefinitelyTyped/node/node.d.ts" />
+/// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
 
 import http = require('http');
+import Q = require('q');
 
 import agent_server = require('./agent_server');
-import onepass = require('./lib/onepass');
-import streamutil = require('./lib/streamutil');
-import Q = require('q');
+import onepass = require('../lib/onepass');
+import streamutil = require('../lib/streamutil');
 
 export class HttpKeyAgent implements onepass.KeyAgent {
 	private agentPID : Q.Promise<number>;

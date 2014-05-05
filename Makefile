@@ -8,16 +8,16 @@ SILENCE_CMD=1>/dev/null 2>/dev/null
 SILENCE_STDOUT=1>/dev/null
 
 lib_srcs=$(shell find lib/ -name '*.ts')
-app_srcs=$(wildcard *.ts)
-all_srcs=$(lib_srcs) $(app_srcs)
+cli_srcs=$(shell find cli/ -name '*.ts')
+all_srcs=$(lib_srcs) $(cli_srcs)
 test_files=$(shell find build/ -name '*_test.js')
 
-all: build/cli.js
+all: build/cli/cli.js
 
-build/cli.js: $(all_srcs)
+build/cli/cli.js: $(all_srcs)
 	@$(TSC_NODE) --outDir build $(all_srcs)
 
-test: build/cli.js
+test: build/cli/cli.js
 	@echo $(test_files) | $(FOREACH_FILE) $(NODE)
 
 LINT_FILES=$(addprefix build/,$(subst .ts,.ts.lint, $(all_srcs)))

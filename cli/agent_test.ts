@@ -1,8 +1,8 @@
 import agent = require('./agent');
 import agent_server = require('./agent_server');
-import crypto = require('./lib/onepass_crypto');
-import testLib = require('./lib/test');
-import onepass = require('./lib/onepass');
+import crypto = require('../lib/onepass_crypto');
+import testLib = require('../lib/test');
+import onepass = require('../lib/onepass');
 
 testLib.addAsyncTest('store keys', (assert) => {
 	var httpAgent = new agent.HttpKeyAgent();

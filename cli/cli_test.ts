@@ -1,7 +1,8 @@
-import cli = require('./cli')
-import consoleio = require('./lib/console')
-import testLib = require('./lib/test')
 import Q = require('q');
+
+import cli = require('./cli')
+import consoleio = require('../lib/console')
+import testLib = require('../lib/test')
 
 /** Fake terminal input/output implementation which
   * returns canned input and stores 'output' for
