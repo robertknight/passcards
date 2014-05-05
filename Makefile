@@ -9,15 +9,22 @@ SILENCE_STDOUT=1>/dev/null
 
 lib_srcs=$(shell find lib/ -name '*.ts')
 cli_srcs=$(shell find cli/ -name '*.ts')
+webui_srcs=$(shell find webui/ -name '*.ts')
 all_srcs=$(lib_srcs) $(cli_srcs)
 test_files=$(shell find build/ -name '*_test.js')
 
-all: build/cli/cli.js
+all: build/current
 
-build/cli/cli.js: $(all_srcs)
-	@$(TSC_NODE) --outDir build $(all_srcs)
+build/current: $(lib_srcs) $(cli_srcs) $(webui-srcs)
+	@$(TSC_NODE) --outDir build $(lib_srcs) $(cli_srcs) $(webui_srcs)
+	@touch build/current
 
-test: build/cli/cli.js
+webui-build: build/webui_bundle.js
+
+build/webui_bundle.js: build/current
+	browserify --entry build/webui/init.js --outfile build/webui_bundle.js
+
+test: cli webui
 	@echo $(test_files) | $(FOREACH_FILE) $(NODE)
 
 LINT_FILES=$(addprefix build/,$(subst .ts,.ts.lint, $(all_srcs)))
