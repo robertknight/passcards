@@ -28,6 +28,8 @@ export interface AddKeyRequest {
 export var AGENT_LOG = '/tmp/1pass-agent.log';
 export var AGENT_PID_FILE = '/tmp/1pass-agent.pid';
 
+var KEY_TIMEOUT = 2 * 60 * 1000;
+
 function currentVersion() : string {
 	return fs.statSync(__filename).mtime.toString();
 }
@@ -49,7 +51,8 @@ function parseJSONRequest(req: http.ServerRequest, rsp: http.ServerResponse, cb:
 class Server {
 	private crypto : crypto.CryptoImpl;
 	private httpServer : http.Server;
-	private keys : {[id:string]: string}
+	private keys : {[id:string]: string};
+	private keyTimeout : NodeTimer;
 
 	constructor() {
 		this.crypto = new crypto.CryptoJsCrypto();
@@ -62,6 +65,8 @@ class Server {
 					logf('received key %s', params.id);
 					this.keys[params.id] = params.key;
 					res.end('Key added');
+
+					self.resetKeyTimeout();
 				});
 			});
 			app.get('/keys', (req, res) => {
@@ -81,6 +86,8 @@ class Server {
 
 							logf('Decrypted (%d => %d) bytes with key %s', params.cipherText.length,
 							  plainText.length, params.id);
+
+							self.resetKeyTimeout();
 
 							res.end(plainText);
 							break;
@@ -110,6 +117,16 @@ class Server {
 			ready.resolve(null);
 		});
 		return ready.promise;
+	}
+
+	private resetKeyTimeout() {
+		if (this.keyTimeout) {
+			clearTimeout(<any>this.keyTimeout);
+		}
+		this.keyTimeout = <any>setTimeout(() => {
+			logf('Key timeout expired');
+			this.keys = {};
+		}, KEY_TIMEOUT);
 	}
 }
 
