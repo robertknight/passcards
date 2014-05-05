@@ -314,7 +314,7 @@ export class Vault {
 	private fs: vfs.VFS;
 	private path: string;
 	private keyAgent: KeyAgent;
-	private keys : EncryptionKeyEntry[];
+	private keys : Q.Promise<EncryptionKeyEntry[]>;
 
 	/** Setup a vault which is stored at @p path in a filesystem.
 	  * @p fs is the filesystem interface through which the
@@ -324,21 +324,16 @@ export class Vault {
 		this.fs = fs;
 		this.path = path;
 		this.keyAgent = keyAgent || new SimpleKeyAgent(defaultCryptoImpl);
-		this.keys = [];
+		this.keys = this.readKeyData();
 	}
 
-	/** Unlock the vault using the given master password.
-	  * This must be called before item contents can be decrypted.
-	  */
-	unlock(pwd: string) : Q.Promise<void> {
-		var result = Q.defer<void>();
+	private readKeyData() : Q.Promise<EncryptionKeyEntry[]> {
 		var keys = Q.defer<EncryptionKeyEntry[]>();
-
 		var content = this.fs.read(Path.join(this.path, 'data/default/encryptionKeys.js'));
 		content.then((content:string) => {
 			var keyList = JSON.parse(content);
 			if (!keyList.list) {
-				result.reject('Missing `list` entry in encryptionKeys.js file');
+				keys.reject('Missing `list` entry in encryptionKeys.js file');
 				return;
 			}
 			var vaultKeys : EncryptionKeyEntry[] = [];
@@ -350,50 +345,60 @@ export class Vault {
 				item.level = entry.level;
 				item.validation = atob(entry.validation);
 
-				try {
-					// Using 1Password v4, there are two entries in the
-					// encryptionKeys.js file, 'SL5' and 'SL3'.
-					// 'SL3' appears to be unused so speed up the unlock
-					// process by skipping it
-					if (item.level != "SL3") {
-						var saltCipher = extractSaltAndCipherText(item.data);
-						var key = decryptKey(pwd, saltCipher.cipherText, saltCipher.salt, item.iterations, item.validation);
-						this.keyAgent.addKey(item.identifier, key);
-					}
+				// Using 1Password v4, there are two entries in the
+				// encryptionKeys.js file, 'SL5' and 'SL3'.
+				// 'SL3' appears to be unused so speed up the unlock
+				// process by skipping it
+				if (item.level != "SL3") {
 					vaultKeys.push(item);
-
-				} catch (ex) {
-					result.reject('failed to decrypt key ' + entry.level + ex);
-					return;
 				}
 			});
 			keys.resolve(vaultKeys);
-			result.resolve(null);
 		}, (err) => {
 			console.log('unable to get enc keys');
-			result.reject(err);
+			keys.reject(err);
 		})
 		.done();
 
-		keys.promise.then((keys: EncryptionKeyEntry[]) => {
-			this.keys = keys;
-		}).done();
+		return keys.promise;
+	}
 
-		return result.promise;
+	/** Unlock the vault using the given master password.
+	  * This must be called before item contents can be decrypted.
+	  */
+	unlock(pwd: string) : Q.Promise<void> {
+		return this.keys.then((keyEntries) => {
+			keyEntries.forEach((item) => {
+				var saltCipher = extractSaltAndCipherText(item.data);
+				var key = decryptKey(pwd, saltCipher.cipherText, saltCipher.salt, item.iterations, item.validation);
+				this.keyAgent.addKey(item.identifier, key);
+			});
+			return Q.resolve<void>(null);
+		});
 	}
 
 	/** Lock the vault. This discards decrypted master keys for the vault
 	  * created via a call to unlock()
 	  */
 	lock() : void {
-		this.keys = null;
+		this.keyAgent.forgetKeys();
 	}
 
 	/** Returns true if the vault was successfully unlocked using unlock().
 	  * Only once the vault is unlocked can item contents be retrieved using Item.getContents()
 	  */
-	isLocked() : boolean {
-		return this.keys === null;
+	isLocked() : Q.Promise<boolean> {
+		return Q.all([this.keyAgent.listKeys(), this.keys]).spread<boolean>(
+			(keyIDs: string[], keyEntries: EncryptionKeyEntry[]) => {
+
+			var locked = false;
+			keyEntries.forEach((entry) => {
+				if (keyIDs.indexOf(entry.identifier) == -1) {
+					locked = true;
+				}
+			});
+			return locked;
+		});
 	}
 
 	loadItem(uuid: string) : Q.Promise<Item> {
@@ -444,20 +449,22 @@ export class Vault {
 	}
 
 	decryptItemData(level: string, data: string) : Q.Promise<string> {
-		var result : Q.Promise<string>;
-		this.keys.forEach((key) => {
-			if (key.level == level) {
-				var saltCipher = extractSaltAndCipherText(data);
-				var cryptoParams = new CryptoParams(CryptoAlgorithm.AES128_OpenSSLKey, saltCipher.salt);
-				result = this.keyAgent.decrypt(key.identifier, saltCipher.cipherText, cryptoParams);
-				return;
+		return this.keys.then((keys) => {
+			var result : Q.Promise<string>;
+			keys.forEach((key) => {
+				if (key.level == level) {
+					var saltCipher = extractSaltAndCipherText(data);
+					var cryptoParams = new CryptoParams(CryptoAlgorithm.AES128_OpenSSLKey, saltCipher.salt);
+					result = this.keyAgent.decrypt(key.identifier, saltCipher.cipherText, cryptoParams);
+					return;
+				}
+			});
+			if (result) {
+				return result;
+			} else {
+				return Q.reject('No key ' + level + ' found');
 			}
 		});
-		if (result) {
-			return result;
-		} else {
-			return Q.reject('No key ' + level + ' found');
-		}
 	}
 }
 

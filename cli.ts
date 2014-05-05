@@ -102,9 +102,14 @@ export class CLI {
 	}
 
 	private unlockVault(vault: onepass.Vault) : Q.Promise<void> {
-		var password = this.io.readPassword('Master password: ');
-		return password.then((password) => {
-			return vault.unlock(password);
+		return vault.isLocked().then((isLocked) => {
+			if (!isLocked) {
+				return Q.resolve<void>(null);
+			}
+			var password = this.io.readPassword('Master password: ');
+			return password.then((password) => {
+				return vault.unlock(password);
+			});
 		});
 	}
 
