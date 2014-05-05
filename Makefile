@@ -28,7 +28,9 @@ build/%.ts.lint: %.ts
 	@touch $@
 
 test-package: all
-	@cd `mktemp -d` && npm install $(ROOT_DIR) $(SILENCE_CMD) && ./node_modules/onepass-cli/1pass --help $(SILENCE_STDOUT)
+	@cd `mktemp -d` \
+	&& npm install --quiet $(ROOT_DIR) $(SILENCE_STDOUT) \
+	&& ./node_modules/onepass-cli/1pass --help $(SILENCE_STDOUT)
 	
 clean:
 	rm -rf build/*
