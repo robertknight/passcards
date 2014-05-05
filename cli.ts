@@ -85,6 +85,8 @@ export class CLI {
 		var showCommand = subcommands.addParser('show');
 		showCommand.addArgument(['pattern'], {action:'store'});
 
+		subcommands.addParser('lock');
+
 		return parser;
 	}
 
@@ -296,6 +298,11 @@ export class CLI {
 					result.resolve(0);
 				}).done();
 			}).done();
+		};
+
+		handlers['lock'] = (args, result) => {
+			currentVault.lock();
+			result.resolve(0);
 		};
 
 		// process commands
