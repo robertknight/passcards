@@ -10,6 +10,7 @@ import mkdirp = require('mkdirp')
 import fs = require('fs');
 import Path = require('path');
 
+import clipboard = require('./clipboard');
 import consoleio = require('../lib/console');
 import dropboxvfs = require('../lib/dropboxvfs');
 import onepass = require('../lib/onepass');
@@ -20,10 +21,17 @@ interface HandlerMap {
 	[index: string] : (args: any, result : Q.Deferred<number>) => void;
 }
 
+interface FieldMatch {
+	url? : onepass.ItemUrl;
+	field? : onepass.ItemField;
+	formField? : onepass.WebFormField;
+}
+
 export class CLI {
-	private configDir : string
-	private io : consoleio.TermIO
-	private keyAgent : onepass.KeyAgent
+	private configDir : string;
+	private io : consoleio.TermIO;
+	private keyAgent : onepass.KeyAgent;
+	private clipboard : clipboard.Clipboard;
 
 	private printf(format: string, ...args: any[]) {
 		consoleio.printf.apply(null, [this.io, format].concat(args));
@@ -88,6 +96,10 @@ export class CLI {
 
 		subcommands.addParser('lock');
 
+		var copyCommand = subcommands.addParser('copy');
+		copyCommand.addArgument(['item'], {action:'store'});
+		copyCommand.addArgument(['field'], {action:'store', nargs: '?', defaultValue:'password'});
+
 		return parser;
 	}
 
@@ -125,6 +137,32 @@ export class CLI {
 		if (item.openContents && item.openContents.tags) {
 			this.printf('  Tags: %s', item.openContents.tags.join(', '));
 		}
+	}
+
+	private matchPattern(pattern: string, label: string) : boolean {
+		return label.indexOf(pattern) != -1;
+	}
+
+	private matchField(content: onepass.ItemContent, pattern: string) : FieldMatch[] {
+		var matches : FieldMatch[] = [];
+		content.urls.forEach((url) => {
+			if (this.matchPattern(pattern, url.label)) {
+				matches.push({url : url});
+			}
+		});
+		content.formFields.forEach((field) => {
+			if (this.matchPattern(pattern, field.name) || this.matchPattern(pattern, field.designation)) {
+				matches.push({formField : field});
+			}
+		});
+		content.sections.forEach((section) => {
+			section.fields.forEach((field) => {
+				if (this.matchPattern(pattern, field.title)) {
+					matches.push({field : field});
+				}
+			});
+		});
+		return matches;
 	}
 
 	private printDetails(content: onepass.ItemContent) {
@@ -217,10 +255,11 @@ export class CLI {
 		return vault.promise;
 	}
 
-	constructor(io? : consoleio.TermIO, agent? : onepass.KeyAgent) {
+	constructor(io? : consoleio.TermIO, agent? : onepass.KeyAgent, clipboardImpl?: clipboard.Clipboard) {
 		this.configDir = process.env.HOME + "/.config/onepass-web";
 		this.io = io || new consoleio.ConsoleIO();
 		this.keyAgent = agent || new onepass.SimpleKeyAgent();
+		this.clipboard = clipboardImpl || clipboard.createPlatformClipboard();
 	}
 
 	/** Starts the command-line interface and returns
@@ -304,6 +343,32 @@ export class CLI {
 		handlers['lock'] = (args, result) => {
 			currentVault.lock();
 			result.resolve(0);
+		};
+
+		handlers['copy'] = (args, result) => {
+			this.lookupItems(currentVault, args.item).then((items) => {
+				if (items.length < 1) {
+					this.printf('No items matching "%s"', args.item);
+					result.resolve(1);
+				}
+				items[0].getContent().then((content) => {
+					var matches = this.matchField(content, args.field);
+					if (matches.length > 0) {
+						var match = matches[0];
+						if (match.url) {
+							this.clipboard.setData(match.url.url);
+						} else if (match.formField) {
+							this.clipboard.setData(match.formField.value);
+						} else if (match.field) {
+							this.clipboard.setData(match.field.value);
+						}
+						result.resolve(0);
+					} else {
+						this.printf('No fields matching "%s"', args.item);
+						result.resolve(1);
+					}
+				}).done();
+			}).done();
 		};
 
 		// process commands

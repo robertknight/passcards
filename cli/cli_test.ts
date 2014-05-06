@@ -1,8 +1,10 @@
 import Q = require('q');
 
 import cli = require('./cli')
+import clipboard = require('./clipboard')
 import consoleio = require('../lib/console')
 import testLib = require('../lib/test')
+import onepass = require('../lib/onepass')
 
 /** Fake terminal input/output implementation which
   * returns canned input and stores 'output' for
@@ -43,11 +45,18 @@ var TEST_VAULT_PATH = 'lib/test-data/test.agilekeychain';
 var fakeTerm = new FakeIO();
 fakeTerm.password = 'logMEin';
 
-var app = new cli.CLI(fakeTerm);
+var keyAgent = new onepass.SimpleKeyAgent();
+var fakeClipboard = new clipboard.FakeClipboard();
+
+var app = new cli.CLI(fakeTerm, keyAgent, fakeClipboard);
 var stdArgs = ['--vault', TEST_VAULT_PATH];
 
+function runCLI(...args: any[]) : Q.Promise<number> {
+	return app.exec(stdArgs.concat(args));
+}
+
 testLib.addAsyncTest('list vault', (assert) => {
-	app.exec(stdArgs.concat(['list']))
+	runCLI('list')
 	.then((status) => {
 		assert.equal(status, 0);
 		assert.ok(fakeTerm.didPrint(/Facebook.*Login/));
@@ -70,7 +79,7 @@ testLib.addAsyncTest('wrong password', (assert) => {
 });
 
 testLib.addAsyncTest('show item', (assert) => {
-	app.exec(stdArgs.concat(['show', 'facebook']))
+	runCLI('show', 'facebook')
 	.then((status) => {
 		assert.equal(status, 0);
 		assert.ok(fakeTerm.didPrint(/username.*john\.doe@gmail.com/));
@@ -81,7 +90,7 @@ testLib.addAsyncTest('show item', (assert) => {
 });
 
 testLib.addAsyncTest('show overview', (assert) => {
-	app.exec(stdArgs.concat(['show-overview', 'facebook']))
+	runCLI('show-overview', 'facebook')
 	.then((status) => {
 		assert.equal(status, 0);
 		assert.ok(fakeTerm.didPrint(/Facebook.*Login/));
@@ -94,19 +103,44 @@ testLib.addAsyncTest('show overview', (assert) => {
 testLib.addAsyncTest('lock', (assert) => {
 	fakeTerm.passRequestCount = 0;
 
-	app.exec(stdArgs.concat(['show', 'facebook']))
-	.then((status) => {
+	keyAgent.forgetKeys().then(() => {
+		return runCLI('show', 'facebook')
+	}).then((status) => {
 		assert.equal(status, 0);
 		assert.equal(fakeTerm.passRequestCount, 1);
-		return app.exec(stdArgs.concat(['lock']));
+		return runCLI('lock')
 	})
 	.then((status) => {
 		assert.equal(status, 0);
-		return app.exec(stdArgs.concat(['show', 'facebook']));
+		return runCLI('show', 'facebook')
 	})
 	.then((status) => {
 		assert.equal(status, 0);
 		assert.equal(fakeTerm.passRequestCount, 2);
+		testLib.continueTests();
+	})
+	.done();
+});
+
+testLib.addAsyncTest('copy', (assert) => {
+	runCLI('copy', 'facebook')
+	.then((status) => {
+		assert.equal(status, 0);
+		assert.equal(fakeClipboard.data, 'Wwk-ZWc-T9MO');
+		return runCLI('copy', 'facebook', 'user');
+	})
+	.then((status) => {
+		assert.equal(status, 0);
+		assert.equal(fakeClipboard.data, 'john.doe@gmail.com');
+		return runCLI('copy', 'facebook', 'web');
+	})
+	.then((status) => {
+		assert.equal(status, 0);
+		assert.equal(fakeClipboard.data, 'facebook.com');
+		return runCLI('copy', 'facebook', 'no-such-field');
+	})
+	.then((status) => {
+		assert.equal(status, 1);
 		testLib.continueTests();
 	})
 	.done();

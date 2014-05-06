@@ -42,6 +42,10 @@ export function continueTests() {
 	qunit.start();
 }
 
+export function beforeTest(func: () => void) {
+	qunit.testStart(func);
+}
+
 export function teardownSuite(func: () => void) {
 	qunit.done(func);
 }
