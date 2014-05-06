@@ -351,16 +351,22 @@ export class CLI {
 					this.printf('No items matching "%s"', args.item);
 					result.resolve(1);
 				}
-				items[0].getContent().then((content) => {
+				var item = items[0];
+				item.getContent().then((content) => {
 					var matches = this.matchField(content, args.field);
 					if (matches.length > 0) {
 						var match = matches[0];
 						if (match.url) {
 							this.clipboard.setData(match.url.url);
+							this.printf('Copied "%s" from "%s" to clipboard', match.url.label, item.title);
 						} else if (match.formField) {
 							this.clipboard.setData(match.formField.value);
+
+							var label = match.formField.designation || match.formField.name;
+							this.printf('Copied "%s" from "%s" to clipboard', label, item.title);
 						} else if (match.field) {
 							this.clipboard.setData(match.field.value);
+							this.printf('Copied "%s" from "%s" to clipboard', match.field.title, item.title);
 						}
 						result.resolve(0);
 					} else {

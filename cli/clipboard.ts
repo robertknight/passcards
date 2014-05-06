@@ -1,5 +1,8 @@
 /// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
 
+import child_process = require('child_process');
+import os = require('os');
+
 import Q = require('q');
 
 export interface Clipboard {
@@ -29,7 +32,48 @@ export class FakeClipboard implements Clipboard {
 	}
 }
 
+// run an external command, feeding it 'input' if non-null and return
+// a promise for the output
+function exec(command: string, input?: string) : Q.Promise<string> {
+	var stdout = Q.defer<string>();
+	var child = child_process.exec(command, (err, _stdout, stderr) => {
+		if (err) {
+			stdout.reject(err);
+			return;
+		}
+		stdout.resolve(_stdout.toString());
+	});
+	if (input) {
+		child.stdin.write(input);
+		child.stdin.end();
+	}
+	return stdout.promise;
+}
+
+function discardResult<T>(promise: Q.Promise<T>) : Q.Promise<void> {
+	return promise.then(() => { return <void>(null); });
+}
+
+export class X11Clipboard implements Clipboard {
+	setData(content: string) : Q.Promise<void> {
+		return discardResult(exec('xsel --clipboard --input', content));
+	}
+
+	getData() : Q.Promise<string> {
+		return exec('xsel --clipboard --output');
+	}
+
+	clear() : Q.Promise<void> {
+		return discardResult(exec('xsel --clipboard --clear'));
+	}
+}
+
 export function createPlatformClipboard() : Clipboard {
-	return new FakeClipboard();
+	switch (os.type()) {
+		case 'Linux':
+			return new X11Clipboard();
+		default:
+			return new FakeClipboard();
+	}
 }
 
