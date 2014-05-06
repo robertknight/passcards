@@ -46,6 +46,9 @@ function exec(command: string, input?: string) : Q.Promise<string> {
 	if (input) {
 		child.stdin.write(input);
 		child.stdin.end();
+		child.stdin.on('error', (err: any) => {
+			stdout.reject(err);
+		});
 	}
 	return stdout.promise;
 }
@@ -55,6 +58,8 @@ function discardResult<T>(promise: Q.Promise<T>) : Q.Promise<void> {
 }
 
 export class X11Clipboard implements Clipboard {
+	// TODO - Improve error handling if xsel is not installed
+
 	setData(content: string) : Q.Promise<void> {
 		return discardResult(exec('xsel --clipboard --input', content));
 	}

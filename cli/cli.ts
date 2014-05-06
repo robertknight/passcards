@@ -355,20 +355,28 @@ export class CLI {
 				item.getContent().then((content) => {
 					var matches = this.matchField(content, args.field);
 					if (matches.length > 0) {
+						var label : string;
 						var match = matches[0];
+						var copied : Q.Promise<void>;
 						if (match.url) {
-							this.clipboard.setData(match.url.url);
-							this.printf('Copied "%s" from "%s" to clipboard', match.url.label, item.title);
+							label = match.url.label;
+							copied = this.clipboard.setData(match.url.url);
 						} else if (match.formField) {
-							this.clipboard.setData(match.formField.value);
-
-							var label = match.formField.designation || match.formField.name;
-							this.printf('Copied "%s" from "%s" to clipboard', label, item.title);
+							label = match.formField.designation || match.formField.name;
+							copied = this.clipboard.setData(match.formField.value);
 						} else if (match.field) {
-							this.clipboard.setData(match.field.value);
-							this.printf('Copied "%s" from "%s" to clipboard', match.field.title, item.title);
+							label = match.field.title;
+							copied = this.clipboard.setData(match.field.value);
 						}
-						result.resolve(0);
+
+						copied.then(() => {
+							this.printf('Copied "%s" from "%s" to clipboard', label, item.title);
+							result.resolve(0);
+						}, (err) => {
+							this.printf('Unable to copy data: %s', err);
+							result.resolve(1);
+						}).done();
+
 					} else {
 						this.printf('No fields matching "%s"', args.item);
 						result.resolve(1);
