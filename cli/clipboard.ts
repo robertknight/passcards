@@ -28,6 +28,7 @@ export class FakeClipboard implements Clipboard {
 	}
 
 	clear() : Q.Promise<void> {
+		this.data = '';
 		return Q.resolve<void>(null);
 	}
 }
@@ -74,11 +75,10 @@ export class X11Clipboard implements Clipboard {
 }
 
 export function createPlatformClipboard() : Clipboard {
-	switch (os.type()) {
-		case 'Linux':
-			return new X11Clipboard();
-		default:
-			return new FakeClipboard();
+	if (os.type() == 'Linux' && process.env.DISPLAY) {
+		return new X11Clipboard();
+	} else {
+		return new FakeClipboard();
 	}
 }
 
