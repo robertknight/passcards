@@ -3,7 +3,7 @@
 
 import Q = require('q');
 
-export function readAll(readable: ReadableStream) : Q.Promise<string> {
+export function readAll(readable: NodeJS.ReadableStream) : Q.Promise<string> {
 	var result = Q.defer<string>();
 	var body = '';
 	readable.on('data', (chunk: string) => {
@@ -15,7 +15,7 @@ export function readAll(readable: ReadableStream) : Q.Promise<string> {
 	return result.promise;
 }
 
-export function readJSON(readable: ReadableStream) : Q.Promise<any> {
+export function readJSON(readable: NodeJS.ReadableStream) : Q.Promise<any> {
 	return readAll(readable).then((content) => {
 		return Q.resolve(JSON.parse(content));
 	});

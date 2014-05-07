@@ -52,7 +52,7 @@ class Server {
 	private crypto : crypto.CryptoImpl;
 	private httpServer : http.Server;
 	private keys : {[id:string]: string};
-	private keyTimeout : NodeTimer;
+	private keyTimeout : NodeJS.Timer;
 
 	constructor() {
 		this.crypto = new crypto.CryptoJsCrypto();
