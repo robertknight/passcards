@@ -42,3 +42,16 @@ test-package: all
 	
 clean:
 	rm -rf build/*
+
+PUBLISH_TMP_DIR=/tmp/publish
+GIT_HEAD=$(shell git log --oneline -n1)
+
+publish-app: webui-build
+	rm -rf $(PUBLISH_TMP_DIR)
+	git clone --no-checkout http://github.com/robertknight/1pass-web $(PUBLISH_TMP_DIR)
+	cd $(PUBLISH_TMP_DIR) && git checkout gh-pages
+	cp -R build $(PUBLISH_TMP_DIR)/app/scripts
+	cp webui/*.html $(PUBLISH_TMP_DIR)/app/
+	sed -e 's/\.\.\/build/scripts/' -i '' $(PUBLISH_TMP_DIR)/app/index.html
+	cd $(PUBLISH_TMP_DIR) && git add . && git commit -m "Update build to '$(GIT_HEAD)'"
+	cd $(PUBLISH_TMP_DIR) && git push
