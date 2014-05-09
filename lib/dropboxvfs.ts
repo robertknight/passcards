@@ -9,7 +9,7 @@ export class DropboxVFS implements vfs.VFS {
 	private client : dropbox.Client;
 
 	constructor() {
-		var apiKeys = { "key" : "<CLIENT ID HERE>" }
+		var apiKeys = { "key" : "3lq6pyowxfvad8z" }
 		this.client = new dropbox.Client(apiKeys);
 		this.client.onError.addListener((error) => {
 			console.log(error);
