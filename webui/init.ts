@@ -1,2 +1,7 @@
+import $ = require('jquery');
 import app = require('./app');
-new app.App();
+
+$(document).ready(() => {
+	new app.App();
+});
+

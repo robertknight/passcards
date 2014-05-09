@@ -13,7 +13,7 @@ webui_srcs=$(shell find webui/ -name '*.ts')
 all_srcs=$(lib_srcs) $(cli_srcs)
 test_files=$(shell find build/ -name '*_test.js')
 
-all: build/current
+all: build/current webui-build
 
 build/current: $(lib_srcs) $(cli_srcs) $(webui-srcs)
 	@$(TSC_NODE) --outDir build $(lib_srcs) $(cli_srcs) $(webui_srcs)
