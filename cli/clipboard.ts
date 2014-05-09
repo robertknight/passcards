@@ -44,7 +44,7 @@ function exec(command: string, input?: string) : Q.Promise<string> {
 		}
 		stdout.resolve(_stdout.toString());
 	});
-	if (input) {
+	if (typeof input != 'undefined') {
 		child.stdin.write(input);
 		child.stdin.end();
 		child.stdin.on('error', (err: any) => {
@@ -74,9 +74,25 @@ export class X11Clipboard implements Clipboard {
 	}
 }
 
+export class MacClipboard implements Clipboard {
+	setData(content: string) : Q.Promise<void> {
+		return discardResult(exec('pbcopy', content));
+	}
+
+	getData() : Q.Promise<string> {
+		return exec('pbpaste');
+	}
+
+	clear() : Q.Promise<void> {
+		return discardResult(exec('pbcopy', ''));
+	}
+}
+
 export function createPlatformClipboard() : Clipboard {
 	if (os.type() == 'Linux' && process.env.DISPLAY) {
 		return new X11Clipboard();
+	} else if (os.type() == 'Darwin') {
+		return new MacClipboard();
 	} else {
 		return new FakeClipboard();
 	}
