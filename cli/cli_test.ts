@@ -6,22 +6,38 @@ import consoleio = require('../lib/console')
 import testLib = require('../lib/test')
 import onepass = require('../lib/onepass')
 
+interface PromptReply {
+	match: RegExp
+	response: string
+}
+
 /** Fake terminal input/output implementation which
   * returns canned input and stores 'output' for
   * inspection in tests.
   */
-export class FakeIO implements consoleio.TermIO {
+class FakeIO implements consoleio.TermIO {
 	output : string[];
 	password : string;
 	passRequestCount : number;
-
+	replies : PromptReply[];
+	
 	constructor() {
 		this.output = [];
 		this.passRequestCount = 0;
+		this.replies = [];
 	}
 
 	print(text: string) : void {
 		this.output.push(text);
+	}
+
+	readLine(prompt: string) : Q.Promise<string> {
+		this.replies.forEach((reply) => {
+			if (prompt.match(reply.match)) {
+				return Q.resolve(reply.response);
+			}
+		});
+		return Q.reject('No pattern matched the prompt');	
 	}
 
 	/** Returns a canned password. */
@@ -141,6 +157,35 @@ testLib.addAsyncTest('copy', (assert) => {
 	})
 	.then((status) => {
 		assert.equal(status, 1);
+		testLib.continueTests();
+	})
+	.done();
+});
+
+testLib.addAsyncTest('add login', (assert) => {
+	fakeTerm.replies = fakeTerm.replies.concat([{
+		match: /Website/,
+		response: 'mydomain.com'
+	},{
+		match: /Username/,
+		response: 'jim.smith@gmail.com'
+	},{
+		match: /Password/,
+		response: 'testpass'
+	},{
+		match: /Re-enter/,
+		response: 'testpass'
+	}]);
+	runCLI('add', 'login', 'MyDomain')
+	.then((status) => {
+		assert.equal(status, 0);
+		return runCLI('show', 'mydomain');
+	})
+	.then((status) => {
+		assert.equal(status, 0);
+		assert.ok(fakeTerm.didPrint(/mydomain.com/));
+		assert.ok(fakeTerm.didPrint(/testpass/));
+		assert.ok(fakeTerm.didPrint(/jim\.smith@gmail\.com/));
 		testLib.continueTests();
 	})
 	.done();

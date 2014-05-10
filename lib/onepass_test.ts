@@ -35,6 +35,10 @@ class ItemAndContent {
 	content : onepass.ItemContent;
 }
 
+function createTestVault() : Q.Promise<onepass.Vault> {
+	return null;
+}
+
 testLib.addAsyncTest('Import item from .1pif file', (assert) => {
 	var importer = new exportLib.PIFImporter();
 	var actualItems = importer.importItems(fs, 'test.1pif');
@@ -192,11 +196,33 @@ testLib.addTest('Encrypt/decrypt item data', (assert) => {
 	cryptoImpls.forEach((impl) => {
 		var itemData = JSON.stringify({secret: 'secret-data'});
 		var itemPass = 'item password';
-		var itemSalt = 'item salt';
-		var encrypted = crypto.encryptAgileKeychainItemData(impl, itemPass, itemSalt, itemData);
-		var decrypted = crypto.decryptAgileKeychainItemData(impl, itemPass, itemSalt, encrypted);
+		var encrypted = crypto.encryptAgileKeychainItemData(impl, itemPass, itemData);
+		var decrypted = crypto.decryptAgileKeychainItemData(impl, itemPass, encrypted);
 		assert.equal(decrypted, itemData);
 	});
+});
+
+testLib.addTest('New item UUID', (assert) => {
+	var item = new onepass.Item();
+	assert.ok(item.uuid.match(/[0-9A-F]{32}/) != null);
+});
+
+testLib.addAsyncTest('Save item', (assert) => {
+	createTestVault().then((vault) => {
+		var item = new onepass.Item();
+		item.title = 'New Test Item';
+		var content = new onepass.ItemContent();
+		content.urls.push({
+			url: 'mysite.com',
+			label: 'website'
+		});
+		item.setContent(content);
+		item.save().then(() => {
+			testLib.continueTests();
+		})
+		.done();
+	})
+	.done();
 });
 
 testLib.runTests();

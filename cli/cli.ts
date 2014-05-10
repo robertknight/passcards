@@ -33,6 +33,13 @@ export class CLI {
 	private keyAgent : onepass.KeyAgent;
 	private clipboard : clipboard.Clipboard;
 
+	constructor(io? : consoleio.TermIO, agent? : onepass.KeyAgent, clipboardImpl?: clipboard.Clipboard) {
+		this.configDir = process.env.HOME + "/.config/onepass-web";
+		this.io = io || new consoleio.ConsoleIO();
+		this.keyAgent = agent || new onepass.SimpleKeyAgent();
+		this.clipboard = clipboardImpl || clipboard.createPlatformClipboard();
+	}
+
 	private printf(format: string, ...args: any[]) {
 		consoleio.printf.apply(null, [this.io, format].concat(args));
 	}
@@ -99,6 +106,10 @@ export class CLI {
 		var copyCommand = subcommands.addParser('copy');
 		copyCommand.addArgument(['item'], {action:'store'});
 		copyCommand.addArgument(['field'], {action:'store', nargs: '?', defaultValue:'password'});
+
+		var addCommand = subcommands.addParser('add');
+		addCommand.addArgument(['type'], {action:'store'});
+		addCommand.addArgument(['title'], {action:'store', nargs: '*'});
 
 		return parser;
 	}
@@ -255,11 +266,63 @@ export class CLI {
 		return vault.promise;
 	}
 
-	constructor(io? : consoleio.TermIO, agent? : onepass.KeyAgent, clipboardImpl?: clipboard.Clipboard) {
-		this.configDir = process.env.HOME + "/.config/onepass-web";
-		this.io = io || new consoleio.ConsoleIO();
-		this.keyAgent = agent || new onepass.SimpleKeyAgent();
-		this.clipboard = clipboardImpl || clipboard.createPlatformClipboard();
+	private addItemCommand(vault: onepass.Vault, type: string, title: string) : Q.Promise<number> {
+		var status = Q.defer<number>();
+
+		if (type !== 'login') {
+			this.printf('The only supported item type for the "add" command is currently "login"');
+			status.resolve(1);
+			return status.promise;
+		}
+
+		var item = new onepass.Item(vault);
+		item.title = title;
+		var content = new onepass.ItemContent();
+
+		var contentReady = Q.defer<onepass.ItemContent>();
+
+		this.io.readLine('Website: ').then((website) => {
+			content.urls.push({
+				label: 'website',
+				url: website
+			});
+			return this.io.readLine('Username: ');
+		})
+		.then((username) => {
+			content.formFields.push({
+				id: '',
+				name: 'username',
+				designation: 'username',
+				type: 'T',
+				value: username
+			});
+			return this.io.readPassword("Password (or '-' to generate a random password): ");
+		})
+		.then((password) => {
+			content.formFields.push({
+				id: '',
+				name: 'password',
+				designation: 'password',
+				type: 'P',
+				value: password
+			});
+			contentReady.resolve(content);
+		})
+		.done();
+		
+		contentReady.promise.then(() => {
+			item.setContent(content);
+			return item.save();
+		})
+		.then(() => {
+			this.printf("Added new login '%s'", item.title);
+			status.resolve(0);
+		})
+		.fail((err) => {
+			status.resolve(1);
+		});
+
+		return status.promise;
 	}
 
 	/** Starts the command-line interface and returns
@@ -384,6 +447,10 @@ export class CLI {
 				}).done();
 			}).done();
 		};
+
+		handlers['add'] = (args, result) => {
+			return this.addItemCommand(currentVault, args.type, args.title);
+		}
 
 		// process commands
 		var exitStatus = Q.defer<number>();

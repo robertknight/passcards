@@ -29,19 +29,23 @@ testLib.addAsyncTest('decrypt data', (assert) => {
 
 	var itemData = JSON.stringify({secret: 'secret-data'});
 	var itemPass = 'the master key';
-	var itemSalt = 'item salt';
-	var encrypted = crypto.encryptAgileKeychainItemData(new crypto.CryptoJsCrypto, itemPass, itemSalt, itemData);
+	var encrypted = crypto.encryptAgileKeychainItemData(new crypto.CryptoJsCrypto, itemPass, itemData);
 
 	httpAgent.addKey('key1', itemPass)
 	.then(() => {
 		return httpAgent.decrypt('key1', encrypted, new onepass.CryptoParams(
-			onepass.CryptoAlgorithm.AES128_OpenSSLKey, itemSalt));
+			onepass.CryptoAlgorithm.AES128_OpenSSLKey));
 	})
 	.then((decrypted) => {
 		assert.equal(decrypted, itemData);
 		testLib.continueTests();
 	})
 	.done();
+});
+
+testLib.addAsyncTest('encrypt data', (assert) => {
+	// TODO
+	assert.ok(false);
 });
 
 testLib.teardownSuite(() => {

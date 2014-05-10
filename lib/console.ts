@@ -11,6 +11,7 @@ import Q = require('q');
 export interface TermIO {
 	print(text: string) : void
 	readPassword(prompt: string) : Q.Promise<string>
+	readLine(prompt: string) : Q.Promise<string>
 }
 
 export class ConsoleIO implements TermIO {
@@ -26,6 +27,18 @@ export class ConsoleIO implements TermIO {
 				return;
 			}
 			result.resolve(password);
+		});
+		return result.promise;
+	}
+
+	readLine(prompt: string) : Q.Promise<string> {
+		var result = Q.defer<string>();
+		promptly.prompt(prompt, (err, text) => {
+			if (err) {
+				result.reject(err);
+				return;
+			}
+			result.resolve(text);
 		});
 		return result.promise;
 	}

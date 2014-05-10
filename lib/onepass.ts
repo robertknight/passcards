@@ -1,19 +1,28 @@
 /// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
+/// <reference path="../typings/atob.d.ts" />
 
+import atob = require('atob');
+import btoa = require('btoa');
 import Q = require('q');
-import crypto = require('./onepass_crypto');
-import vfs = require('./vfs');
 import Path = require('path');
 
-var atob = require('atob');
+import agilekeychain = require('./agilekeychain');
+import crypto = require('./onepass_crypto');
+import vfs = require('./vfs');
 
 var defaultCryptoImpl = new crypto.CryptoJsCrypto();
 
-// Converts a UNIX timestamp in milliseconds since
+// Converts a UNIX timestamp in seconds since
 // the epoch to a JS Date
 function dateFromUNIXDate(timestamp: number) : Date {
 	return new Date(timestamp * 1000);
+}
+
+// Converts a JS Date to a UNIX timestamp in seconds
+// since the epoch
+function UNIXDateFromDate(date: Date) : number {
+	return date.getTime() / 1000;
 }
 
 export class EncryptionKeyEntry {
@@ -39,11 +48,9 @@ export enum CryptoAlgorithm {
 
 export class CryptoParams {
 	algo : CryptoAlgorithm;
-	salt : string;
 
-	constructor(algo: CryptoAlgorithm, salt: string) {
+	constructor(algo: CryptoAlgorithm) {
 		this.algo = algo;
-		this.salt = salt;
 	}
 }
 
@@ -64,6 +71,12 @@ export interface KeyAgent {
 	  * Returns a promise for the decrypted plaintext.
 	  */
 	decrypt(id: string, cipherText: string, params: CryptoParams) : Q.Promise<string>;
+	/** Encrypt data for an item using the given key ID and crypto
+	  * parameters.
+	  *
+	  * Returns a promise for the encrypted text.
+	  */
+	encrypt(id: string, plainText: string, params: CryptoParams) : Q.Promise<string>;
 }
 
 /** A simple key agent which just stores keys in memory */
@@ -97,7 +110,20 @@ export class SimpleKeyAgent {
 		switch (params.algo) {
 			case CryptoAlgorithm.AES128_OpenSSLKey:
 				return Q.resolve(crypto.decryptAgileKeychainItemData(this.crypto,
-					  this.keys[id], params.salt, cipherText));
+					  this.keys[id], cipherText));
+			default:
+				return Q.reject('Unknown encryption algorithm');
+		}
+	}
+
+	encrypt(id: string, plainText: string, params: CryptoParams) : Q.Promise<string> {
+		if (!this.keys.hasOwnProperty(id)) {
+			return Q.reject('No such key');
+		}
+		switch (params.algo) {
+			case CryptoAlgorithm.AES128_OpenSSLKey:
+				return Q.resolve(crypto.encryptAgileKeychainItemData(this.crypto,
+					this.keys[id], plainText));
 			default:
 				return Q.reject('Unknown encryption algorithm');
 		}
@@ -208,8 +234,11 @@ export class Item {
 	private vault : Vault;
 	private content : ItemContent;
 	
-	constructor(vault? : Vault) {
+	constructor(vault? : Vault, uuid? : string) {
 		this.vault = vault;
+
+		this.uuid = uuid || crypto.newUUID();
+		this.trashed = false;
 	}
 
 	/** Retrieves and decrypts the content of a 1Password item.
@@ -252,6 +281,13 @@ export class Item {
 		this.content = content;
 	}
 
+	save() : Q.Promise<void> {
+		if (!this.vault) {
+			return Q.reject('Item has no associated vault');
+		}
+		return this.vault.saveItem(this);
+	}
+
 	/** Returns true if this is a 'tombstone' entry remaining from
 	  * a deleted item. When an item is deleted, all of the properties except
 	  * the UUID are erased and the item's type is changed to 'system.Tombstone'.
@@ -277,6 +313,25 @@ export class Item {
 		} else {
 			return this.typeName;
 		}
+	}
+
+	static toAgileKeychainObject(item: Item, encryptedData: string) : agilekeychain.Item {
+		var keychainItem: any = {};
+
+		keychainItem.createdAt = UNIXDateFromDate(item.createdAt);
+		keychainItem.updatedAt = UNIXDateFromDate(item.updatedAt);
+		keychainItem.title = item.title;
+		keychainItem.securityLevel = item.securityLevel;
+		keychainItem.encrypted = btoa(encryptedData);
+		keychainItem.typeName = item.typeName;
+		keychainItem.uuid = item.uuid;
+		keychainItem.location = item.location;
+		keychainItem.folderUuid = item.folderUuid;
+		keychainItem.faveIndex = item.faveIndex;
+		keychainItem.trashed = item.trashed;
+		keychainItem.openContents = item.openContents;
+
+		return keychainItem;
 	}
 
 	/** Parses an Item from JSON data in a .1password file.
@@ -369,7 +424,7 @@ export class Vault {
 	unlock(pwd: string) : Q.Promise<void> {
 		return this.keys.then((keyEntries) => {
 			keyEntries.forEach((item) => {
-				var saltCipher = extractSaltAndCipherText(item.data);
+				var saltCipher = crypto.extractSaltAndCipherText(item.data);
 				var key = decryptKey(pwd, saltCipher.cipherText, saltCipher.salt, item.iterations, item.validation);
 				this.keyAgent.addKey(item.identifier, key);
 			});
@@ -401,9 +456,13 @@ export class Vault {
 		});
 	}
 
+	private itemPath(uuid: string) : string {
+		return Path.join(this.path, 'data/default/' + uuid + '.1password')
+	}
+
 	loadItem(uuid: string) : Q.Promise<Item> {
 		var item = Q.defer<Item>();
-		var content = this.fs.read(Path.join(this.path, 'data/default/' + uuid + '.1password'));
+		var content = this.fs.read(this.itemPath(uuid));
 		
 		content.then((content) => {
 			item.resolve(Item.fromAgileKeychainObject(this, JSON.parse(content)));
@@ -413,6 +472,29 @@ export class Vault {
 		.done();
 
 		return item.promise;
+	}
+
+	saveItem(item: Item) : Q.Promise<void> {
+		var done = Q.defer<void>();
+
+		if (!item.createdAt) {
+			item.createdAt = new Date();
+		}
+		item.updatedAt = new Date();
+
+		item.getContent().then((content) => {
+			var contentJSON = JSON.stringify(ItemContent.toAgileKeychainObject(content));
+			this.encryptItemData(item.securityLevel, contentJSON).then((encryptedContent) => {
+				var itemPath = this.itemPath(item.uuid);
+				var keychainJSON = JSON.stringify(Item.toAgileKeychainObject(item, encryptedContent));
+				this.fs.write(itemPath, keychainJSON).then(() => {
+					done.resolve(null);
+				})
+			}).done();
+		})
+		.done();
+
+		return done.promise;
 	}
 
 	/** Returns a list of overview data for all items in the vault,
@@ -453,9 +535,8 @@ export class Vault {
 			var result : Q.Promise<string>;
 			keys.forEach((key) => {
 				if (key.level == level) {
-					var saltCipher = extractSaltAndCipherText(data);
-					var cryptoParams = new CryptoParams(CryptoAlgorithm.AES128_OpenSSLKey, saltCipher.salt);
-					result = this.keyAgent.decrypt(key.identifier, saltCipher.cipherText, cryptoParams);
+					var cryptoParams = new CryptoParams(CryptoAlgorithm.AES128_OpenSSLKey);
+					result = this.keyAgent.decrypt(key.identifier, data, cryptoParams);
 					return;
 				}
 			});
@@ -466,10 +547,23 @@ export class Vault {
 			}
 		});
 	}
-}
 
-export class SaltedCipherText {
-	constructor(public salt: string, public cipherText: string) {
+	encryptItemData(level: string, data: string) : Q.Promise<string> {
+		return this.keys.then((keys) => {
+			var result : Q.Promise<string>;
+			keys.forEach((key) => {
+				if (key.level == level) {
+					var cryptoParams = new CryptoParams(CryptoAlgorithm.AES128_OpenSSLKey);
+					result = this.keyAgent.encrypt(key.identifier, data, cryptoParams);
+					return;
+				}
+			});
+			if (result) {
+				return result;
+			} else {
+				return Q.reject('No key ' + level + ' found');
+			}
+		});
 	}
 }
 
@@ -495,26 +589,56 @@ export class ItemContent {
 		this.htmlId = '';
 	}
 
+	/** Convert an ItemContent entry into a `contents` blob for storage in
+	  * a 1Password item.
+	  */
+	static toAgileKeychainObject(content: ItemContent) : agilekeychain.ItemContent {
+		var keychainContent = new agilekeychain.ItemContent();
+		if (content.sections) {
+			keychainContent.sections = [];
+			content.sections.forEach((section) => {
+				keychainContent.sections.push(ItemSection.toAgileKeychainObject(section));
+			});
+		}
+		if (content.urls) {
+			keychainContent.URLs = [];
+			content.urls.forEach((url) => {
+				keychainContent.URLs.push(url);
+			});
+		}
+		keychainContent.notesPlain = content.notes;
+		if (content.formFields) {
+			keychainContent.fields = [];
+			content.formFields.forEach((field) => {
+				keychainContent.fields.push(field);
+			});
+		}
+		keychainContent.htmlAction = content.htmlAction;
+		keychainContent.htmlMethod = content.htmlMethod;
+		keychainContent.htmlID = content.htmlId;
+		return keychainContent;
+	}
+
 	/** Convert a decrypted JSON `contents` blob from a 1Password item
 	  * into an ItemContent instance.
 	  */
-	static fromAgileKeychainObject(data: any) : ItemContent {
+	static fromAgileKeychainObject(data: agilekeychain.ItemContent) : ItemContent {
 		var content = new ItemContent();
 		if (data.sections) {
-			data.sections.forEach((section: any) => {
+			data.sections.forEach((section) => {
 				content.sections.push(ItemSection.fromAgileKeychainObject(section));
 			});
 		}
 		if (data.URLs) {
-			data.URLs.forEach((url: any) => {
+			data.URLs.forEach((url) => {
 				content.urls.push(url);
 			});
 		}
-		if (data.notes) {
-			content.notes = data.notes;
+		if (data.notesPlain) {
+			content.notes = data.notesPlain;
 		}
 		if (data.fields) {
-			data.fields.forEach((field: any) => {
+			data.fields.forEach((field) => {
 				content.formFields.push(field);
 			});
 		}
@@ -525,7 +649,7 @@ export class ItemContent {
 			content.htmlMethod = data.htmlMethod;
 		}
 		if (data.htmlID) {
-			content.htmlId = data.htmlId;
+			content.htmlId = data.htmlID;
 		}
 
 		return content;
@@ -553,16 +677,27 @@ export class ItemSection {
 	title : string;
 	fields : ItemField[];
 
+	static toAgileKeychainObject(section: ItemSection) : agilekeychain.ItemSection {
+		var keychainSection = new agilekeychain.ItemSection();
+		keychainSection.name = section.name;
+		keychainSection.title = section.title;
+		keychainSection.fields = [];
+		section.fields.forEach((field) => {
+			keychainSection.fields.push(ItemField.toAgileKeychainObject(field));
+		});
+		return keychainSection;
+	}
+
 	/** Convert a section entry from the JSON contents blob for
 	  * an item into an ItemSection instance.
 	  */
-	static fromAgileKeychainObject(data: any) : ItemSection {
+	static fromAgileKeychainObject(data: agilekeychain.ItemSection) : ItemSection {
 		var section = new ItemSection();
 		section.name = data.name;
 		section.title = data.title;
 		section.fields = [];
 		if (data.fields) {
-			data.fields.forEach((fieldData: any) => {
+			data.fields.forEach((fieldData) => {
 				section.fields.push(ItemField.fromAgileKeychainObject(fieldData));
 			});
 		}
@@ -580,7 +715,16 @@ export class ItemField {
 		return this.value;
 	}
 
-	static fromAgileKeychainObject(fieldData: any) : ItemField {
+	static toAgileKeychainObject(field: ItemField) : agilekeychain.ItemField {
+		var keychainField = new agilekeychain.ItemField;
+		keychainField.k = field.kind;
+		keychainField.n = field.name;
+		keychainField.t = field.title;
+		keychainField.v = field.value;
+		return keychainField;
+	}
+
+	static fromAgileKeychainObject(fieldData: agilekeychain.ItemField) : ItemField {
 		var field = new ItemField;
 		field.kind = fieldData.k;
 		field.name = fieldData.n;
@@ -617,19 +761,13 @@ export class ItemUrl {
 	url : string;
 }
 
-function extractSaltAndCipherText(input: string) : SaltedCipherText {
-	var salt = input.substring(8, 16);
-	var cipher = input.substring(16);
-	return new SaltedCipherText(salt, cipher);
-}
-
 export function decryptKey(masterPwd: any, encryptedKey: string, salt: string, iterCount: number, validation: string) : string {
 	var KEY_LEN = 32;
 	var derivedKey = defaultCryptoImpl.pbkdf2(masterPwd, salt, iterCount, KEY_LEN);
 	var aesKey = derivedKey.substring(0, 16);
 	var iv = derivedKey.substring(16, 32);
 	var decryptedKey = defaultCryptoImpl.aesCbcDecrypt(aesKey, encryptedKey, iv);
-	var validationSaltCipher = extractSaltAndCipherText(validation);
+	var validationSaltCipher = crypto.extractSaltAndCipherText(validation);
 
 	var keyParams = crypto.openSSLKey(defaultCryptoImpl, decryptedKey, validationSaltCipher.salt);
 	var decryptedValidation = defaultCryptoImpl.aesCbcDecrypt(keyParams.key, validationSaltCipher.cipherText, keyParams.iv);

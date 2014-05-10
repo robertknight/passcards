@@ -11,13 +11,21 @@ import urlrouter = require('urlrouter');
 
 import consoleio = require('../lib/console');
 import crypto = require('../lib/onepass_crypto');
+import onepass = require('../lib/onepass');
 import streamutil = require('../lib/streamutil');
 
 export interface DecryptRequest {
 	id : string;
-	algo : string;
+	algo : onepass.CryptoAlgorithm;
 	salt : string;
 	cipherText : string
+}
+
+export interface EncryptRequest {
+	id : string;
+	algo : onepass.CryptoAlgorithm;
+	salt : string;
+	plainText : string;
 }
 
 export interface AddKeyRequest {
@@ -76,13 +84,14 @@ class Server {
 				parseJSONRequest(req, res, (params: DecryptRequest) => {
 					if (!this.keys.hasOwnProperty(params.id)) {
 						logf('Decrypt failed - unknown key %s', params.id);
-						res.statusCode = 404;
-						res.end('No such key found');
+						res.statusCode = 400;
+						res.end('Key not found');
+						return;
 					}
 					switch (params.algo) {
-						case 'aes-128-openssl':
+						case onepass.CryptoAlgorithm.AES128_OpenSSLKey:
 							var plainText = crypto.decryptAgileKeychainItemData(this.crypto, this.keys[params.id],
-							  params.salt, params.cipherText);
+							  params.cipherText);
 
 							logf('Decrypted (%d => %d) bytes with key %s', params.cipherText.length,
 							  plainText.length, params.id);
@@ -93,6 +102,33 @@ class Server {
 							break;
 						default:
 							logf('Decrypt failed - unknown algorithm');
+							res.statusCode = 400;
+							res.end('Unsupported encryption algorithm');
+					}
+				});
+			});
+			app.post('/encrypt', (req, res) => {
+				parseJSONRequest(req, res, (params: EncryptRequest) => {
+					if (!this.keys.hasOwnProperty(params.id)) {
+						logf('Encrypt failed - unknown key %s', params.id);
+						res.statusCode = 400;
+						res.end('Key not found');
+						return;
+					}
+					switch (params.algo) {
+						case onepass.CryptoAlgorithm.AES128_OpenSSLKey:
+							var cipherText = crypto.encryptAgileKeychainItemData(this.crypto, this.keys[params.id],
+							 params.plainText);
+
+							logf('Encrypted (%d => %d) bytes with key %s', params.plainText.length,
+							  cipherText.length, params.id);
+
+							self.resetKeyTimeout();
+
+							res.end(cipherText);
+							break;
+						default:
+							logf('Encrypt failed - unknown algorithm');
 							res.statusCode = 400;
 							res.end('Unsupported encryption algorithm');
 					}

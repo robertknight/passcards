@@ -1,14 +1,39 @@
 /// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
+/// <reference path="../typings/DefinitelyTyped/node-uuid/node-uuid.d.ts" />
 
 import assert = require('assert');
 import crypto = require('crypto');
+var cryptoJS = require('crypto-js');
+import uuid = require('node-uuid');
+
 import pbkdf2Lib = require('./crypto/pbkdf2');
 
-var cryptoJS = require('crypto-js');
+// see https://developer.mozilla.org/en-US/docs/Web/API/window.crypto.getRandomValues
+interface WebCrypto {
+	getRandomValues<T extends ArrayBufferView>(buffer: T): T;
+}
+
+interface Window {
+	crypto: WebCrypto;
+}
 
 export class AESKeyParams {
 	constructor(public key: string, public iv: string) {
 	}
+}
+
+export class SaltedCipherText {
+	constructor(public salt: string, public cipherText: string) {
+	}
+}
+
+export function extractSaltAndCipherText(input: string) : SaltedCipherText {
+	if (input.slice(0, 8) != 'Salted__') {
+		throw 'Ciphertext missing salt';
+	}
+	var salt = input.substring(8, 16);
+	var cipher = input.substring(16);
+	return new SaltedCipherText(salt, cipher);
 }
 
 /** Derives an AES-128 key and initialization vector from a key of arbitrary length and salt
@@ -22,15 +47,22 @@ export function openSSLKey(cryptoImpl: CryptoImpl, password: string, salt: strin
 }
 
 /** Encrypt the JSON data for an item for storage in the Agile Keychain format. */
-export function encryptAgileKeychainItemData(cryptoImpl: CryptoImpl, key: string, salt: string, plainText: string) {
+export function encryptAgileKeychainItemData(cryptoImpl: CryptoImpl, key: string, plainText: string) {
+	var salt = cryptoImpl.randomBytes(8);
 	var keyParams = openSSLKey(cryptoImpl, key, salt);
-	return cryptoImpl.aesCbcEncrypt(keyParams.key, plainText, keyParams.iv);
+	return 'Salted__' + salt + cryptoImpl.aesCbcEncrypt(keyParams.key, plainText, keyParams.iv);
 }
 
 /** Decrypt the encrypted contents of an item stored in the Agile Keychain format. */
-export function decryptAgileKeychainItemData(cryptoImpl: CryptoImpl, key: string, salt: string, cipherText: string) {
-	var keyParams = openSSLKey(cryptoImpl, key, salt);
-	return cryptoImpl.aesCbcDecrypt(keyParams.key, cipherText, keyParams.iv);
+export function decryptAgileKeychainItemData(cryptoImpl: CryptoImpl, key: string, cipherText: string) {
+	var saltCipher = extractSaltAndCipherText(cipherText);
+	var keyParams = openSSLKey(cryptoImpl, key, saltCipher.salt);
+	return cryptoImpl.aesCbcDecrypt(keyParams.key, saltCipher.cipherText, keyParams.iv);
+}
+
+/** Generate a V4 (random) UUID */
+export function newUUID() : string {
+	return uuid.v4().toUpperCase().replace(/-/g,'');
 }
 
 /** CryptoImpl is an interface to common crypto algorithms required
@@ -48,6 +80,10 @@ export interface CryptoImpl {
 	pbkdf2(masterPwd: string, salt: string, iterCount: number, keyLen: number) : string;
 
 	md5Digest(input: string) : string;
+
+	/** Returns a buffer of @p length random bytes of strong pseudo-random data.
+	  */
+	randomBytes(length: number) : string;
 }
 
 // crypto implementation using Node.js' crypto lib
@@ -77,6 +113,10 @@ export class NodeCrypto implements CryptoImpl {
 		var md5er = crypto.createHash('md5');
 		md5er.update(input);
 		return md5er.digest('binary');
+	}
+
+	randomBytes(length: number) : string {
+		return crypto.pseudoRandomBytes(length).toString('binary');
 	}
 }
 
@@ -139,6 +179,25 @@ export class CryptoJsCrypto implements CryptoImpl {
 	
 	md5Digest(input: string) : string {
 		return cryptoJS.MD5(this.encoding.parse(input)).toString(this.encoding);
+	}
+
+	randomBytes(length: number) : string {
+		// use browser's PRNG if available
+		if (typeof window != 'undefined') {
+			var theWindow = <Window><any>window;
+			if (theWindow.crypto && theWindow.crypto.getRandomValues) {
+				var buffer = new Uint8Array(length);
+				return pbkdf2Lib.stringFromBuffer(theWindow.crypto.getRandomValues(buffer));
+			}
+		}
+
+		// fall back to NodeJS' PRNG otherwise
+		if (crypto.pseudoRandomBytes) {
+			return crypto.pseudoRandomBytes(length).toString('binary');
+		}
+		
+		// fall back to Math.random()-based PRNG
+		return cryptoJS.lib.WordArray.random(length).toString(this.encoding);
 	}
 }
 
