@@ -1,11 +1,15 @@
+import os = require('os');
+import path = require('path');
 import Q = require('q');
 import underscore = require('underscore');
 
 import cli = require('./cli')
 import clipboard = require('./clipboard')
 import consoleio = require('../lib/console')
+import nodefs = require('../lib/nodefs');
 import testLib = require('../lib/test')
 import onepass = require('../lib/onepass')
+import vfs = require('../lib/vfs');
 
 interface PromptReply {
 	match: RegExp
@@ -75,6 +79,22 @@ var stdArgs = ['--vault', TEST_VAULT_PATH];
 
 function runCLI(...args: any[]) : Q.Promise<number> {
 	return app.exec(stdArgs.concat(args));
+}
+
+function runCLIWithVault(path: string, ...args: any[]) : Q.Promise<number> {
+	return app.exec(['--vault', path].concat(args));
+}
+
+function cloneTestVault() : Q.Promise<string> {
+	var fs = new nodefs.FileVFS('/');
+	var tempPath = path.join(<string>(<any>os).tmpdir(), 'test-vault');
+	return vfs.VFSUtil.rmrf(fs, tempPath).then(() => {
+		return fs.stat(path.resolve(TEST_VAULT_PATH));
+	}).then((srcFolder) => {
+		return vfs.VFSUtil.cp(fs, srcFolder, tempPath);
+	}).then(() => {
+		return tempPath;
+	});
 }
 
 testLib.addAsyncTest('list vault', (assert) => {
@@ -182,10 +202,14 @@ testLib.addAsyncTest('add login', (assert) => {
 		match: /Re-enter/,
 		response: 'testpass'
 	}]);
-	runCLI('add', 'login', 'MyDomain')
-	.then((status) => {
+
+	var vaultPath : string;
+	cloneTestVault().then((path) => {
+		vaultPath = path;
+		return runCLIWithVault(path, 'add', 'login', 'MyDomain')
+	}).then((status) => {
 		assert.equal(status, 0);
-		return runCLI('show', 'mydomain');
+		return runCLIWithVault(vaultPath, 'show', 'mydomain');
 	})
 	.then((status) => {
 		assert.equal(status, 0);
