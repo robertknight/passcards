@@ -263,4 +263,16 @@ testLib.addAsyncTest('Save item', (assert) => {
 	.done();
 });
 
+testLib.addTest('Generate Passwords', (assert) => {
+	for (var len = 4; len < 20; len++) {
+		for (var k=0; k < 10; k++) {
+			var pass = crypto.generatePassword(len);
+			assert.ok(pass.match(/[A-Z]/) != null);
+			assert.ok(pass.match(/[a-z]/) != null);
+			assert.ok(pass.match(/[0-9]/) != null);
+			assert.equal(pass.length, len);
+		}
+	}
+});
+
 testLib.runTests();

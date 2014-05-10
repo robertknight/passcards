@@ -4,6 +4,7 @@
 import assert = require('assert');
 import crypto = require('crypto');
 var cryptoJS = require('crypto-js');
+import underscore = require('underscore');
 import uuid = require('node-uuid');
 
 import pbkdf2Lib = require('./crypto/pbkdf2');
@@ -48,7 +49,7 @@ export function openSSLKey(cryptoImpl: CryptoImpl, password: string, salt: strin
 
 /** Encrypt the JSON data for an item for storage in the Agile Keychain format. */
 export function encryptAgileKeychainItemData(cryptoImpl: CryptoImpl, key: string, plainText: string) {
-	var salt = cryptoImpl.randomBytes(8);
+	var salt = randomBytes(8);
 	var keyParams = openSSLKey(cryptoImpl, key, salt);
 	return 'Salted__' + salt + cryptoImpl.aesCbcEncrypt(keyParams.key, plainText, keyParams.iv);
 }
@@ -63,6 +64,71 @@ export function decryptAgileKeychainItemData(cryptoImpl: CryptoImpl, key: string
 /** Generate a V4 (random) UUID */
 export function newUUID() : string {
 	return uuid.v4().toUpperCase().replace(/-/g,'');
+}
+
+/** Generate a buffer of @p length strong pseudo-random bytes */
+export function randomBytes(length: number) : string {
+	// use browser's PRNG if available
+	if (typeof window != 'undefined') {
+		var theWindow = <Window><any>window;
+		if (theWindow.crypto && theWindow.crypto.getRandomValues) {
+			var buffer = new Uint8Array(length);
+			return pbkdf2Lib.stringFromBuffer(theWindow.crypto.getRandomValues(buffer));
+		}
+	}
+
+	// fall back to NodeJS' PRNG otherwise
+	if (crypto.pseudoRandomBytes) {
+		return crypto.pseudoRandomBytes(length).toString('binary');
+	}
+	
+	// fall back to Math.random()-based PRNG
+	return cryptoJS.lib.WordArray.random(length).toString(this.encoding);
+}
+
+var DEFAULT_PASSWORD_CHARSETS = ["ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+                                 "abcdefghijklmnopqrstuvwxyz",
+                                 "0123456789"];
+
+/** Generate a new random password. */
+export function generatePassword(length: number, charsets?: string[]) : string {
+	charsets = charsets || DEFAULT_PASSWORD_CHARSETS;
+	var fullCharset = charsets.join('');
+
+	var genCandidate = (length: number) => {
+		var candidate = '';
+		var sectionSize = 3;
+		while (candidate.length < length) {
+			var buffer = randomBytes(100);
+			for (var i=0; candidate.length < length && i < buffer.length; i++) {
+				if ((candidate.length % (sectionSize+1) == sectionSize) &&
+				    (length - candidate.length > 1)) {
+					candidate += '-';
+				}
+				if (buffer.charCodeAt(i) < fullCharset.length) {
+					candidate += fullCharset[buffer.charCodeAt(i)];
+				}
+			}
+		}
+		return candidate;
+	}
+	while (true) {
+		// generate a candiate, check that it contains at least one
+		// character from each of the charsets
+		var candidate = genCandidate(length);
+		var charsetMatches = new Array(charsets.length);
+
+		for (var i=0; i < candidate.length; i++) {
+			for (var k=0; k < charsetMatches.length; k++) {
+				charsetMatches[k] = charsetMatches[k] || charsets[k].indexOf(candidate[i]) != -1;
+			}
+		}
+		if (underscore.every(charsetMatches, (match: boolean) => {
+			return match;
+		})) {
+			return candidate;
+		}
+	}
 }
 
 /** CryptoImpl is an interface to common crypto algorithms required
@@ -80,10 +146,6 @@ export interface CryptoImpl {
 	pbkdf2(masterPwd: string, salt: string, iterCount: number, keyLen: number) : string;
 
 	md5Digest(input: string) : string;
-
-	/** Returns a buffer of @p length random bytes of strong pseudo-random data.
-	  */
-	randomBytes(length: number) : string;
 }
 
 // crypto implementation using Node.js' crypto lib
@@ -113,10 +175,6 @@ export class NodeCrypto implements CryptoImpl {
 		var md5er = crypto.createHash('md5');
 		md5er.update(input);
 		return md5er.digest('binary');
-	}
-
-	randomBytes(length: number) : string {
-		return crypto.pseudoRandomBytes(length).toString('binary');
 	}
 }
 
