@@ -83,28 +83,26 @@ export class FileVFS implements vfs.VFS {
 				return;
 			}
 
-			var done = 0;
-			var infoList : vfs.FileInfo[] = [];
+			var statOps : Q.Promise<vfs.FileInfo>[] = [];
 			files.forEach((name) => {
 				var filePath : string = Path.join(absPath, name);
-				fs.stat(filePath, (err, info) => {
-					if (err) {
-						console.log('Unable to stat ' + filePath);
-						return;
-					}
-
-					var fi = new vfs.FileInfo;
-					fi.name = name;
-					fi.path = filePath;
-					fi.isDir = info.isDirectory();
-
-					infoList.push(fi);
-					++done;
-					if (done == files.length) {
-						result.resolve(infoList);
-					}
-				});
+				statOps.push(this.stat(filePath));
 			});
+			Q.all(statOps).then((fileInfoList) => {
+				result.resolve(fileInfoList);
+			}).done();
+		});
+		return result.promise;
+	}
+
+	rmdir(path: string) : Q.Promise<void> {
+		var result = Q.defer<void>();
+		fs.rmdir(this.absPath(path), (error) => {
+			if (error) {
+				result.reject(error);
+				return;
+			}
+			result.resolve(null);
 		});
 		return result.promise;
 	}
@@ -113,10 +111,18 @@ export class FileVFS implements vfs.VFS {
 		var result = Q.defer<void>();
 		fs.unlink(this.absPath(path), (error) => {
 			if (error) {
-				result.reject(error);
-				return;
+				if (error.code == 'EISDIR') {
+					this.rmdir(path).then(() => {
+						result.resolve(null);
+					}, (err) => {
+						result.reject(err);
+					}).done();
+				} else {
+					result.reject(error);
+				}
+			} else {
+				result.resolve(null);
 			}
-			result.resolve(null);
 		});
 		return result.promise;
 	}

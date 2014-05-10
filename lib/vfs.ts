@@ -37,7 +37,7 @@ export interface VFS {
 	write(path: string, content: string) : Q.Promise<void>;
 	/** List the contents of a directory */
 	list(path: string) : Q.Promise<FileInfo[]>;
-	/** Remove a file */
+	/** Remove a file or directory */
 	rm(path: string) : Q.Promise<void>;
 	/** Create all directories along the path to @p path */
 	mkpath(path: string) : Q.Promise<void>;
@@ -62,19 +62,80 @@ export class VFSUtil {
 						removeOps.push(fs.rm(file.path));
 					}
 				});
-			}).done();
 
-			removeOps.push(fileList);
-			Q.all(removeOps).then(() => {
-				result.resolve(null);
-			}, (err) => {
-				result.reject(err);
+				Q.all(removeOps).then(() => {
+					return fs.rm(path);
+				}).then(() => {
+					result.resolve(null);
+				}).fail((err) => {
+					result.reject(err);
+				});
 			}).done();
 		}, (err) => {
 			// TODO - Only resolve the promise if
 			// the error is that the file does not exist
 			result.resolve(null);
 		}).done();
+
+		return result.promise;
+	}
+
+	/** Recursively enumerate the contents of @p path */
+	static listRecursive(fs: VFS, src: string) : Q.Promise<FileInfo[]> {
+		var result = Q.defer<FileInfo[]>();
+
+		fs.list(src).then((files) => {
+			var listOps : Q.Promise<FileInfo[]>[] = [];
+			files.forEach((file) => {
+				if (file.isDir) {
+					listOps.push(VFSUtil.listRecursive(fs, file.path));
+				}
+			});
+
+			var allFiles = files;
+			Q.all(listOps).then((subdirFiles) => {
+				subdirFiles.forEach((files) => {
+					allFiles = allFiles.concat(files);
+				});
+				result.resolve(allFiles);
+			}).done();
+		}).done();
+
+		return result.promise;
+	}
+
+	/** Copy the directory @p path and all of its contents to a new location */
+	static cp(fs: VFS, src: FileInfo, dest: string) : Q.Promise<void> {
+		var result = Q.defer<void>();
+		if (src.isDir) {
+			fs.mkpath(dest).then(() => {
+				return fs.list(src.path);
+			})
+			.then((srcFiles) => {
+				var copyOps : Q.Promise<void>[] = [];
+				srcFiles.forEach((srcFile) => {
+					var destPath = dest + '/' + srcFile.name;
+					copyOps.push(VFSUtil.cp(fs, srcFile, destPath));
+				});
+				return Q.all(copyOps);
+			})
+			.then(() => {
+				result.resolve(null);
+			})
+			.fail((err) => {
+				result.reject(err);
+			});
+		} else {
+			fs.read(src.path).then((content) => {
+				return fs.write(dest, content);
+			})
+			.then(() => {
+				result.resolve(null);
+			})
+			.fail((err) => {
+				result.reject(err);
+			});
+		}
 
 		return result.promise;
 	}

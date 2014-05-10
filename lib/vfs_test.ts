@@ -9,11 +9,16 @@ var createFs = () => {
 	var TEST_DIR = '/tmp/vfs-test';
 	var fs = new nodefs.FileVFS(TEST_DIR);
 	var result = Q.defer<nodefs.FileVFS>();
-	vfs.VFSUtil.rmrf(fs, TEST_DIR)
+	vfs.VFSUtil.rmrf(fs, '')
 	.then(() => {
 		return fs.mkpath(TEST_DIR);
-	})
-	.then(() => {
+	}).then(() => {
+		return vfs.VFSUtil.listRecursive(fs, '')
+	}).then((files) => {
+		if (files.length > 0) {
+			result.reject('Failed to remove all files');
+			return;
+		}
 		result.resolve(fs);
 	})
 	.done();
@@ -114,6 +119,47 @@ testLib.addAsyncTest('Search folder', (assert) => {
 				testLib.continueTests();
 			});
 		}).done();
+	}).done();
+});
+
+testLib.addAsyncTest('Copy dir', (assert) => {
+	var fs = createFs();
+	fs.then((fs) => {
+		// create a dir hierarchy in 'src', copy it
+		// to 'dest', list both hierarchies and compare
+		// the sorted results
+		fs.mkpath('src').then(() => {
+			return fs.write('src/file_a', 'file-a-content');
+		}).then(() => {
+			return fs.mkpath('src/dir_b')
+		}).then(() => {
+			return fs.write('src/dir_b/file_c', 'file-c-content');
+		}).then(() => {
+			return fs.mkpath('src/dir_b/dir_d');
+		}).then(() => {
+			return fs.write('src/dir_b/dir_d/file_d', 'file-d-content');
+		}).then(() => {
+			return fs.stat('src');
+		}).then((srcFolder) => {
+			return vfs.VFSUtil.cp(fs, srcFolder, 'dest');
+		}).then(() => {
+			return vfs.VFSUtil.listRecursive(fs, 'dest');
+		}).then((destFiles) => {
+			vfs.VFSUtil.listRecursive(fs, 'src').then((srcFiles) => {
+				srcFiles.sort((a,b) => {
+					return a.path.localeCompare(b.path);
+				});
+				destFiles.sort((a,b) => {
+					return a.path.localeCompare(b.path);
+				});
+				srcFiles.forEach((srcFile) => {
+					srcFile.path.replace('src/','dest/');
+				});
+				testLib.assertEqual(assert, srcFiles, destFiles);
+				testLib.continueTests();
+			}).done();
+		})
+		.done();
 	}).done();
 });
 
