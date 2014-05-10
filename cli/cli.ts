@@ -10,6 +10,7 @@ import mkdirp = require('mkdirp')
 import fs = require('fs');
 import Path = require('path');
 
+import asyncutil = require('../lib/asyncutil');
 import clipboard = require('./clipboard');
 import consoleio = require('../lib/console');
 import dropboxvfs = require('../lib/dropboxvfs');
@@ -109,7 +110,7 @@ export class CLI {
 
 		var addCommand = subcommands.addParser('add');
 		addCommand.addArgument(['type'], {action:'store'});
-		addCommand.addArgument(['title'], {action:'store', nargs: '*'});
+		addCommand.addArgument(['title'], {action:'store'});
 
 		return parser;
 	}
@@ -286,6 +287,7 @@ export class CLI {
 				label: 'website',
 				url: website
 			});
+			item.location = website;
 			return this.io.readLine('Username: ');
 		})
 		.then((username) => {
@@ -449,7 +451,7 @@ export class CLI {
 		};
 
 		handlers['add'] = (args, result) => {
-			return this.addItemCommand(currentVault, args.type, args.title);
+			asyncutil.resolveWith(exitStatus, this.addItemCommand(currentVault, args.type, args.title));
 		}
 
 		// process commands

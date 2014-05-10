@@ -1,4 +1,5 @@
 import Q = require('q');
+import underscore = require('underscore');
 
 import cli = require('./cli')
 import clipboard = require('./clipboard')
@@ -32,18 +33,23 @@ class FakeIO implements consoleio.TermIO {
 	}
 
 	readLine(prompt: string) : Q.Promise<string> {
-		this.replies.forEach((reply) => {
-			if (prompt.match(reply.match)) {
-				return Q.resolve(reply.response);
-			}
+		var reply = underscore.find(this.replies, (reply) => {
+			return prompt.match(reply.match) != null;
 		});
-		return Q.reject('No pattern matched the prompt');	
+		if (reply) {
+			return Q.resolve(reply.response);
+		} else {
+			return Q.reject('No pattern matched the prompt: "' + prompt + '"');
+		}
 	}
 
-	/** Returns a canned password. */
 	readPassword(prompt: string) : Q.Promise<string> {
-		++this.passRequestCount;
-		return Q.resolve(this.password);
+		if (prompt.match('Master password')) {
+			++this.passRequestCount;
+			return Q.resolve(this.password);
+		} else {
+			return this.readLine(prompt);
+		}
 	}
 
 	didPrint(pattern: RegExp) : boolean {

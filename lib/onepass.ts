@@ -25,7 +25,7 @@ function dateFromUNIXDate(timestamp: number) : Date {
 // Converts a JS Date to a UNIX timestamp in seconds
 // since the epoch
 function UNIXDateFromDate(date: Date) : number {
-	return date.getTime() / 1000;
+	return (date.getTime() / 1000)|0;
 }
 
 export class EncryptionKeyEntry {
@@ -245,6 +245,7 @@ export class Item {
 		this.trashed = false;
 		this.securityLevel = 'SL5';
 		this.typeName = 'webforms.WebForm';
+		this.folderUuid = '';
 	}
 
 	/** Retrieves and decrypts the content of a 1Password item.
@@ -515,7 +516,7 @@ export class Vault {
 			entry[3] = item.location;
 			entry[4] = UNIXDateFromDate(item.updatedAt);
 			entry[5] = item.folderUuid;
-			entry[6] = ""; // TODO - Find out what this is used for
+			entry[6] = 0; // TODO - Find out what this is used for
 			entry[7] = (item.trashed ? "Y" : "N");
 
 			var newContentsJSON = JSON.stringify(contentEntries);
