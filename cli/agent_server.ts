@@ -17,14 +17,12 @@ import streamutil = require('../lib/streamutil');
 export interface DecryptRequest {
 	id : string;
 	algo : onepass.CryptoAlgorithm;
-	salt : string;
 	cipherText : string
 }
 
 export interface EncryptRequest {
 	id : string;
 	algo : onepass.CryptoAlgorithm;
-	salt : string;
 	plainText : string;
 }
 

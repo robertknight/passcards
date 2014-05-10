@@ -43,7 +43,7 @@ export class HttpKeyAgent implements onepass.KeyAgent {
 
 	decrypt(id: string, cipherText: string, params: onepass.CryptoParams) : Q.Promise<string> {
 		var plainText = Q.defer<string>();
-		this.sendRequest('POST', '/decrypt', {
+		this.sendRequest<agent_server.DecryptRequest>('POST', '/decrypt', {
 			id: id,
 			algo: onepass.CryptoAlgorithm.AES128_OpenSSLKey,
 			cipherText: cipherText
@@ -55,17 +55,17 @@ export class HttpKeyAgent implements onepass.KeyAgent {
 
 	encrypt(id: string, plainText: string, params: onepass.CryptoParams) : Q.Promise<string> {
 		var cipherText = Q.defer<string>();
-		this.sendRequest('POST', '/encrypt', {
+		this.sendRequest<agent_server.EncryptRequest>('POST', '/encrypt', {
 			id: id,
 			algo: onepass.CryptoAlgorithm.AES128_OpenSSLKey,
-			cipherText: cipherText
+			plainText: plainText
 		}).then((result) => {
 			cipherText.resolve(result);
 		}).done();
 		return cipherText.promise;
 	}
 
-	private sendRequest(method: string, path: string, data: any) : Q.Promise<string> {
+	private sendRequest<T>(method: string, path: string, data: T) : Q.Promise<string> {
 		var response = Q.defer<string>();
 		var dispatchRequest = () => {
 			var request = http.request({
