@@ -1,11 +1,15 @@
 /// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
+/// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
+
+import Q = require('q');
+import underscore = require('underscore');
 
 import crypto = require('./onepass_crypto');
 import testLib = require('./test');
 import onepass = require('./onepass');
 import exportLib = require('./export');
-import Q = require('q');
 import nodefs = require('./nodefs');
+import vfs = require('./vfs');
 
 class TestCase {
 	/** Relative path to the vault within the test data dir */
@@ -36,7 +40,20 @@ class ItemAndContent {
 }
 
 function createTestVault() : Q.Promise<onepass.Vault> {
-	return null;
+	var vault = Q.defer<onepass.Vault>();
+	var fs = new nodefs.FileVFS('lib/test-data');
+	vfs.VFSUtil.rmrf(fs, 'copy.agilekeychain').then(() => {
+		return fs.stat('test.agilekeychain')
+	}).then((srcFolder) => {
+		return vfs.VFSUtil.cp(fs, srcFolder, 'copy.agilekeychain')
+	}).then(() => {
+		var newVault = new onepass.Vault(fs, 'copy.agilekeychain');
+		newVault.unlock('logMEin').then(() => {
+			vault.resolve(newVault);
+		}).done();
+	})
+	.done();
+	return vault.promise;
 }
 
 testLib.addAsyncTest('Import item from .1pif file', (assert) => {
@@ -209,8 +226,9 @@ testLib.addTest('New item UUID', (assert) => {
 
 testLib.addAsyncTest('Save item', (assert) => {
 	createTestVault().then((vault) => {
-		var item = new onepass.Item();
+		var item = new onepass.Item(vault);
 		item.title = 'New Test Item';
+		item.location = 'mysite.com';
 		var content = new onepass.ItemContent();
 		content.urls.push({
 			url: 'mysite.com',
@@ -218,7 +236,27 @@ testLib.addAsyncTest('Save item', (assert) => {
 		});
 		item.setContent(content);
 		item.save().then(() => {
-			testLib.continueTests();
+			return vault.loadItem(item.uuid);
+		}).then((loadedItem) => {
+			// check overview data matches
+			assert.equal(item.title, loadedItem.title);
+
+			// check item content matches
+			loadedItem.getContent().then((loadedContent) => {
+				testLib.assertEqual(assert, content, loadedContent);
+			
+				// check new item appears in vault list
+				vault.listItems().then((items) => {
+					// check that selected properties match
+					var comparedProps : any[] = ['title', 
+					 'uuid', 'trashed', 'faveIndex', 'typeName',
+					 'location', 'updatedAt'];
+
+					var actualOverview = underscore.find(items, (item) => { return item.uuid == loadedItem.uuid });
+					testLib.assertEqual(assert, actualOverview, item, comparedProps);
+					testLib.continueTests();
+				}).done();
+			}).done();
 		})
 		.done();
 	})

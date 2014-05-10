@@ -1,12 +1,15 @@
 /// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
+/// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
 /// <reference path="../typings/atob.d.ts" />
 
 import atob = require('atob');
 import btoa = require('btoa');
 import Q = require('q');
 import Path = require('path');
+import underscore = require('underscore');
 
+import asyncutil = require('./asyncutil');
 import agilekeychain = require('./agilekeychain');
 import crypto = require('./onepass_crypto');
 import vfs = require('./vfs');
@@ -105,7 +108,7 @@ export class SimpleKeyAgent {
 
 	decrypt(id: string, cipherText: string, params: CryptoParams) : Q.Promise<string> {
 		if (!this.keys.hasOwnProperty(id)) {
-			return Q.reject('No such key');
+			return Q.reject('No such key: ' + id);
 		}
 		switch (params.algo) {
 			case CryptoAlgorithm.AES128_OpenSSLKey:
@@ -118,7 +121,7 @@ export class SimpleKeyAgent {
 
 	encrypt(id: string, plainText: string, params: CryptoParams) : Q.Promise<string> {
 		if (!this.keys.hasOwnProperty(id)) {
-			return Q.reject('No such key');
+			return Q.reject('No such key: ' + id);
 		}
 		switch (params.algo) {
 			case CryptoAlgorithm.AES128_OpenSSLKey:
@@ -238,7 +241,10 @@ export class Item {
 		this.vault = vault;
 
 		this.uuid = uuid || crypto.newUUID();
+
 		this.trashed = false;
+		this.securityLevel = 'SL5';
+		this.typeName = 'webforms.WebForm';
 	}
 
 	/** Retrieves and decrypts the content of a 1Password item.
@@ -475,7 +481,8 @@ export class Vault {
 	}
 
 	saveItem(item: Item) : Q.Promise<void> {
-		var done = Q.defer<void>();
+		var itemSaved = Q.defer<void>();
+		var overviewSaved = Q.defer<void>();
 
 		if (!item.createdAt) {
 			item.createdAt = new Date();
@@ -488,13 +495,38 @@ export class Vault {
 				var itemPath = this.itemPath(item.uuid);
 				var keychainJSON = JSON.stringify(Item.toAgileKeychainObject(item, encryptedContent));
 				this.fs.write(itemPath, keychainJSON).then(() => {
-					done.resolve(null);
+					itemSaved.resolve(null);
 				})
 			}).done();
 		})
 		.done();
 
-		return done.promise;
+		this.fs.read(this.contentsFilePath()).then((contentsJSON) => {
+			var contentEntries : any[] = JSON.parse(contentsJSON);
+
+			var entry = underscore.find(contentEntries, (entry) => { return entry[0] == item.uuid });
+			if (!entry) {
+				entry = [null, null, null, null, null, null, null, null];
+				contentEntries.push(entry);
+			}
+			entry[0] = item.uuid;
+			entry[1] = item.typeName;
+			entry[2] = item.title;
+			entry[3] = item.location;
+			entry[4] = UNIXDateFromDate(item.updatedAt);
+			entry[5] = item.folderUuid;
+			entry[6] = ""; // TODO - Find out what this is used for
+			entry[7] = (item.trashed ? "Y" : "N");
+
+			var newContentsJSON = JSON.stringify(contentEntries);
+			asyncutil.resolveWith(overviewSaved, this.fs.write(this.contentsFilePath(), newContentsJSON));
+		}).done();
+
+		return <any>Q.all([itemSaved.promise, overviewSaved.promise]);
+	}
+
+	private contentsFilePath() : string {
+		return Path.join(this.path, 'data/default/contents.js');
 	}
 
 	/** Returns a list of overview data for all items in the vault,
@@ -502,7 +534,7 @@ export class Vault {
 	  */
 	listItems() : Q.Promise<Item[]> {
 		var items = Q.defer<Item[]>();
-		var content = this.fs.read(Path.join(this.path, 'data/default/contents.js'));
+		var content = this.fs.read(this.contentsFilePath());
 		content.then((content) => {
 			var entries = JSON.parse(content);
 			var vaultItems : Item[] = [];

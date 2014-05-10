@@ -1,8 +1,10 @@
 /// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
 /// <reference path="../typings/xdiff.d.ts" />
+/// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
 
 var qunit = require('qunitjs');
 import xdiff = require('xdiff');
+import underscore = require('underscore');
 
 export interface Assert {
 	equal(actual: any, expected: any, message?: string) : void;
@@ -165,7 +167,17 @@ export function compareObjects(a: any, b: any, expectedAdditions?: string[], exp
 	});
 }
 
-export function assertEqual(assert: Assert, a: any, b: any) {
+/** Check that two objects or arrays are equal.
+  * If the objects or arrays are not equal, print a diff between the two.
+  * If @p properties is specified, only the listed properties are compared
+  * between objects @p a and @p b.
+  */
+export function assertEqual(assert: Assert, a: any, b: any, properties?: string[]) {
+	if (properties) {
+		a = underscore.pick.apply(null, [a].concat(<any[]>properties));
+		b = underscore.pick.apply(null, [b].concat(<any[]>properties));
+	}
+
 	var diff = compareObjects(a, b);
 	if (diff.length > 0) {
 		console.log(diff);

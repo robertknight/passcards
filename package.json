@@ -20,6 +20,7 @@
 		"promptly" : ">=0.2.0",
 		"q" : ">=1.0",
 		"sprintf" : ">=0.1.3",
+		"underscore" : ">=1.6.0",
 		"urlrouter" : ">=0.5.4"
 	},
 	"license" : "BSD-3-Clause",
