@@ -13,6 +13,7 @@ import Path = require('path');
 import asyncutil = require('../lib/asyncutil');
 import clipboard = require('./clipboard');
 import consoleio = require('../lib/console');
+import crypto = require('../lib/onepass_crypto');
 import dropboxvfs = require('../lib/dropboxvfs');
 import onepass = require('../lib/onepass');
 import nodefs = require('../lib/nodefs');
@@ -271,6 +272,31 @@ export class CLI {
 		return vault.promise;
 	}
 
+	private passwordFieldPrompt() : Q.Promise<string> {
+		var password = Q.defer<string>();
+		
+		this.io.readPassword("Password (or '-' to generate a random password): ")
+		.then((input) => {
+			if (input == '-') {
+				password.resolve(crypto.generatePassword(12));
+			} else {
+				this.io.readPassword("Re-enter password: ")
+				.then((input2) => {
+					if (input == input2) {
+						password.resolve(input);
+					} else {
+						this.printf('Passwords do not match');
+						asyncutil.resolveWith(password, this.passwordFieldPrompt());
+					}
+				})
+				.done();
+			}
+		})
+		.done();
+
+		return password.promise;
+	}
+
 	private addItemCommand(vault: onepass.Vault, type: string, title: string) : Q.Promise<number> {
 		var status = Q.defer<number>();
 
@@ -302,7 +328,7 @@ export class CLI {
 				type: 'T',
 				value: username
 			});
-			return this.io.readPassword("Password (or '-' to generate a random password): ");
+			return this.passwordFieldPrompt();
 		})
 		.then((password) => {
 			content.formFields.push({
