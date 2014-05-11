@@ -11,6 +11,7 @@ import underscore = require('underscore');
 
 import asyncutil = require('./asyncutil');
 import agilekeychain = require('./agilekeychain');
+import collectionutil = require('./collectionutil');
 import crypto = require('./onepass_crypto');
 import vfs = require('./vfs');
 
@@ -647,7 +648,7 @@ export class ItemContent {
 		if (content.formFields) {
 			keychainContent.fields = [];
 			content.formFields.forEach((field) => {
-				keychainContent.fields.push(field);
+				keychainContent.fields.push(WebFormField.toAgileKeychainObject(field));
 			});
 		}
 		keychainContent.htmlAction = content.htmlAction;
@@ -676,7 +677,7 @@ export class ItemContent {
 		}
 		if (data.fields) {
 			data.fields.forEach((field) => {
-				content.formFields.push(field);
+				content.formFields.push(WebFormField.fromAgileKeychainObject(field));
 			});
 		}
 		if (data.htmlAction) {
@@ -771,6 +772,24 @@ export class ItemField {
 	}
 }
 
+export enum FormFieldType {
+	Text,
+	Password,
+	Email,
+	Checkbox,
+	Input
+}
+
+// mapping between input element types
+// and the single-char codes used to represent
+// them in .1password files
+var fieldTypeCodeMap = new collectionutil.BiDiMap<FormFieldType, string>()
+ .add(FormFieldType.Text, 'T')
+ .add(FormFieldType.Password, 'P')
+ .add(FormFieldType.Email, 'E')
+ .add(FormFieldType.Checkbox, 'C')
+ .add(FormFieldType.Input, 'I');
+
 /** Saved value of an input field in a web form. */
 export class WebFormField {
 	value : string;
@@ -783,13 +802,31 @@ export class WebFormField {
 	  */
 	name : string;
 
-	/** Single-char code identifying the type of field value.
-	  * (T)ext, (P)assword, (E)mail, (C)heckbox, (I)nput (eg. button)
-	  */
-	type : string;
+	/** Type of input element used for this form field */
+	type : FormFieldType;
 
 	/** Purpose of the field. Known values are 'username', 'password' */
 	designation : string;
+
+	static toAgileKeychainObject(field: WebFormField) : agilekeychain.WebFormField {
+		var keychainField = new agilekeychain.WebFormField();
+		keychainField.id = field.id;
+		keychainField.name = field.name;
+		keychainField.type = fieldTypeCodeMap.get(field.type);
+		keychainField.designation = field.designation;
+		keychainField.value = field.value;
+		return keychainField;
+	}
+
+	static fromAgileKeychainObject(keychainField: agilekeychain.WebFormField) : WebFormField {
+		var field = new WebFormField();
+		field.id = keychainField.id;
+		field.name = keychainField.name;
+		field.type = fieldTypeCodeMap.get2(keychainField.type);
+		field.designation = keychainField.designation;
+		field.value = keychainField.value;
+		return field;
+	}
 }
 
 /** Entry in an item's 'Websites' list. */

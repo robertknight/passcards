@@ -275,7 +275,7 @@ testLib.addAsyncTest('Update item', (assert) => {
 		content.formFields.push({
 			id: '',
 			name: 'password',
-			type: 'P',
+			type: onepass.FormFieldType.Password,
 			designation: 'password',
 			value: 'original-password'
 		});
@@ -293,6 +293,7 @@ testLib.addAsyncTest('Update item', (assert) => {
 			});
 			assert.notEqual(passwordField, null);
 			assert.equal(passwordField.value, 'original-password');
+			assert.equal(passwordField.type, onepass.FormFieldType.Password);
 
 			loadedItem.title = 'New Item Title';
 			loadedItem.faveIndex = 42;

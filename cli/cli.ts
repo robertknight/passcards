@@ -325,7 +325,7 @@ export class CLI {
 				id: '',
 				name: 'username',
 				designation: 'username',
-				type: 'T',
+				type: onepass.FormFieldType.Text,
 				value: username
 			});
 			return this.passwordFieldPrompt();
@@ -335,7 +335,7 @@ export class CLI {
 				id: '',
 				name: 'password',
 				designation: 'password',
-				type: 'P',
+				type: onepass.FormFieldType.Password,
 				value: password
 			});
 			contentReady.resolve(content);
