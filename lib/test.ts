@@ -122,7 +122,7 @@ export function runTests(filter?: string) {
 	});
 
 	qunit.done((result: TestSuiteResult) => {
-		console.log('tests run. total: ' + result.total + ' failed: ' + result.failed);
+		console.log('tests run. total assertions: ' + result.total + ' failed: ' + result.failed);
 		if (typeof process != 'undefined') {
 			if (result.failed > 0) {
 				process.on('exit', () => {

@@ -15,6 +15,7 @@
 		"btoa" : ">=1.1",
 		"crypto-js" : ">=3.1",
 		"dropbox" : ">=0.10.2",
+		"es6-shim" : ">=0.10.0",
 		"mkdirp" : ">=0.4.0",
 		"node-uuid" : ">=1.4.0",
 		"paralleljs" : ">=0.2.1",

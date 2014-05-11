@@ -11,6 +11,8 @@ import exportLib = require('./export');
 import nodefs = require('./nodefs');
 import vfs = require('./vfs');
 
+require('es6-shim');
+
 class TestCase {
 	/** Relative path to the vault within the test data dir */
 	path : string;
@@ -264,6 +266,7 @@ testLib.addAsyncTest('Save item', (assert) => {
 });
 
 testLib.addTest('Generate Passwords', (assert) => {
+	var usedPasswords = new Set<string>();
 	for (var len = 4; len < 20; len++) {
 		for (var k=0; k < 10; k++) {
 			var pass = crypto.generatePassword(len);
@@ -271,6 +274,9 @@ testLib.addTest('Generate Passwords', (assert) => {
 			assert.ok(pass.match(/[a-z]/) != null);
 			assert.ok(pass.match(/[0-9]/) != null);
 			assert.equal(pass.length, len);
+
+			assert.ok(!usedPasswords.has(pass));
+			usedPasswords.add(pass);
 		}
 	}
 });
