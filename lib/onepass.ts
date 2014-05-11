@@ -87,6 +87,10 @@ export class SimpleKeyAgent {
 	private crypto : crypto.CryptoImpl;
 	private keys : {[id:string] : string};
 
+	keyCount() : number {
+		return Object.keys(this.keys).length;
+	}
+
 	constructor(cryptoImpl? : crypto.CryptoImpl) {
 		this.crypto = cryptoImpl || defaultCryptoImpl;
 		this.keys = {};
@@ -442,8 +446,8 @@ export class Vault {
 	/** Lock the vault. This discards decrypted master keys for the vault
 	  * created via a call to unlock()
 	  */
-	lock() : void {
-		this.keyAgent.forgetKeys();
+	lock() : Q.Promise<void> {
+		return this.keyAgent.forgetKeys();
 	}
 
 	/** Returns true if the vault was successfully unlocked using unlock().

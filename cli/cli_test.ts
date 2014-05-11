@@ -67,11 +67,51 @@ class FakeIO implements consoleio.TermIO {
 	}
 }
 
+// fake key agent which mirrors the real agent in returning
+// results asynchronously - whereas the default SimpleKeyAgent
+// implementation updates keys synchronously
+class FakeKeyAgent extends onepass.SimpleKeyAgent {
+
+	private delay() : Q.Promise<void> {
+		return Q.delay<void>(null, 0);
+	}
+
+	addKey(id: string, key: string) : Q.Promise<void> {
+		return this.delay().then(() => {
+			return super.addKey(id, key);
+		});
+	}
+	
+	listKeys() : Q.Promise<string[]> {
+		return this.delay().then(() => {
+			return super.listKeys();
+		});
+	}
+
+	forgetKeys() : Q.Promise<void> {
+		return this.delay().then(() => {
+			return super.forgetKeys();
+		});
+	}
+
+	decrypt(id: string, cipherText: string, params: onepass.CryptoParams) : Q.Promise<string> {
+		return this.delay().then(() => {
+			return super.decrypt(id, cipherText, params);
+		});
+	}
+
+	encrypt(id: string, plainText: string, params: onepass.CryptoParams) : Q.Promise<string> {
+		return this.delay().then(() => {
+			return super.encrypt(id, plainText, params);
+		});
+	}
+}
+
 var TEST_VAULT_PATH = 'lib/test-data/test.agilekeychain';
 var fakeTerm = new FakeIO();
 fakeTerm.password = 'logMEin';
 
-var keyAgent = new onepass.SimpleKeyAgent();
+var keyAgent = new FakeKeyAgent();
 var fakeClipboard = new clipboard.FakeClipboard();
 
 var app = new cli.CLI(fakeTerm, keyAgent, fakeClipboard);
@@ -150,14 +190,17 @@ testLib.addAsyncTest('lock', (assert) => {
 	}).then((status) => {
 		assert.equal(status, 0);
 		assert.equal(fakeTerm.passRequestCount, 1);
+		assert.equal(keyAgent.keyCount(), 1);
 		return runCLI('lock')
 	})
 	.then((status) => {
 		assert.equal(status, 0);
+		assert.equal(keyAgent.keyCount(), 0);
 		return runCLI('show', 'facebook')
 	})
 	.then((status) => {
 		assert.equal(status, 0);
+		assert.equal(keyAgent.keyCount(), 1);
 		assert.equal(fakeTerm.passRequestCount, 2);
 		testLib.continueTests();
 	})

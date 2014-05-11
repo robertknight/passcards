@@ -436,8 +436,7 @@ export class CLI {
 		};
 
 		handlers['lock'] = (args, result) => {
-			currentVault.lock();
-			result.resolve(0);
+			asyncutil.resolveWithValue(result, currentVault.lock(), 0);
 		};
 
 		handlers['copy'] = (args, result) => {
