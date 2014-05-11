@@ -265,6 +265,60 @@ testLib.addAsyncTest('Save item', (assert) => {
 	.done();
 });
 
+testLib.addAsyncTest('Update item', (assert) => {
+	createTestVault().then((vault) => {
+		var item = new onepass.Item(vault);
+		item.title = 'Original item title';
+		item.location = 'mysite.com';
+
+		var content = new onepass.ItemContent();
+		content.formFields.push({
+			id: '',
+			name: 'password',
+			type: 'P',
+			designation: 'password',
+			value: 'original-password'
+		});
+		item.setContent(content);
+
+		var loadedItem : onepass.Item;
+		item.save().then(() => {
+			return vault.loadItem(item.uuid);
+		}).then((loadedItem_) => {
+			loadedItem = loadedItem_;
+			return loadedItem.getContent()
+		}).then((content) => {
+			var passwordField = underscore.find(content.formFields, (field) => {
+				return field.name == 'password';
+			});
+			assert.notEqual(passwordField, null);
+			assert.equal(passwordField.value, 'original-password');
+
+			loadedItem.title = 'New Item Title';
+			passwordField.value = 'new-password';
+			loadedItem.setContent(content);
+
+			return loadedItem.save();
+		}).then(() => {
+			return vault.loadItem(item.uuid);
+		}).then((loadedItem_) => {
+			loadedItem = loadedItem_;
+			assert.equal(loadedItem.title, 'New Item Title');
+			return loadedItem.getContent();
+		}).then((content) => {
+			var passwordField = underscore.find(content.formFields, (field) => {
+				return field.name == 'password';
+			});
+			assert.notEqual(passwordField, null);
+			assert.equal(passwordField.value, 'new-password');
+
+			testLib.continueTests();
+		})
+		.done();
+	})
+	.done();
+});
+
 testLib.addTest('Generate Passwords', (assert) => {
 	var usedPasswords = new Set<string>();
 	for (var len = 4; len < 20; len++) {

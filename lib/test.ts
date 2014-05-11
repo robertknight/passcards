@@ -7,6 +7,7 @@ import xdiff = require('xdiff');
 import underscore = require('underscore');
 
 export interface Assert {
+	notEqual<T>(actual: T, notExpected: T, message?: string) : void;
 	equal<T>(actual: T, expected: T, message?: string) : void;
 	ok(result: boolean) : void;
 }
