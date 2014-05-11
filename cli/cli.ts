@@ -146,6 +146,10 @@ export class CLI {
 		this.printf('  ID: %s', item.uuid);
 		this.printf('  Updated: %s', item.updatedAt);
 
+		if (item.trashed) {
+			this.printf('  In Trash: Yes');
+		}
+
 		if (item.openContents && item.openContents.tags) {
 			this.printf('  Tags: %s', item.openContents.tags.join(', '));
 		}
