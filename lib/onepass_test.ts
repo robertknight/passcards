@@ -295,6 +295,10 @@ testLib.addAsyncTest('Update item', (assert) => {
 			assert.equal(passwordField.value, 'original-password');
 
 			loadedItem.title = 'New Item Title';
+			loadedItem.faveIndex = 42;
+			loadedItem.location = 'newsite.com';
+			loadedItem.trashed = true;
+
 			passwordField.value = 'new-password';
 			loadedItem.setContent(content);
 
@@ -303,7 +307,12 @@ testLib.addAsyncTest('Update item', (assert) => {
 			return vault.loadItem(item.uuid);
 		}).then((loadedItem_) => {
 			loadedItem = loadedItem_;
+
 			assert.equal(loadedItem.title, 'New Item Title');
+			assert.equal(loadedItem.faveIndex, 42);
+			assert.equal(loadedItem.location, 'newsite.com');
+			assert.equal(loadedItem.trashed, true);
+
 			return loadedItem.getContent();
 		}).then((content) => {
 			var passwordField = underscore.find(content.formFields, (field) => {
