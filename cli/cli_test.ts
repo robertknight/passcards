@@ -264,4 +264,28 @@ testLib.addAsyncTest('add login', (assert) => {
 	.done();
 });
 
+testLib.addAsyncTest('trash/restore item', (assert) => {
+	var vaultPath : string;
+	cloneTestVault().then((path) => {
+		vaultPath = path;
+		return runCLIWithVault(path, 'trash', 'facebook');
+	}).then((status) => {
+		assert.equal(status, 0);
+		return runCLIWithVault(vaultPath, 'show', 'facebook');
+	}).then((status) => {
+		assert.equal(status, 0);
+		assert.ok(fakeTerm.didPrint(/In Trash: Yes/));
+		return runCLIWithVault(vaultPath, 'restore', 'facebook');
+	}).then((status) => {
+		assert.equal(status, 0);
+		fakeTerm.output = [];
+		return runCLIWithVault(vaultPath, 'show', 'facebook');
+	}).then((status) => {
+		assert.equal(status, 0);
+		assert.ok(!fakeTerm.didPrint(/In Trash/));
+
+		testLib.continueTests();
+	}).done();
+});
+
 testLib.runTests();

@@ -113,6 +113,12 @@ export class CLI {
 		addCommand.addArgument(['type'], {action:'store'});
 		addCommand.addArgument(['title'], {action:'store'});
 
+		var trashCommand = subcommands.addParser('trash');
+		trashCommand.addArgument(['item'], {action:'store'});
+
+		var restoreCommand = subcommands.addParser('restore');
+		restoreCommand.addArgument(['item'], {action:'store'});
+
 		return parser;
 	}
 
@@ -356,6 +362,22 @@ export class CLI {
 
 		return status.promise;
 	}
+	
+	private trashItemCommand(vault: onepass.Vault, pattern: string, trash: boolean) : Q.Promise<number> {
+		var result = Q.defer<number>();
+
+		this.lookupItems(vault, pattern).then((items) => {
+			var trashOps : Q.Promise<void>[] = [];
+			items.forEach((item) => {
+				item.trashed = trash;
+				trashOps.push(item.save());
+			});
+
+			asyncutil.resolveWithValue(result, Q.all(trashOps), 0);
+		}).done();
+
+		return result.promise;
+	}
 
 	/** Starts the command-line interface and returns
 	  * a promise for the exit code.
@@ -481,6 +503,14 @@ export class CLI {
 
 		handlers['add'] = (args, result) => {
 			asyncutil.resolveWith(exitStatus, this.addItemCommand(currentVault, args.type, args.title));
+		}
+
+		handlers['trash'] = (args, result) => {
+			asyncutil.resolveWith(exitStatus, this.trashItemCommand(currentVault, args.item, true));
+		}
+
+		handlers['restore'] = (args, result) => {
+			asyncutil.resolveWith(exitStatus, this.trashItemCommand(currentVault, args.item, false));
 		}
 
 		// process commands
