@@ -329,6 +329,45 @@ testLib.addAsyncTest('Update item', (assert) => {
 	.done();
 });
 
+testLib.addAsyncTest('Remove item', (assert) => {
+	createTestVault().then((vault) => {
+		var item : onepass.Item;
+		vault.loadItem('CA20BB325873446966ED1F4E641B5A36').then((item_) => {
+			item = item_;
+			assert.equal(item.title, 'Facebook');
+			assert.equal(item.typeName, 'webforms.WebForm');
+			return item.getContent();
+		}).then((content) => {
+			testLib.assertEqual(assert, content.urls, [ { label: 'website', 'url' : 'facebook.com' } ]);
+			var passwordField = underscore.find(content.formFields, (field) => {
+				return field.designation == 'password';
+			});
+			assert.ok(passwordField != null);
+			assert.equal(passwordField.value, 'Wwk-ZWc-T9MO');
+			return item.remove();
+		}).then(() => {
+			// check that all item-specific data has been erased.
+			// Only a tombstone should be left behind
+			assert.ok(item.isTombstone());
+			assert.equal(item.title, 'Unnamed');
+			assert.equal(item.typeName, 'system.Tombstone');
+			return vault.loadItem(item.uuid);
+		}).then((loadedItem) => {
+			assert.ok(loadedItem.isTombstone());
+			assert.equal(loadedItem.title, 'Unnamed');
+			assert.equal(loadedItem.typeName, 'system.Tombstone');
+			assert.equal(loadedItem.trashed, true);
+			assert.equal(loadedItem.faveIndex, null);
+			assert.equal(loadedItem.openContents, null);
+
+			return loadedItem.getContent();
+		}).then((content) => {
+			testLib.assertEqual(assert, content, new onepass.ItemContent());
+			testLib.continueTests();
+		}).done();
+	});
+});
+
 testLib.addTest('Generate Passwords', (assert) => {
 	var usedPasswords = new Set<string>();
 	for (var len = 4; len < 20; len++) {

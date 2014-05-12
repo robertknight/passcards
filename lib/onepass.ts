@@ -300,6 +300,26 @@ export class Item {
 		return this.vault.saveItem(this);
 	}
 
+	/** Remove the item from the vault.
+	  * This erases all of the item's data and leaves behind a 'tombstone'
+	  * entry for syncing purposes.
+	  */
+	remove() : Q.Promise<void> {
+		if (!this.vault) {
+			return Q.reject('Item has no associated vault');
+		}
+		this.typeName = 'system.Tombstone';
+		this.title = 'Unnamed';
+		this.trashed = true;
+		this.setContent(new ItemContent);
+		this.folderUuid = '';
+		this.location = '';
+		this.faveIndex = null;
+		this.openContents = null;
+
+		return this.vault.saveItem(this);
+	}
+
 	/** Returns true if this is a 'tombstone' entry remaining from
 	  * a deleted item. When an item is deleted, all of the properties except
 	  * the UUID are erased and the item's type is changed to 'system.Tombstone'.
