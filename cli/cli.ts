@@ -29,6 +29,12 @@ interface FieldMatch {
 	formField? : onepass.WebFormField;
 }
 
+enum ShowItemFormat {
+	ShowOverview,
+	ShowJSON,
+	ShowFull
+}
+
 export class CLI {
 	private configDir : string;
 	private io : consoleio.TermIO;
@@ -379,6 +385,94 @@ export class CLI {
 		return result.promise;
 	}
 
+	private listCommand(vault: onepass.Vault, pattern: string) : Q.Promise<number> {
+		var result = Q.defer<number>();
+		vault.listItems().then((items : onepass.Item[]) => {
+			items.sort((a:onepass.Item, b:onepass.Item) => {
+				return a.title.toLowerCase().localeCompare(b.title.toLowerCase());
+			});
+			items.forEach((item) => {
+				if (!pattern || CLI.patternMatch(pattern, item)) {
+					this.printf('%s (%s, %s)', item.title, item.typeDescription(), item.shortID());
+				}
+			});
+			result.resolve(0);
+		}).done();
+		return result.promise;
+	}
+
+	private showItemCommand(vault: onepass.Vault, pattern: string, format: ShowItemFormat) : Q.Promise<number> {
+		var result = Q.defer<number>();
+		this.lookupItems(vault, pattern).then((items) => {
+			var itemContents : Q.Promise<onepass.ItemContent>[] = [];
+			items.forEach((item) => {
+				itemContents.push(item.getContent());
+			});
+			Q.all(itemContents).then((contents) => {
+				items.forEach((item, index) => {
+					if (index > 0) {
+						this.printf('');
+					}
+
+					if (format == ShowItemFormat.ShowOverview ||
+					    format == ShowItemFormat.ShowFull) {
+						this.printOverview(item);
+					}
+					if (format == ShowItemFormat.ShowFull) {
+						this.printDetails(contents[index]);
+					}
+					if (format == ShowItemFormat.ShowJSON) {
+						this.printf('%s', consoleio.prettyJSON(contents[index]));
+					}
+				});
+				result.resolve(0);
+			}).done();
+		}).done();
+		return result.promise;
+	}
+
+	private copyItemCommand(vault: onepass.Vault, pattern: string, field: string) : Q.Promise<number> {
+		var result = Q.defer<number>();
+		this.lookupItems(vault, pattern).then((items) => {
+			if (items.length < 1) {
+				this.printf('No items matching "%s"', pattern);
+				result.resolve(1);
+			}
+			var item = items[0];
+			item.getContent().then((content) => {
+				var matches = this.matchField(content, field);
+				if (matches.length > 0) {
+					var label : string;
+					var match = matches[0];
+					var copied : Q.Promise<void>;
+					if (match.url) {
+						label = match.url.label;
+						copied = this.clipboard.setData(match.url.url);
+					} else if (match.formField) {
+						label = match.formField.designation || match.formField.name;
+						copied = this.clipboard.setData(match.formField.value);
+					} else if (match.field) {
+						label = match.field.title;
+						copied = this.clipboard.setData(match.field.value);
+					}
+
+					copied.then(() => {
+						this.printf('Copied "%s" from "%s" to clipboard', label, item.title);
+						result.resolve(0);
+					}, (err) => {
+						this.printf('Unable to copy data: %s', err);
+						result.resolve(1);
+					}).done();
+
+				} else {
+					this.printf('No fields matching "%s"', field);
+					result.resolve(1);
+				}
+			}).done();
+		}).done();
+		return result.promise;
+	}
+
 	/** Starts the command-line interface and returns
 	  * a promise for the exit code.
 	  */
@@ -397,64 +491,19 @@ export class CLI {
 		var handlers : HandlerMap = {};
 
 		handlers['list'] = (args, result) => {
-			currentVault.listItems().then((items : onepass.Item[]) => {
-				items.sort((a:onepass.Item, b:onepass.Item) => {
-					return a.title.toLowerCase().localeCompare(b.title.toLowerCase());
-				});
-				items.forEach((item) => {
-					if (!args.pattern || CLI.patternMatch(args.pattern[0], item)) {
-						this.printf('%s (%s, %s)', item.title, item.typeDescription(), item.shortID());
-					}
-				});
-				result.resolve(0);
-			}).done();
+			asyncutil.resolveWith(result, this.listCommand(currentVault, args.pattern ? args.pattern[0] : null));		
 		};
 
 		handlers['show-json'] = (args, result) => {
-			this.lookupItems(currentVault, args.pattern).then((items) => {
-				var itemContents : Q.Promise<onepass.ItemContent>[] = [];
-				items.forEach((item) => {
-					itemContents.push(item.getContent());
-				});
-				Q.all(itemContents).then((contents) => {
-					contents.forEach((content) => {
-						this.printf('%s', consoleio.prettyJSON(content));
-					});
-					result.resolve(0);
-				});
-			}).done();
+			asyncutil.resolveWith(exitStatus, this.showItemCommand(currentVault, args.pattern, ShowItemFormat.ShowJSON));
 		};
 
 		handlers['show-overview'] = (args, result) => {
-			this.lookupItems(currentVault, args.pattern).then((items) => {
-				items.forEach((item, index) => {
-					if (index > 0) {
-						this.printf('');
-					}
-					this.printOverview(item);
-				});
-				result.resolve(0);
-			}).done();
+			asyncutil.resolveWith(exitStatus, this.showItemCommand(currentVault, args.pattern, ShowItemFormat.ShowOverview));
 		};
 
 		handlers['show'] = (args, result) => {
-			this.lookupItems(currentVault, args.pattern).then((items) => {
-				var itemContents : Q.Promise<onepass.ItemContent>[] = [];
-				items.forEach((item) => {
-					itemContents.push(item.getContent());
-				});
-				Q.all(itemContents).then((contents) => {
-					items.forEach((item, index) => {
-						if (index > 0) {
-							this.printf('');
-						}
-						
-						this.printOverview(item);
-						this.printDetails(contents[index]);
-					});
-					result.resolve(0);
-				}).done();
-			}).done();
+			asyncutil.resolveWith(exitStatus, this.showItemCommand(currentVault, args.pattern, ShowItemFormat.ShowFull));
 		};
 
 		handlers['lock'] = (args, result) => {
@@ -462,43 +511,7 @@ export class CLI {
 		};
 
 		handlers['copy'] = (args, result) => {
-			this.lookupItems(currentVault, args.item).then((items) => {
-				if (items.length < 1) {
-					this.printf('No items matching "%s"', args.item);
-					result.resolve(1);
-				}
-				var item = items[0];
-				item.getContent().then((content) => {
-					var matches = this.matchField(content, args.field);
-					if (matches.length > 0) {
-						var label : string;
-						var match = matches[0];
-						var copied : Q.Promise<void>;
-						if (match.url) {
-							label = match.url.label;
-							copied = this.clipboard.setData(match.url.url);
-						} else if (match.formField) {
-							label = match.formField.designation || match.formField.name;
-							copied = this.clipboard.setData(match.formField.value);
-						} else if (match.field) {
-							label = match.field.title;
-							copied = this.clipboard.setData(match.field.value);
-						}
-
-						copied.then(() => {
-							this.printf('Copied "%s" from "%s" to clipboard', label, item.title);
-							result.resolve(0);
-						}, (err) => {
-							this.printf('Unable to copy data: %s', err);
-							result.resolve(1);
-						}).done();
-
-					} else {
-						this.printf('No fields matching "%s"', args.item);
-						result.resolve(1);
-					}
-				}).done();
-			}).done();
+			asyncutil.resolveWith(exitStatus, this.copyItemCommand(currentVault, args.item, args.field));	
 		};
 
 		handlers['add'] = (args, result) => {
