@@ -13,7 +13,16 @@ import asyncutil = require('./asyncutil');
 import agilekeychain = require('./agilekeychain');
 import collectionutil = require('./collectionutil');
 import crypto = require('./onepass_crypto');
+import stringutil = require('./stringutil');
 import vfs = require('./vfs');
+
+/** Default number of iterations to use in the PBKDF2 password
+  * stretching function used to secure the master key.
+  *
+  * The default value was taken from a recent version of
+  * the official 1Password v4 app for Mac (13/05/14)
+  */
+export var DEFAULT_VAULT_PASS_ITERATIONS = 80000;
 
 var defaultCryptoImpl = new crypto.CryptoJsCrypto();
 
@@ -35,6 +44,13 @@ export class EncryptionKeyEntry {
 	iterations : number;
 	level : string;
 	validation : string;
+}
+
+export class EncryptionKeyList {
+	list: EncryptionKeyEntry[];
+
+	/** Identifier of the main encryption key. */
+	SL5: string;
 }
 
 export interface ItemType {
@@ -394,6 +410,7 @@ export class Item {
 		item.openContents = data.openContents;
 		return item;
 	}
+
 }
 
 /** Represents a 1Password vault. */
@@ -411,12 +428,18 @@ export class Vault {
 		this.fs = fs;
 		this.path = path;
 		this.keyAgent = keyAgent || new SimpleKeyAgent(defaultCryptoImpl);
-		this.keys = this.readKeyData();
+	}
+
+	private getKeys() : Q.Promise<EncryptionKeyEntry[]> {
+		if (!this.keys) {
+			this.keys = this.readKeyData();
+		}
+		return this.keys;
 	}
 
 	private readKeyData() : Q.Promise<EncryptionKeyEntry[]> {
 		var keys = Q.defer<EncryptionKeyEntry[]>();
-		var content = this.fs.read(Path.join(this.path, 'data/default/encryptionKeys.js'));
+		var content = this.fs.read(Path.join(this.dataFolderPath(), 'encryptionKeys.js'));
 		content.then((content:string) => {
 			var keyList = JSON.parse(content);
 			if (!keyList.list) {
@@ -454,7 +477,7 @@ export class Vault {
 	  * This must be called before item contents can be decrypted.
 	  */
 	unlock(pwd: string) : Q.Promise<void> {
-		return this.keys.then((keyEntries) => {
+		return this.getKeys().then((keyEntries) => {
 			keyEntries.forEach((item) => {
 				var saltCipher = crypto.extractSaltAndCipherText(item.data);
 				var key = decryptKey(pwd, saltCipher.cipherText, saltCipher.salt, item.iterations, item.validation);
@@ -475,7 +498,7 @@ export class Vault {
 	  * Only once the vault is unlocked can item contents be retrieved using Item.getContents()
 	  */
 	isLocked() : Q.Promise<boolean> {
-		return Q.all([this.keyAgent.listKeys(), this.keys]).spread<boolean>(
+		return Q.all([this.keyAgent.listKeys(), this.getKeys()]).spread<boolean>(
 			(keyIDs: string[], keyEntries: EncryptionKeyEntry[]) => {
 
 			var locked = false;
@@ -551,8 +574,12 @@ export class Vault {
 		return <any>Q.all([itemSaved.promise, overviewSaved.promise]);
 	}
 
+	private dataFolderPath() : string {
+		return Path.join(this.path, 'data/default');
+	}
+
 	private contentsFilePath() : string {
-		return Path.join(this.path, 'data/default/contents.js');
+		return Path.join(this.dataFolderPath(), 'contents.js');
 	}
 
 	/** Returns a list of overview data for all items in the vault,
@@ -589,7 +616,7 @@ export class Vault {
 	}
 
 	decryptItemData(level: string, data: string) : Q.Promise<string> {
-		return this.keys.then((keys) => {
+		return this.getKeys().then((keys) => {
 			var result : Q.Promise<string>;
 			keys.forEach((key) => {
 				if (key.level == level) {
@@ -607,7 +634,7 @@ export class Vault {
 	}
 
 	encryptItemData(level: string, data: string) : Q.Promise<string> {
-		return this.keys.then((keys) => {
+		return this.getKeys().then((keys) => {
 			var result : Q.Promise<string>;
 			keys.forEach((key) => {
 				if (key.level == level) {
@@ -622,6 +649,52 @@ export class Vault {
 				return Q.reject('No key ' + level + ' found');
 			}
 		});
+	}
+
+	/** Initialize a new empty vault in @p path with
+	  * a given master @p password.
+	  */
+	static createVault(fs: vfs.VFS, path: string, password: string, hint: string,
+	  passIterations: number = DEFAULT_VAULT_PASS_ITERATIONS) : Q.Promise<Vault> {
+		if (!stringutil.endsWith(path, '.agilekeychain')) {
+			path += '.agilekeychain';
+		}
+
+		var vault = new Vault(fs, path);
+
+		// 1. Check for no existing vault at @p path
+		// 2. Add empty contents.js, encryptionKeys.js, 1Password.keys files
+		// 3. If this is a Dropbox folder and no file exists in the root
+		//    specifying the vault path, add one
+		// 4. Generate new random key and encrypt with master passworD
+
+		var masterKey = crypto.randomBytes(1024);
+		var salt = crypto.randomBytes(8);
+		var encryptedKey = encryptKey(password, masterKey, salt, passIterations);
+
+		var masterKeyEntry = {
+			data: btoa('Salted__' + salt + encryptedKey.key),
+			identifier: crypto.newUUID(),
+			iterations: passIterations,
+			level: 'SL5',
+			validation: btoa(encryptedKey.validation)
+		};
+
+		var keyList = {
+			list: [masterKeyEntry],
+			SL5: masterKeyEntry.identifier
+		};
+
+		return fs.mkpath(vault.dataFolderPath()).then(() => {
+			return vault.saveEncryptionKeys(keyList);
+		}).then(() => {
+			return vault;
+		});
+	}
+
+	private saveEncryptionKeys(keyList: EncryptionKeyList) : Q.Promise<void> {
+		var keyJSON = collectionutil.prettyJSON(keyList);
+		return this.fs.write(Path.join(this.dataFolderPath(), 'encryptionKeys.js'), keyJSON);
 	}
 }
 

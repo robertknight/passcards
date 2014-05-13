@@ -398,4 +398,23 @@ testLib.addTest('Encrypt/decrypt key', (assert) => {
 	});
 });
 
+testLib.addAsyncTest('Create new vault', (assert) => {
+	var fs = new nodefs.FileVFS('/tmp');
+	var pass = 'test-new-vault-pass';
+	var hint = 'the-password-hint';
+	var vault : onepass.Vault;
+	var keyIterations = 100;
+
+	onepass.Vault.createVault(fs, '/new-vault', pass, hint, keyIterations)
+	.then((vault_) => {
+		vault = vault_;
+		return vault.unlock(pass)
+	}).then(() => {
+		// TODO - Add new item to vault, save, load
+		// TODO - Verify password hint
+		assert.ok(true);
+		testLib.continueTests();
+	}).done();
+});
+
 testLib.runTests();
