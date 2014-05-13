@@ -12,6 +12,7 @@ import Path = require('path');
 
 import asyncutil = require('../lib/asyncutil');
 import clipboard = require('./clipboard');
+import collectionutil = require('../lib/collectionutil');
 import consoleio = require('../lib/console');
 import crypto = require('../lib/onepass_crypto');
 import dropboxvfs = require('../lib/dropboxvfs');
@@ -422,7 +423,7 @@ export class CLI {
 						this.printDetails(contents[index]);
 					}
 					if (format == ShowItemFormat.ShowJSON) {
-						this.printf('%s', consoleio.prettyJSON(contents[index]));
+						this.printf('%s', collectionutil.prettyJSON(contents[index]));
 					}
 				});
 				result.resolve(0);

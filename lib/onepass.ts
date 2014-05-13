@@ -855,9 +855,10 @@ export class ItemUrl {
 	url : string;
 }
 
+var AES_128_KEY_LEN = 32; // 16 byte key + 16 byte IV
+
 export function decryptKey(masterPwd: any, encryptedKey: string, salt: string, iterCount: number, validation: string) : string {
-	var KEY_LEN = 32;
-	var derivedKey = defaultCryptoImpl.pbkdf2(masterPwd, salt, iterCount, KEY_LEN);
+	var derivedKey = defaultCryptoImpl.pbkdf2(masterPwd, salt, iterCount, AES_128_KEY_LEN);
 	var aesKey = derivedKey.substring(0, 16);
 	var iv = derivedKey.substring(16, 32);
 	var decryptedKey = defaultCryptoImpl.aesCbcDecrypt(aesKey, encryptedKey, iv);
@@ -871,5 +872,23 @@ export function decryptKey(masterPwd: any, encryptedKey: string, salt: string, i
 	}
 
 	return decryptedKey;
+}
+
+export interface EncryptedKey {
+	key: string;
+	validation: string;
+}
+
+export function encryptKey(password: string, decryptedKey: string, salt: string, iterCount: number) : EncryptedKey {
+	var derivedKey = defaultCryptoImpl.pbkdf2(password, salt, iterCount, AES_128_KEY_LEN);
+	var aesKey = derivedKey.substring(0, 16);
+	var iv = derivedKey.substring(16, 32);
+	var encryptedKey = defaultCryptoImpl.aesCbcEncrypt(aesKey, decryptedKey, iv);
+
+	var validationSalt = crypto.randomBytes(8);
+	var keyParams = crypto.openSSLKey(defaultCryptoImpl, decryptedKey, validationSalt);
+	var validation = 'Salted__' + validationSalt + defaultCryptoImpl.aesCbcEncrypt(keyParams.key, decryptedKey, keyParams.iv);
+
+	return {key: encryptedKey, validation: validation};
 }
 

@@ -44,10 +44,6 @@ export class ConsoleIO implements TermIO {
 	}
 }
 
-export function prettyJSON(obj: any) {
-	return JSON.stringify(obj, null /* replacer */, 2);
-}
-
 export function printf(out: TermIO, format: string, ...args: any[]) {
 	out.print(sprintf.apply(null, [format].concat(args)));
 }

@@ -38,3 +38,7 @@ export class BiDiMap<T1,T2> {
 	}
 }
 
+export function prettyJSON(object: any) : string {
+	return JSON.stringify(object, null /* replacer */, 2);
+}
+

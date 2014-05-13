@@ -384,4 +384,18 @@ testLib.addTest('Generate Passwords', (assert) => {
 	}
 });
 
+testLib.addTest('Encrypt/decrypt key', (assert) => {
+	var password = 'test-pass'
+	var iterations = 100;
+	var salt = crypto.randomBytes(8);
+	var masterKey = crypto.randomBytes(1024);
+
+	var encryptedKey = onepass.encryptKey(password, masterKey, salt, iterations);
+	var decryptedKey = onepass.decryptKey(password, encryptedKey.key, salt, iterations, encryptedKey.validation);
+	assert.equal(decryptedKey, masterKey);
+	assert.throws(() => {
+		onepass.decryptKey('wrong-pass', encryptedKey.key, salt, iterations, encryptedKey.validation)
+	});
+});
+
 testLib.runTests();
