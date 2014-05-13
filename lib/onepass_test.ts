@@ -433,9 +433,9 @@ testLib.addAsyncTest('Create new vault', (assert) => {
 	}).then((content) => {
 		assert.equal(content.urls.length, 1);
 		assert.equal(content.urls[0].url, 'foobar.com');
-
-		// TODO - Verify password hint
-		assert.ok(true);
+		return vault.hint();
+	}).then((savedHint) => {
+		assert.equal(savedHint, hint);
 		testLib.continueTests();
 	}).done();
 });

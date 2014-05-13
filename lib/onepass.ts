@@ -686,13 +686,17 @@ export class Vault {
 		};
 
 		return fs.mkpath(vault.dataFolderPath()).then(() => {
-			return vault.saveEncryptionKeys(keyList);
-		}).then(() => {
-			// create empty contents.js file
-			return fs.write(vault.contentsFilePath(), '[]');
+			var keysSaved = vault.saveEncryptionKeys(keyList);
+			var hintSaved = fs.write(Path.join(vault.dataFolderPath(), '.password.hint'), hint);
+			var contentsSaved = fs.write(vault.contentsFilePath(), '[]');
+			return Q.all([keysSaved, hintSaved, contentsSaved]);
 		}).then(() => {
 			return vault;
 		});
+	}
+
+	hint() : Q.Promise<string> {
+		return this.fs.read(Path.join(this.dataFolderPath(), '.password.hint'));
 	}
 
 	private saveEncryptionKeys(keyList: EncryptionKeyList) : Q.Promise<void> {
