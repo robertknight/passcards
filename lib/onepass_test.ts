@@ -410,7 +410,30 @@ testLib.addAsyncTest('Create new vault', (assert) => {
 		vault = vault_;
 		return vault.unlock(pass)
 	}).then(() => {
-		// TODO - Add new item to vault, save, load
+		return vault.listItems()
+	}).then((items) => {
+		assert.equal(items.length, 0);
+
+		var item = new onepass.Item(vault);
+		item.title = 'Item in new vault';
+
+		var content = new onepass.ItemContent();
+		content.urls.push({
+			url: 'foobar.com',
+			label: 'website'
+		});
+
+		item.setContent(content);
+		return item.save();
+	}).then(() => {
+		return vault.listItems()
+	}).then((items) => {
+		assert.equal(items.length, 1);
+		return items[0].getContent();
+	}).then((content) => {
+		assert.equal(content.urls.length, 1);
+		assert.equal(content.urls[0].url, 'foobar.com');
+
 		// TODO - Verify password hint
 		assert.ok(true);
 		testLib.continueTests();

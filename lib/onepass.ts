@@ -688,6 +688,9 @@ export class Vault {
 		return fs.mkpath(vault.dataFolderPath()).then(() => {
 			return vault.saveEncryptionKeys(keyList);
 		}).then(() => {
+			// create empty contents.js file
+			return fs.write(vault.contentsFilePath(), '[]');
+		}).then(() => {
 			return vault;
 		});
 	}
