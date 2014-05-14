@@ -433,7 +433,7 @@ testLib.addAsyncTest('Create new vault', (assert) => {
 	}).then((content) => {
 		assert.equal(content.urls.length, 1);
 		assert.equal(content.urls[0].url, 'foobar.com');
-		return vault.hint();
+		return vault.passwordHint();
 	}).then((savedHint) => {
 		assert.equal(savedHint, hint);
 		testLib.continueTests();

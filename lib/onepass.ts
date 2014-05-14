@@ -38,21 +38,6 @@ function UNIXDateFromDate(date: Date) : number {
 	return (date.getTime() / 1000)|0;
 }
 
-export class EncryptionKeyEntry {
-	data : string;
-	identifier : string;
-	iterations : number;
-	level : string;
-	validation : string;
-}
-
-export class EncryptionKeyList {
-	list: EncryptionKeyEntry[];
-
-	/** Identifier of the main encryption key. */
-	SL5: string;
-}
-
 export interface ItemType {
 	name : string;
 	shortAlias : string;
@@ -418,7 +403,7 @@ export class Vault {
 	private fs: vfs.VFS;
 	private path: string;
 	private keyAgent: KeyAgent;
-	private keys : Q.Promise<EncryptionKeyEntry[]>;
+	private keys : Q.Promise<agilekeychain.EncryptionKeyEntry[]>;
 
 	/** Setup a vault which is stored at @p path in a filesystem.
 	  * @p fs is the filesystem interface through which the
@@ -430,37 +415,30 @@ export class Vault {
 		this.keyAgent = keyAgent || new SimpleKeyAgent(defaultCryptoImpl);
 	}
 
-	private getKeys() : Q.Promise<EncryptionKeyEntry[]> {
+	private getKeys() : Q.Promise<agilekeychain.EncryptionKeyEntry[]> {
 		if (!this.keys) {
-			this.keys = this.readKeyData();
+			this.keys = this.loadKeys();
 		}
 		return this.keys;
 	}
 
-	private readKeyData() : Q.Promise<EncryptionKeyEntry[]> {
-		var keys = Q.defer<EncryptionKeyEntry[]>();
+	private loadKeys() : Q.Promise<agilekeychain.EncryptionKeyEntry[]> {
+		var keys = Q.defer<agilekeychain.EncryptionKeyEntry[]>();
 		var content = this.fs.read(Path.join(this.dataFolderPath(), 'encryptionKeys.js'));
 		content.then((content:string) => {
-			var keyList = JSON.parse(content);
+			var keyList : agilekeychain.EncryptionKeyList = JSON.parse(content);
 			if (!keyList.list) {
 				keys.reject('Missing `list` entry in encryptionKeys.js file');
 				return;
 			}
-			var vaultKeys : EncryptionKeyEntry[] = [];
-			keyList.list.forEach((entry:any) => {
-				var item = new EncryptionKeyEntry;
-				item.data = atob(entry.data);
-				item.identifier = entry.identifier;
-				item.iterations = entry.iterations;
-				item.level = entry.level;
-				item.validation = atob(entry.validation);
-
+			var vaultKeys : agilekeychain.EncryptionKeyEntry[] = [];
+			keyList.list.forEach((entry) => {
 				// Using 1Password v4, there are two entries in the
 				// encryptionKeys.js file, 'SL5' and 'SL3'.
 				// 'SL3' appears to be unused so speed up the unlock
 				// process by skipping it
-				if (item.level != "SL3") {
-					vaultKeys.push(item);
+				if (entry.level != "SL3") {
+					vaultKeys.push(entry);
 				}
 			});
 			keys.resolve(vaultKeys);
@@ -473,14 +451,20 @@ export class Vault {
 		return keys.promise;
 	}
 
+	private saveKeys(keyList: agilekeychain.EncryptionKeyList) : Q.Promise<void> {
+		var keyJSON = collectionutil.prettyJSON(keyList);
+		return this.fs.write(Path.join(this.dataFolderPath(), 'encryptionKeys.js'), keyJSON);
+	}
+
 	/** Unlock the vault using the given master password.
 	  * This must be called before item contents can be decrypted.
 	  */
 	unlock(pwd: string) : Q.Promise<void> {
 		return this.getKeys().then((keyEntries) => {
 			keyEntries.forEach((item) => {
-				var saltCipher = crypto.extractSaltAndCipherText(item.data);
-				var key = decryptKey(pwd, saltCipher.cipherText, saltCipher.salt, item.iterations, item.validation);
+				var saltCipher = crypto.extractSaltAndCipherText(atob(item.data));
+				var key = decryptKey(pwd, saltCipher.cipherText, saltCipher.salt, item.iterations,
+				  atob(item.validation));
 				this.keyAgent.addKey(item.identifier, key);
 			});
 			return Q.resolve<void>(null);
@@ -499,7 +483,7 @@ export class Vault {
 	  */
 	isLocked() : Q.Promise<boolean> {
 		return Q.all([this.keyAgent.listKeys(), this.getKeys()]).spread<boolean>(
-			(keyIDs: string[], keyEntries: EncryptionKeyEntry[]) => {
+			(keyIDs: string[], keyEntries: agilekeychain.EncryptionKeyEntry[]) => {
 
 			var locked = false;
 			keyEntries.forEach((entry) => {
@@ -686,7 +670,7 @@ export class Vault {
 		};
 
 		return fs.mkpath(vault.dataFolderPath()).then(() => {
-			var keysSaved = vault.saveEncryptionKeys(keyList);
+			var keysSaved = vault.saveKeys(keyList);
 			var hintSaved = fs.write(Path.join(vault.dataFolderPath(), '.password.hint'), hint);
 			var contentsSaved = fs.write(vault.contentsFilePath(), '[]');
 			return Q.all([keysSaved, hintSaved, contentsSaved]);
@@ -695,13 +679,8 @@ export class Vault {
 		});
 	}
 
-	hint() : Q.Promise<string> {
+	passwordHint() : Q.Promise<string> {
 		return this.fs.read(Path.join(this.dataFolderPath(), '.password.hint'));
-	}
-
-	private saveEncryptionKeys(keyList: EncryptionKeyList) : Q.Promise<void> {
-		var keyJSON = collectionutil.prettyJSON(keyList);
-		return this.fs.write(Path.join(this.dataFolderPath(), 'encryptionKeys.js'), keyJSON);
 	}
 }
 
