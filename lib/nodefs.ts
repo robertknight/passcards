@@ -111,7 +111,10 @@ export class FileVFS implements vfs.VFS {
 		var result = Q.defer<void>();
 		fs.unlink(this.absPath(path), (error) => {
 			if (error) {
-				if (error.code == 'EISDIR') {
+				// unlink() on a directory returns EISDIR on Linux and
+				// EPERM under OS X, which is the POSIX-prescribed error code
+				// for this condition.
+				if (error.code == 'EPERM' || error.code == 'EISDIR') {
 					this.rmdir(path).then(() => {
 						result.resolve(null);
 					}, (err) => {
