@@ -126,6 +126,8 @@ export class CLI {
 		var restoreCommand = subcommands.addParser('restore');
 		restoreCommand.addArgument(['item'], {action:'store'});
 
+		subcommands.addParser('set-password');
+
 		return parser;
 	}
 
@@ -386,6 +388,30 @@ export class CLI {
 		return result.promise;
 	}
 
+	private setPasswordCommand(vault: onepass.Vault) : Q.Promise<number> {
+		var result = Q.defer<number>();
+		var newPass: string;
+		var newPass2: string;
+
+		this.io.readPassword('Existing password: ').then((pass) => {
+			return this.io.readPassword('New password: ');
+		}).then((newPass_) => {
+			return this.io.readPassword('Re-enter new password: ');
+		}).then((newPass2_) => {
+			if (newPass != newPass2) {
+				this.printf('Passwords do not match');
+				result.resolve(1);
+				return;
+			}
+			return this.io.readLine('Hint for new password: ');
+		}).then((hint) => {
+			vault.changePassword(o
+			result.resolve(0);
+		}).done();
+
+		return result.promise;
+	}
+
 	private listCommand(vault: onepass.Vault, pattern: string) : Q.Promise<number> {
 		var result = Q.defer<number>();
 		vault.listItems().then((items : onepass.Item[]) => {
@@ -525,6 +551,10 @@ export class CLI {
 
 		handlers['restore'] = (args, result) => {
 			asyncutil.resolveWith(exitStatus, this.trashItemCommand(currentVault, args.item, false));
+		}
+
+		handlers['set-password'] = (args, result) => {
+			asyncutil.resolveWith(exitStatus, this.setPasswordCommand(currentVault));
 		}
 
 		// process commands
