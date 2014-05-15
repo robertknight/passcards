@@ -13,8 +13,8 @@ export class EncryptionKeyList {
 	  */
 	list: EncryptionKeyEntry[];
 
-	/** Identifier of the main encryption key. */
-	SL5: string;
+	/** Map of security level -> key identifier (string) */
+	[keyLevel: string] : any;
 }
 
 export class EncryptionKeyEntry {

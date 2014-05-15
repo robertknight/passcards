@@ -440,4 +440,23 @@ testLib.addAsyncTest('Create new vault', (assert) => {
 	}).done();
 });
 
+testLib.addAsyncTest('Change vault password', (assert) => {
+	var vault: onepass.Vault;
+	createTestVault().then((vault_) => {
+		vault = vault_;
+		return vault.changePassword('wrong-pass', 'new-pass', 'new-hint');
+	}).fail((err) => {
+		assert.equal(err, 'Failed to decrypt key');
+		vault.changePassword('logMEin', 'new-pass', 'new-hint')
+		.then(() => {
+			return vault.unlock('new-pass');
+		}).then(() => {
+			return vault.passwordHint();
+		}).then((hint) => {
+			assert.equal(hint, 'new-hint');
+			testLib.continueTests();
+		}).done();
+	});
+});
+
 testLib.runTests();

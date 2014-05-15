@@ -443,7 +443,6 @@ export class Vault {
 			});
 			keys.resolve(vaultKeys);
 		}, (err) => {
-			console.log('unable to get enc keys');
 			keys.reject(err);
 		})
 		.done();
@@ -451,9 +450,11 @@ export class Vault {
 		return keys.promise;
 	}
 
-	private saveKeys(keyList: agilekeychain.EncryptionKeyList) : Q.Promise<void> {
+	private saveKeys(keyList: agilekeychain.EncryptionKeyList, passHint: string) : Q.Promise<void> {
 		var keyJSON = collectionutil.prettyJSON(keyList);
-		return this.fs.write(Path.join(this.dataFolderPath(), 'encryptionKeys.js'), keyJSON);
+		var keysSaved = this.fs.write(Path.join(this.dataFolderPath(), 'encryptionKeys.js'), keyJSON);
+		var hintSaved = this.fs.write(Path.join(this.dataFolderPath(), '.password.hint'), passHint);
+		return asyncutil.eraseResult(Q.all([keysSaved, hintSaved]));
 	}
 
 	/** Unlock the vault using the given master password.
@@ -635,6 +636,44 @@ export class Vault {
 		});
 	}
 
+	changePassword(oldPass: string, newPass: string, newPassHint: string) : Q.Promise<void> {
+		return this.isLocked().then((locked) => {
+			if (locked) {
+				return <Q.Promise<agilekeychain.EncryptionKeyEntry[]>>
+					Q.reject('Vault must be unlocked before changing the password');
+			}
+			return this.getKeys();
+		}).then((keys) => {
+			var keyList = <agilekeychain.EncryptionKeyList>{
+				list: []
+			};
+
+			try {
+				keys.forEach((key) => {
+					var oldSaltCipher = crypto.extractSaltAndCipherText(atob(key.data));
+					var newSalt = crypto.randomBytes(8);
+					var oldKey = decryptKey(oldPass, oldSaltCipher.cipherText, oldSaltCipher.salt, key.iterations,
+					  atob(key.validation));
+					var newKey = encryptKey(newPass, oldKey, newSalt, key.iterations);
+					var newKeyEntry = {
+						data: btoa('Salted__' + newSalt + newKey.key),
+						identifier: key.identifier,
+						iterations: key.iterations,
+						level: key.level,
+						validation: btoa(newKey.validation)
+					};
+					keyList.list.push(newKeyEntry);
+					keyList[newKeyEntry.level] = newKeyEntry.identifier;
+				});
+			} catch (err) {
+				return Q.reject(err);
+			}
+
+			this.keys = null;
+			return this.saveKeys(keyList, newPassHint);
+		});
+	}
+
 	/** Initialize a new empty vault in @p path with
 	  * a given master @p password.
 	  */
@@ -664,16 +703,15 @@ export class Vault {
 			validation: btoa(encryptedKey.validation)
 		};
 
-		var keyList = {
+		var keyList = <agilekeychain.EncryptionKeyList>{
 			list: [masterKeyEntry],
 			SL5: masterKeyEntry.identifier
 		};
 
 		return fs.mkpath(vault.dataFolderPath()).then(() => {
-			var keysSaved = vault.saveKeys(keyList);
-			var hintSaved = fs.write(Path.join(vault.dataFolderPath(), '.password.hint'), hint);
+			var keysSaved = vault.saveKeys(keyList, hint);
 			var contentsSaved = fs.write(vault.contentsFilePath(), '[]');
-			return Q.all([keysSaved, hintSaved, contentsSaved]);
+			return Q.all([keysSaved, contentsSaved]);
 		}).then(() => {
 			return vault;
 		});

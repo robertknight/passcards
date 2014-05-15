@@ -30,3 +30,12 @@ export function resolveWithValue<T, U>(a: Q.Deferred<T>, b: Q.Promise<U>, value:
 	return a.promise;
 }
 
+/** Returns a promise with the result type erased.
+  *
+  * Note: This doesn't actually modify the passed promise at all,
+  * it just exists as a helper for type checking.
+  */
+export function eraseResult<T>(p: Q.Promise<T>) : Q.Promise<void> {
+	return <any>p;
+}
+
