@@ -5,6 +5,7 @@
 var qunit = require('qunitjs');
 import xdiff = require('xdiff');
 import underscore = require('underscore');
+import sprintf = require('sprintf');
 
 export interface Assert {
 	notEqual<T>(actual: T, notExpected: T, message?: string) : void;
@@ -70,7 +71,7 @@ interface TestResult {
 	failed: number
 	passed: number
 	total: number
-	duration: number
+	runtime: number
 }
 
 interface TestSuiteResult {
@@ -120,11 +121,13 @@ export function runTests(filter?: string) {
 
 	qunit.testDone((result: TestResult) => {
 		var summary = result.passed == result.total ? 'PASS ' : 'FAIL';
-		console.log(summary + ': ' + result.name);
+		var durationStr = sprintf(' (%sms)', result.runtime);
+		console.log(summary, ': ', result.name, durationStr);
 	});
 
 	qunit.done((result: TestSuiteResult) => {
-		console.log('tests run. total assertions: ' + result.total + ' failed: ' + result.failed);
+		var summary = sprintf('tests run. total assertions: %d, failed: %d, duration: %dms', result.total, result.failed, result.runtime);
+		console.log(summary);
 		if (typeof process != 'undefined') {
 			if (result.failed > 0) {
 				process.on('exit', () => {
