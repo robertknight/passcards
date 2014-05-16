@@ -8,6 +8,7 @@ import Q = require('q');
 import argparse = require('argparse');
 import mkdirp = require('mkdirp')
 import fs = require('fs');
+import sprintf = require('sprintf');
 import Path = require('path');
 
 import asyncutil = require('../lib/asyncutil');
@@ -143,6 +144,9 @@ export class CLI {
 			nargs: 1,
 			type: 'string'
 		});
+
+		var removeCommand = subcommands.addParser('remove');
+		removeCommand.addArgument(['pattern'], {action:'store'});
 
 		return parser;
 	}
@@ -439,10 +443,38 @@ export class CLI {
 		return result.promise;
 	}
 
+	private removeCommand(vault: onepass.Vault, pattern: string) : Q.Promise<number> {
+		var result = Q.defer<number>();
+		var items : onepass.Item[];
+
+		this.lookupItems(vault, pattern).then((items_) => {
+			items = items_;
+			items.forEach((item) => {
+				this.printOverview(item);
+			});
+			return this.io.readLine(sprintf('Do you really want to remove these %d item(s) permanently?', items.length));
+		}).then((response) => {
+			if (response.match(/[yY]/)) {
+				var removeOps : Q.Promise<void>[] = [];
+				items.forEach((item) => {
+					removeOps.push(item.remove());
+				});
+				Q.all(removeOps).then(() => {
+					this.printf(sprintf('%d items were removed', items.length));
+					result.resolve(0);
+				}).done();
+			} else {
+				result.resolve(1);
+			}
+		}).done();
+
+		return result.promise;
+	}
+
 	private listCommand(vault: onepass.Vault, pattern: string) : Q.Promise<number> {
 		var result = Q.defer<number>();
-		vault.listItems().then((items : onepass.Item[]) => {
-			items.sort((a:onepass.Item, b:onepass.Item) => {
+		vault.listItems().then((items) => {
+			items.sort((a, b) => {
 				return a.title.toLowerCase().localeCompare(b.title.toLowerCase());
 			});
 			items.forEach((item) => {
@@ -450,6 +482,7 @@ export class CLI {
 					this.printf('%s (%s, %s)', item.title, item.typeDescription(), item.shortID());
 				}
 			});
+			this.printf('%d matching item(s) in vault', items.length);
 			result.resolve(0);
 		}).done();
 		return result.promise;
@@ -582,6 +615,10 @@ export class CLI {
 
 		handlers['set-password'] = (args, result) => {
 			asyncutil.resolveWith(exitStatus, this.setPasswordCommand(currentVault, args.iterations));
+		}
+
+		handlers['remove'] = (args, result) => {
+			asyncutil.resolveWith(exitStatus, this.removeCommand(currentVault, args.pattern));
 		}
 
 		// process commands

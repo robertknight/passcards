@@ -343,4 +343,23 @@ testLib.addAsyncTest('item pattern formats', (assert) => {
 	});
 });
 
+testLib.addAsyncTest('remove items', (assert) => {
+	fakeTerm.replies.push({
+		match: /Do you really want to remove these 1 item\(s\)/,
+		response: 'y'
+	});
+
+	var vaultPath : string;
+	cloneTestVault().then((path) => {
+		vaultPath = path;
+		return runCLIWithVault(vaultPath, 'remove', 'faceb');
+	}).then((status) => {
+		assert.equal(status, 0);
+		return runCLIWithVault(vaultPath, 'list');
+	}).then((status) => {
+		assert.ok(fakeTerm.didPrint(/0 matching item\(s\)/));
+		testLib.continueTests();
+	}).done();
+});
+
 testLib.runTests();
