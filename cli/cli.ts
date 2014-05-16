@@ -18,6 +18,7 @@ import crypto = require('../lib/onepass_crypto');
 import dropboxvfs = require('../lib/dropboxvfs');
 import onepass = require('../lib/onepass');
 import nodefs = require('../lib/nodefs');
+import stringutil = require('../lib/stringutil');
 import vfs = require('../lib/vfs');
 
 interface HandlerMap {
@@ -53,10 +54,19 @@ export class CLI {
 		consoleio.printf.apply(null, [this.io, format].concat(args));
 	}
 
-	private static patternMatch(pattern: string, item: onepass.Item) {
+	private static patternMatch(pattern: string, item: onepass.Item) : boolean {
 		pattern = pattern.toLowerCase();
 		var titleLower = item.title.toLowerCase();
-		return titleLower.indexOf(pattern) != -1;
+		
+		if (titleLower.indexOf(pattern) != -1) {
+			return true;
+		}
+
+		if (stringutil.startsWith(item.uuid.toLowerCase(), pattern)) {
+			return true;
+		}
+
+		return false;
 	}
 
 	private lookupItems(vault: onepass.Vault, pattern: string) : Q.Promise<onepass.Item[]> {

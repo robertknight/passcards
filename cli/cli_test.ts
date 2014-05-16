@@ -3,6 +3,7 @@ import path = require('path');
 import Q = require('q');
 import underscore = require('underscore');
 
+import asyncutil = require('../lib/asyncutil');
 import cli = require('./cli')
 import clipboard = require('./clipboard')
 import consoleio = require('../lib/console')
@@ -320,6 +321,26 @@ testLib.addAsyncTest('change password', (assert) => {
 		fakeTerm.password = 'logMEin';
 		testLib.continueTests();
 	}).done();
+});
+
+testLib.addAsyncTest('item pattern formats', (assert) => {
+	var patterns = ['facebook', 'FACEB', 'ca20', 'CA20'];
+	var tests: Array<() => Q.Promise<any>> = [];
+
+	patterns.forEach((pattern, index) => {
+		tests.push(() => {
+			return runCLI('show', pattern)
+			.then((status) => {
+				assert.equal(status, 0);
+				assert.ok(fakeTerm.didPrint(/Facebook.*Login/));
+				return true;
+			});
+		});
+	});
+
+	asyncutil.runSequence(tests).then(() => {
+		testLib.continueTests();
+	});
 });
 
 testLib.runTests();

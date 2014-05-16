@@ -39,3 +39,18 @@ export function eraseResult<T>(p: Q.Promise<T>) : Q.Promise<void> {
 	return <any>p;
 }
 
+/** Run a sequence of async functions in a serial fashion.
+  *
+  * Returns an array containing the results of each operation.
+  */
+export function runSequence(funcs: Array<() => Q.Promise<any>>, results?: any[]) : Q.Promise<any[]> {
+	results = results || [];
+	if (funcs.length == 0) {
+		return Q.resolve(results);
+	}
+	return funcs[0]().then((result) => {
+		results.push(result);
+		return runSequence(funcs.slice(1), results);
+	});
+}
+
