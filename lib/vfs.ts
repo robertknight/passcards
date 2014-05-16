@@ -2,6 +2,7 @@
 /// <reference path="../typings/DefinitelyTyped/mkdirp/mkdirp.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
 
+import asyncutil = require('./asyncutil');
 import Q = require('q');
 
 /** Holds details of a file retrieved by a VFS implementation */
@@ -63,13 +64,9 @@ export class VFSUtil {
 					}
 				});
 
-				Q.all(removeOps).then(() => {
+				asyncutil.resolveWithValue(result, Q.all(removeOps).then(() => {
 					return fs.rm(path);
-				}).then(() => {
-					result.resolve(null);
-				}).fail((err) => {
-					result.reject(err);
-				});
+				}), null);
 			}).done();
 		}, (err) => {
 			// TODO - Only resolve the promise if
@@ -106,9 +103,8 @@ export class VFSUtil {
 
 	/** Copy the directory @p path and all of its contents to a new location */
 	static cp(fs: VFS, src: FileInfo, dest: string) : Q.Promise<void> {
-		var result = Q.defer<void>();
 		if (src.isDir) {
-			fs.mkpath(dest).then(() => {
+			return fs.mkpath(dest).then(() => {
 				return fs.list(src.path);
 			})
 			.then((srcFiles) => {
@@ -117,27 +113,13 @@ export class VFSUtil {
 					var destPath = dest + '/' + srcFile.name;
 					copyOps.push(VFSUtil.cp(fs, srcFile, destPath));
 				});
-				return Q.all(copyOps);
+				return asyncutil.eraseResult(Q.all(copyOps));
 			})
-			.then(() => {
-				result.resolve(null);
-			})
-			.fail((err) => {
-				result.reject(err);
-			});
 		} else {
-			fs.read(src.path).then((content) => {
+			return fs.read(src.path).then((content) => {
 				return fs.write(dest, content);
 			})
-			.then(() => {
-				result.resolve(null);
-			})
-			.fail((err) => {
-				result.reject(err);
-			});
 		}
-
-		return result.promise;
 	}
 }
 
