@@ -449,9 +449,16 @@ export class CLI {
 
 		this.lookupItems(vault, pattern).then((items_) => {
 			items = items_;
+			if (items.length == 0) {
+				this.printf('No matching items');
+				result.resolve(1);
+				return;
+			}
+
 			items.forEach((item) => {
 				this.printOverview(item);
 			});
+			this.printf('');
 			return this.io.readLine(sprintf('Do you really want to remove these %d item(s) permanently?', items.length));
 		}).then((response) => {
 			if (response.match(/[yY]/)) {
@@ -482,7 +489,7 @@ export class CLI {
 					this.printf('%s (%s, %s)', item.title, item.typeDescription(), item.shortID());
 				}
 			});
-			this.printf('%d matching item(s) in vault', items.length);
+			this.printf('\n%d matching item(s) in vault', items.length);
 			result.resolve(0);
 		}).done();
 		return result.promise;
