@@ -51,6 +51,18 @@ export enum CryptoAlgorithm {
 	AES128_OpenSSLKey
 }
 
+export class DecryptionError {
+	context : string;
+
+	constructor(context?: string) {
+		this.context = context;
+	}
+
+	toString() : string {
+		return this.context || 'Decryption failed';
+	}
+}
+
 export class CryptoParams {
 	algo : CryptoAlgorithm;
 
@@ -984,7 +996,7 @@ export function decryptKey(masterPwd: any, encryptedKey: string, salt: string, i
 	var decryptedValidation = defaultCryptoImpl.aesCbcDecrypt(keyParams.key, validationSaltCipher.cipherText, keyParams.iv);
 
 	if (decryptedValidation != decryptedKey) {
-		throw 'Failed to decrypt key';
+		throw new DecryptionError('Incorrect password');
 	}
 
 	return decryptedKey;
