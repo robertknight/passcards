@@ -288,4 +288,38 @@ testLib.addAsyncTest('trash/restore item', (assert) => {
 	}).done();
 });
 
+testLib.addAsyncTest('change password', (assert) => {
+	fakeTerm.replies = fakeTerm.replies.concat([{
+		match: /Re-enter existing/,
+		response: 'logMEin'
+	},{
+		match: /New password/,
+		response: 'newpass'
+	},{
+		match: /Re-enter new/,
+		response: 'newpass'
+	},{
+		match: /Hint for new/,
+		response: 'the-hint'
+	}]);
+
+	var vaultPath : string;
+	cloneTestVault().then((path) => {
+		vaultPath = path;
+		return runCLIWithVault(path, 'set-password');
+	}).then((status) => {
+		assert.equal(status, 0);
+		return runCLIWithVault(vaultPath, 'lock');
+	}).then((status) => {
+		assert.equal(status, 0);
+		fakeTerm.password = 'newpass';
+		return runCLIWithVault(vaultPath, 'list');
+	}).then((status) => {
+		assert.equal(status, 0);
+
+		fakeTerm.password = 'logMEin';
+		testLib.continueTests();
+	}).done();
+});
+
 testLib.runTests();

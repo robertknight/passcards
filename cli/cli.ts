@@ -126,7 +126,13 @@ export class CLI {
 		var restoreCommand = subcommands.addParser('restore');
 		restoreCommand.addArgument(['item'], {action:'store'});
 
-		subcommands.addParser('set-password');
+		var setPassCommand = subcommands.addParser('set-password');
+		setPassCommand.addArgument(['--iterations'], {
+			action: 'store',
+			dest: 'iterations',
+			nargs: 1,
+			type: 'string'
+		});
 
 		return parser;
 	}
@@ -388,16 +394,21 @@ export class CLI {
 		return result.promise;
 	}
 
-	private setPasswordCommand(vault: onepass.Vault) : Q.Promise<number> {
+	private setPasswordCommand(vault: onepass.Vault, iterations?: number) : Q.Promise<number> {
 		var result = Q.defer<number>();
+		var currentPass: string;
 		var newPass: string;
 		var newPass2: string;
 
-		this.io.readPassword('Existing password: ').then((pass) => {
+		this.io.readPassword('Re-enter existing password: ').then((pass) => {
+			currentPass = pass;
 			return this.io.readPassword('New password: ');
 		}).then((newPass_) => {
+			newPass = newPass_;
 			return this.io.readPassword('Re-enter new password: ');
 		}).then((newPass2_) => {
+			newPass2 = newPass2_;
+
 			if (newPass != newPass2) {
 				this.printf('Passwords do not match');
 				result.resolve(1);
@@ -405,9 +416,15 @@ export class CLI {
 			}
 			return this.io.readLine('Hint for new password: ');
 		}).then((hint) => {
-			vault.changePassword(o
+			return vault.changePassword(currentPass, newPass, hint, iterations);
+		}).then(() => {
+			this.printf('The master password for this vault has been changed.\n\n' +
+'If you are using other 1Password apps, please note that they may still ' +
+'require the previous password when they are next unlocked');
 			result.resolve(0);
-		}).done();
+		}).fail((err) => {
+			this.printf('Unable to update the vault password: %s', err);
+		});
 
 		return result.promise;
 	}
@@ -554,7 +571,7 @@ export class CLI {
 		}
 
 		handlers['set-password'] = (args, result) => {
-			asyncutil.resolveWith(exitStatus, this.setPasswordCommand(currentVault));
+			asyncutil.resolveWith(exitStatus, this.setPasswordCommand(currentVault, args.iterations));
 		}
 
 		// process commands

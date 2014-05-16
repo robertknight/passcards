@@ -636,7 +636,18 @@ export class Vault {
 		});
 	}
 
-	changePassword(oldPass: string, newPass: string, newPassHint: string) : Q.Promise<void> {
+	/** Change the master password for the vault.
+	  *
+	  * This decrypts the existing master key and re-encrypts it with @p newPass.
+	  *
+	  * @param oldPass The current password for the vault
+	  * @param newPass The new password for the vault
+	  * @param newPassHint The user-provided hint for the new password
+	  * @param iterations The number of iterations of the key derivation function
+	  *  to use when generating an encryption key from @p newPass. If not specified,
+	  *  use the same number of iterations as the existing key.
+	  */
+	changePassword(oldPass: string, newPass: string, newPassHint: string, iterations?: number) : Q.Promise<void> {
 		return this.isLocked().then((locked) => {
 			if (locked) {
 				return <Q.Promise<agilekeychain.EncryptionKeyEntry[]>>
@@ -654,11 +665,12 @@ export class Vault {
 					var newSalt = crypto.randomBytes(8);
 					var oldKey = decryptKey(oldPass, oldSaltCipher.cipherText, oldSaltCipher.salt, key.iterations,
 					  atob(key.validation));
-					var newKey = encryptKey(newPass, oldKey, newSalt, key.iterations);
+					var newKeyIterations = iterations || key.iterations;
+					var newKey = encryptKey(newPass, oldKey, newSalt, newKeyIterations);
 					var newKeyEntry = {
 						data: btoa('Salted__' + newSalt + newKey.key),
 						identifier: key.identifier,
-						iterations: key.iterations,
+						iterations: newKeyIterations,
 						level: key.level,
 						validation: btoa(newKey.validation)
 					};
