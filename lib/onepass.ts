@@ -451,6 +451,10 @@ export class Vault {
 	}
 
 	private saveKeys(keyList: agilekeychain.EncryptionKeyList, passHint: string) : Q.Promise<void> {
+		// FIXME - Improve handling of concurrent attempts to update encryptionKeys.js.
+		// If the file in the VFS has been modified since the original read, the operation
+		// should fail.
+
 		var keyJSON = collectionutil.prettyJSON(keyList);
 		var keysSaved = this.fs.write(Path.join(this.dataFolderPath(), 'encryptionKeys.js'), keyJSON);
 		var hintSaved = this.fs.write(Path.join(this.dataFolderPath(), '.password.hint'), passHint);
@@ -552,6 +556,9 @@ export class Vault {
 			entry[6] = 0; // TODO - Find out what this is used for
 			entry[7] = (item.trashed ? "Y" : "N");
 
+			// FIXME - Improve handling of concurrent updates to contents.js file.
+			// If the file has been modified in the VFS since the original write then
+			// the operation should fail.
 			var newContentsJSON = JSON.stringify(contentEntries);
 			asyncutil.resolveWith(overviewSaved, this.fs.write(this.contentsFilePath(), newContentsJSON));
 		}).done();
