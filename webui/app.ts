@@ -102,11 +102,13 @@ class SearchField extends reactts.ReactComponentBase<SearchFieldProps, {}> {
 	}
 
 	render() {
-		return react.DOM.input({className: 'searchField',
-			type: 'search',
-			placeholder: 'Search...',
-			ref: 'searchField'
-		});
+		return react.DOM.div({className: 'searchField'},
+				react.DOM.input({className: 'searchFieldInput',
+					type: 'search',
+					placeholder: 'Search...',
+					ref: 'searchField'
+				})
+			);
 	}
 }
 
@@ -130,7 +132,7 @@ class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, ItemLis
 	}
 
 	render() {
-		return react.DOM.div({},
+		return react.DOM.div({className: 'itemListView'},
 			new SearchField({onQueryChanged: this.updateFilter}),
 			new ItemList({items: this.props.items, filter: this.state.filter})
 		);
@@ -153,6 +155,7 @@ class ItemProps {
 	iconURL: string;
 	accountName: string;
 	location: string;
+	domain: string;
 }
 
 class Item extends reactts.ReactComponentBase<ItemProps, {}> {
@@ -161,7 +164,7 @@ class Item extends reactts.ReactComponentBase<ItemProps, {}> {
 			react.DOM.img({className: 'itemIcon', src: this.props.iconURL}),
 			react.DOM.div({className: 'itemDetails'},
 				react.DOM.div({className: 'itemTitle'}, this.props.title),
-				react.DOM.div({className: 'itemLocation'}, this.props.location),
+				react.DOM.div({className: 'itemLocation'}, this.props.domain),
 				react.DOM.div({className: 'itemAccount'}, this.props.accountName)
 			)
 		);
@@ -217,7 +220,8 @@ class ItemList extends reactts.ReactComponentBase<ItemListProps, {}> {
 				title: item.title,
 				iconURL: this.itemIconURL(item),
 				accountName: this.itemAccount(item),
-				location: item.location
+				location: item.location,
+				domain: this.itemDomain(item)
 			}));
 		});
 

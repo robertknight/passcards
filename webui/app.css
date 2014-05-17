@@ -1,3 +1,32 @@
+body {
+	font-family: 'Helvetica Neue', 'Segoe UI', 'Helvetica', 'Arial';
+	margin:0px;
+}
+
+.unlockPane {
+	display: none;
+}
+
+.itemListView {
+	display: flex;
+	flex-direction: column;
+}
+
+.searchField {
+	align-items: center;
+	background-color: rgba(200,200,200,0.8);
+	display: flex;
+	flex-direction: row;
+	width: 100%;
+	height: 40px;
+	justify-content: center;
+	position: fixed;
+}
+
+.itemList {
+	margin-top: 45px;
+}
+
 .itemOverview {
 	display: flex;
 	flex-direction: row;
@@ -24,12 +53,15 @@
 }
 
 .itemTitle {
-	font-family: arial;
 	font-size: 14px;
 }
 
 .itemAccount {
 	font-size: 12px;
 	color: #bbbbbb;
+}
+
+.itemLocation {
+	color: #666666;
 }
 
