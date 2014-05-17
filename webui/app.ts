@@ -62,19 +62,27 @@ class AppView extends reactts.ReactComponentBase<{}, AppViewState> {
 	}
 
 	render() {
-		return react.DOM.div({className: 'appView'},
-			new UnlockPane({
-				vault: this.state.vault,
-				isLocked: this.state.isLocked,
-				onUnlock: () => {
-					this.setLocked(false);
-				}
-			}),
-			new ItemListView({
+		var children: react.ReactComponent<any,any>[] = [];
+		if (this.state.isLocked) {
+			children.push(
+				new UnlockPane({
+					vault: this.state.vault,
+					isLocked: this.state.isLocked,
+					onUnlock: () => {
+						this.setLocked(false);
+					}
+				})
+			);
+		} else {
+			children.push(new ItemListView({
 				items: this.state.items,
 				onSelectedItemChanged: (item) => { this.setSelectedItem(item); }
-			}),
-			new DetailsView({item: this.state.selectedItem})
+			}));
+			children.push(new DetailsView({item: this.state.selectedItem}));
+		}
+
+		return react.DOM.div({className: 'appView'},
+			children
 		);
 	}
 }
@@ -88,8 +96,10 @@ class UnlockPaneProps {
 
 class UnlockPane extends reactts.ReactComponentBase<UnlockPaneProps, {}> {
 	componentDidMount() {
-		var unlockBtn = this.refs['unlockBtn'].getDOMNode();
-		$(unlockBtn).click(() => {
+		var unlockBtn = this.refs['unlockPaneForm'].getDOMNode();
+		$(unlockBtn).submit((e) => {
+			e.preventDefault();
+
 			var unlockField = this.refs['masterPassField'].getDOMNode();
 			var masterPass = $(unlockField).val();
 
@@ -106,7 +116,7 @@ class UnlockPane extends reactts.ReactComponentBase<UnlockPaneProps, {}> {
 		}
 
 		return react.DOM.div({className: 'unlockPane'},
-			react.DOM.div({className: 'unlockPaneInputs'},
+			react.DOM.form({className: 'unlockPaneInputs', ref:'unlockPaneForm'},
 				react.DOM.input({
 					className: 'masterPassField',
 					type: 'password',
