@@ -15,7 +15,7 @@
 		"atob" : ">=1.1",
 		"btoa" : ">=1.1",
 		"crypto-js" : ">=3.1",
-		"dropbox" : ">=0.10.2",
+		"dropbox" : "https://github.com/robertknight/dropbox-js/archive/5568865764d9deab69836569a69d72d200c88293.tar.gz",
 		"es6-shim" : ">=0.10.0",
 		"jquery" : ">=2.1.0",
 		"mkdirp" : ">=0.4.0",
