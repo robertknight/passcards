@@ -2119,18 +2119,26 @@ var AppView = (function (_super) {
 
     AppView.prototype.render = function () {
         var _this = this;
-        return react.DOM.div({ className: 'appView' }, new UnlockPane({
-            vault: this.state.vault,
-            isLocked: this.state.isLocked,
-            onUnlock: function () {
-                _this.setLocked(false);
-            }
-        }), new ItemListView({
-            items: this.state.items,
-            onSelectedItemChanged: function (item) {
-                _this.setSelectedItem(item);
-            }
-        }), new DetailsView({ item: this.state.selectedItem }));
+        var children = [];
+        if (this.state.isLocked) {
+            children.push(new UnlockPane({
+                vault: this.state.vault,
+                isLocked: this.state.isLocked,
+                onUnlock: function () {
+                    _this.setLocked(false);
+                }
+            }));
+        } else {
+            children.push(new ItemListView({
+                items: this.state.items,
+                onSelectedItemChanged: function (item) {
+                    _this.setSelectedItem(item);
+                }
+            }));
+            children.push(new DetailsView({ item: this.state.selectedItem }));
+        }
+
+        return react.DOM.div({ className: 'appView' }, children);
     };
     return AppView;
 })(reactts.ReactComponentBase);

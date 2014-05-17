@@ -51,8 +51,8 @@ body {
 	background-color: rgba(200,200,200,0.8);
 	width: 100%;
 	position: fixed;
-	padding-top: 5px;
-	padding-bottom: 5px;
+	padding-top: 7px;
+	padding-bottom: 7px;
 
 	display: flex;
 	display: -webkit-flex;
@@ -65,11 +65,12 @@ body {
 }
 
 .searchFieldInput {
-	height: 40px;
+	padding-left: 5px;
+	height: 30px;
 }
 
 .itemList {
-	margin-top: 45px;
+	margin-top: 50px;
 }
 
 .itemOverview {
