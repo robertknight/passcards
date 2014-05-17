@@ -2169,12 +2169,12 @@ var SearchField = (function (_super) {
     };
 
     SearchField.prototype.render = function () {
-        return react.DOM.input({
-            className: 'searchField',
+        return react.DOM.div({ className: 'searchField' }, react.DOM.input({
+            className: 'searchFieldInput',
             type: 'search',
             placeholder: 'Search...',
             ref: 'searchField'
-        });
+        }));
     };
     return SearchField;
 })(reactts.ReactComponentBase);
@@ -2207,7 +2207,7 @@ var ItemListView = (function (_super) {
     };
 
     ItemListView.prototype.render = function () {
-        return react.DOM.div({}, new SearchField({ onQueryChanged: this.updateFilter }), new ItemList({ items: this.props.items, filter: this.state.filter }));
+        return react.DOM.div({ className: 'itemListView' }, new SearchField({ onQueryChanged: this.updateFilter }), new ItemList({ items: this.props.items, filter: this.state.filter }));
     };
     return ItemListView;
 })(reactts.ReactComponentBase);
@@ -2239,7 +2239,7 @@ var Item = (function (_super) {
         _super.apply(this, arguments);
     }
     Item.prototype.render = function () {
-        return react.DOM.div({ className: 'itemOverview' }, react.DOM.img({ className: 'itemIcon', src: this.props.iconURL }), react.DOM.div({ className: 'itemDetails' }, react.DOM.div({ className: 'itemTitle' }, this.props.title), react.DOM.div({ className: 'itemLocation' }, this.props.location), react.DOM.div({ className: 'itemAccount' }, this.props.accountName)));
+        return react.DOM.div({ className: 'itemOverview' }, react.DOM.img({ className: 'itemIcon', src: this.props.iconURL }), react.DOM.div({ className: 'itemDetails' }, react.DOM.div({ className: 'itemTitle' }, this.props.title), react.DOM.div({ className: 'itemLocation' }, this.props.domain), react.DOM.div({ className: 'itemAccount' }, this.props.accountName)));
     };
     return Item;
 })(reactts.ReactComponentBase);
@@ -2299,7 +2299,8 @@ var ItemList = (function (_super) {
                 title: item.title,
                 iconURL: _this.itemIconURL(item),
                 accountName: _this.itemAccount(item),
-                location: item.location
+                location: item.location,
+                domain: _this.itemDomain(item)
             }));
         });
 
