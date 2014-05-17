@@ -2157,8 +2157,10 @@ var UnlockPane = (function (_super) {
     }
     UnlockPane.prototype.componentDidMount = function () {
         var _this = this;
-        var unlockBtn = this.refs['unlockBtn'].getDOMNode();
-        $(unlockBtn).click(function () {
+        var unlockBtn = this.refs['unlockPaneForm'].getDOMNode();
+        $(unlockBtn).submit(function (e) {
+            e.preventDefault();
+
             var unlockField = _this.refs['masterPassField'].getDOMNode();
             var masterPass = $(unlockField).val();
 
@@ -2174,7 +2176,7 @@ var UnlockPane = (function (_super) {
             return react.DOM.div({});
         }
 
-        return react.DOM.div({ className: 'unlockPane' }, react.DOM.div({ className: 'unlockPaneInputs' }, react.DOM.input({
+        return react.DOM.div({ className: 'unlockPane' }, react.DOM.form({ className: 'unlockPaneInputs', ref: 'unlockPaneForm' }, react.DOM.input({
             className: 'masterPassField',
             type: 'password',
             placeholder: 'Master Password...',
