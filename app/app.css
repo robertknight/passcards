@@ -3,6 +3,10 @@ body {
 	margin:0px;
 }
 
+.appView {
+	width: 100%;
+}
+
 .unlockPane {
 	background-color: #0099CC;
 	position: absolute;
