@@ -23,6 +23,8 @@
 		"paralleljs" : ">=0.2.1",
 		"promptly" : ">=0.2.0",
 		"q" : ">=1.0",
+		"react" : "~0.9.x",
+		"react-typescript" : "https://github.com/fdecampredon/react-typescript/archive/d8d183c57614a715b07e0dd1caae7b54b37172db.tar.gz",
 		"sprintf" : ">=0.1.3",
 		"underscore" : ">=1.6.0",
 		"urlrouter" : ">=0.5.4"
