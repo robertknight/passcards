@@ -23,6 +23,8 @@ class AppViewState {
 	mainView: ActiveView;
 	vault: onepass.Vault;
 	items: onepass.Item[];
+	selectedItem: onepass.Item;
+	isLocked: boolean;
 }
 
 class AppView extends reactts.ReactComponentBase<{}, AppViewState> {
@@ -30,6 +32,7 @@ class AppView extends reactts.ReactComponentBase<{}, AppViewState> {
 		var state = new AppViewState;
 		state.mainView = ActiveView.UnlockPane;
 		state.items = [];
+		state.isLocked = true;
 		return state;
 	}
 
@@ -46,11 +49,32 @@ class AppView extends reactts.ReactComponentBase<{}, AppViewState> {
 		this.setState(state);
 	}
 
+	setSelectedItem(item: onepass.Item) {
+		var state = this.state;
+		state.selectedItem = item;
+		this.setState(state);
+	}
+
+	setLocked(locked: boolean) {
+		var state = this.state;
+		state.isLocked = locked;
+		this.setState(state);
+	}
+
 	render() {
 		return react.DOM.div({className: 'appView'},
-			new UnlockPane({vault: this.state.vault}),
-			new ItemListView({items: this.state.items}),
-			new DetailsView({})
+			new UnlockPane({
+				vault: this.state.vault,
+				isLocked: this.state.isLocked,
+				onUnlock: () => {
+					this.setLocked(false);
+				}
+			}),
+			new ItemListView({
+				items: this.state.items,
+				onSelectedItemChanged: (item) => { this.setSelectedItem(item); }
+			}),
+			new DetailsView({item: this.state.selectedItem})
 		);
 	}
 }
@@ -58,6 +82,8 @@ class AppView extends reactts.ReactComponentBase<{}, AppViewState> {
 // View for entering master password and unlocking the vault
 class UnlockPaneProps {
 	vault: onepass.Vault;
+	isLocked: boolean;
+	onUnlock: () => void;
 }
 
 class UnlockPane extends reactts.ReactComponentBase<UnlockPaneProps, {}> {
@@ -68,20 +94,27 @@ class UnlockPane extends reactts.ReactComponentBase<UnlockPaneProps, {}> {
 			var masterPass = $(unlockField).val();
 
 			this.props.vault.unlock(masterPass).then(() => {
+				this.props.onUnlock();
 				console.log('vault unlocked!');
 			}).done();
 		});
 	}
 
 	render() {
+		if (!this.props.isLocked) {
+			return react.DOM.div({});
+		}
+
 		return react.DOM.div({className: 'unlockPane'},
-			react.DOM.input({
-				className: 'masterPassField',
-				type: 'password',
-				placeholder: 'Master Password...',
-				ref: 'masterPassField'
-			}),
-			react.DOM.input({type: 'button', value: 'Unlock', ref: 'unlockBtn'})
+			react.DOM.div({className: 'unlockPaneInputs'},
+				react.DOM.input({
+					className: 'masterPassField',
+					type: 'password',
+					placeholder: 'Master Password...',
+					ref: 'masterPassField'
+				}),
+				react.DOM.input({type: 'button', value: 'Unlock', ref: 'unlockBtn'})
+			)
 		);
 	}
 }
@@ -118,6 +151,7 @@ class ItemListViewState {
 
 class ItemListViewProps {
 	items: onepass.Item[];
+	onSelectedItemChanged: (item: onepass.Item) => void;
 }
 
 class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, ItemListViewState> {
@@ -134,17 +168,42 @@ class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, ItemLis
 	render() {
 		return react.DOM.div({className: 'itemListView'},
 			new SearchField({onQueryChanged: this.updateFilter}),
-			new ItemList({items: this.props.items, filter: this.state.filter})
+			new ItemList({items: this.props.items, filter: this.state.filter,
+			              onSelectedItemChanged: this.props.onSelectedItemChanged})
 		);
 	}
 }
 
 // Detail view for an individual item
-class DetailsView extends reactts.ReactComponentBase<{}, {}> {
+class DetailsViewProps {
+	item: onepass.Item;
+}
+
+class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
+	itemContent : onepass.ItemContent;
+
+	componentWillReceiveProps(nextProps: DetailsViewProps) {
+		if (!nextProps.item) {
+			return;
+		}
+
+		nextProps.item.getContent().then((content) => {
+			// TODO - Cache content and avoid using forceUpdate()
+			this.itemContent = content;
+			this.forceUpdate();
+		}).done();
+	}
+
 	render() {
-		return react.DOM.div({
-			children: 'This is the details view for an item'
-		});
+		var children: react.ReactComponent<any,any>[] = [];
+		if (this.props.item) {
+			children.push(react.DOM.div({className: 'detailsTitle'}, this.props.item.title));
+			children.push(react.DOM.div({}, this.props.item.location));
+			var itemFields : reactts.ReactComponentBase<any,any>[] = [];
+			children = children.concat(itemFields);
+		}
+
+		return react.DOM.div({className: 'detailsView'}, children);
 	}
 }
 
@@ -156,11 +215,18 @@ class ItemProps {
 	accountName: string;
 	location: string;
 	domain: string;
+	onSelected: () => void;
 }
 
 class Item extends reactts.ReactComponentBase<ItemProps, {}> {
+	componentDidMount() {
+		$(this.refs['itemOverview'].getDOMNode()).click(() => {
+			this.props.onSelected();
+		});
+	}
+
 	render() {
-		return react.DOM.div({className: 'itemOverview'},
+		return react.DOM.div({className: 'itemOverview', ref: 'itemOverview'},
 			react.DOM.img({className: 'itemIcon', src: this.props.iconURL}),
 			react.DOM.div({className: 'itemDetails'},
 				react.DOM.div({className: 'itemTitle'}, this.props.title),
@@ -171,13 +237,17 @@ class Item extends reactts.ReactComponentBase<ItemProps, {}> {
 	}
 }
 
-// List of all items in the vault
+class ItemListState {
+	selectedItem: onepass.Item;
+}
+
 class ItemListProps {
 	items: onepass.Item[];
 	filter: string;
+	onSelectedItemChanged: (item: onepass.Item) => void;
 }
 
-class ItemList extends reactts.ReactComponentBase<ItemListProps, {}> {
+class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> {
 	itemDomain(item: onepass.Item) : string {
 		var itemURL = item.location;
 
@@ -208,6 +278,17 @@ class ItemList extends reactts.ReactComponentBase<ItemListProps, {}> {
 		return '';
 	}
 
+	setSelectedItem(item: onepass.Item) {
+		var state = this.state;
+		state.selectedItem = item;
+		this.setState(state);
+		this.props.onSelectedItemChanged(item);
+	}
+
+	getInitialState() {
+		return new ItemListState();
+	}
+
 	render() {
 		var listItems : Item[] = [];
 		this.props.items.forEach((item) => {
@@ -221,7 +302,10 @@ class ItemList extends reactts.ReactComponentBase<ItemListProps, {}> {
 				iconURL: this.itemIconURL(item),
 				accountName: this.itemAccount(item),
 				location: item.location,
-				domain: this.itemDomain(item)
+				domain: this.itemDomain(item),
+				onSelected: () => {
+					this.setSelectedItem(item);
+				}
 			}));
 		});
 
