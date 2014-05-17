@@ -96,8 +96,8 @@ class UnlockPaneProps {
 
 class UnlockPane extends reactts.ReactComponentBase<UnlockPaneProps, {}> {
 	componentDidMount() {
-		var unlockBtn = this.refs['unlockPaneForm'].getDOMNode();
-		$(unlockBtn).submit((e) => {
+		var unlockForm = this.refs['unlockPaneForm'].getDOMNode();
+		$(unlockForm).submit((e) => {
 			e.preventDefault();
 
 			var unlockField = this.refs['masterPassField'].getDOMNode();
@@ -123,7 +123,7 @@ class UnlockPane extends reactts.ReactComponentBase<UnlockPaneProps, {}> {
 					placeholder: 'Master Password...',
 					ref: 'masterPassField'
 				}),
-				react.DOM.input({type: 'button', value: 'Unlock', ref: 'unlockBtn'})
+				react.DOM.input({type: 'submit', value: 'Unlock', ref: 'unlockBtn'})
 			)
 		);
 	}
