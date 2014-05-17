@@ -1,3 +1,4 @@
+TMP_DIR_CMD=mktemp -d /tmp/onepass.XXXXX
 TSC=tsc --noImplicitAny --sourcemap
 TSC_NODE=$(TSC) -m commonjs
 TSLINT=tslint
@@ -13,9 +14,15 @@ webui_srcs=$(shell find webui/ -name '*.ts')
 all_srcs=$(lib_srcs) $(cli_srcs) $(webui_srcs)
 test_files=$(shell find build/ -name '*_test.js')
 
+# marker files used to trigger npm / Git submodule
+# updates prior to build
+submodule_marker=build/submodule_marker
+nodemodule_marker=build/nodemodule_marker
+deps=$(submodule_marker) $(nodemodule_marker)
+
 all: build/current webui-build
 
-build/current: $(lib_srcs) $(cli_srcs) $(webui_srcs)
+build/current: $(lib_srcs) $(cli_srcs) $(webui_srcs) $(deps)
 	@$(TSC_NODE) --outDir build $(lib_srcs) $(cli_srcs) $(webui_srcs)
 	@touch build/current
 
@@ -27,15 +34,23 @@ build/webui_bundle.js: build/current
 test: cli webui
 	@echo $(test_files) | $(FOREACH_FILE) $(NODE)
 
-LINT_FILES=$(addprefix build/,$(subst .ts,.ts.lint, $(all_srcs)))
-lint: $(LINT_FILES)
+lint_files=$(addprefix build/,$(subst .ts,.ts.lint, $(all_srcs)))
+lint: $(lint_files)
 
 build/%.ts.lint: %.ts
 	$(TSLINT) -f $<
 	@touch $@
 
+$(submodule_marker): .gitmodules
+	git submodule update --init
+	@mkdir -p build && touch $(submodule_marker)
+
+$(nodemodule_marker): package.json
+	@mkdir -p build && touch $(nodemodule_marker)
+	npm install .
+
 test-package: all
-	@cd `mktemp -d /tmp/onepass.XXXXX` \
+	@cd `$(TMP_DIR_CMD)` \
 	&& npm install --quiet $(ROOT_DIR) $(SILENCE_STDOUT) \
 	&& ./node_modules/onepass-cli/1pass --help $(SILENCE_STDOUT) \
 	&& echo npm package OK
