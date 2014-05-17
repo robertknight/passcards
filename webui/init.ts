@@ -1,3 +1,5 @@
+/// <reference path="../typings/DefinitelyTyped/jquery/jquery.d.ts" />
+
 import $ = require('jquery');
 import app = require('./app');
 
@@ -10,6 +12,7 @@ $(document).ready(() => {
 		return;
 	}
 
-	new app.App();
+	var unused = new app.App();
+	unused = unused; // suppress tslint error about expecting assignment or func call
 });
 

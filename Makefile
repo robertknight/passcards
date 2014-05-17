@@ -10,7 +10,7 @@ SILENCE_STDOUT=1>/dev/null
 lib_srcs=$(shell find lib/ -name '*.ts')
 cli_srcs=$(shell find cli/ -name '*.ts')
 webui_srcs=$(shell find webui/ -name '*.ts')
-all_srcs=$(lib_srcs) $(cli_srcs)
+all_srcs=$(lib_srcs) $(cli_srcs) $(webui_srcs)
 test_files=$(shell find build/ -name '*_test.js')
 
 all: build/current webui-build

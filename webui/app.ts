@@ -7,34 +7,133 @@ import $ = require('jquery');
 import Q = require('q');
 import react = require('react');
 import reactts = require('react-typescript');
+import underscore = require('underscore');
+import url = require('url');
 
 import dropboxvfs = require('../lib/dropboxvfs');
 import onepass = require('../lib/onepass');
 
-class AppView extends reactts.ReactComponentBase<{}, {}> {
-	render() {
-		return new ItemList({
-			className: 'commentBox',
-			children: 'Hello - I am a react element'
+enum ActiveView {
+	UnlockPane,
+	ItemList,
+	ItemDetailView
+}
+
+class AppViewState {
+	mainView: ActiveView;
+	vault: onepass.Vault;
+	items: onepass.Item[];
+}
+
+class AppView extends reactts.ReactComponentBase<{}, AppViewState> {
+	getInitialState() {
+		var state = new AppViewState;
+		state.mainView = ActiveView.UnlockPane;
+		state.items = [];
+		return state;
+	}
+
+	setVault(vault: onepass.Vault) {
+		var state = this.state;
+		state.vault = vault;
+
+		vault.listItems().then((items) => {
+			var state = this.state;
+			state.items = items;
+			this.setState(state);
 		});
+
+		this.setState(state);
+	}
+
+	render() {
+		return react.DOM.div({className: 'appView'},
+			new UnlockPane({vault: this.state.vault}),
+			new ItemListView({items: this.state.items}),
+			new DetailsView({})
+		);
 	}
 }
 
 // View for entering master password and unlocking the vault
-class UnlockPane extends reactts.ReactComponentBase<{}, {}> {
-	render() {
-		return react.DOM.div({
-			children: 'This is the vault unlock pane'
+class UnlockPaneProps {
+	vault: onepass.Vault;
+}
+
+class UnlockPane extends reactts.ReactComponentBase<UnlockPaneProps, {}> {
+	componentDidMount() {
+		var unlockBtn = this.refs['unlockBtn'].getDOMNode();
+		$(unlockBtn).click(() => {
+			var unlockField = this.refs['masterPassField'].getDOMNode();
+			var masterPass = $(unlockField).val();
+
+			this.props.vault.unlock(masterPass).then(() => {
+				console.log('vault unlocked!');
+			}).done();
 		});
+	}
+
+	render() {
+		return react.DOM.div({className: 'unlockPane'},
+			react.DOM.input({
+				className: 'masterPassField',
+				type: 'password',
+				placeholder: 'Master Password...',
+				ref: 'masterPassField'
+			}),
+			react.DOM.input({type: 'button', value: 'Unlock', ref: 'unlockBtn'})
+		);
 	}
 }
 
 // Search box to search through items in the view
-class SearchField extends reactts.ReactComponentBase<{}, {}> {
+class SearchFieldProps {
+	onQueryChanged: (query: string) => void;
+}
+
+class SearchField extends reactts.ReactComponentBase<SearchFieldProps, {}> {
+	componentDidMount() {
+		var updateQuery = underscore.debounce(() => {
+			this.props.onQueryChanged($(searchField).val().toLowerCase());
+		}, 100);
+
+		var searchField = this.refs['searchField'].getDOMNode();
+		$(searchField).bind('input', <(eventObject: JQueryEventObject) => any>updateQuery);
+	}
+
 	render() {
-		return react.DOM.div({
-			children: 'This is a search field for the item view'
+		return react.DOM.input({className: 'searchField',
+			type: 'search',
+			placeholder: 'Search...',
+			ref: 'searchField'
 		});
+	}
+}
+
+class ItemListViewState {
+	filter: string;
+}
+
+class ItemListViewProps {
+	items: onepass.Item[];
+}
+
+class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, ItemListViewState> {
+	getInitialState() {
+		return new ItemListViewState();
+	}
+
+	updateFilter = (filter: string) => {
+		var state = this.state;
+		state.filter = filter;
+		this.setState(state);
+	}
+
+	render() {
+		return react.DOM.div({},
+			new SearchField({onQueryChanged: this.updateFilter}),
+			new ItemList({items: this.props.items, filter: this.state.filter})
+		);
 	}
 }
 
@@ -48,20 +147,87 @@ class DetailsView extends reactts.ReactComponentBase<{}, {}> {
 }
 
 // Item in the overall view
-class Item extends reactts.ReactComponentBase<{}, {}> {
+class ItemProps {
+	key: string;
+	title: string;
+	iconURL: string;
+	accountName: string;
+	location: string;
+}
+
+class Item extends reactts.ReactComponentBase<ItemProps, {}> {
 	render() {
-		return react.DOM.div({
-			children: 'This is an item'
-		});
+		return react.DOM.div({className: 'itemOverview'},
+			react.DOM.img({className: 'itemIcon', src: this.props.iconURL}),
+			react.DOM.div({className: 'itemDetails'},
+				react.DOM.div({className: 'itemTitle'}, this.props.title),
+				react.DOM.div({className: 'itemLocation'}, this.props.location),
+				react.DOM.div({className: 'itemAccount'}, this.props.accountName)
+			)
+		);
 	}
 }
 
 // List of all items in the vault
-class ItemList extends reactts.ReactComponentBase<{}, {}> {
+class ItemListProps {
+	items: onepass.Item[];
+	filter: string;
+}
+
+class ItemList extends reactts.ReactComponentBase<ItemListProps, {}> {
+	itemDomain(item: onepass.Item) : string {
+		var itemURL = item.location;
+
+		if (!itemURL) {
+			return null;
+		}
+
+		var parsedUrl = url.parse(itemURL);
+		return parsedUrl.host;
+	}
+
+	itemIconURL(item: onepass.Item) : string {
+		// TODO - Setup a service to get much prettier icons for URLs
+		var domain = this.itemDomain(item);
+		if (domain) {
+			return 'http://' + this.itemDomain(item) + '/favicon.ico';
+		} else {
+			return null;
+		}
+	}
+
+	itemAccount(item: onepass.Item) : string {
+		// TODO - Extract item contents and save account name
+		// for future use
+		//
+		// In the Agile Keychain format it is only available
+		// after the item has been decrypted
+		return '';
+	}
+
 	render() {
-		return react.DOM.div({
-			children: 'This is the item list'
+		var listItems : Item[] = [];
+		this.props.items.forEach((item) => {
+			if (this.props.filter && item.title.toLowerCase().indexOf(this.props.filter) == -1) {
+				return;
+			}
+
+			listItems.push(new Item({
+				key: item.uuid,
+				title: item.title,
+				iconURL: this.itemIconURL(item),
+				accountName: this.itemAccount(item),
+				location: item.location
+			}));
 		});
+
+		listItems.sort((a, b) => {
+			return a.props.title.toLowerCase().localeCompare(b.props.title.toLowerCase());
+		});
+		
+		return react.DOM.div({className: 'itemList'},
+			listItems
+		);
 	}
 }
 
@@ -73,61 +239,18 @@ export class App {
 		var account = fs.login();
 		var vault = Q.defer<onepass.Vault>();
 		this.vault = vault.promise;
+		
+		var appView = new AppView({});
 
 		account.then(() => {
 			vault.resolve(new onepass.Vault(fs, '/1Password/1Password.agilekeychain'));
-			var content = '';
-			
+		}).done();
+
+		vault.promise.then((vault) => {
+			appView.setVault(vault);
 		}).done();
 		
-		this.vault.then((vault) => {
-			vault.listItems().then((items) => {
-				items.sort((a, b) => {
-					return a.title.toLowerCase().localeCompare(b.title.toLowerCase());
-				});
-				var content = '';
-				var linkIDs : string[] = [];
-				items.forEach((item) => {
-					var linkID = 'item-' + item.uuid;
-					content = content + '<div><a href="#" id="' + linkID + '">'  + item.title + '</a></div>';
-					linkIDs.push(linkID);
-				});
-				$('#item-list').html(content);
-				items.forEach((item, index) => {
-					$('#' + linkIDs[index]).click(() => {
-						this.showDetails(item);
-					});
-				});
-			});
-		}).done();
-
-		$('#unlock-btn').click(() => {
-			var pass = $('#master-pass').val();
-			var lockStatus = $('#lock-status');
-			lockStatus.text('Unlocking...');
-			this.vault.then((vault) => {
-				return vault.unlock(pass);
-			})
-			.then((unlocked) => {
-				lockStatus.text('Vault Unlocked');
-			})
-			.fail((err) => {
-				lockStatus.text('Unlocking failed: ' + err);
-			});
-		});
-
-		react.renderComponent(new AppView({}), document.getElementById('react-content'));
-	}
-
-	showDetails(item: onepass.Item) {
-		console.log('Fetching content for ' + item.title);
-		item.getContent().then((content) => {
-			$('#item-details').html(JSON.stringify(content));
-		})
-		.fail((err) => {
-			$('#item-details').html('Failed to retrieve item details');
-		})
-		.done();
+		react.renderComponent(appView, document.getElementById('app-view'));
 	}
 }
 
