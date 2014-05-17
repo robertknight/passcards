@@ -15,7 +15,7 @@ test_files=$(shell find build/ -name '*_test.js')
 
 all: build/current webui-build
 
-build/current: $(lib_srcs) $(cli_srcs) $(webui-srcs)
+build/current: $(lib_srcs) $(cli_srcs) $(webui_srcs)
 	@$(TSC_NODE) --outDir build $(lib_srcs) $(cli_srcs) $(webui_srcs)
 	@touch build/current
 
