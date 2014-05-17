@@ -2087,6 +2087,7 @@ var AppView = (function (_super) {
         var state = new AppViewState;
         state.mainView = 0 /* UnlockPane */;
         state.items = [];
+        state.isLocked = true;
         return state;
     };
 
@@ -2104,8 +2105,32 @@ var AppView = (function (_super) {
         this.setState(state);
     };
 
+    AppView.prototype.setSelectedItem = function (item) {
+        var state = this.state;
+        state.selectedItem = item;
+        this.setState(state);
+    };
+
+    AppView.prototype.setLocked = function (locked) {
+        var state = this.state;
+        state.isLocked = locked;
+        this.setState(state);
+    };
+
     AppView.prototype.render = function () {
-        return react.DOM.div({ className: 'appView' }, new UnlockPane({ vault: this.state.vault }), new ItemListView({ items: this.state.items }), new DetailsView({}));
+        var _this = this;
+        return react.DOM.div({ className: 'appView' }, new UnlockPane({
+            vault: this.state.vault,
+            isLocked: this.state.isLocked,
+            onUnlock: function () {
+                _this.setLocked(false);
+            }
+        }), new ItemListView({
+            items: this.state.items,
+            onSelectedItemChanged: function (item) {
+                _this.setSelectedItem(item);
+            }
+        }), new DetailsView({ item: this.state.selectedItem }));
     };
     return AppView;
 })(reactts.ReactComponentBase);
@@ -2130,18 +2155,23 @@ var UnlockPane = (function (_super) {
             var masterPass = $(unlockField).val();
 
             _this.props.vault.unlock(masterPass).then(function () {
+                _this.props.onUnlock();
                 console.log('vault unlocked!');
             }).done();
         });
     };
 
     UnlockPane.prototype.render = function () {
-        return react.DOM.div({ className: 'unlockPane' }, react.DOM.input({
+        if (!this.props.isLocked) {
+            return react.DOM.div({});
+        }
+
+        return react.DOM.div({ className: 'unlockPane' }, react.DOM.div({ className: 'unlockPaneInputs' }, react.DOM.input({
             className: 'masterPassField',
             type: 'password',
             placeholder: 'Master Password...',
             ref: 'masterPassField'
-        }), react.DOM.input({ type: 'button', value: 'Unlock', ref: 'unlockBtn' }));
+        }), react.DOM.input({ type: 'button', value: 'Unlock', ref: 'unlockBtn' })));
     };
     return UnlockPane;
 })(reactts.ReactComponentBase);
@@ -2207,21 +2237,48 @@ var ItemListView = (function (_super) {
     };
 
     ItemListView.prototype.render = function () {
-        return react.DOM.div({ className: 'itemListView' }, new SearchField({ onQueryChanged: this.updateFilter }), new ItemList({ items: this.props.items, filter: this.state.filter }));
+        return react.DOM.div({ className: 'itemListView' }, new SearchField({ onQueryChanged: this.updateFilter }), new ItemList({
+            items: this.props.items, filter: this.state.filter,
+            onSelectedItemChanged: this.props.onSelectedItemChanged }));
     };
     return ItemListView;
 })(reactts.ReactComponentBase);
 
 // Detail view for an individual item
+var DetailsViewProps = (function () {
+    function DetailsViewProps() {
+    }
+    return DetailsViewProps;
+})();
+
 var DetailsView = (function (_super) {
     __extends(DetailsView, _super);
     function DetailsView() {
         _super.apply(this, arguments);
     }
+    DetailsView.prototype.componentWillReceiveProps = function (nextProps) {
+        var _this = this;
+        if (!nextProps.item) {
+            return;
+        }
+
+        nextProps.item.getContent().then(function (content) {
+            // TODO - Cache content and avoid using forceUpdate()
+            _this.itemContent = content;
+            _this.forceUpdate();
+        }).done();
+    };
+
     DetailsView.prototype.render = function () {
-        return react.DOM.div({
-            children: 'This is the details view for an item'
-        });
+        var children = [];
+        if (this.props.item) {
+            children.push(react.DOM.div({ className: 'detailsTitle' }, this.props.item.title));
+            children.push(react.DOM.div({}, this.props.item.location));
+            var itemFields = [];
+            children = children.concat(itemFields);
+        }
+
+        return react.DOM.div({ className: 'detailsView' }, children);
     };
     return DetailsView;
 })(reactts.ReactComponentBase);
@@ -2238,13 +2295,25 @@ var Item = (function (_super) {
     function Item() {
         _super.apply(this, arguments);
     }
+    Item.prototype.componentDidMount = function () {
+        var _this = this;
+        $(this.refs['itemOverview'].getDOMNode()).click(function () {
+            _this.props.onSelected();
+        });
+    };
+
     Item.prototype.render = function () {
-        return react.DOM.div({ className: 'itemOverview' }, react.DOM.img({ className: 'itemIcon', src: this.props.iconURL }), react.DOM.div({ className: 'itemDetails' }, react.DOM.div({ className: 'itemTitle' }, this.props.title), react.DOM.div({ className: 'itemLocation' }, this.props.domain), react.DOM.div({ className: 'itemAccount' }, this.props.accountName)));
+        return react.DOM.div({ className: 'itemOverview', ref: 'itemOverview' }, react.DOM.img({ className: 'itemIcon', src: this.props.iconURL }), react.DOM.div({ className: 'itemDetails' }, react.DOM.div({ className: 'itemTitle' }, this.props.title), react.DOM.div({ className: 'itemLocation' }, this.props.domain), react.DOM.div({ className: 'itemAccount' }, this.props.accountName)));
     };
     return Item;
 })(reactts.ReactComponentBase);
 
-// List of all items in the vault
+var ItemListState = (function () {
+    function ItemListState() {
+    }
+    return ItemListState;
+})();
+
 var ItemListProps = (function () {
     function ItemListProps() {
     }
@@ -2286,6 +2355,17 @@ var ItemList = (function (_super) {
         return '';
     };
 
+    ItemList.prototype.setSelectedItem = function (item) {
+        var state = this.state;
+        state.selectedItem = item;
+        this.setState(state);
+        this.props.onSelectedItemChanged(item);
+    };
+
+    ItemList.prototype.getInitialState = function () {
+        return new ItemListState();
+    };
+
     ItemList.prototype.render = function () {
         var _this = this;
         var listItems = [];
@@ -2300,7 +2380,10 @@ var ItemList = (function (_super) {
                 iconURL: _this.itemIconURL(item),
                 accountName: _this.itemAccount(item),
                 location: item.location,
-                domain: _this.itemDomain(item)
+                domain: _this.itemDomain(item),
+                onSelected: function () {
+                    _this.setSelectedItem(item);
+                }
             }));
         });
 
