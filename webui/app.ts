@@ -14,6 +14,7 @@ import dropboxvfs = require('../lib/vfs/dropbox');
 import http_client = require('../lib/http_client');
 import http_vfs = require('../lib/vfs/http');
 import onepass = require('../lib/onepass');
+import stringutil = require('../lib/base/stringutil');
 import vfs = require('../lib/vfs/vfs');
 
 import onepass_crypto = require('../lib/onepass_crypto');
@@ -93,13 +94,28 @@ class AppView extends reactts.ReactComponentBase<{}, AppViewState> {
 }
 
 // View for entering master password and unlocking the vault
+enum UnlockState {
+	Locked,
+	Unlocking,
+	Failed,
+	Success
+}
+
+class UnlockPaneState {
+	unlockState: UnlockState;
+}
+
 class UnlockPaneProps {
 	vault: onepass.Vault;
 	isLocked: boolean;
 	onUnlock: () => void;
 }
 
-class UnlockPane extends reactts.ReactComponentBase<UnlockPaneProps, {}> {
+class UnlockPane extends reactts.ReactComponentBase<UnlockPaneProps, UnlockPaneState> {
+	getInitialState() {
+		return new UnlockPaneState();
+	}
+
 	componentDidMount() {
 		var unlockForm = this.refs['unlockPaneForm'].getDOMNode();
 		$(unlockForm).submit((e) => {
@@ -108,11 +124,22 @@ class UnlockPane extends reactts.ReactComponentBase<UnlockPaneProps, {}> {
 			var unlockField = this.refs['masterPassField'].getDOMNode();
 			var masterPass = $(unlockField).val();
 
+			this.setUnlockState(UnlockState.Unlocking);
 			this.props.vault.unlock(masterPass).then(() => {
+				this.setUnlockState(UnlockState.Success);
 				this.props.onUnlock();
 				console.log('vault unlocked!');
-			}).done();
+			})
+			.fail((err) => {
+				this.setUnlockState(UnlockState.Failed);
+			});
 		});
+	}
+
+	setUnlockState(unlockState: UnlockState) {
+		var state = this.state;
+		state.unlockState = unlockState;
+		this.setState(state);
 	}
 
 	render() {
@@ -120,15 +147,25 @@ class UnlockPane extends reactts.ReactComponentBase<UnlockPaneProps, {}> {
 			return react.DOM.div({});
 		}
 
+		var unlockMessage : string;
+		if (this.state.unlockState == UnlockState.Unlocking) {
+			unlockMessage = 'Unlocking...';
+		} else if (this.state.unlockState == UnlockState.Failed) {
+			unlockMessage = 'Unlocking failed';
+		}
+
 		return react.DOM.div({className: 'unlockPane'},
-			react.DOM.form({className: 'unlockPaneInputs', ref:'unlockPaneForm'},
-				react.DOM.input({
-					className: 'masterPassField',
-					type: 'password',
-					placeholder: 'Master Password...',
-					ref: 'masterPassField'
-				}),
-				react.DOM.input({type: 'submit', value: 'Unlock', ref: 'unlockBtn'})
+			react.DOM.div({className:'unlockPaneForm'},
+				react.DOM.form({className: 'unlockPaneInputs', ref:'unlockPaneForm'},
+					react.DOM.input({
+						className: 'masterPassField',
+						type: 'password',
+						placeholder: 'Master Password...',
+						ref: 'masterPassField'
+					}),
+					react.DOM.input({type: 'submit', value: 'Unlock', ref: 'unlockBtn'})
+				),
+				react.DOM.div({className: 'unlockLabel'}, unlockMessage)
 			)
 		);
 	}
@@ -194,6 +231,13 @@ class DetailsViewProps {
 	item: onepass.Item;
 }
 
+
+class ItemSectionProps {
+	title: string;
+	type: onepass.FormFieldType
+	value: string;
+}
+
 class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 	itemContent : onepass.ItemContent;
 
@@ -218,7 +262,12 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 			children = children.concat(itemFields);
 		}
 
-		return react.DOM.div({className: 'detailsView'}, children);
+		return react.DOM.div({
+			className: stringutil.truthyKeys({
+				detailsView: true,
+				hasSelectedItem: this.props.item
+			})
+		}, children);
 	}
 }
 
