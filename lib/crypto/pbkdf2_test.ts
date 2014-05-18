@@ -102,34 +102,67 @@ testLib.addTest('PBKDF2-HMAC-SHA1', (assert) => {
 	});
 });
 
+interface PBKDF2Params {
+	pass: string;
+	salt: string;
+	iterations: number;
+	dkLen: number;
+}
+
+interface PBKDF2BlockParams {
+	params: PBKDF2Params;
+	blockIndex: number;
+}
+
 testLib.addAsyncTest('pbkdf2Lib Parallel', (assert) => {
 	var params = {
 		pass : "passwordPASSWORDpassword",
 		salt : "saltSALTsaltSALTsaltSALTsaltSALTsalt",
 		iterations : 4096,
 		dkLen : 25,
-		key : "3d2eec4fe41c849b80c8d83662c0e44a8b291a964cf2f07038"
 	};
+	var expectedKey = "3d2eec4fe41c849b80c8d83662c0e44a8b291a964cf2f07038"
 
 	var blocks = [
 		{ params : params, blockIndex : 0 },
 		{ params : params, blockIndex : 1 }
 	];
 
-	var pbkdfBlock = (blockParams : any) => {
-		var pbkdf2Lib = require('../../../build/lib/crypto/pbkdf2');
+	var pbkdfBlock = (blockParams: PBKDF2BlockParams) => {
+		var modPath : string;
+		if (typeof self == 'undefined') {
+			// running from NodeJS context, require
+			// the pbkdf2.js lib as normal
+			modPath = '../../../build/lib/crypto/pbkdf2';
+		} else {
+			// running in a Web Worker, require the
+			// pbkdf2 lib exported by the standalone pbkdf2 bundle
+			modPath = 'pbkdf2';
+		}
+		var pbkdf2Lib = require(modPath);
 		var pbkdf2 = new pbkdf2Lib.PBKDF2();
 		var passBuf = pbkdf2Lib.bufferFromString(blockParams.params.pass);
 		var saltBuf = pbkdf2Lib.bufferFromString(blockParams.params.salt);
-		return pbkdf2.keyBlock(passBuf,
+		var keyBlock = pbkdf2.keyBlock(passBuf,
 		  saltBuf,
 		  blockParams.params.iterations,
 		  blockParams.blockIndex
 		);
+		return new Uint8Array(keyBlock);
 	};
 
 	var par = new parallel(blocks, {
+		evalPath: 'node_modules/paralleljs/lib/eval.js'
 	});
+
+	// when this test is run in the browser, include
+	// the standalone pbkdf2 bundle
+	par.require('../../../build/lib/crypto/pbkdf2_bundle.js');
+
+	// process the blocks in parallel in a background (thread|process)
+	// and concatenate the results. Note that in Node.js the results
+	// of the map() promise are not really Uint8Arrays but the
+	// result of `JSON.parse(JSON.stringify(aUint8Array))`
 	par.map(pbkdfBlock).then((blocks: Uint8Array[]) => {
 		var result = new Uint8Array(params.dkLen);
 		var resultIndex = 0;
@@ -139,7 +172,7 @@ testLib.addAsyncTest('pbkdf2Lib Parallel', (assert) => {
 				++resultIndex;
 			}
 		});
-		assert.equal(pbkdf2Lib.hexlify(result), params.key, 'Check pbkdf2Lib result matches');
+		assert.equal(pbkdf2Lib.hexlify(result), expectedKey, 'Check pbkdf2Lib result matches');
 		testLib.continueTests();
 	});
 });

@@ -31,7 +31,13 @@ webui-build: build/webui_bundle.js
 build/webui_bundle.js: build/current
 	browserify --entry build/webui/init.js --outfile build/webui_bundle.js
 
-test: cli webui
+# pbkdf2_bundle.js is a require()-able bundle
+# of the PBKDF2 implementation for use in Web Workers
+# in the browser
+build/lib/crypto/pbkdf2_bundle.js: build/current
+	browserify --require ./build/lib/crypto/pbkdf2.js:pbkdf2 --outfile build/lib/crypto/pbkdf2_bundle.js
+
+test: cli webui build/lib/crypto/pbkdf2_bundle.js
 	@echo $(test_files) | $(FOREACH_FILE) $(NODE)
 
 lint_files=$(addprefix build/,$(subst .ts,.ts.lint, $(all_srcs)))
