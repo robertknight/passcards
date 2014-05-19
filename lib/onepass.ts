@@ -477,14 +477,23 @@ export class Vault {
 	  * This must be called before item contents can be decrypted.
 	  */
 	unlock(pwd: string) : Q.Promise<void> {
-		return this.getKeys().then((keyEntries) => {
+		var keyEntries : agilekeychain.EncryptionKeyEntry[];
+		return this.getKeys().then((keyEntries_) => {
+			var derivedKeys : Q.Promise<string>[] = [];
+			keyEntries = keyEntries_;
 			keyEntries.forEach((item) => {
 				var saltCipher = crypto.extractSaltAndCipherText(atob(item.data));
-				var key = decryptKey(pwd, saltCipher.cipherText, saltCipher.salt, item.iterations,
+				derivedKeys.push(keyFromPassword(pwd, saltCipher.salt, item.iterations));
+			});
+			return Q.all(derivedKeys);
+		}).then((derivedKeys) => {
+			keyEntries.forEach((item, index) => {
+				var saltCipher = crypto.extractSaltAndCipherText(atob(item.data));
+				var key = decryptKey(derivedKeys[index], saltCipher.cipherText,
 				  atob(item.validation));
 				this.keyAgent.addKey(item.identifier, key);
 			});
-			return Q.resolve<void>(null);
+			return <void>null;
 		});
 	}
 
@@ -682,10 +691,12 @@ export class Vault {
 				keys.forEach((key) => {
 					var oldSaltCipher = crypto.extractSaltAndCipherText(atob(key.data));
 					var newSalt = crypto.randomBytes(8);
-					var oldKey = decryptKey(oldPass, oldSaltCipher.cipherText, oldSaltCipher.salt, key.iterations,
+					var derivedKey = keyFromPasswordSync(oldPass, oldSaltCipher.salt, key.iterations);
+					var oldKey = decryptKey(derivedKey, oldSaltCipher.cipherText,
 					  atob(key.validation));
 					var newKeyIterations = iterations || key.iterations;
-					var newKey = encryptKey(newPass, oldKey, newSalt, newKeyIterations);
+					var newDerivedKey = keyFromPasswordSync(newPass, newSalt, newKeyIterations);
+					var newKey = encryptKey(newDerivedKey, oldKey);
 					var newKeyEntry = {
 						data: btoa('Salted__' + newSalt + newKey.key),
 						identifier: key.identifier,
@@ -724,7 +735,8 @@ export class Vault {
 
 		var masterKey = crypto.randomBytes(1024);
 		var salt = crypto.randomBytes(8);
-		var encryptedKey = encryptKey(password, masterKey, salt, passIterations);
+		var derivedKey = keyFromPasswordSync(password, salt, passIterations);
+		var encryptedKey = encryptKey(derivedKey, masterKey);
 
 		var masterKeyEntry = {
 			data: btoa('Salted__' + salt + encryptedKey.key),
@@ -985,8 +997,30 @@ export class ItemUrl {
 
 var AES_128_KEY_LEN = 32; // 16 byte key + 16 byte IV
 
-export function decryptKey(masterPwd: any, encryptedKey: string, salt: string, iterCount: number, validation: string) : string {
-	var derivedKey = defaultCryptoImpl.pbkdf2(masterPwd, salt, iterCount, AES_128_KEY_LEN);
+/** Derive an encryption key from a password for use with decryptKey().
+  * This version is synchronous and will block the UI if @p iterCount
+  * is high.
+  */
+export function keyFromPasswordSync(pass: string, salt: string, iterCount: number) : string {
+	return defaultCryptoImpl.pbkdf2Sync(pass, salt, iterCount, AES_128_KEY_LEN);
+}
+
+/** Derive an encryption key from a password for use with decryptKey()
+  * This version is asynchronous and will not block the UI.
+  */
+export function keyFromPassword(pass: string, salt: string, iterCount: number) : Q.Promise<string> {
+	return defaultCryptoImpl.pbkdf2(pass, salt, iterCount, AES_128_KEY_LEN);
+}
+
+/** Decrypt the master key for a vault.
+  *
+  * @param derivedKey The encryption key that was used to encrypt @p encryptedKey, this is
+  *   derived from a password using keyFromPassword()
+  * @param encryptedKey The encryption key, encrypted with @p derivedKey
+  * @param validation Validation data used to verify whether decryption was successful.
+  *  This is a copy of the decrypted version of @p encryptedKey, encrypted with itself.
+  */
+export function decryptKey(derivedKey: string, encryptedKey: string, validation: string) : string {
 	var aesKey = derivedKey.substring(0, 16);
 	var iv = derivedKey.substring(16, 32);
 	var decryptedKey = defaultCryptoImpl.aesCbcDecrypt(aesKey, encryptedKey, iv);
@@ -1007,8 +1041,7 @@ export interface EncryptedKey {
 	validation: string;
 }
 
-export function encryptKey(password: string, decryptedKey: string, salt: string, iterCount: number) : EncryptedKey {
-	var derivedKey = defaultCryptoImpl.pbkdf2(password, salt, iterCount, AES_128_KEY_LEN);
+export function encryptKey(derivedKey: string, decryptedKey: string) : EncryptedKey {
 	var aesKey = derivedKey.substring(0, 16);
 	var iv = derivedKey.substring(16, 32);
 	var encryptedKey = defaultCryptoImpl.aesCbcEncrypt(aesKey, decryptedKey, iv);

@@ -4,6 +4,7 @@
 import assert = require('assert');
 import crypto = require('crypto');
 var cryptoJS = require('crypto-js');
+import Q = require('q');
 import underscore = require('underscore');
 import uuid = require('node-uuid');
 
@@ -143,7 +144,9 @@ export interface CryptoImpl {
 	/** Derive a key of length @p keyLen from a password using @p iterCount iterations
 	  * of PBKDF2
 	  */
-	pbkdf2(masterPwd: string, salt: string, iterCount: number, keyLen: number) : string;
+	pbkdf2(masterPwd: string, salt: string, iterCount: number, keyLen: number) : Q.Promise<string>;
+	
+	pbkdf2Sync(masterPwd: string, salt: string, iterCount: number, keyLen: number) : string;
 
 	md5Digest(input: string) : string;
 }
@@ -166,9 +169,23 @@ export class NodeCrypto implements CryptoImpl {
 		return result;
 	}
 
-	pbkdf2(masterPwd: string, salt: string, iterCount: number, keyLen: number) : string {
+	pbkdf2Sync(masterPwd: string, salt: string, iterCount: number, keyLen: number) : string {
 		var derivedKey = crypto.pbkdf2Sync(masterPwd, salt, iterCount, keyLen);
 		return derivedKey.toString('binary');
+	}
+	
+	pbkdf2(masterPwd: string, salt: string, iterCount: number, keyLen: number) : Q.Promise<string> {
+		var key = Q.defer<string>();
+		// FIXME - Type definition for crypto.pbkdf2() is wrong, result
+		// is a Buffer, not a string.
+		crypto.pbkdf2(masterPwd, salt, iterCount, keyLen, (err, derivedKey) => {
+			if (err) {
+				key.reject(err);
+				return;
+			}
+			key.resolve((<any>derivedKey).toString('binary'));
+		});
+		return key.promise;
 	}
 
 	md5Digest(input: string) : string {
@@ -219,7 +236,7 @@ export class CryptoJsCrypto implements CryptoImpl {
 		}).toString(this.encoding);
 	}
 
-	pbkdf2(masterPwd: string, salt: string, iterCount: number, keyLen: number) : string {
+	pbkdf2Sync(masterPwd: string, salt: string, iterCount: number, keyLen: number) : string {
 		// CryptoJS' own implementation of PKBDF2 scales poorly as the number
 		// of iterations increases (see https://github.com/dominictarr/crypto-bench/blob/master/results.md)
 		//
@@ -233,6 +250,10 @@ export class CryptoJsCrypto implements CryptoImpl {
 		var saltBuf = pbkdf2Lib.bufferFromString(salt);
 		var key = pbkdf2Impl.key(passBuf, saltBuf, iterCount, keyLen);
 		return pbkdf2Lib.stringFromBuffer(key);
+	}
+	
+	pbkdf2(masterPwd: string, salt: string, iterCount: number, keyLen: number) : Q.Promise<string> {
+		return Q.resolve(this.pbkdf2Sync(masterPwd, salt, iterCount, keyLen));
 	}
 	
 	md5Digest(input: string) : string {

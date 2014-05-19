@@ -384,18 +384,34 @@ testLib.addTest('Generate Passwords', (assert) => {
 	}
 });
 
-testLib.addTest('Encrypt/decrypt key', (assert) => {
+testLib.addTest('Encrypt/decrypt key (sync)', (assert) => {
 	var password = 'test-pass'
 	var iterations = 100;
 	var salt = crypto.randomBytes(8);
 	var masterKey = crypto.randomBytes(1024);
 
-	var encryptedKey = onepass.encryptKey(password, masterKey, salt, iterations);
-	var decryptedKey = onepass.decryptKey(password, encryptedKey.key, salt, iterations, encryptedKey.validation);
+	var derivedKey = onepass.keyFromPasswordSync(password, salt, iterations);
+	var encryptedKey = onepass.encryptKey(derivedKey, masterKey);
+	var decryptedKey = onepass.decryptKey(derivedKey, encryptedKey.key, encryptedKey.validation);
 	assert.equal(decryptedKey, masterKey);
 	assert.throws(() => {
-		onepass.decryptKey('wrong-pass', encryptedKey.key, salt, iterations, encryptedKey.validation)
+		var derivedKey2 = onepass.keyFromPasswordSync('wrong-pass', salt, iterations);
+		onepass.decryptKey(derivedKey2, encryptedKey.key, encryptedKey.validation)
 	});
+});
+
+testLib.addAsyncTest('Encrypt/decrypt key (async)', (assert) => {
+	var password = ' test-pass-2';
+	var iterations = 100;
+	var salt = crypto.randomBytes(8);
+	var masterKey = crypto.randomBytes(1024);
+
+	onepass.keyFromPassword(password, salt, iterations).then((derivedKey) => {
+		var encryptedKey = onepass.encryptKey(derivedKey, masterKey);
+		var decryptedKey = onepass.decryptKey(derivedKey, encryptedKey.key, encryptedKey.validation);
+		assert.equal(decryptedKey, masterKey);
+		testLib.continueTests();
+	}).done();
 });
 
 testLib.addAsyncTest('Create new vault', (assert) => {
