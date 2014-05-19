@@ -1964,22 +1964,40 @@ var CryptoJsCrypto = (function () {
     CryptoJsCrypto.prototype.pbkdf2 = function (masterPwd, salt, iterCount, keyLen) {
         if (typeof Worker != 'undefined') {
             var result = Q.defer();
+            var blocks = ['', ''];
 
             // use web workers if available
-            var cryptoWorker = new Worker('scripts/crypto_worker.js');
-            cryptoWorker.onmessage = function (e) {
-                var data = e.data;
-                result.resolve(data.key);
-            };
-            cryptoWorker.onerror = function (err) {
-                result.reject(err);
-            };
-            cryptoWorker.postMessage({
-                pass: masterPwd,
-                salt: salt,
-                iterations: iterCount,
-                keyLen: keyLen
-            });
+            var workers = [
+                new Worker('scripts/crypto_worker.js'),
+                new Worker('scripts/crypto_worker.js')
+            ];
+
+            for (var i = 0; i < 2; i++) {
+                workers[i].onmessage = function (e) {
+                    var data = e.data;
+                    blocks[data.request.blockIndex] = data.keyBlock;
+                    if (blocks[0] && blocks[1]) {
+                        var resultIndex = 0;
+                        var derivedKey = '';
+                        blocks.forEach(function (block) {
+                            for (var i = 0; resultIndex < keyLen && i < block.length; i++) {
+                                derivedKey += block[i];
+                                ++resultIndex;
+                            }
+                        });
+                        result.resolve(derivedKey);
+                    }
+                };
+                workers[i].onerror = function (err) {
+                    result.reject(err);
+                };
+                workers[i].postMessage({
+                    pass: masterPwd,
+                    salt: salt,
+                    iterations: iterCount,
+                    blockIndex: i
+                });
+            }
 
             return result.promise;
         } else {

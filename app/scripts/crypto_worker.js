@@ -429,11 +429,22 @@ function startWorker() {
         var req = e.data;
         var passBuf = pbkdf2Lib.bufferFromString(req.pass);
         var saltBuf = pbkdf2Lib.bufferFromString(req.salt);
-        var derivedKey = pbkdf2.key(passBuf, saltBuf, req.iterations, req.keyLen);
-        var response = {
-            request: req,
-            key: pbkdf2Lib.stringFromBuffer(derivedKey)
-        };
+        var response;
+
+        if (req.blockIndex !== undefined) {
+            var derivedKeyBlock = pbkdf2.keyBlock(passBuf, saltBuf, req.iterations, req.blockIndex);
+            response = {
+                request: req,
+                keyBlock: pbkdf2Lib.stringFromBuffer(new Uint8Array(derivedKeyBlock))
+            };
+        } else {
+            var derivedKey = pbkdf2.key(passBuf, saltBuf, req.iterations, req.keyLen);
+            response = {
+                request: req,
+                key: pbkdf2Lib.stringFromBuffer(derivedKey)
+            };
+        }
+
         self.postMessage(response, undefined);
     };
 }
