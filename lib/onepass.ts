@@ -1037,10 +1037,21 @@ export function decryptKey(derivedKey: string, encryptedKey: string, validation:
 }
 
 export interface EncryptedKey {
+	/** The master key for the vault, encrypted with a key derived from the user's
+	  * master password.
+	  */
 	key: string;
+
+	/** A copy of the master key encrypted with itself. This can be used to verify
+	  * successful decryption of the key when it is next decrypted.
+	  */
 	validation: string;
 }
 
+/** Encrypt the master key for a vault.
+  * @param derivedKey An encryption key for the master key, derived from a password using keyFromPassword()
+  * @param decryptedKey The master key for the vault to be encrypted.
+  */
 export function encryptKey(derivedKey: string, decryptedKey: string) : EncryptedKey {
 	var aesKey = derivedKey.substring(0, 16);
 	var iv = derivedKey.substring(16, 32);
