@@ -258,7 +258,7 @@ export class CryptoJsCrypto implements CryptoImpl {
 			var result = Q.defer<string>();
 
 			// use web workers if available
-			var cryptoWorker = new Worker('../build/crypto_worker.js');
+			var cryptoWorker = new Worker('scripts/crypto_worker.js');
 			cryptoWorker.onmessage = (e: MessageEvent) => {
 				var data = <crypto_worker.Response>e.data;
 				result.resolve(data.key);

@@ -13,6 +13,7 @@ cli_srcs=$(shell find cli/ -name '*.ts')
 webui_srcs=$(shell find webui/ -name '*.ts')
 all_srcs=$(lib_srcs) $(cli_srcs) $(webui_srcs)
 test_files=$(shell find build/ -name '*_test.js')
+webui_script_dir=webui/scripts
 
 # marker files used to trigger npm / Git submodule
 # updates prior to build
@@ -26,13 +27,15 @@ build/current: $(lib_srcs) $(cli_srcs) $(webui_srcs) $(deps)
 	@$(TSC_NODE) --outDir build $(lib_srcs) $(cli_srcs) $(webui_srcs)
 	@touch build/current
 
-webui-build: build/webui_bundle.js build/crypto_worker.js
+webui-build: $(webui_script_dir)/webui_bundle.js $(webui_script_dir)/crypto_worker.js
 
-build/webui_bundle.js: build/current
-	browserify --entry build/webui/init.js --outfile build/webui_bundle.js
+$(webui_script_dir)/webui_bundle.js: build/current
+	mkdir -p $(webui_script_dir)
+	browserify --entry build/webui/init.js --outfile $(webui_script_dir)/webui_bundle.js
 
-build/crypto_worker.js: build/current
-	browserify --entry build/lib/crypto_worker.js --outfile build/crypto_worker.js
+$(webui_script_dir)/crypto_worker.js: build/current
+	mkdir -p $(webui_script_dir)
+	browserify --entry build/lib/crypto_worker.js --outfile $(webui_script_dir)/crypto_worker.js
 
 # pbkdf2_bundle.js is a require()-able bundle
 # of the PBKDF2 implementation for use in Web Workers
@@ -66,6 +69,7 @@ test-package: all
 	
 clean:
 	rm -rf build/*
+	rm -rf webui/scripts/*
 
 PUBLISH_TMP_DIR=/tmp/publish
 GIT_HEAD=$(shell git log --oneline -n1)
@@ -75,8 +79,7 @@ publish-app: webui-build
 	git clone --no-checkout http://github.com/robertknight/1pass-web $(PUBLISH_TMP_DIR)
 	cd $(PUBLISH_TMP_DIR) && git checkout gh-pages && git rm -rf app
 	cd $(PUBLISH_TMP_DIR) && mkdir -p app/scripts
-	cp build/webui_bundle.js $(PUBLISH_TMP_DIR)/app/scripts
 	cp webui/*.html webui/*.css $(PUBLISH_TMP_DIR)/app/
-	sed -e 's/\.\.\/build/scripts/' -i'' $(PUBLISH_TMP_DIR)/app/index.html
+	cp webui/scripts/*.js $(PUBLISH_TMP_DIR)/app/scripts/
 	cd $(PUBLISH_TMP_DIR) && git add . && git commit -m "Update build to '$(GIT_HEAD)'"
 	cd $(PUBLISH_TMP_DIR) && git push
