@@ -1966,7 +1966,7 @@ var CryptoJsCrypto = (function () {
             var result = Q.defer();
 
             // use web workers if available
-            var cryptoWorker = new Worker('../build/crypto_worker.js');
+            var cryptoWorker = new Worker('scripts/crypto_worker.js');
             cryptoWorker.onmessage = function (e) {
                 var data = e.data;
                 result.resolve(data.key);
