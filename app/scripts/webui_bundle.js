@@ -1163,13 +1163,22 @@ var Vault = (function () {
     */
     Vault.prototype.unlock = function (pwd) {
         var _this = this;
-        return this.getKeys().then(function (keyEntries) {
+        var keyEntries;
+        return this.getKeys().then(function (keyEntries_) {
+            var derivedKeys = [];
+            keyEntries = keyEntries_;
             keyEntries.forEach(function (item) {
                 var saltCipher = crypto.extractSaltAndCipherText(atob(item.data));
-                var key = exports.decryptKey(pwd, saltCipher.cipherText, saltCipher.salt, item.iterations, atob(item.validation));
+                derivedKeys.push(exports.keyFromPassword(pwd, saltCipher.salt, item.iterations));
+            });
+            return Q.all(derivedKeys);
+        }).then(function (derivedKeys) {
+            keyEntries.forEach(function (item, index) {
+                var saltCipher = crypto.extractSaltAndCipherText(atob(item.data));
+                var key = exports.decryptKey(derivedKeys[index], saltCipher.cipherText, atob(item.validation));
                 _this.keyAgent.addKey(item.identifier, key);
             });
-            return Q.resolve(null);
+            return null;
         });
     };
 
@@ -1370,9 +1379,11 @@ var Vault = (function () {
                 keys.forEach(function (key) {
                     var oldSaltCipher = crypto.extractSaltAndCipherText(atob(key.data));
                     var newSalt = crypto.randomBytes(8);
-                    var oldKey = exports.decryptKey(oldPass, oldSaltCipher.cipherText, oldSaltCipher.salt, key.iterations, atob(key.validation));
+                    var derivedKey = exports.keyFromPasswordSync(oldPass, oldSaltCipher.salt, key.iterations);
+                    var oldKey = exports.decryptKey(derivedKey, oldSaltCipher.cipherText, atob(key.validation));
                     var newKeyIterations = iterations || key.iterations;
-                    var newKey = exports.encryptKey(newPass, oldKey, newSalt, newKeyIterations);
+                    var newDerivedKey = exports.keyFromPasswordSync(newPass, newSalt, newKeyIterations);
+                    var newKey = exports.encryptKey(newDerivedKey, oldKey);
                     var newKeyEntry = {
                         data: btoa('Salted__' + newSalt + newKey.key),
                         identifier: key.identifier,
@@ -1410,7 +1421,8 @@ var Vault = (function () {
         // 4. Generate new random key and encrypt with master passworD
         var masterKey = crypto.randomBytes(1024);
         var salt = crypto.randomBytes(8);
-        var encryptedKey = exports.encryptKey(password, masterKey, salt, passIterations);
+        var derivedKey = exports.keyFromPasswordSync(password, salt, passIterations);
+        var encryptedKey = exports.encryptKey(derivedKey, masterKey);
 
         var masterKeyEntry = {
             data: btoa('Salted__' + salt + encryptedKey.key),
@@ -1645,8 +1657,32 @@ exports.ItemUrl = ItemUrl;
 
 var AES_128_KEY_LEN = 32;
 
-function decryptKey(masterPwd, encryptedKey, salt, iterCount, validation) {
-    var derivedKey = defaultCryptoImpl.pbkdf2(masterPwd, salt, iterCount, AES_128_KEY_LEN);
+/** Derive an encryption key from a password for use with decryptKey().
+* This version is synchronous and will block the UI if @p iterCount
+* is high.
+*/
+function keyFromPasswordSync(pass, salt, iterCount) {
+    return defaultCryptoImpl.pbkdf2Sync(pass, salt, iterCount, AES_128_KEY_LEN);
+}
+exports.keyFromPasswordSync = keyFromPasswordSync;
+
+/** Derive an encryption key from a password for use with decryptKey()
+* This version is asynchronous and will not block the UI.
+*/
+function keyFromPassword(pass, salt, iterCount) {
+    return defaultCryptoImpl.pbkdf2(pass, salt, iterCount, AES_128_KEY_LEN);
+}
+exports.keyFromPassword = keyFromPassword;
+
+/** Decrypt the master key for a vault.
+*
+* @param derivedKey The encryption key that was used to encrypt @p encryptedKey, this is
+*   derived from a password using keyFromPassword()
+* @param encryptedKey The encryption key, encrypted with @p derivedKey
+* @param validation Validation data used to verify whether decryption was successful.
+*  This is a copy of the decrypted version of @p encryptedKey, encrypted with itself.
+*/
+function decryptKey(derivedKey, encryptedKey, validation) {
     var aesKey = derivedKey.substring(0, 16);
     var iv = derivedKey.substring(16, 32);
     var decryptedKey = defaultCryptoImpl.aesCbcDecrypt(aesKey, encryptedKey, iv);
@@ -1663,8 +1699,11 @@ function decryptKey(masterPwd, encryptedKey, salt, iterCount, validation) {
 }
 exports.decryptKey = decryptKey;
 
-function encryptKey(password, decryptedKey, salt, iterCount) {
-    var derivedKey = defaultCryptoImpl.pbkdf2(password, salt, iterCount, AES_128_KEY_LEN);
+/** Encrypt the master key for a vault.
+* @param derivedKey An encryption key for the master key, derived from a password using keyFromPassword()
+* @param decryptedKey The master key for the vault to be encrypted.
+*/
+function encryptKey(derivedKey, decryptedKey) {
     var aesKey = derivedKey.substring(0, 16);
     var iv = derivedKey.substring(16, 32);
     var encryptedKey = defaultCryptoImpl.aesCbcEncrypt(aesKey, decryptedKey, iv);
@@ -1684,6 +1723,7 @@ exports.encryptKey = encryptKey;
 var assert = require('assert');
 var crypto = require('crypto');
 var cryptoJS = require('crypto-js');
+var Q = require('q');
 var underscore = require('underscore');
 var uuid = require('node-uuid');
 
@@ -1839,9 +1879,24 @@ var NodeCrypto = (function () {
         return result;
     };
 
-    NodeCrypto.prototype.pbkdf2 = function (masterPwd, salt, iterCount, keyLen) {
+    NodeCrypto.prototype.pbkdf2Sync = function (masterPwd, salt, iterCount, keyLen) {
         var derivedKey = crypto.pbkdf2Sync(masterPwd, salt, iterCount, keyLen);
         return derivedKey.toString('binary');
+    };
+
+    NodeCrypto.prototype.pbkdf2 = function (masterPwd, salt, iterCount, keyLen) {
+        var key = Q.defer();
+
+        // FIXME - Type definition for crypto.pbkdf2() is wrong, result
+        // is a Buffer, not a string.
+        crypto.pbkdf2(masterPwd, salt, iterCount, keyLen, function (err, derivedKey) {
+            if (err) {
+                key.reject(err);
+                return;
+            }
+            key.resolve(derivedKey.toString('binary'));
+        });
+        return key.promise;
     };
 
     NodeCrypto.prototype.md5Digest = function (input) {
@@ -1891,7 +1946,7 @@ var CryptoJsCrypto = (function () {
         }).toString(this.encoding);
     };
 
-    CryptoJsCrypto.prototype.pbkdf2 = function (masterPwd, salt, iterCount, keyLen) {
+    CryptoJsCrypto.prototype.pbkdf2Sync = function (masterPwd, salt, iterCount, keyLen) {
         // CryptoJS' own implementation of PKBDF2 scales poorly as the number
         // of iterations increases (see https://github.com/dominictarr/crypto-bench/blob/master/results.md)
         //
@@ -1904,6 +1959,33 @@ var CryptoJsCrypto = (function () {
         var saltBuf = pbkdf2Lib.bufferFromString(salt);
         var key = pbkdf2Impl.key(passBuf, saltBuf, iterCount, keyLen);
         return pbkdf2Lib.stringFromBuffer(key);
+    };
+
+    CryptoJsCrypto.prototype.pbkdf2 = function (masterPwd, salt, iterCount, keyLen) {
+        if (typeof Worker != 'undefined') {
+            var result = Q.defer();
+
+            // use web workers if available
+            var cryptoWorker = new Worker('../build/crypto_worker.js');
+            cryptoWorker.onmessage = function (e) {
+                var data = e.data;
+                result.resolve(data.key);
+            };
+            cryptoWorker.onerror = function (err) {
+                result.reject(err);
+            };
+            cryptoWorker.postMessage({
+                pass: masterPwd,
+                salt: salt,
+                iterations: iterCount,
+                keyLen: keyLen
+            });
+
+            return result.promise;
+        } else {
+            // fall back to sync calculation
+            return Q.resolve(this.pbkdf2Sync(masterPwd, salt, iterCount, keyLen));
+        }
     };
 
     CryptoJsCrypto.prototype.md5Digest = function (input) {
@@ -1933,7 +2015,7 @@ var CryptoJsCrypto = (function () {
 exports.CryptoJsCrypto = CryptoJsCrypto;
 //# sourceMappingURL=onepass_crypto.js.map
 
-},{"./crypto/pbkdf2":4,"assert":185,"crypto":192,"crypto-js":22,"node-uuid":50,"underscore":184}],8:[function(require,module,exports){
+},{"./crypto/pbkdf2":4,"assert":185,"crypto":192,"crypto-js":22,"node-uuid":50,"q":51,"underscore":184}],8:[function(require,module,exports){
 function startsWith(str, prefix) {
     return str.indexOf(prefix) == 0;
 }

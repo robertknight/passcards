@@ -4,8 +4,15 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, user-scalable=no">
 	<meta name="apple-mobile-web-app-capable" content="yes">
-	<script src="scripts/webui_bundle.js"></script>
+	
 	<title>1pass-web</title>
+
+	<!-- crypto_worker.js is included here early so that
+	     It is already cached by the time we need to use
+		 it.
+	!-->
+	<script src="scripts/crypto_worker.js"></script>
+	<script src="scripts/webui_bundle.js"></script>
 	<link rel="stylesheet" href="app.css">
 </head>
 <body>
