@@ -8,6 +8,7 @@ import Q = require('q');
 import underscore = require('underscore');
 import uuid = require('node-uuid');
 
+import crypto_worker = require('./crypto_worker');
 import pbkdf2Lib = require('./crypto/pbkdf2');
 
 // see https://developer.mozilla.org/en-US/docs/Web/API/window.crypto.getRandomValues
@@ -253,7 +254,30 @@ export class CryptoJsCrypto implements CryptoImpl {
 	}
 	
 	pbkdf2(masterPwd: string, salt: string, iterCount: number, keyLen: number) : Q.Promise<string> {
-		return Q.resolve(this.pbkdf2Sync(masterPwd, salt, iterCount, keyLen));
+		if (typeof Worker != 'undefined') {
+			var result = Q.defer<string>();
+
+			// use web workers if available
+			var cryptoWorker = new Worker('../build/crypto_worker.js');
+			cryptoWorker.onmessage = (e: MessageEvent) => {
+				var data = <crypto_worker.Response>e.data;
+				result.resolve(data.key);
+			}
+			cryptoWorker.onerror = (err) => {
+				result.reject(err);
+			}
+			cryptoWorker.postMessage(<crypto_worker.Request>{
+				pass: masterPwd,
+				salt: salt,
+				iterations: iterCount,
+				keyLen: keyLen
+			});
+
+			return result.promise;
+		} else {
+			// fall back to sync calculation
+			return Q.resolve(this.pbkdf2Sync(masterPwd, salt, iterCount, keyLen));
+		}
 	}
 	
 	md5Digest(input: string) : string {

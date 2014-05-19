@@ -26,10 +26,13 @@ build/current: $(lib_srcs) $(cli_srcs) $(webui_srcs) $(deps)
 	@$(TSC_NODE) --outDir build $(lib_srcs) $(cli_srcs) $(webui_srcs)
 	@touch build/current
 
-webui-build: build/webui_bundle.js
+webui-build: build/webui_bundle.js build/crypto_worker.js
 
 build/webui_bundle.js: build/current
 	browserify --entry build/webui/init.js --outfile build/webui_bundle.js
+
+build/crypto_worker.js: build/current
+	browserify --entry build/lib/crypto_worker.js --outfile build/crypto_worker.js
 
 # pbkdf2_bundle.js is a require()-able bundle
 # of the PBKDF2 implementation for use in Web Workers
