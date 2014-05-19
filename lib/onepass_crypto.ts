@@ -256,22 +256,39 @@ export class CryptoJsCrypto implements CryptoImpl {
 	pbkdf2(masterPwd: string, salt: string, iterCount: number, keyLen: number) : Q.Promise<string> {
 		if (typeof Worker != 'undefined') {
 			var result = Q.defer<string>();
+			var blocks : string[] = ['',''];
 
-			// use web workers if available
-			var cryptoWorker = new Worker('scripts/crypto_worker.js');
-			cryptoWorker.onmessage = (e: MessageEvent) => {
-				var data = <crypto_worker.Response>e.data;
-				result.resolve(data.key);
+			var workers = [
+				new Worker('scripts/crypto_worker.js'),
+				new Worker('scripts/crypto_worker.js')
+			];
+
+			for (var i=0; i < 2; i++) {
+				workers[i].onmessage = (e: MessageEvent) => {
+					var data = <crypto_worker.Response>e.data;
+					blocks[data.request.blockIndex] = data.keyBlock;
+					if (blocks[0] && blocks[1]) {
+						var resultIndex = 0;
+						var derivedKey = '';
+						blocks.forEach((block) => {
+							for (var i=0; resultIndex < keyLen && i < block.length; i++) {
+								derivedKey += block[i];
+								++resultIndex;
+							}
+						});
+						result.resolve(derivedKey);
+					}
+				}
+				workers[i].onerror = (err) => {
+					result.reject(err);
+				}
+				workers[i].postMessage(<crypto_worker.Request>{
+					pass: masterPwd,
+					salt: salt,
+					iterations: iterCount,
+					blockIndex: i
+				});
 			}
-			cryptoWorker.onerror = (err) => {
-				result.reject(err);
-			}
-			cryptoWorker.postMessage(<crypto_worker.Request>{
-				pass: masterPwd,
-				salt: salt,
-				iterations: iterCount,
-				keyLen: keyLen
-			});
 
 			return result.promise;
 		} else {
