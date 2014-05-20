@@ -22,7 +22,7 @@ export interface Response {
 	/** Block of the derived key corresponding to
 	  * Request.blockIndex
 	  */
-	keyBlock?: string;
+	keyBlock: string;
 }
 
 export function startWorker() {
@@ -32,11 +32,8 @@ export function startWorker() {
 		var req = <Request>e.data;
 		var passBuf = pbkdf2Lib.bufferFromString(req.pass);
 		var saltBuf = pbkdf2Lib.bufferFromString(req.salt);
-		var response : Response;
-
-		// compute a block of the output key
 		var derivedKeyBlock = pbkdf2.keyBlock(passBuf, saltBuf, req.iterations, req.blockIndex);
-		response = {
+		var response = {
 			requestId: req.id,
 			keyBlock: pbkdf2Lib.stringFromBuffer(new Uint8Array(derivedKeyBlock))
 		};

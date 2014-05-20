@@ -263,7 +263,6 @@ export class CryptoJsCrypto implements CryptoImpl {
 	pbkdf2(masterPwd: string, salt: string, iterCount: number, keyLen: number) : Q.Promise<string> {
 		if (CryptoJsCrypto.workerPool) {
 			var result = Q.defer<string>();
-			var start = new Date();
 
 			var blockResponses : Q.Promise<crypto_worker.Response>[] = [];
 			for (var i=0; i < 2; i++) {
@@ -278,10 +277,8 @@ export class CryptoJsCrypto implements CryptoImpl {
 			Q.all(blockResponses).then((responses) => {
 				var derivedKey = underscore.map(responses, (response) => {
 					return response.keyBlock;
-				}).join('').slice(keyLen);
+				}).join('').slice(0, keyLen);
 
-				var elapsed = (new Date()).valueOf() - start.valueOf();
-				console.log('unlocking took', elapsed, 'ms');
 				result.resolve(derivedKey);
 			});
 
