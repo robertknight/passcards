@@ -8,6 +8,7 @@ import Q = require('q');
 import underscore = require('underscore');
 import uuid = require('node-uuid');
 
+import webworker_pool = require('./webworker_pool');
 import crypto_worker = require('./crypto_worker');
 import pbkdf2Lib = require('./crypto/pbkdf2');
 
@@ -199,9 +200,15 @@ export class NodeCrypto implements CryptoImpl {
 // crypto implementation using CryptoJS plus the
 // crypto functions in lib/crypto
 export class CryptoJsCrypto implements CryptoImpl {
+	static workerPool : webworker_pool.WorkerPool<crypto_worker.Request, crypto_worker.Response>;
 	encoding : any
 
 	constructor() {
+		if (!CryptoJsCrypto.workerPool && typeof Worker != 'undefined') {
+			CryptoJsCrypto.workerPool = new webworker_pool.WorkerPool<crypto_worker.Request,
+			  crypto_worker.Response>('scripts/crypto_worker.js');
+		}
+
 		this.encoding = cryptoJS.enc.Latin1;
 	}
 
@@ -254,41 +261,29 @@ export class CryptoJsCrypto implements CryptoImpl {
 	}
 	
 	pbkdf2(masterPwd: string, salt: string, iterCount: number, keyLen: number) : Q.Promise<string> {
-		if (typeof Worker != 'undefined') {
+		if (CryptoJsCrypto.workerPool) {
 			var result = Q.defer<string>();
-			var blocks : string[] = ['',''];
+			var start = new Date();
 
-			var workers = [
-				new Worker('scripts/crypto_worker.js'),
-				new Worker('scripts/crypto_worker.js')
-			];
-
+			var blockResponses : Q.Promise<crypto_worker.Response>[] = [];
 			for (var i=0; i < 2; i++) {
-				workers[i].onmessage = (e: MessageEvent) => {
-					var data = <crypto_worker.Response>e.data;
-					blocks[data.request.blockIndex] = data.keyBlock;
-					if (blocks[0] && blocks[1]) {
-						var resultIndex = 0;
-						var derivedKey = '';
-						blocks.forEach((block) => {
-							for (var i=0; resultIndex < keyLen && i < block.length; i++) {
-								derivedKey += block[i];
-								++resultIndex;
-							}
-						});
-						result.resolve(derivedKey);
-					}
-				}
-				workers[i].onerror = (err) => {
-					result.reject(err);
-				}
-				workers[i].postMessage(<crypto_worker.Request>{
+				blockResponses.push(CryptoJsCrypto.workerPool.dispatch({
 					pass: masterPwd,
 					salt: salt,
 					iterations: iterCount,
 					blockIndex: i
-				});
+				}));
 			}
+
+			Q.all(blockResponses).then((responses) => {
+				var derivedKey = underscore.map(responses, (response) => {
+					return response.keyBlock;
+				}).join('').slice(keyLen);
+
+				var elapsed = (new Date()).valueOf() - start.valueOf();
+				console.log('unlocking took', elapsed, 'ms');
+				result.resolve(derivedKey);
+			});
 
 			return result.promise;
 		} else {
