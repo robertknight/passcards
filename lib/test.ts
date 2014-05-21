@@ -7,6 +7,8 @@ import xdiff = require('xdiff');
 import underscore = require('underscore');
 import sprintf = require('sprintf');
 
+import env = require('./env');
+
 export interface Assert {
 	notEqual<T>(actual: T, notExpected: T, message?: string) : void;
 	equal<T>(actual: T, expected: T, message?: string) : void;
@@ -81,19 +83,6 @@ interface TestSuiteResult {
 	runtime: number
 }
 
-export enum Environment {
-	Browser,
-	NodeJS
-}
-
-export function environment() : Environment {
-	if (typeof window == 'undefined') {
-		return Environment.NodeJS;
-	} else {
-		return Environment.Browser;
-	}
-}
-
 /** Run all tests queued with addTest() and addAsyncTest() */
 export function runTests(filter?: string) {
 	if (filter) {
@@ -128,7 +117,7 @@ export function runTests(filter?: string) {
 	qunit.done((result: TestSuiteResult) => {
 		var summary = sprintf('tests run. total assertions: %d, failed: %d, duration: %dms', result.total, result.failed, result.runtime);
 		console.log(summary);
-		if (typeof process != 'undefined') {
+		if (env.isNodeJS()) {
 			if (result.failed > 0) {
 				process.on('exit', () => {
 					process.exit(1);
@@ -137,7 +126,7 @@ export function runTests(filter?: string) {
 		}
 	});
 
-	if (environment() == Environment.NodeJS) {
+	if (!env.isBrowser()) {
 		qunit.load();
 	}
 }

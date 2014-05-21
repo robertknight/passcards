@@ -1,6 +1,7 @@
 // crypto_worker implements a Web Worker for handling async
 // decryption tasks off the main browser thread
 
+import env = require('./env');
 import pbkdf2Lib = require('./crypto/pbkdf2');
 
 export interface Request {
@@ -42,8 +43,7 @@ export function startWorker() {
 	}
 }
 
-if (typeof importScripts != 'undefined') {
-	// running in Web Worker context
+if (env.isWebWorker()) {
 	startWorker();
 }
 

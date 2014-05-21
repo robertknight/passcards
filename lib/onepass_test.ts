@@ -5,6 +5,7 @@ import Q = require('q');
 import underscore = require('underscore');
 
 import crypto = require('./onepass_crypto');
+import env = require('./env');
 import testLib = require('./test');
 import onepass = require('./onepass');
 import exportLib = require('./export');
@@ -190,7 +191,7 @@ testLib.addAsyncTest('Test Vaults', (assert) => {
 function createCryptoImpls() : crypto.CryptoImpl[] {
 	var cryptoImpls : crypto.CryptoImpl[] = [];
 	cryptoImpls.push(new crypto.CryptoJsCrypto);
-	if (testLib.environment() == testLib.Environment.NodeJS) {
+	if (env.isNodeJS()) {
 		cryptoImpls.push(new crypto.NodeCrypto);
 	}
 	return cryptoImpls;
