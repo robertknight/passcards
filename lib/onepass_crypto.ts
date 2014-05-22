@@ -203,12 +203,17 @@ export class CryptoJsCrypto implements CryptoImpl {
 	static workerPool : webworker_pool.WorkerPool<crypto_worker.Request, crypto_worker.Response>;
 	encoding : any
 
-	constructor() {
-		if (!CryptoJsCrypto.workerPool && typeof Worker != 'undefined') {
+	/** Enable the use of web workers to avoid blocking the UI during
+	  * calls to pbkdf2()
+	  */
+	static initWorkers() {
+		if (typeof Worker != 'undefined') {
 			CryptoJsCrypto.workerPool = new webworker_pool.WorkerPool<crypto_worker.Request,
-			  crypto_worker.Response>('scripts/crypto_worker.js');
+			crypto_worker.Response>(crypto_worker.SCRIPT_PATH);
 		}
+	}
 
+	constructor() {
 		this.encoding = cryptoJS.enc.Latin1;
 	}
 
@@ -244,7 +249,10 @@ export class CryptoJsCrypto implements CryptoImpl {
 		}).toString(this.encoding);
 	}
 
-	pbkdf2Sync(masterPwd: string, salt: string, iterCount: number, keyLen: number) : string {
+	/** Derive a key from a password using PBKDF2. Depending on the number of iterations,
+	  * this process can be expensive and can block the UI in the browser.
+	  */
+	pbkdf2Sync(pass: string, salt: string, iterCount: number, keyLen: number) : string {
 		// CryptoJS' own implementation of PKBDF2 scales poorly as the number
 		// of iterations increases (see https://github.com/dominictarr/crypto-bench/blob/master/results.md)
 		//
@@ -254,20 +262,24 @@ export class CryptoJsCrypto implements CryptoImpl {
 		// Hence we use a custom implementation of PBKDF2 based on Rusha
 
 		var pbkdf2Impl = new pbkdf2Lib.PBKDF2();
-		var passBuf = pbkdf2Lib.bufferFromString(masterPwd);
+		var passBuf = pbkdf2Lib.bufferFromString(pass);
 		var saltBuf = pbkdf2Lib.bufferFromString(salt);
 		var key = pbkdf2Impl.key(passBuf, saltBuf, iterCount, keyLen);
 		return pbkdf2Lib.stringFromBuffer(key);
 	}
 	
-	pbkdf2(masterPwd: string, salt: string, iterCount: number, keyLen: number) : Q.Promise<string> {
+	/** Derive a key from a password using PBKDF2. If initWorkers() has been called,
+	  * this will run asynchronously and in parallel in a worker, otherwise it will fall back to
+	  * pbkdf2Sync()
+	  */
+	pbkdf2(pass: string, salt: string, iterCount: number, keyLen: number) : Q.Promise<string> {
 		if (CryptoJsCrypto.workerPool) {
 			var result = Q.defer<string>();
 
 			var blockResponses : Q.Promise<crypto_worker.Response>[] = [];
 			for (var i=0; i < 2; i++) {
 				blockResponses.push(CryptoJsCrypto.workerPool.dispatch({
-					pass: masterPwd,
+					pass: pass,
 					salt: salt,
 					iterations: iterCount,
 					blockIndex: i
@@ -285,7 +297,7 @@ export class CryptoJsCrypto implements CryptoImpl {
 			return result.promise;
 		} else {
 			// fall back to sync calculation
-			return Q.resolve(this.pbkdf2Sync(masterPwd, salt, iterCount, keyLen));
+			return Q.resolve(this.pbkdf2Sync(pass, salt, iterCount, keyLen));
 		}
 	}
 	

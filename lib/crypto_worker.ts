@@ -4,6 +4,8 @@
 import env = require('./env');
 import pbkdf2Lib = require('./crypto/pbkdf2');
 
+export var SCRIPT_PATH = env.isNodeJS() ? './build/lib/crypto_worker.js' : 'scripts/crypto_worker.js';
+
 export interface Request {
 	id?: number;
 
@@ -26,10 +28,10 @@ export interface Response {
 	keyBlock: string;
 }
 
-export function startWorker() {
+export function startWorker(worker: MessagePort) {
 	var pbkdf2 = new pbkdf2Lib.PBKDF2();
 
-	self.onmessage = (e) => {
+	worker.onmessage = (e) => {
 		var req = <Request>e.data;
 		var passBuf = pbkdf2Lib.bufferFromString(req.pass);
 		var saltBuf = pbkdf2Lib.bufferFromString(req.salt);
@@ -39,11 +41,16 @@ export function startWorker() {
 			keyBlock: pbkdf2Lib.stringFromBuffer(new Uint8Array(derivedKeyBlock))
 		};
 
-		self.postMessage(response, undefined /* ports. Optional but incorrectly marked as required in lib.d.ts */);
+		worker.postMessage(response);
 	}
 }
 
-if (env.isWebWorker()) {
-	startWorker();
+var workerClient: MessagePort;
+if (env.isNodeJS()) {
+	var nodeworker = require('./node_worker');
+	workerClient = new nodeworker.WorkerClient();
+} else {
+	workerClient = <any>self;
 }
+startWorker(workerClient);
 

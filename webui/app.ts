@@ -13,6 +13,8 @@ import url = require('url');
 import dropboxvfs = require('../lib/dropboxvfs');
 import onepass = require('../lib/onepass');
 
+import onepass_crypto = require('../lib/onepass_crypto');
+
 enum ActiveView {
 	UnlockPane,
 	ItemList,
@@ -339,6 +341,7 @@ export class App {
 		this.vault = vault.promise;
 		
 		var appView = new AppView({});
+		onepass_crypto.CryptoJsCrypto.initWorkers();
 
 		account.then(() => {
 			vault.resolve(new onepass.Vault(fs, '/1Password/1Password.agilekeychain'));

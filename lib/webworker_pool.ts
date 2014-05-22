@@ -1,6 +1,12 @@
 import Q = require('q');
 import underscore = require('underscore');
 
+import env = require('./env');
+
+if (env.isNodeJS()) {
+	Worker = require('./node_worker').Worker;
+}
+
 export interface Request {
 	id?: number
 }
@@ -51,6 +57,12 @@ export class WorkerPool<Req extends Request, Rsp extends Response> {
 		this.workers[request.id % this.workers.length].postMessage(request);
 		++this.nextTaskId;
 		return task.response.promise;
+	}
+
+	terminate() {
+		this.workers.forEach((worker) => {
+			worker.terminate();
+		});
 	}
 }
 
