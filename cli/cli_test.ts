@@ -168,6 +168,10 @@ class CLITest {
 		this.vaultPath = TEST_VAULT_PATH;
 	}
 
+	setVaultPath(path: string) {
+		this.vaultPath = path;
+	}
+
 	/** Create a new writable vault for testing. Subsequent run() calls
 	  * will use this vault.
 	  */
@@ -187,6 +191,12 @@ class CLITest {
 	runExpectingStatus(expectedStatus: number, ...args: any[]) : Q.Promise<number> {
 		var vaultArgs = ['--vault', this.vaultPath];
 		return this.app.exec(vaultArgs.concat(args)).then((status) => {
+			if (status != expectedStatus) {
+				console.log(args.join(' ') + ' FAILED');
+				console.log('>>> CLI OUTPUT');
+				console.log(this.fakeTerm.output.join('\n'));
+				console.log('<<<');
+			}
 			this.assert.equal(status, expectedStatus);
 			return status;
 		});
@@ -458,6 +468,36 @@ testLib.addAsyncTest('edit item - add section and field', (assert) => {
 	}).then(() => {
 		assert.ok(env.fakeTerm.didPrint(/NewSection/));
 		assert.ok(env.fakeTerm.didPrint(/customfield.*customvalue/));
+		testLib.continueTests();
+	}).done();
+});
+
+testLib.addAsyncTest('create new vault', (assert) => {
+	var env = new CLITest(assert);
+	env.replyTo(/New password/).with('vaultpass');
+	env.replyTo(/Re-enter new/).with('vaultpass');
+	env.replyTo(/Hint for new/).with('vault pass hint');
+
+	var newVaultPath = path.join(<string>(<any>os).tmpdir(), 'new-vault');
+	return env.run('new-vault', '--iterations', '100', newVaultPath).then(() => {
+		assert.ok(env.fakeTerm.didPrint(/New vault created/));
+
+		// A '.agilekeychain' suffix is added to the end of the path if
+		// not specified on the command line
+		env.setVaultPath(newVaultPath + '.agilekeychain');
+		env.fakeTerm.password = 'vaultpass';
+		return env.run('list');
+	}).then(() => {
+		env.replyTo(/Website/).with('google.com');
+		env.replyTo(/Username/).with('john.doe@gmail.com');
+		env.replyTo(/Password/).with('-');
+
+		assert.ok(env.fakeTerm.didPrint(/0 matching/));
+		return env.run('add', 'login', 'google.com');
+	}).then(() => {
+		return env.run('show', 'google');
+	}).then(() => {
+		assert.ok(env.fakeTerm.didPrint(/john\.doe/));
 		testLib.continueTests();
 	}).done();
 });

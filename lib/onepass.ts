@@ -795,6 +795,10 @@ export class Vault {
 	passwordHint() : Q.Promise<string> {
 		return this.fs.read(Path.join(this.dataFolderPath(), '.password.hint'));
 	}
+
+	vaultPath() : string {
+		return this.path;
+	}
 }
 
 /** Represents the content of an item, usually stored

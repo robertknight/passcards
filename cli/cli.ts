@@ -25,6 +25,11 @@ interface HandlerMap {
 	[index: string] : (args: any) => Q.Promise<any>;
 }
 
+interface NewPass {
+	pass: string;
+	hint: string;
+}
+
 enum ShowItemFormat {
 	ShowOverview,
 	ShowJSON,
@@ -161,6 +166,15 @@ export class CLI {
 
 		subcommands.addParser('gen-password', {
 			description: 'Generate a new random password'
+		});
+
+		var newVaultCommand = subcommands.addParser('new-vault');
+		newVaultCommand.addArgument(['path'], {action:'store'});
+		newVaultCommand.addArgument(['--iterations'], {
+			action: 'store',
+			dest: 'iterations',
+			nargs: 1,
+			type: 'string'
 		});
 
 		return parser;
@@ -376,6 +390,19 @@ export class CLI {
 		});
 	}
 
+	private readNewPassword() : Q.Promise<NewPass> {
+		return this.io.readPassword('New password: ').then((pass) => {
+			return this.io.readPassword('Re-enter new password: ').then((pass2) => {
+				if (pass != pass2) {
+					throw('Passwords do not match');
+				}
+				return this.io.readLine('Hint for new password: ').then((hint) => {
+					return {pass: pass, hint: hint};
+				});
+			});
+		});
+	}
+
 	private setPasswordCommand(vault: onepass.Vault, iterations?: number) : Q.Promise<number> {
 		var result = Q.defer<number>();
 		var currentPass: string;
@@ -512,6 +539,14 @@ export class CLI {
 		});
 	}
 
+	private newVaultCommand(fs: vfs.VFS, path: string, iterations?: number) : Q.Promise<void> {
+		return this.readNewPassword().then((newPass) => {
+			return onepass.Vault.createVault(fs, path, newPass.pass, newPass.hint, iterations).then((vault) => {
+				this.printf('New vault created in %s', vault.vaultPath());
+			});
+		});
+	}
+
 	/** Starts the command-line interface and returns
 	  * a promise for the exit code.
 	  */
@@ -520,12 +555,18 @@ export class CLI {
 		mkdirp.sync(this.configDir)
 
 		var currentVault : onepass.Vault;
+		var vaultReady : Q.Promise<void>;
+		var requiresUnlockedVault = ['new-vault', 'gen-password'].indexOf(args.command) == -1;
 
-		var vault = this.initVault(args.vault ? args.vault[0] : null);
-		var vaultReady = vault.then((vault) => {
-			currentVault = vault;
-			return this.unlockVault(vault);
-		});
+		if (requiresUnlockedVault) {
+			var vault = this.initVault(args.vault ? args.vault[0] : null);
+			vaultReady = vault.then((vault) => {
+				currentVault = vault;
+				return this.unlockVault(vault);
+			});
+		} else {
+			vaultReady = Q.resolve<void>(null);
+		}
 		
 		var handlers : HandlerMap = {};
 
@@ -588,6 +629,10 @@ export class CLI {
 		handlers['gen-password'] = (args) => {
 			return this.genPasswordCommand();
 		};
+
+		handlers['new-vault'] = (args) => {
+			return this.newVaultCommand(new nodefs.FileVFS('/'), args.path, args.iterations);
+		}
 
 		// process commands
 		var exitStatus = Q.defer<number>();
