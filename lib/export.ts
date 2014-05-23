@@ -23,9 +23,8 @@ export class PIFExporter implements Exporter {
 /** Importer for 1Password's .1pif format */
 export class PIFImporter {
 	importItems(fs: vfs.VFS, path: string) : Q.Promise<onepass.Item[]> {
-		var result = Q.defer<onepass.Item[]>();
 		var content = fs.read(path);
-		content.then((content) => {
+		return content.then((content) => {
 			// .1pif files contain unencrypted JSON blobs separated by
 			// '***<uuid>***' markers
 			var re = /\*{3}[0-9a-f\-]{36}\*{3}/
@@ -39,11 +38,8 @@ export class PIFImporter {
 				return onepass.Item.fromAgileKeychainObject(null, json);
 			});
 
-			result.resolve(items);
-		}, (err) => {
-			throw err;
+			return items;
 		});
-		return result.promise;
 	}
 };
 
