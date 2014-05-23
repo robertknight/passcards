@@ -120,7 +120,7 @@ testLib.addAsyncTest('Import item from .1pif file', (assert) => {
 // set of tests which open a vault, unlock it,
 // fetch all items and compare to an expected set
 // of items in .1pif format
-testLib.addAsyncTest('Test Vaults', (assert) => {
+testLib.addAsyncTest('Compare vaults against .1pif files', (assert) => {
 	var done : Q.Promise<boolean>[] = [];
 	var importer = new exportLib.PIFImporter();
 
@@ -170,7 +170,7 @@ testLib.addAsyncTest('Test Vaults', (assert) => {
 				actualItem.setContent(actualAry[i].content);
 
 				var diff = testLib.compareObjects(expectedItem, actualItem,
-				  ['root/vault'],
+				  ['root/vault', 'root/encrypted'],
 				  ['root/securityLevel', 'root/createdAt', 'root/faveIndex', 'root/openContents']
 				);
 				if (diff.length > 0) {
@@ -474,6 +474,26 @@ testLib.addAsyncTest('Change vault password', (assert) => {
 			testLib.continueTests();
 		}).done();
 	});
+});
+
+testLib.addAsyncTest('Save existing item to new vault', (assert) => {
+	var vault: onepass.Vault;
+	var item: onepass.Item;
+
+	createTestVault().then((vault_) => {
+		vault = vault_;
+		item = new onepass.Item();
+		item.title = 'Existing Item';
+		item.location = 'somesite.com';
+		item.setContent(new onepass.ItemContent());
+		return item.saveTo(vault);
+	}).then(() => {
+		assert.equal(item.uuid.length, 32);
+		return vault.loadItem(item.uuid);
+	}).then((loadedItem) => {
+		assert.equal(item.title, loadedItem.title);
+		testLib.continueTests();
+	}).done();
 });
 
 testLib.runTests();

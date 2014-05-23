@@ -242,6 +242,10 @@ export class Item {
 	updatedAt : Date;
 	title : string;
 	securityLevel : string;
+
+	/** The encrypted contents of the item, or null if only
+	  * the overview data has been loaded.
+	  */
 	encrypted : string;
 	typeName : string;
 	uuid : string;
@@ -253,8 +257,22 @@ export class Item {
 	openContents : ItemOpenContents;
 
 	private vault : Vault;
+
+	/** The decrypted content of the item, either set
+	  * via setContent() or decrypted on-demand by
+	  * getContent()
+	  */
 	private content : ItemContent;
 	
+	/** Create a new item. @p vault is the vault
+	  * to associate the new item with. This can
+	  * be changed later via saveTo().
+	  *
+	  * When importing an existing item or loading
+	  * an existing item from the vault, @p uuid may be non-null.
+	  * Otherwise a random new UUID will be allocated for
+	  * the item.
+	  */
 	constructor(vault? : Vault, uuid? : string) {
 		this.vault = vault;
 
@@ -279,37 +297,42 @@ export class Item {
 	  * item content can be retrieved.
 	  */
 	getContent() : Q.Promise<ItemContent> {
-		var itemContent = Q.defer<ItemContent>();
-		
 		if (this.content) {
-			itemContent.resolve(this.content);
-			return itemContent.promise;
+			return Q.resolve(this.content);
 		}
-
-		if (!this.vault) {
-			itemContent.reject('content not available');
-			return itemContent.promise;
+		if (this.encrypted) {
+			return this.vault.decryptItemData(this.securityLevel, this.encrypted).then((content) => {
+				return ItemContent.fromAgileKeychainObject(JSON.parse(content));
+			});
 		}
-
-		this.vault.loadItem(this.uuid).then((item:Item) => {
-			return this.vault.decryptItemData(item.securityLevel, item.encrypted);
-		})
-		.then((content) => {
-			itemContent.resolve(ItemContent.fromAgileKeychainObject(JSON.parse(content)));
-		})
-		.done();
-
-		return itemContent.promise;
+		if (this.vault) {
+			return this.vault.loadItem(this.uuid).then((item) => {
+				this.encrypted = item.encrypted;
+				return this.getContent();
+			});
+		}
+		return Q.reject('Content not available and item has no associated vault');
 	}
 
 	setContent(content: ItemContent) {
 		this.content = content;
 	}
 
+	/** Save this item to its associated vault */
 	save() : Q.Promise<void> {
 		if (!this.vault) {
 			return Q.reject('Item has no associated vault');
 		}
+		return this.saveTo(this.vault);
+	}
+
+	/** Save this item to the specified vault */
+	saveTo(vault: Vault) : Q.Promise<void> {
+		if (!this.content && !this.encrypted && !this.isSaved()) {
+			return Q.reject('Unable to save new item, no content set');
+		}
+
+		this.vault = vault;
 		return this.vault.saveItem(this);
 	}
 
@@ -360,6 +383,14 @@ export class Item {
 		}
 	}
 
+	/** Returns true if this item has been saved to a vault. */
+	isSaved() : boolean {
+		return this.updatedAt != null;
+	}
+
+	/** Convert an item to JSON data for serialization in a .1password file.
+	  * @p encryptedData is the encrypted version of the item's content.
+	  */
 	static toAgileKeychainObject(item: Item, encryptedData: string) : agilekeychain.Item {
 		var keychainItem: any = {};
 
