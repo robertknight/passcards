@@ -191,25 +191,25 @@ export class CLI {
 		}
 	}
 
-	private matchPattern(pattern: string, label: string) : boolean {
-		return label.indexOf(pattern) != -1;
+	private matchLabel(pattern: string, label: string) : boolean {
+		return label && label.indexOf(pattern) != -1;
 	}
 
 	private matchField(content: onepass.ItemContent, pattern: string) : FieldMatch[] {
 		var matches : FieldMatch[] = [];
 		content.urls.forEach((url) => {
-			if (this.matchPattern(pattern, url.label)) {
+			if (this.matchLabel(pattern, url.label)) {
 				matches.push({url : url});
 			}
 		});
 		content.formFields.forEach((field) => {
-			if (this.matchPattern(pattern, field.name) || this.matchPattern(pattern, field.designation)) {
+			if (this.matchLabel(pattern, field.name) || this.matchLabel(pattern, field.designation)) {
 				matches.push({formField : field});
 			}
 		});
 		content.sections.forEach((section) => {
 			section.fields.forEach((field) => {
-				if (this.matchPattern(pattern, field.title)) {
+				if (this.matchLabel(pattern, field.title)) {
 					matches.push({field : field});
 				}
 			});
