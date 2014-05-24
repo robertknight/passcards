@@ -121,5 +121,28 @@ export class VFSUtil {
 			})
 		}
 	}
+
+	/** Search a file system for files whose name matches a given pattern,
+	  * using VFS.list() recursively.
+	  *
+	  * VFS.search() should be used by clients instead of this method as
+	  * some VFS implementations may use a faster method.
+	  */
+	static searchIn(fs: VFS, path: string, namePattern: string, cb: (files: FileInfo[]) => any) : void {
+		var fileList = fs.list(path);
+		fileList.then((files) => {
+			files.forEach((file) => {
+				if (file.name.indexOf(namePattern) != -1) {
+					cb([file]);
+				}
+
+				if (file.isDir) {
+					VFSUtil.searchIn(fs, file.path, namePattern, cb);
+				}
+			});
+		}, (error) => {
+			throw error;
+		}).done();
+	}
 }
 

@@ -47,7 +47,7 @@ export class FileVFS implements vfs.VFS {
 	}
 
 	search(namePattern: string, cb: (files: vfs.FileInfo[]) => any) : void {
-		this.searchIn('', namePattern, cb);
+		vfs.VFSUtil.searchIn(this, '', namePattern, cb);
 	}
 
 	read(path: string) : Q.Promise<string> {
