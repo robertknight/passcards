@@ -17,19 +17,13 @@ import collectionutil = require('../lib/collectionutil');
 import consoleio = require('../lib/console');
 import crypto = require('../lib/onepass_crypto');
 import dropboxvfs = require('../lib/dropboxvfs');
+import item_search = require('../lib/item_search');
 import onepass = require('../lib/onepass');
 import nodefs = require('../lib/nodefs');
-import stringutil = require('../lib/stringutil');
 import vfs = require('../lib/vfs');
 
 interface HandlerMap {
 	[index: string] : (args: any, result : Q.Deferred<number>) => void;
-}
-
-interface FieldMatch {
-	url? : onepass.ItemUrl;
-	field? : onepass.ItemField;
-	formField? : onepass.WebFormField;
 }
 
 enum ShowItemFormat {
@@ -53,37 +47,6 @@ export class CLI {
 
 	private printf(format: string, ...args: any[]) {
 		consoleio.printf.apply(null, [this.io, format].concat(args));
-	}
-
-	private static patternMatch(pattern: string, item: onepass.Item) : boolean {
-		pattern = pattern.toLowerCase();
-		var titleLower = item.title.toLowerCase();
-		
-		if (titleLower.indexOf(pattern) != -1) {
-			return true;
-		}
-
-		if (stringutil.startsWith(item.uuid.toLowerCase(), pattern)) {
-			return true;
-		}
-
-		return false;
-	}
-
-	private lookupItems(vault: onepass.Vault, pattern: string) : Q.Promise<onepass.Item[]> {
-		var result = Q.defer<onepass.Item[]>();
-		vault.listItems().then((items:onepass.Item[]) => {
-			var matches : onepass.Item[] = [];
-			items.forEach((item) => {
-				if (CLI.patternMatch(pattern, item)) {
-					matches.push(item);
-				}
-			});
-			result.resolve(matches);
-		}, (err:any) => {
-			this.printf('Looking up items failed');
-		}).done();
-		return result.promise;
 	}
 
 	private static createParser() : argparse.ArgumentParser {
@@ -189,32 +152,6 @@ export class CLI {
 		if (item.openContents && item.openContents.tags) {
 			this.printf('  Tags: %s', item.openContents.tags.join(', '));
 		}
-	}
-
-	private matchLabel(pattern: string, label: string) : boolean {
-		return label && label.indexOf(pattern) != -1;
-	}
-
-	private matchField(content: onepass.ItemContent, pattern: string) : FieldMatch[] {
-		var matches : FieldMatch[] = [];
-		content.urls.forEach((url) => {
-			if (this.matchLabel(pattern, url.label)) {
-				matches.push({url : url});
-			}
-		});
-		content.formFields.forEach((field) => {
-			if (this.matchLabel(pattern, field.name) || this.matchLabel(pattern, field.designation)) {
-				matches.push({formField : field});
-			}
-		});
-		content.sections.forEach((section) => {
-			section.fields.forEach((field) => {
-				if (this.matchLabel(pattern, field.title)) {
-					matches.push({field : field});
-				}
-			});
-		});
-		return matches;
 	}
 
 	private printDetails(content: onepass.ItemContent) {
@@ -395,7 +332,7 @@ export class CLI {
 	private trashItemCommand(vault: onepass.Vault, pattern: string, trash: boolean) : Q.Promise<number> {
 		var result = Q.defer<number>();
 
-		this.lookupItems(vault, pattern).then((items) => {
+		item_search.lookupItems(vault, pattern).then((items) => {
 			var trashOps : Q.Promise<void>[] = [];
 			items.forEach((item) => {
 				item.trashed = trash;
@@ -447,7 +384,7 @@ export class CLI {
 		var result = Q.defer<number>();
 		var items : onepass.Item[];
 
-		this.lookupItems(vault, pattern).then((items_) => {
+		item_search.lookupItems(vault, pattern).then((items_) => {
 			items = items_;
 			if (items.length == 0) {
 				this.printf('No matching items');
@@ -485,7 +422,7 @@ export class CLI {
 				return a.title.toLowerCase().localeCompare(b.title.toLowerCase());
 			});
 			items.forEach((item) => {
-				if (!pattern || CLI.patternMatch(pattern, item)) {
+				if (!pattern || item_search.matchItem(item, pattern)) {
 					this.printf('%s (%s, %s)', item.title, item.typeDescription(), item.shortID());
 				}
 			});
@@ -497,7 +434,7 @@ export class CLI {
 
 	private showItemCommand(vault: onepass.Vault, pattern: string, format: ShowItemFormat) : Q.Promise<number> {
 		var result = Q.defer<number>();
-		this.lookupItems(vault, pattern).then((items) => {
+		item_search.lookupItems(vault, pattern).then((items) => {
 			var itemContents : Q.Promise<onepass.ItemContent>[] = [];
 			items.forEach((item) => {
 				itemContents.push(item.getContent());
@@ -527,14 +464,14 @@ export class CLI {
 
 	private copyItemCommand(vault: onepass.Vault, pattern: string, field: string) : Q.Promise<number> {
 		var result = Q.defer<number>();
-		this.lookupItems(vault, pattern).then((items) => {
+		item_search.lookupItems(vault, pattern).then((items) => {
 			if (items.length < 1) {
 				this.printf('No items matching "%s"', pattern);
 				result.resolve(1);
 			}
 			var item = items[0];
 			item.getContent().then((content) => {
-				var matches = this.matchField(content, field);
+				var matches = item_search.matchField(content, field);
 				if (matches.length > 0) {
 					var label : string;
 					var match = matches[0];
