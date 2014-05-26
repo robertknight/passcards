@@ -17,8 +17,8 @@ import url = require('url');
 
 import vfs = require('./vfs');
 import http_client = require('../http_client');
-import streamutil = require('../streamutil');
-import stringutil = require('../stringutil');
+import streamutil = require('../base/streamutil');
+import stringutil = require('../base/stringutil');
 
 /** VFS which accesses a file system exposed over HTTP
  * via a simple REST-like API:

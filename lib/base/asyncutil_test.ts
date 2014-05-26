@@ -1,6 +1,6 @@
 import Q = require('q');
 
-import testLib = require('./test');
+import testLib = require('../test');
 import asyncutil = require('./asyncutil');
 
 testLib.addAsyncTest('test run sequence', (assert) => {

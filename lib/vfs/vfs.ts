@@ -4,7 +4,7 @@
 
 import Q = require('q');
 
-import asyncutil = require('../asyncutil');
+import asyncutil = require('../base/asyncutil');
 
 /** Holds details of a file retrieved by a VFS implementation */
 export class FileInfo {

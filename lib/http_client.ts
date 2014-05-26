@@ -1,8 +1,8 @@
 import http = require('http');
 import Q = require('q');
 
-import streamutil = require('./streamutil');
-import stringutil = require('./stringutil');
+import streamutil = require('./base/streamutil');
+import stringutil = require('./base/stringutil');
 
 /** Simple HTTP client with a promise-based API.
   *

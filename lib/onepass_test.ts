@@ -5,7 +5,7 @@ import Q = require('q');
 import underscore = require('underscore');
 
 import crypto = require('./onepass_crypto');
-import env = require('./env');
+import env = require('./base/env');
 import testLib = require('./test');
 import onepass = require('./onepass');
 import exportLib = require('./export');

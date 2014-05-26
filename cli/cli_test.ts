@@ -3,7 +3,7 @@ import path = require('path');
 import Q = require('q');
 import underscore = require('underscore');
 
-import asyncutil = require('../lib/asyncutil');
+import asyncutil = require('../lib/base/asyncutil');
 import cli = require('./cli')
 import clipboard = require('./clipboard')
 import consoleio = require('../lib/console')

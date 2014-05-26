@@ -12,7 +12,7 @@ import urlrouter = require('urlrouter');
 import consoleio = require('../lib/console');
 import crypto = require('../lib/onepass_crypto');
 import onepass = require('../lib/onepass');
-import streamutil = require('../lib/streamutil');
+import streamutil = require('../lib/base/streamutil');
 
 export interface DecryptRequest {
 	id : string;

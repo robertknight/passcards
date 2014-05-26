@@ -1,7 +1,7 @@
 // crypto_worker implements a Web Worker for handling async
 // decryption tasks off the main browser thread
 
-import env = require('./env');
+import env = require('./base/env');
 import pbkdf2Lib = require('./crypto/pbkdf2');
 
 export var SCRIPT_PATH = env.isNodeJS() ? './build/lib/crypto_worker.js' : 'scripts/crypto_worker.js';

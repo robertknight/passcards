@@ -1,7 +1,7 @@
 import Q = require('q');
 import underscore = require('underscore');
 
-import env = require('./env');
+import env = require('./base/env');
 
 if (env.isNodeJS()) {
 	Worker = require('./node_worker').Worker;

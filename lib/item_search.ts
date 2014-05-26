@@ -3,7 +3,7 @@
 import underscore = require('underscore');
 
 import onepass = require('./onepass');
-import stringutil = require('./stringutil');
+import stringutil = require('./base/stringutil');
 
 export interface FieldMatch {
 	url? : onepass.ItemUrl;

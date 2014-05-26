@@ -5,7 +5,7 @@ import Q = require('q');
 
 import agent_server = require('./agent_server');
 import onepass = require('../lib/onepass');
-import streamutil = require('../lib/streamutil');
+import streamutil = require('../lib/base/streamutil');
 
 export class HttpKeyAgent implements onepass.KeyAgent {
 	private agentPID : Q.Promise<number>;

@@ -7,7 +7,7 @@ import xdiff = require('xdiff');
 import underscore = require('underscore');
 import sprintf = require('sprintf');
 
-import env = require('./env');
+import env = require('./base/env');
 
 export interface Assert {
 	notEqual<T>(actual: T, notExpected: T, message?: string) : void;

@@ -1,5 +1,5 @@
 import collectionutil = require('./collectionutil');
-import testLib = require('./test');
+import testLib = require('../test');
 
 testLib.addTest('add/fetch keys', (assert) => {
 	var map = new collectionutil.BiDiMap<number,string>();

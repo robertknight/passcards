@@ -9,11 +9,11 @@ import Q = require('q');
 import Path = require('path');
 import underscore = require('underscore');
 
-import asyncutil = require('./asyncutil');
+import asyncutil = require('./base/asyncutil');
 import agilekeychain = require('./agilekeychain');
-import collectionutil = require('./collectionutil');
+import collectionutil = require('./base/collectionutil');
 import crypto = require('./onepass_crypto');
-import stringutil = require('./stringutil');
+import stringutil = require('./base/stringutil');
 import vfs = require('./vfs/vfs');
 
 /** Default number of iterations to use in the PBKDF2 password

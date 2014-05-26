@@ -11,9 +11,9 @@ import fs = require('fs');
 import sprintf = require('sprintf');
 import Path = require('path');
 
-import asyncutil = require('../lib/asyncutil');
+import asyncutil = require('../lib/base/asyncutil');
 import clipboard = require('./clipboard');
-import collectionutil = require('../lib/collectionutil');
+import collectionutil = require('../lib/base/collectionutil');
 import consoleio = require('../lib/console');
 import crypto = require('../lib/onepass_crypto');
 import dropboxvfs = require('../lib/vfs/dropbox');
