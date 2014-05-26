@@ -11,7 +11,10 @@ import underscore = require('underscore');
 import url = require('url');
 
 import dropboxvfs = require('../lib/dropboxvfs');
+import http_client = require('../lib/http_client');
+import http_vfs = require('../lib/http_vfs');
 import onepass = require('../lib/onepass');
+import vfs = require('../lib/vfs');
 
 import onepass_crypto = require('../lib/onepass_crypto');
 
@@ -335,7 +338,15 @@ export class App {
 	vault : Q.Promise<onepass.Vault>;
 
 	constructor() {
-		var fs = new dropboxvfs.DropboxVFS();
+		var opts = <any>url.parse(document.location.href, true /* parse query */).query;
+		var fs: vfs.VFS;
+		if (opts.httpfs) {
+			var hostPort = opts.httpfs.split(':');
+			fs = new http_vfs.Client(new http_client.Client(hostPort[0], parseInt(hostPort[1])));
+		} else {
+			fs = new dropboxvfs.DropboxVFS();
+		}
+
 		var account = fs.login();
 		var vault = Q.defer<onepass.Vault>();
 		this.vault = vault.promise;
