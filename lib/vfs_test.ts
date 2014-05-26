@@ -163,5 +163,14 @@ testLib.addAsyncTest('Copy dir', (assert) => {
 	}).done();
 });
 
+testLib.addAsyncTest('ignore paths above root', (assert) => {
+	createFs().then((fs) => {
+		return fs.list('../../');
+	}).then((files) => {
+		assert.equal(files.length, 0);
+		testLib.continueTests();
+	}).done();
+});
+
 testLib.runTests();
 

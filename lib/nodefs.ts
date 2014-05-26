@@ -10,7 +10,7 @@ export class FileVFS implements vfs.VFS {
 	root : string;
 
 	constructor(_root: string) {
-		this.root = _root;
+		this.root = Path.normalize(_root);
 	}
 
 	stat(path: string) : Q.Promise<vfs.FileInfo> {
@@ -160,7 +160,11 @@ export class FileVFS implements vfs.VFS {
 
 	private absPath(path: string) : string {
 		if (path.indexOf(this.root) != 0) {
-			return Path.join(this.root, path);
+			var fullPath = Path.normalize(Path.join(this.root, path));
+			if (fullPath.length < this.root.length) {
+				fullPath = this.root;
+			}
+			return fullPath;
 		} else {
 			return path;
 		}
