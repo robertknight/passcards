@@ -1,9 +1,10 @@
-/// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
-/// <reference path="../typings/dropbox.d.ts" />
+/// <reference path="../../typings/DefinitelyTyped/node/node.d.ts" />
+/// <reference path="../../typings/dropbox.d.ts" />
 
 import dropbox = require('dropbox');
-import vfs = require('./vfs');
 import Q = require('q');
+
+import vfs = require('./vfs');
 
 export class DropboxVFS implements vfs.VFS {
 	private client : dropbox.Client;

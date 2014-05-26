@@ -9,8 +9,8 @@ import env = require('./env');
 import testLib = require('./test');
 import onepass = require('./onepass');
 import exportLib = require('./export');
-import nodefs = require('./nodefs');
-import vfs = require('./vfs');
+import nodefs = require('./vfs/node');
+import vfs = require('./vfs/vfs');
 
 require('es6-shim');
 

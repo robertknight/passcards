@@ -10,11 +10,11 @@ import reactts = require('react-typescript');
 import underscore = require('underscore');
 import url = require('url');
 
-import dropboxvfs = require('../lib/dropboxvfs');
+import dropboxvfs = require('../lib/vfs/dropbox');
 import http_client = require('../lib/http_client');
-import http_vfs = require('../lib/http_vfs');
+import http_vfs = require('../lib/vfs/http');
 import onepass = require('../lib/onepass');
-import vfs = require('../lib/vfs');
+import vfs = require('../lib/vfs/vfs');
 
 import onepass_crypto = require('../lib/onepass_crypto');
 

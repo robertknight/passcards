@@ -3,7 +3,7 @@
 
 import Q = require('q');
 import onepass = require('./onepass');
-import vfs = require('./vfs');
+import vfs = require('./vfs/vfs');
 
 export interface Exporter {
 	exportItems(fs: vfs.VFS, path: string, items: onepass.Item[]) : Q.Promise<boolean>;

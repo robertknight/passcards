@@ -16,11 +16,11 @@ import clipboard = require('./clipboard');
 import collectionutil = require('../lib/collectionutil');
 import consoleio = require('../lib/console');
 import crypto = require('../lib/onepass_crypto');
-import dropboxvfs = require('../lib/dropboxvfs');
+import dropboxvfs = require('../lib/vfs/dropbox');
 import item_search = require('../lib/item_search');
 import onepass = require('../lib/onepass');
-import nodefs = require('../lib/nodefs');
-import vfs = require('../lib/vfs');
+import nodefs = require('../lib/vfs/node');
+import vfs = require('../lib/vfs/vfs');
 
 interface HandlerMap {
 	[index: string] : (args: any, result : Q.Deferred<number>) => void;

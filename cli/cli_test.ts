@@ -7,10 +7,10 @@ import asyncutil = require('../lib/asyncutil');
 import cli = require('./cli')
 import clipboard = require('./clipboard')
 import consoleio = require('../lib/console')
-import nodefs = require('../lib/nodefs');
+import nodefs = require('../lib/vfs/node');
 import testLib = require('../lib/test')
 import onepass = require('../lib/onepass')
-import vfs = require('../lib/vfs');
+import vfs = require('../lib/vfs/vfs');
 
 interface PromptReply {
 	match: RegExp

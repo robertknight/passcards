@@ -16,9 +16,9 @@ import underscore = require('underscore');
 import url = require('url');
 
 import vfs = require('./vfs');
-import http_client = require('./http_client');
-import streamutil = require('./streamutil');
-import stringutil = require('./stringutil');
+import http_client = require('../http_client');
+import streamutil = require('../streamutil');
+import stringutil = require('../stringutil');
 
 /** VFS which accesses a file system exposed over HTTP
  * via a simple REST-like API:
@@ -211,7 +211,7 @@ export class Server {
 }
 
 function main() {
-	var nodefs = require('./nodefs');
+	var nodefs = require('./node');
 	var sprintf = require('sprintf');
 
 	var port = 3030;

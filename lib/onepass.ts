@@ -14,7 +14,7 @@ import agilekeychain = require('./agilekeychain');
 import collectionutil = require('./collectionutil');
 import crypto = require('./onepass_crypto');
 import stringutil = require('./stringutil');
-import vfs = require('./vfs');
+import vfs = require('./vfs/vfs');
 
 /** Default number of iterations to use in the PBKDF2 password
   * stretching function used to secure the master key.

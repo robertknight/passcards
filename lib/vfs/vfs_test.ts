@@ -1,9 +1,9 @@
 import Path = require('path');
 import Q = require('q');
 
-import testLib = require('./test');
+import testLib = require('../test');
 import vfs = require('./vfs');
-import nodefs = require('./nodefs');
+import nodefs = require('./node');
 
 var createFs = () => {
 	var TEST_DIR = '/tmp/vfs-test';

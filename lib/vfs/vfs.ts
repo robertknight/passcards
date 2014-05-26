@@ -1,9 +1,10 @@
-/// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
-/// <reference path="../typings/DefinitelyTyped/mkdirp/mkdirp.d.ts" />
-/// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
+/// <reference path="../../typings/DefinitelyTyped/node/node.d.ts" />
+/// <reference path="../../typings/DefinitelyTyped/mkdirp/mkdirp.d.ts" />
+/// <reference path="../../typings/DefinitelyTyped/q/Q.d.ts" />
 
-import asyncutil = require('./asyncutil');
 import Q = require('q');
+
+import asyncutil = require('../asyncutil');
 
 /** Holds details of a file retrieved by a VFS implementation */
 export class FileInfo {

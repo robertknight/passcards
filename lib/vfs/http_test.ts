@@ -1,10 +1,10 @@
 import fs = require('fs');
 import os = require('os');
 
-import testLib = require('./test');
-import http_client = require('./http_client');
-import http_vfs = require('./http_vfs');
-import nodefs = require('./nodefs');
+import testLib = require('../test');
+import http_client = require('../http_client');
+import http_vfs = require('./http');
+import nodefs = require('./node');
 
 var PORT = 3002;
 
