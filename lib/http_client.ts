@@ -15,7 +15,7 @@ import stringutil = require('./stringutil');
   * TODO: Look for an existing library that can be used
   *  instead.
   */
-export class HttpClient {
+export class Client {
 	constructor(public host: string, public port: number) {
 	}
 
@@ -44,6 +44,7 @@ export class HttpClient {
 				path: path,
 				host: this.host,
 				port: this.port,
+				withCredentials: false
 			}, (resp: http.ClientResponse) => {
 				streamutil.readAll(resp)
 				.then((content) => {

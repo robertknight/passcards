@@ -12,7 +12,7 @@ var fsRoot = <string>(<any>os).tmpdir() + '/http-vfs-test';
 
 var fileVfs = new nodefs.FileVFS(fsRoot);
 var httpVfsServer = new http_vfs.Server(fileVfs);
-var httpVfs = new http_vfs.Client(new http_client.HttpClient('127.0.0.1', PORT));
+var httpVfs = new http_vfs.Client(new http_client.Client('127.0.0.1', PORT));
 
 function setup() : Q.Promise<void> {
 	return fileVfs.mkpath('.').then(() => {

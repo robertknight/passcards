@@ -30,7 +30,7 @@ import stringutil = require('./stringutil');
  * DELETE /path - Delete file
  */
 export class Client implements vfs.VFS {
-	constructor(public client: http_client.HttpClient) {
+	constructor(public client: http_client.Client) {
 	}
 
 	login() : Q.Promise<string> {
@@ -141,6 +141,7 @@ export class Server {
 		};
 
 		var router = (req: http.ServerRequest, res: http.ServerResponse) => {
+			res.setHeader('Access-Control-Allow-Origin', '*');
 			var path = url.parse(req.url).pathname;
 			if (req.method == 'GET') {
 				this.fs.stat(path).then((fileInfo) => {
@@ -182,6 +183,9 @@ export class Server {
 				}).fail((err) => {
 					fail(res, err);
 				});
+			} else if (req.method == 'OPTIONS') {
+				res.setHeader('Access-Control-Allow-Methods', 'GET, PUT, DELETE');
+				done(res);
 			} else {
 				throw 'Unhandled method ' + req.method;
 			}
