@@ -1,3 +1,14 @@
+// http_vfs provides a client and server for a simple file-system
+// interface exposed via a RESTish API.
+//
+// It supports basic CRUD operations on files and directories.
+//
+// The module can be run as a server using
+//   node http_vfs.js $PATH
+//
+// Which will expose the local file system dir $PATH
+// via this API.
+//
 import Q = require('q');
 import http = require('http');
 import sprintf = require('sprintf');
@@ -193,5 +204,22 @@ export class Server {
 	close() {
 		this.server.close();
 	}
+}
+
+function main() {
+	var nodefs = require('./nodefs');
+	var sprintf = require('sprintf');
+
+	var port = 3030;
+
+	var dirPath = process.argv[2] || process.cwd();
+	var server = new Server(new nodefs.FileVFS(dirPath));
+	server.listen(port).then(() => {
+		console.log(sprintf('Exposing %s via HTTP port %d', dirPath, port));
+	});
+}
+
+if (require.main == module) {
+	main();
 }
 
