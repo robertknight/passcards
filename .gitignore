@@ -1,3 +1,7 @@
+*.swp
+*.log
+
+tags
 build
 node_modules
 webui/scripts
