@@ -29,6 +29,9 @@ function setup() : Q.Promise<void> {
 testLib.addAsyncTest('list dir', (assert) => {
 	httpVfs.list('test-dir').then((files) => {
 		assert.equal(files.length, 1);
+		return httpVfs.list('test-dir/');
+	}).then((files) => {
+		assert.equal(files.length, 1);
 		testLib.continueTests();
 	}).done();
 });

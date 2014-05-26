@@ -132,19 +132,23 @@ export class Server {
 		var router = (req: http.ServerRequest, res: http.ServerResponse) => {
 			var path = url.parse(req.url).pathname;
 			if (req.method == 'GET') {
-				if (stringutil.endsWith(path, '/')) {
-					this.fs.list(path).then((files) => {
-						done(res, JSON.stringify(files));
-					}).fail((err) => {
-						fail(res, err);
-					});
-				} else {
-					this.fs.read(path).then((content) => {
-						done(res, content);
-					}).fail((err) => {
-						fail(res, err);
-					});
-				}
+				this.fs.stat(path).then((fileInfo) => {
+					if (fileInfo.isDir) {
+						this.fs.list(path).then((files) => {
+							done(res, JSON.stringify(files));
+						}).fail((err) => {
+							fail(res, err);
+						});
+					} else {
+						this.fs.read(path).then((content) => {
+							done(res, content);
+						}).fail((err) => {
+							fail(res, err);
+						});
+					}
+				}).fail((err) => {
+					fail(res, err);
+				});
 			} else if (req.method == 'PUT') {
 				if (stringutil.endsWith(path, '/')) {
 					this.fs.mkpath(path).then(() => {
