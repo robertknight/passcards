@@ -1,17 +1,18 @@
 /// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
 
-import http = require('http');
 import Q = require('q');
 
 import agent_server = require('./agent_server');
+import http_client = require('../lib/http_client');
 import onepass = require('../lib/onepass');
-import streamutil = require('../lib/base/streamutil');
 
 export class HttpKeyAgent implements onepass.KeyAgent {
 	private agentPID : Q.Promise<number>;
+	private client : http_client.Client
 
 	constructor() {
 		this.agentPID = agent_server.startAgent();
+		this.client = new http_client.Client('localhost', 3000);
 	}
 
 	addKey(id: string, key: string) : Q.Promise<void> {
@@ -66,37 +67,8 @@ export class HttpKeyAgent implements onepass.KeyAgent {
 	}
 
 	private sendRequest<T>(method: string, path: string, data: T) : Q.Promise<string> {
-		var response = Q.defer<string>();
-		var dispatchRequest = () => {
-			var request = http.request({
-				method: method,
-				path: path,
-				host: 'localhost',
-				port: 3000
-			}, (resp: http.ClientResponse) => {
-				streamutil.readAll(resp)
-				.then((content) => {
-					if (resp.statusCode == 200) {
-						response.resolve(content);
-					} else {
-						response.reject({status: resp.statusCode, body: content});
-					}
-				}, (err) => {
-					response.reject(err);
-				}).done();
-			});
-			request.write(JSON.stringify(data));
-			request.end();
-
-			request.on('error', (err: any) => {
-				response.reject(err);
-			});
-		};
-
-		this.agentPID.then(() => {
-			dispatchRequest();
+		return this.agentPID.then(() => {
+			return this.client.request(method, path, data);
 		});
-
-		return response.promise;
 	}
 }

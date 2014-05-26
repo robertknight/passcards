@@ -38,43 +38,41 @@ export class Client {
 		}
 
 		var response = Q.defer<string>();
-		var dispatchRequest = () => {
-			var request = http.request({
-				method: method,
-				path: path,
-				host: this.host,
-				port: this.port,
-				withCredentials: false
-			}, (resp: http.ClientResponse) => {
-				streamutil.readAll(resp)
-				.then((content) => {
-					if (resp.statusCode == 200) {
-						response.resolve(content);
-					} else {
-						response.reject({status: resp.statusCode, body: content});
-					}
-				}, (err) => {
-					response.reject(err);
-				}).done();
-			});
-			if (data) {
-				switch (typeof data) {
-					case 'string':
-						request.write(data);
-						break;
-					case 'object':
-					case 'array':
-						request.write(JSON.stringify(data));
-						break;
-					case undefined:
-						break;
-					default:
-						throw 'Unable to serialize data type ' + typeof data;
+		var request = http.request({
+			method: method,
+			path: path,
+			host: this.host,
+			port: this.port,
+			withCredentials: false
+		}, (resp: http.ClientResponse) => {
+			streamutil.readAll(resp)
+			.then((content) => {
+				if (resp.statusCode == 200) {
+					response.resolve(content);
+				} else {
+					response.reject({status: resp.statusCode, body: content});
 				}
+			}, (err) => {
+				response.reject(err);
+			}).done();
+		});
+		if (data) {
+			switch (typeof data) {
+				case 'string':
+					request.write(data);
+					break;
+				case 'object':
+				case 'array':
+					request.write(JSON.stringify(data));
+					break;
+				case undefined:
+					break;
+				default:
+					throw 'Unable to serialize data type ' + typeof data;
 			}
-			request.end();
-		};
-		dispatchRequest();
+		}
+		request.end();
+
 		return response.promise;
 	}
 }
