@@ -49,8 +49,10 @@ var workerClient: MessagePort;
 if (env.isNodeJS()) {
 	var nodeworker = require('./node_worker');
 	workerClient = new nodeworker.WorkerClient();
-} else {
+} else if (env.isWebWorker()) {
 	workerClient = <any>self;
 }
-startWorker(workerClient);
+if (workerClient) {
+	startWorker(workerClient);
+}
 
