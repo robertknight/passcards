@@ -518,13 +518,14 @@ export class Vault {
 			});
 			return Q.all(derivedKeys);
 		}).then((derivedKeys) => {
+			var addKeyOps : Q.Promise<void>[] = [];
 			keyEntries.forEach((item, index) => {
 				var saltCipher = crypto.extractSaltAndCipherText(atob(item.data));
 				var key = decryptKey(derivedKeys[index], saltCipher.cipherText,
 				  atob(item.validation));
-				this.keyAgent.addKey(item.identifier, key);
+				addKeyOps.push(this.keyAgent.addKey(item.identifier, key));
 			});
-			return <void>null;
+			return asyncutil.eraseResult(Q.all(addKeyOps));
 		});
 	}
 
