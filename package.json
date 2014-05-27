@@ -1,7 +1,7 @@
 {
 	"name" : "onepass-cli",
 	"description" : "A 1Password command-line client and library",
-	"version" : "0.4.3",
+	"version" : "0.4.4",
 	"devDependencies" : {
 		"browserify" : ">=3.46.0",
 		"typescript" : ">=1.0",
