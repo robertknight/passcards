@@ -3168,7 +3168,7 @@ var SearchField = (function (_super) {
     };
 
     SearchField.prototype.render = function () {
-        return react.DOM.div({ className: 'searchField' }, react.DOM.input({
+        return react.DOM.div({ className: stringutil.truthyKeys({ searchField: true, toolbar: true }) }, react.DOM.input({
             className: 'searchFieldInput',
             type: 'text',
             placeholder: 'Search...',
@@ -3267,7 +3267,7 @@ var DetailsView = (function (_super) {
                 detailsView: true,
                 hasSelectedItem: this.props.item
             })
-        }, react.DOM.div({ className: 'detailsToolbar' }, react.DOM.a({ className: 'toolbarLink', href: '#', ref: 'backLink' }, 'Back')), detailsContent ? detailsContent : []);
+        }, react.DOM.div({ className: stringutil.truthyKeys({ toolbar: true, detailsToolbar: true }) }, react.DOM.a({ className: 'toolbarLink', href: '#', ref: 'backLink' }, 'Back')), detailsContent ? detailsContent : []);
     };
     return DetailsView;
 })(reactts.ReactComponentBase);

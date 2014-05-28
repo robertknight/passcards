@@ -63,12 +63,17 @@ html, body {
 	-webkit-flex-direction: column;
 }
 
-.searchField {
-	background-color: #ededed;
-	width: 100%;
-	position: fixed;
+.toolbar {
 	padding-top: 7px;
 	padding-bottom: 7px;
+	border-bottom: 1px solid #bbbbbb;
+	height: 30px;
+	background-color: #ededed;
+}
+
+.searchField {
+	width: 100%;
+	position: fixed;
 
 	display: flex;
 	display: -webkit-flex;
@@ -157,11 +162,8 @@ html, body {
 }
 
 .detailsToolbar {
-	background-color: #ededed;
 	margin-bottom: 10px;
 	height: 30px;
-	padding-top: 7px;
-	padding-bottom: 7px;
 }
 
 .detailsToolbar a {
