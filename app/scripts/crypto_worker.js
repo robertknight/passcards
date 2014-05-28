@@ -1,4 +1,34 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function (process){
+// env.ts provides functions to query the host Javascript
+// environment
+/** Returns true if running in the main browser
+* environment with DOM access.
+*/
+function isBrowser() {
+    return typeof window != 'undefined';
+}
+exports.isBrowser = isBrowser;
+
+/** Returns true if running from within NodeJS
+* (or a compatible environment)
+*/
+function isNodeJS() {
+    return process && process.version;
+}
+exports.isNodeJS = isNodeJS;
+
+/** Returns true if running from a Web Worker context
+* in a browser (or a compatible environment)
+*/
+function isWebWorker() {
+    return typeof importScripts != 'undefined';
+}
+exports.isWebWorker = isWebWorker;
+//# sourceMappingURL=env.js.map
+
+}).call(this,require("/usr/local/lib/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js"))
+},{"/usr/local/lib/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":6}],2:[function(require,module,exports){
 /* Optimized implementation of PBKDF2-HMAC-SHA1
 *
 * Core SHA-1 implementation derived from Rusha  (http://github.com/srijs/rusha)
@@ -417,43 +447,173 @@ var PBKDF2 = (function () {
 exports.PBKDF2 = PBKDF2;
 //# sourceMappingURL=pbkdf2.js.map
 
-},{}],2:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 // crypto_worker implements a Web Worker for handling async
 // decryption tasks off the main browser thread
+var env = require('./base/env');
 var pbkdf2Lib = require('./crypto/pbkdf2');
 
-function startWorker() {
+exports.SCRIPT_PATH = env.isNodeJS() ? './build/lib/crypto_worker.js' : 'scripts/crypto_worker.js';
+
+function startWorker(worker) {
     var pbkdf2 = new pbkdf2Lib.PBKDF2();
 
-    self.onmessage = function (e) {
+    worker.onmessage = function (e) {
         var req = e.data;
         var passBuf = pbkdf2Lib.bufferFromString(req.pass);
         var saltBuf = pbkdf2Lib.bufferFromString(req.salt);
-        var response;
+        var derivedKeyBlock = pbkdf2.keyBlock(passBuf, saltBuf, req.iterations, req.blockIndex);
+        var response = {
+            requestId: req.id,
+            keyBlock: pbkdf2Lib.stringFromBuffer(new Uint8Array(derivedKeyBlock))
+        };
 
-        if (req.blockIndex !== undefined) {
-            var derivedKeyBlock = pbkdf2.keyBlock(passBuf, saltBuf, req.iterations, req.blockIndex);
-            response = {
-                request: req,
-                keyBlock: pbkdf2Lib.stringFromBuffer(new Uint8Array(derivedKeyBlock))
-            };
-        } else {
-            var derivedKey = pbkdf2.key(passBuf, saltBuf, req.iterations, req.keyLen);
-            response = {
-                request: req,
-                key: pbkdf2Lib.stringFromBuffer(derivedKey)
-            };
-        }
-
-        self.postMessage(response, undefined);
+        worker.postMessage(response);
     };
 }
 exports.startWorker = startWorker;
 
-if (typeof importScripts != 'undefined') {
-    // running in Web Worker context
-    exports.startWorker();
+var workerClient;
+if (env.isNodeJS()) {
+    var nodeworker = require('./node_worker');
+    workerClient = new nodeworker.WorkerClient();
+} else if (env.isWebWorker()) {
+    workerClient = self;
+}
+if (workerClient) {
+    exports.startWorker(workerClient);
 }
 //# sourceMappingURL=crypto_worker.js.map
 
-},{"./crypto/pbkdf2":1}]},{},[2])
+},{"./base/env":1,"./crypto/pbkdf2":2,"./node_worker":4}],4:[function(require,module,exports){
+(function (process){
+var child_process = require('child_process');
+
+/** Emulation of the Web Worker interface for NodeJS
+* using a child process.
+*
+* Within the child, WorkerClient can be used to communicate
+* with the parent where `self` would normally be used
+* in a web worker.
+*/
+var Worker = (function () {
+    function Worker(scriptUrl) {
+        var _this = this;
+        this.process = child_process.fork(scriptUrl);
+        this.process.on('message', function (msg) {
+            if (_this.onmessage) {
+                _this.onmessage({ data: msg });
+            }
+        });
+        this.process.on('error', function (err) {
+            if (_this.onerror) {
+                _this.onerror(err);
+            }
+        });
+
+        process.on('exit', function () {
+            _this.terminate();
+        });
+    }
+    Worker.prototype.postMessage = function (obj) {
+        this.process.send(obj, undefined);
+    };
+
+    Worker.prototype.terminate = function () {
+        this.process.kill();
+    };
+    return Worker;
+})();
+exports.Worker = Worker;
+
+/** Emulation of the `self` variable exposed
+* to the global scope of Web Workers for communicating
+* with the parent worker.
+*/
+var WorkerClient = (function () {
+    function WorkerClient() {
+        var _this = this;
+        process.on('message', function (message) {
+            if (_this.onmessage) {
+                _this.onmessage({ data: message });
+            }
+        });
+    }
+    WorkerClient.prototype.close = function () {
+        process.exit(0);
+    };
+
+    WorkerClient.prototype.postMessage = function (message, ports) {
+        process.send(message);
+    };
+    return WorkerClient;
+})();
+exports.WorkerClient = WorkerClient;
+//# sourceMappingURL=node_worker.js.map
+
+}).call(this,require("/usr/local/lib/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js"))
+},{"/usr/local/lib/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":6,"child_process":5}],5:[function(require,module,exports){
+
+},{}],6:[function(require,module,exports){
+// shim for using process in browser
+
+var process = module.exports = {};
+
+process.nextTick = (function () {
+    var canSetImmediate = typeof window !== 'undefined'
+    && window.setImmediate;
+    var canPost = typeof window !== 'undefined'
+    && window.postMessage && window.addEventListener
+    ;
+
+    if (canSetImmediate) {
+        return function (f) { return window.setImmediate(f) };
+    }
+
+    if (canPost) {
+        var queue = [];
+        window.addEventListener('message', function (ev) {
+            var source = ev.source;
+            if ((source === window || source === null) && ev.data === 'process-tick') {
+                ev.stopPropagation();
+                if (queue.length > 0) {
+                    var fn = queue.shift();
+                    fn();
+                }
+            }
+        }, true);
+
+        return function nextTick(fn) {
+            queue.push(fn);
+            window.postMessage('process-tick', '*');
+        };
+    }
+
+    return function nextTick(fn) {
+        setTimeout(fn, 0);
+    };
+})();
+
+process.title = 'browser';
+process.browser = true;
+process.env = {};
+process.argv = [];
+
+function noop() {}
+
+process.on = noop;
+process.once = noop;
+process.off = noop;
+process.emit = noop;
+
+process.binding = function (name) {
+    throw new Error('process.binding is not supported');
+}
+
+// TODO(shtylman)
+process.cwd = function () { return '/' };
+process.chdir = function (dir) {
+    throw new Error('process.chdir is not supported');
+};
+
+},{}]},{},[3])
