@@ -193,9 +193,9 @@ class SearchField extends reactts.ReactComponentBase<SearchFieldProps, {}> {
 	}
 
 	render() {
-		return react.DOM.div({className: 'searchField'},
+		return react.DOM.div({className: stringutil.truthyKeys({searchField: true, toolbar: true})},
 				react.DOM.input({className: 'searchFieldInput',
-					type: 'search',
+					type: 'text',
 					placeholder: 'Search...',
 					ref: 'searchField'
 				})
@@ -299,7 +299,7 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 				hasSelectedItem: this.props.item
 			})
 		},
-			react.DOM.div({className: 'detailsToolbar'},
+			react.DOM.div({className: stringutil.truthyKeys({toolbar: true, detailsToolbar: true})},
 				react.DOM.a({className: 'toolbarLink', href:'#', ref:'backLink'}, 'Back')),
 			detailsContent ? detailsContent : []
 		);

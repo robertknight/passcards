@@ -1,10 +1,16 @@
-body {
+html, body {
 	font-family: 'Helvetica Neue', 'Segoe UI', 'Helvetica', 'Arial';
 	margin:0px;
+	height: 100%;
+}
+
+#app-view {
+	height: 100%;
 }
 
 .appView {
 	width: 100%;
+	height: 100%;
 }
 
 .unlockPane {
@@ -51,17 +57,23 @@ body {
 .itemListView {
 	display: flex;
 	display: -webkit-flex;
+	height:100%;
 
 	flex-direction: column;
 	-webkit-flex-direction: column;
 }
 
-.searchField {
-	background-color: rgba(200,200,200,0.8);
-	width: 100%;
-	position: fixed;
+.toolbar {
 	padding-top: 7px;
 	padding-bottom: 7px;
+	border-bottom: 1px solid #bbbbbb;
+	height: 30px;
+	background-color: #ededed;
+}
+
+.searchField {
+	width: 100%;
+	position: fixed;
 
 	display: flex;
 	display: -webkit-flex;
@@ -80,6 +92,10 @@ body {
 
 .itemList {
 	margin-top: 50px;
+	height: 100%;
+	overflow: auto;
+	overflow-scrolling:auto;
+	-webkit-overflow-scrolling:touch;
 }
 
 .itemOverview {
@@ -146,8 +162,8 @@ body {
 }
 
 .detailsToolbar {
-	background-color: rgba(200,200,200,0.8);
 	margin-bottom: 10px;
+	height: 30px;
 }
 
 .detailsToolbar a {
@@ -158,7 +174,7 @@ body {
 .detailsHeader {
 	display: flex;
 	flex-direction: row;
-	border-bottom: 2px solid #bbbbbb;
+	border-bottom: 1px solid #dddddd;
 	padding-bottom: 5px;
 }
 
@@ -176,7 +192,10 @@ body {
 
 .detailsField {
 	display:flex;
+	-webkit-display:flex;
+
 	flex-direction:row;
+	-webkit-flex-direction:row;
 }
 
 .detailsFieldLabel {
@@ -187,6 +206,6 @@ body {
 .detailsCore {
 	padding-top: 5px;
 	padding-bottom: 5px;
-	border-bottom: 2px solid #bbbbbb;
+	border-bottom: 1px solid #dddddd;
 }
 
