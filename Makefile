@@ -14,6 +14,7 @@ webui_srcs=$(shell find webui/ -name '*.ts')
 all_srcs=$(lib_srcs) $(cli_srcs) $(webui_srcs)
 test_files=$(shell find build/ -name '*_test.js')
 webui_script_dir=webui/scripts
+webui_css_dir=webui/style
 
 # marker files used to trigger npm / Git submodule
 # updates prior to build
@@ -27,7 +28,7 @@ build/current: $(lib_srcs) $(cli_srcs) $(webui_srcs) $(deps)
 	@$(TSC_NODE) --outDir build $(lib_srcs) $(cli_srcs) $(webui_srcs)
 	@touch build/current
 
-webui-build: $(webui_script_dir)/webui_bundle.js $(webui_script_dir)/crypto_worker.js
+webui-build: $(webui_script_dir)/webui_bundle.js $(webui_script_dir)/crypto_worker.js $(webui_css_dir)/app.css
 
 $(webui_script_dir)/webui_bundle.js: build/current
 	mkdir -p $(webui_script_dir)
@@ -36,6 +37,10 @@ $(webui_script_dir)/webui_bundle.js: build/current
 $(webui_script_dir)/crypto_worker.js: build/current
 	mkdir -p $(webui_script_dir)
 	browserify --entry build/lib/crypto_worker.js --outfile $(webui_script_dir)/crypto_worker.js
+
+$(webui_css_dir)/app.css: webui/app.less
+	mkdir -p $(webui_css_dir)
+	lessc webui/app.less > $(webui_css_dir)/app.css
 
 # pbkdf2_bundle.js is a require()-able bundle
 # of the PBKDF2 implementation for use in Web Workers
@@ -78,8 +83,9 @@ publish-app: webui-build
 	rm -rf $(PUBLISH_TMP_DIR)
 	git clone --no-checkout http://github.com/robertknight/1pass-web $(PUBLISH_TMP_DIR)
 	cd $(PUBLISH_TMP_DIR) && git checkout gh-pages && git rm -rf app
-	cd $(PUBLISH_TMP_DIR) && mkdir -p app/scripts
-	cp webui/*.html webui/*.css $(PUBLISH_TMP_DIR)/app/
+	cd $(PUBLISH_TMP_DIR) && mkdir -p app/scripts && mkdir -p app/style
+	cp webui/*.html $(PUBLISH_TMP_DIR)/app/
 	cp webui/scripts/*.js $(PUBLISH_TMP_DIR)/app/scripts/
+	cp webui/style/*.css $(PUBLISH_TMP_DIR)/app/style/
 	cd $(PUBLISH_TMP_DIR) && git add . && git commit -m "Update build to '$(GIT_HEAD)'"
 	cd $(PUBLISH_TMP_DIR) && git push

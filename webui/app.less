@@ -1,3 +1,33 @@
+/* mixins */
+.flex {
+	display: flex;
+	-webkit-display: flex;
+}
+
+.flex-row {
+	flex-direction: row;
+	-webkit-flex-direction: row;
+}
+
+.flex-column {
+	flex-direction: column;
+	-webkit-flex-direction: column;
+}
+
+.flex-center {
+	align-items: center;
+	-webkit-align-items: center;
+	justify-content: center;
+	-webkit-justify-content: center;
+}
+
+.touch-scrolling {
+	overflow: auto;
+	overflow-scrolling: auto;
+	-webkit-overflow-scrolling: touch;
+}
+
+/* app style */
 html, body {
 	font-family: 'Helvetica Neue', 'Segoe UI', 'Helvetica', 'Arial';
 	margin:0px;
@@ -39,8 +69,7 @@ html, body {
 }
 
 .unlockPaneInputs {
-	display:flex;
-	-webkit-display:flex;
+	.flex;
 }
 
 .unlockLabel {
@@ -55,12 +84,10 @@ html, body {
 }
 
 .itemListView {
-	display: flex;
-	display: -webkit-flex;
-	height:100%;
+	.flex;
+	.flex-column;
 
-	flex-direction: column;
-	-webkit-flex-direction: column;
+	height:100%;
 }
 
 .toolbar {
@@ -75,14 +102,9 @@ html, body {
 	width: 100%;
 	position: fixed;
 
-	display: flex;
-	display: -webkit-flex;
-	align-items: center;
-	-webkit-align-items: center;
-	flex-direction: row;
-	-webkit-flex-direction: row;
-	justify-content: center;
-	-webkit-justify-content: center;
+	.flex;
+	.flex-row;
+	.flex-center;
 }
 
 .searchFieldInput {
@@ -93,17 +115,13 @@ html, body {
 .itemList {
 	margin-top: 50px;
 	height: 100%;
-	overflow: auto;
-	overflow-scrolling:auto;
-	-webkit-overflow-scrolling:touch;
+	
+	.touch-scrolling;
 }
 
 .itemOverview {
-	display: flex;
-	display: -webkit-flex;
-
-	flex-direction: row;
-	-webkit-flex-direction: row;
+	.flex;
+	.flex-row;
 
 	margin-top: 5px;
 	margin-bottom: 5px;
@@ -172,8 +190,9 @@ html, body {
 }
 
 .detailsHeader {
-	display: flex;
-	flex-direction: row;
+	.flex;
+	.flex-row;
+
 	border-bottom: 1px solid #dddddd;
 	padding-bottom: 5px;
 }
@@ -191,11 +210,8 @@ html, body {
 }
 
 .detailsField {
-	display:flex;
-	-webkit-display:flex;
-
-	flex-direction:row;
-	-webkit-flex-direction:row;
+	.flex;
+	.flex-row;
 }
 
 .detailsFieldLabel {
