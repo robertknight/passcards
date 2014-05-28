@@ -1325,12 +1325,13 @@ var Vault = (function () {
             });
             return Q.all(derivedKeys);
         }).then(function (derivedKeys) {
+            var addKeyOps = [];
             keyEntries.forEach(function (item, index) {
                 var saltCipher = crypto.extractSaltAndCipherText(atob(item.data));
                 var key = exports.decryptKey(derivedKeys[index], saltCipher.cipherText, atob(item.validation));
-                _this.keyAgent.addKey(item.identifier, key);
+                addKeyOps.push(_this.keyAgent.addKey(item.identifier, key));
             });
-            return null;
+            return asyncutil.eraseResult(Q.all(addKeyOps));
         });
     };
 

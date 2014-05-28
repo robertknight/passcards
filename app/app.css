@@ -1,10 +1,16 @@
-body {
+html, body {
 	font-family: 'Helvetica Neue', 'Segoe UI', 'Helvetica', 'Arial';
 	margin:0px;
+	height: 100%;
+}
+
+#app-view {
+	height: 100%;
 }
 
 .appView {
 	width: 100%;
+	height: 100%;
 }
 
 .unlockPane {
@@ -51,6 +57,7 @@ body {
 .itemListView {
 	display: flex;
 	display: -webkit-flex;
+	height:100%;
 
 	flex-direction: column;
 	-webkit-flex-direction: column;
@@ -80,6 +87,10 @@ body {
 
 .itemList {
 	margin-top: 50px;
+	height: 100%;
+	overflow: auto;
+	overflow-scrolling:auto;
+	-webkit-overflow-scrolling:touch;
 }
 
 .itemOverview {
