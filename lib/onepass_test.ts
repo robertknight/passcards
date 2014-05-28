@@ -295,6 +295,7 @@ testLib.addAsyncTest('Update item', (assert) => {
 			assert.notEqual(passwordField, null);
 			assert.equal(passwordField.value, 'original-password');
 			assert.equal(passwordField.type, onepass.FormFieldType.Password);
+			assert.equal(content.password(), 'original-password');
 
 			loadedItem.title = 'New Item Title';
 			loadedItem.faveIndex = 42;
@@ -322,6 +323,7 @@ testLib.addAsyncTest('Update item', (assert) => {
 			});
 			assert.notEqual(passwordField, null);
 			assert.equal(passwordField.value, 'new-password');
+			assert.equal(content.password(), 'new-password');
 
 			testLib.continueTests();
 		})
@@ -494,6 +496,25 @@ testLib.addAsyncTest('Save existing item to new vault', (assert) => {
 		assert.equal(item.title, loadedItem.title);
 		testLib.continueTests();
 	}).done();
+});
+
+testLib.addTest('Item content account and password accessors', (assert) => {
+	var content = new onepass.ItemContent();
+	content.formFields.push({
+		id: '',
+		name: 'password',
+		type: onepass.FormFieldType.Password,
+		designation: 'password',
+		value: 'the-item-password'
+	},{
+		id: '',
+		name: 'email',
+		type: onepass.FormFieldType.Text,
+		designation: 'username',
+		value: 'jim.smith@gmail.com'
+	});
+	assert.equal(content.account(), 'jim.smith@gmail.com');
+	assert.equal(content.password(), 'the-item-password');
 });
 
 testLib.runTests();

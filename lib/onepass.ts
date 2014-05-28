@@ -819,6 +819,41 @@ export class ItemContent {
 		this.htmlId = '';
 	}
 
+	/** Returns the account name associated with this item.
+	  *
+	  * The field used for the account name depends on the item
+	  * type. For logins, this is the 'username' field.
+	  *
+	  * Returns an empty string if the item has no associated account.
+	  */
+	account() : string {
+		var accountFields = underscore.filter(this.formFields, (field) => {
+			return field.designation == 'username';
+		});
+		if (accountFields.length > 0) {
+			return accountFields[0].value;
+		}
+		return '';
+	}
+
+	/** Returns the primary password associated with this item.
+	  *
+	  * This depends upon the item type. For logins, this is
+	  * the 'password' field.
+	  *
+	  * Returns an empty password if the item has no associated
+	  * account.
+	  */
+	password() : string {
+		var passFields = underscore.filter(this.formFields, (field) => {
+			return field.designation == 'password';
+		});
+		if (passFields.length > 0) {
+			return passFields[0].value;
+		}
+		return '';
+	}
+
 	/** Convert an ItemContent entry into a `contents` blob for storage in
 	  * a 1Password item.
 	  */
