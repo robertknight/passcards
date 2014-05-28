@@ -3170,7 +3170,7 @@ var SearchField = (function (_super) {
     SearchField.prototype.render = function () {
         return react.DOM.div({ className: 'searchField' }, react.DOM.input({
             className: 'searchFieldInput',
-            type: 'search',
+            type: 'text',
             placeholder: 'Search...',
             ref: 'searchField'
         }));

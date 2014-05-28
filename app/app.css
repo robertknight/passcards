@@ -64,7 +64,7 @@ html, body {
 }
 
 .searchField {
-	background-color: rgba(200,200,200,0.8);
+	background-color: #ededed;
 	width: 100%;
 	position: fixed;
 	padding-top: 7px;
@@ -157,8 +157,11 @@ html, body {
 }
 
 .detailsToolbar {
-	background-color: rgba(200,200,200,0.8);
+	background-color: #ededed;
 	margin-bottom: 10px;
+	height: 30px;
+	padding-top: 7px;
+	padding-bottom: 7px;
 }
 
 .detailsToolbar a {
@@ -169,7 +172,7 @@ html, body {
 .detailsHeader {
 	display: flex;
 	flex-direction: row;
-	border-bottom: 2px solid #bbbbbb;
+	border-bottom: 1px solid #dddddd;
 	padding-bottom: 5px;
 }
 
@@ -187,7 +190,10 @@ html, body {
 
 .detailsField {
 	display:flex;
+	-webkit-display:flex;
+
 	flex-direction:row;
+	-webkit-flex-direction:row;
 }
 
 .detailsFieldLabel {
@@ -198,6 +204,6 @@ html, body {
 .detailsCore {
 	padding-top: 5px;
 	padding-bottom: 5px;
-	border-bottom: 2px solid #bbbbbb;
+	border-bottom: 1px solid #dddddd;
 }
 
