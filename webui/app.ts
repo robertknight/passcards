@@ -84,7 +84,13 @@ class AppView extends reactts.ReactComponentBase<{}, AppViewState> {
 				items: this.state.items,
 				onSelectedItemChanged: (item) => { this.setSelectedItem(item); }
 			}));
-			children.push(new DetailsView({item: this.state.selectedItem}));
+			children.push(new DetailsView({
+				item: this.state.selectedItem,
+				iconURL: this.state.selectedItem ? itemIconURL(this.state.selectedItem) : '',
+				onGoBack: () => {
+					this.setSelectedItem(null);
+				}
+			}));
 		}
 
 		return react.DOM.div({className: 'appView'},
@@ -229,8 +235,10 @@ class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, ItemLis
 // Detail view for an individual item
 class DetailsViewProps {
 	item: onepass.Item;
-}
+	iconURL: string;
 
+	onGoBack: () => any;
+}
 
 class ItemSectionProps {
 	title: string;
@@ -253,13 +261,36 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 		}).done();
 	}
 
+	componentDidMount() {
+		console.log($(this.refs['backLink'].getDOMNode()));
+		$(this.refs['backLink'].getDOMNode()).click(() => {
+			this.props.onGoBack();
+		});
+	}
+
 	render() {
-		var children: react.ReactComponent<any,any>[] = [];
-		if (this.props.item) {
-			children.push(react.DOM.div({className: 'detailsTitle'}, this.props.item.title));
-			children.push(react.DOM.div({}, this.props.item.location));
-			var itemFields : reactts.ReactComponentBase<any,any>[] = [];
-			children = children.concat(itemFields);
+		var detailsContent : react.ReactComponent<any,any>;
+		if (this.props.item && this.itemContent) {
+			var account = this.itemContent.account();
+			var password = this.itemContent.password();
+			var sections : react.ReactComponent<any,any>[] = [];
+
+			detailsContent = react.DOM.div({className: 'detailsContent'},
+				react.DOM.div({className: 'detailsHeader'},
+					react.DOM.img({className: 'detailsHeaderIcon itemIcon', src:this.props.iconURL}),
+					react.DOM.div({},
+						react.DOM.div({className: 'detailsTitle'}, this.props.item.title),
+						react.DOM.div({className: 'detailsLocation'}, this.props.item.location))),
+				react.DOM.div({className: 'detailsCore'},
+					react.DOM.div({className: 'detailsField detailsAccount'},
+						react.DOM.div({className: 'detailsFieldLabel'}, 'Account'),
+						react.DOM.div({}, account)),
+					react.DOM.div({className: 'detailsField detailsPass'},
+						react.DOM.div({className: 'detailsFieldLabel'}, 'Password'),
+						react.DOM.div({}, password))),
+				react.DOM.div({className: 'detailsSections'},
+					sections)
+			);
 		}
 
 		return react.DOM.div({
@@ -267,7 +298,11 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 				detailsView: true,
 				hasSelectedItem: this.props.item
 			})
-		}, children);
+		},
+			react.DOM.div({className: 'detailsToolbar'},
+				react.DOM.a({className: 'toolbarLink', href:'#', ref:'backLink'}, 'Back')),
+			detailsContent ? detailsContent : []
+		);
 	}
 }
 
@@ -312,26 +347,7 @@ class ItemListProps {
 }
 
 class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> {
-	itemDomain(item: onepass.Item) : string {
-		var itemURL = item.location;
-
-		if (!itemURL) {
-			return null;
-		}
-
-		var parsedUrl = url.parse(itemURL);
-		return parsedUrl.host;
-	}
-
-	itemIconURL(item: onepass.Item) : string {
-		// TODO - Setup a service to get much prettier icons for URLs
-		var domain = this.itemDomain(item);
-		if (domain) {
-			return 'http://' + this.itemDomain(item) + '/favicon.ico';
-		} else {
-			return null;
-		}
-	}
+	
 
 	itemAccount(item: onepass.Item) : string {
 		// TODO - Extract item contents and save account name
@@ -363,10 +379,10 @@ class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> 
 			listItems.push(new Item({
 				key: item.uuid,
 				title: item.title,
-				iconURL: this.itemIconURL(item),
+				iconURL: itemIconURL(item),
 				accountName: this.itemAccount(item),
 				location: item.location,
-				domain: this.itemDomain(item),
+				domain: itemDomain(item),
 				onSelected: () => {
 					this.setSelectedItem(item);
 				}
@@ -380,6 +396,27 @@ class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> 
 		return react.DOM.div({className: 'itemList'},
 			listItems
 		);
+	}
+}
+
+function itemDomain(item: onepass.Item) : string {
+	var itemURL = item.location;
+
+	if (!itemURL) {
+		return null;
+	}
+
+	var parsedUrl = url.parse(itemURL);
+	return parsedUrl.host;
+}
+
+function itemIconURL(item: onepass.Item) : string {
+	// TODO - Setup a service to get much prettier icons for URLs
+	var domain = itemDomain(item);
+	if (domain) {
+		return 'http://' + itemDomain(item) + '/favicon.ico';
+	} else {
+		return null;
 	}
 }
 
