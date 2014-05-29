@@ -2,8 +2,9 @@
 
 import child_process = require('child_process');
 import os = require('os');
-
 import Q = require('q');
+
+import asyncutil = require('../lib/base/asyncutil');
 
 export interface Clipboard {
 	setData(content: string) : Q.Promise<void>;
@@ -54,15 +55,11 @@ function exec(command: string, input?: string) : Q.Promise<string> {
 	return stdout.promise;
 }
 
-function discardResult<T>(promise: Q.Promise<T>) : Q.Promise<void> {
-	return promise.then(() => { return <void>(null); });
-}
-
 export class X11Clipboard implements Clipboard {
 	// TODO - Improve error handling if xsel is not installed
 
 	setData(content: string) : Q.Promise<void> {
-		return discardResult(exec('xsel --clipboard --input', content));
+		return asyncutil.eraseResult(exec('xsel --clipboard --input', content));
 	}
 
 	getData() : Q.Promise<string> {
@@ -70,13 +67,13 @@ export class X11Clipboard implements Clipboard {
 	}
 
 	clear() : Q.Promise<void> {
-		return discardResult(exec('xsel --clipboard --clear'));
+		return asyncutil.eraseResult(exec('xsel --clipboard --clear'));
 	}
 }
 
 export class MacClipboard implements Clipboard {
 	setData(content: string) : Q.Promise<void> {
-		return discardResult(exec('pbcopy', content));
+		return asyncutil.eraseResult(exec('pbcopy', content));
 	}
 
 	getData() : Q.Promise<string> {
@@ -84,7 +81,7 @@ export class MacClipboard implements Clipboard {
 	}
 
 	clear() : Q.Promise<void> {
-		return discardResult(exec('pbcopy', ''));
+		return asyncutil.eraseResult(exec('pbcopy', ''));
 	}
 }
 
