@@ -2,8 +2,10 @@
 /// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
 /// <reference path="../node_modules/react-typescript/declarations/react.d.ts" />
 /// <reference path="../node_modules/react-typescript/declarations/react-typescript.d.ts" />
+/// <reference path="../typings/fastclick.d.ts" />
 
 import $ = require('jquery');
+import fastclick = require('fastclick');
 import Q = require('q');
 import react = require('react');
 import reactts = require('react-typescript');
@@ -424,6 +426,10 @@ export class App {
 	vault : Q.Promise<onepass.Vault>;
 
 	constructor() {
+		// UI setup
+		fastclick.FastClick.attach(document.body);
+
+		// VFS setup
 		var opts = <any>url.parse(document.location.href, true /* parse query */).query;
 		var fs: vfs.VFS;
 		if (opts.httpfs) {
