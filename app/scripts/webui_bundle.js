@@ -3141,7 +3141,8 @@ var UnlockPane = (function (_super) {
             className: 'masterPassField',
             type: 'password',
             placeholder: 'Master Password...',
-            ref: 'masterPassField'
+            ref: 'masterPassField',
+            autoFocus: true
         }), react.DOM.input({ type: 'submit', value: 'Unlock', ref: 'unlockBtn' })), react.DOM.div({ className: 'unlockLabel' }, unlockMessage)));
     };
     return UnlockPane;
