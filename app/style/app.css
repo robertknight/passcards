@@ -1,7 +1,7 @@
 /* mixins */
 .flex {
   display: flex;
-  -webkit-display: flex;
+  display: -webkit-flex;
 }
 .flex-row {
   flex-direction: row;
@@ -58,7 +58,7 @@ body {
 }
 .unlockPaneInputs {
   display: flex;
-  -webkit-display: flex;
+  display: -webkit-flex;
 }
 .unlockLabel {
   margin-top: 5px;
@@ -71,7 +71,7 @@ body {
 }
 .itemListView {
   display: flex;
-  -webkit-display: flex;
+  display: -webkit-flex;
   flex-direction: column;
   -webkit-flex-direction: column;
   height: 100%;
@@ -79,24 +79,15 @@ body {
 .toolbar {
   padding-top: 7px;
   padding-bottom: 7px;
-  padding-left: 7px;
-  padding-right: 7px;
   border-bottom: 1px solid #bbbbbb;
   height: 30px;
   background-color: #ededed;
-  display: flex;
-  -webkit-display: flex;
-  flex-direction: column;
-  -webkit-flex-direction: column;
-}
-.toolbarLink {
-  color: #6666dd;
 }
 .searchField {
   width: 100%;
   position: fixed;
   display: flex;
-  -webkit-display: flex;
+  display: -webkit-flex;
   flex-direction: row;
   -webkit-flex-direction: row;
   align-items: center;
@@ -117,7 +108,7 @@ body {
 }
 .itemOverview {
   display: flex;
-  -webkit-display: flex;
+  display: -webkit-flex;
   flex-direction: row;
   -webkit-flex-direction: row;
   margin-top: 5px;
@@ -175,7 +166,7 @@ body {
 }
 .detailsHeader {
   display: flex;
-  -webkit-display: flex;
+  display: -webkit-flex;
   flex-direction: row;
   -webkit-flex-direction: row;
   border-bottom: 1px solid #dddddd;
@@ -192,7 +183,7 @@ body {
 }
 .detailsField {
   display: flex;
-  -webkit-display: flex;
+  display: -webkit-flex;
   flex-direction: row;
   -webkit-flex-direction: row;
 }
