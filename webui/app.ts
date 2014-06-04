@@ -169,7 +169,8 @@ class UnlockPane extends reactts.ReactComponentBase<UnlockPaneProps, UnlockPaneS
 						className: 'masterPassField',
 						type: 'password',
 						placeholder: 'Master Password...',
-						ref: 'masterPassField'
+						ref: 'masterPassField',
+						autoFocus: true
 					}),
 					react.DOM.input({type: 'submit', value: 'Unlock', ref: 'unlockBtn'})
 				),
