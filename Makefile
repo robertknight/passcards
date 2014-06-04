@@ -89,3 +89,6 @@ publish-app: webui-build
 	cp webui/style/*.css $(PUBLISH_TMP_DIR)/app/style/
 	cd $(PUBLISH_TMP_DIR) && git add . && git commit -m "Update build to '$(GIT_HEAD)'"
 	cd $(PUBLISH_TMP_DIR) && git push
+
+publish-app-s3: webui-build
+	 s3cmd --acl-public -c $(S3_CONFIG_FILE) sync webui/ s3://$(S3_PATH)
