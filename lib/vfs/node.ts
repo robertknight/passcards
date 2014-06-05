@@ -22,7 +22,7 @@ export class FileVFS implements vfs.VFS {
 			}
 			var fileInfo = new vfs.FileInfo;
 			fileInfo.name = Path.basename(path);
-			fileInfo.path = this.absPath(path);
+			fileInfo.path = path;
 			fileInfo.isDir = info.isDirectory();
 			result.resolve(fileInfo);
 		});
@@ -85,7 +85,7 @@ export class FileVFS implements vfs.VFS {
 
 			var statOps : Q.Promise<vfs.FileInfo>[] = [];
 			files.forEach((name) => {
-				var filePath : string = Path.join(absPath, name);
+				var filePath : string = Path.join(path, name);
 				statOps.push(this.stat(filePath));
 			});
 			Q.all(statOps).then((fileInfoList) => {
