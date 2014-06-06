@@ -1,5 +1,12 @@
+/// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
+/// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
+
+import Q = require('q');
+
 import event_stream = require('../lib/base/event_stream');
 import rpc = require('../lib/net/rpc');
+import site_info = require('../lib/siteinfo/site_info');
+import site_info_service = require('../lib/siteinfo/service');
 
 export enum FieldType {
 	Text,
@@ -21,6 +28,26 @@ export interface InputField {
 export interface AutoFillEntry {
 	key: any;
 	value: string;
+}
+
+class ExtensionUrlFetcher {
+	private rpc: rpc.RpcHandler;
+
+	constructor(rpc: rpc.RpcHandler) {
+		this.rpc = rpc;
+	}
+
+	fetch(url: string) : Q.Promise<site_info_service.UrlResponse> {
+		var result = Q.defer<site_info_service.UrlResponse>();
+		this.rpc.call('fetch-url', [url], (err: any, response: site_info_service.UrlResponse) => {
+			if (err) {
+				result.reject(err);
+			} else {
+				result.resolve(response);
+			}
+		});
+		return result.promise;
+	}
 }
 
 /** Interface for interacting with forms in the current web page
@@ -53,6 +80,11 @@ export interface PageAccess {
 
 	/** URL of the acitve page or tab. */
 	currentUrl: string;
+
+	/** Interface to retrieve info about URLs associated
+	  * with items.
+	  */
+	siteInfoProvider() : site_info.SiteInfoProvider;
 }
 
 /** Interface exposed by priviledged browser extension code for triggering input field
@@ -70,7 +102,7 @@ export interface ExtensionConnector {
 /** A stub extension connector with no-op findForms()
   * and autofill() methods.
   */
-export class FakeExtensionConnector {
+export class FakeExtensionConnector implements ExtensionConnector {
 	currentUrl: string;
 	oauthRedirectUrl: string;
 	syncService: string;
@@ -78,14 +110,6 @@ export class FakeExtensionConnector {
 	constructor() {
 		this.currentUrl = '';
 		this.syncService = 'dropbox';
-	}
-
-	findForms() : void {
-		/* no-op */
-	}
-
-	autofill(fields: AutoFillEntry[]) : void {
-		/* no-op */
 	}
 }
 
@@ -97,6 +121,7 @@ export class FakeExtensionConnector {
 export class ExtensionPageAccess implements PageAccess {
 	private rpc: rpc.RpcHandler;
 	private connector: ExtensionConnector;
+	private siteInfoService: site_info_service.SiteInfoService;
 
 	showEvents: event_stream.EventStream<void>;
 	pageChanged: event_stream.EventStream<string>;
@@ -108,6 +133,7 @@ export class ExtensionPageAccess implements PageAccess {
 		this.showEvents = new event_stream.EventStream<void>();
 		this.rpc = new rpc.RpcHandler(new rpc.WindowMessagePort(window, '*', 'extension-app', 'extension-core'));
 		this.currentUrl = extension.currentUrl;
+		this.siteInfoService = new site_info_service.SiteInfoService(new ExtensionUrlFetcher(this.rpc));
 
 		this.rpc.on<void>('pagechanged', (url: string) => {
 			this.currentUrl = url;
@@ -139,6 +165,10 @@ export class ExtensionPageAccess implements PageAccess {
 				return;
 			}
 		});
+	}
+
+	siteInfoProvider() : site_info.SiteInfoProvider {
+		return this.siteInfoService;
 	}
 };
 

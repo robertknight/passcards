@@ -1,3 +1,5 @@
+/// <reference path="firefox-content-script.d.ts" />
+
 // Typings for the Firefox add-on SDK.
 //
 // This is not a complete set of typings. It only covers the functionality
@@ -6,21 +8,6 @@
 // See https://addons.mozilla.org/developers/docs/sdk/latest/dev-guide
 
 declare function require(module: string) : any;
-
-// interfaces available to content scripts
-interface CreateOptions {
-	defineAs: string;
-}
-
-interface ExportFuncOptions {
-	defineAs: string;
-}
-
-declare function createObjectIn<T>(object: Object, options: CreateOptions) : T;
-declare function cloneInto<T>(object: T, target: Window) : T;
-declare function exportFunction<F extends Function>(func: F, target: Object, options?: ExportFuncOptions) : F;
-
-declare var unsafeWindow: Window;
 
 // interfaces available for use in the main add-on script
 interface PageWorker {
@@ -43,6 +30,19 @@ declare module 'sdk/hotkeys' {
 	}
 
 	export var Hotkey: Hotkey;
+}
+
+declare module 'sdk/net/xhr' {
+	// copied from TypeScript's lib.d.ts
+	export var XMLHttpRequest: {
+		prototype: XMLHttpRequest;
+		new (): XMLHttpRequest;
+		LOADING: number;
+		DONE: number;
+		UNSENT: number;
+		OPENED: number;
+		HEADERS_RECEIVED: number;
+	}
 }
 
 declare module 'sdk/panel' {
@@ -93,12 +93,6 @@ interface ButtonOptions {
 
 interface WorkerOptions {
 	contentScriptFile: string;
-}
-
-interface ContentWorker {
-	on(event: string, callback: () => void): void;
-	port: Port;
-	options: any;
 }
 
 declare module 'sdk/self' {

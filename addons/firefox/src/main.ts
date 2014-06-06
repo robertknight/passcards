@@ -6,6 +6,7 @@ import panel = require('sdk/panel');
 import preferences_service = require('sdk/preferences/service');
 import self_ = require('sdk/self');
 import tabs = require('sdk/tabs');
+import xhr = require('sdk/net/xhr');
 
 import rpc = require('./rpc');
 
@@ -96,6 +97,34 @@ function main() {
 			panelRpc.on<void>('ready', () => {
 				notifyPageChanged(tabs.activeTab);
 				panelRpc.call('show', []);
+			});
+			
+			panelRpc.onAsync('fetch-url', (done: (err: any, result: any) => void, url: string) => {
+				// copied from collectionutil.ts
+				function stringFromBuffer(buf: any) : string {
+					var str = '';
+					for (var i=0; i < buf.length; i++) {
+						str += String.fromCharCode(buf[i]);
+					}
+					return str;
+				}
+
+				try {
+					var request = new xhr.XMLHttpRequest();
+					request.open('GET', url, true /* async */);
+					request.responseType = 'arraybuffer';
+					request.onloadend = (e) => {
+						var result = {
+							status: request.status,
+							body: stringFromBuffer(new Uint8Array(request.response))
+						};
+						done(null, result);
+					};
+					request.send();
+				} catch (err) {
+					console.log('sending XHR failed', err.toString());
+					done(err, null);
+				}
 			});
 		}
 

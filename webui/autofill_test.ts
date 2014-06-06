@@ -1,9 +1,10 @@
 import autofill = require('./autofill');
 import event_stream = require('../lib/base/event_stream');
-import itemBuilder = require('../lib/item_builder');
+import item_builder = require('../lib/item_builder');
 import onepass = require('../lib/onepass');
-import testLib = require('../lib/test');
 import pageAccess = require('./page_access');
+import site_info = require('../lib/siteinfo/site_info');
+import testLib = require('../lib/test');
 
 class FakePageAccess implements pageAccess.PageAccess {
 	formList: pageAccess.InputField[];
@@ -34,10 +35,14 @@ class FakePageAccess implements pageAccess.PageAccess {
 	autofill(fields: pageAccess.AutoFillEntry[]) {
 		this.autofillEntries = fields;
 	}
+
+	siteInfoProvider() : site_info.SiteInfoProvider {
+		return null;
+	}
 }
 
 function itemWithUsernameAndPassword(user: string, password: string) : onepass.Item {
-	return new itemBuilder.Builder(onepass.ItemTypes.LOGIN)
+	return new item_builder.Builder(onepass.ItemTypes.LOGIN)
 	  .setTitle('Test Item')
 	  .addLogin(user)
 	  .addPassword(password)

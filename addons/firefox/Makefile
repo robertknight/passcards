@@ -30,6 +30,9 @@ data/icon-32.png: ../../icons/icon-32.png
 data/icon-64.png: ../../icons/icon-64.png
 	cp ../../icons/icon-64.png data/
 
+data/loading.png: ../../icons/loading.png
+	cp ../../icons/loading.png data/
+
 data/index.html: ../../webui/index.html
 	cp ../../webui/index.html data/
 

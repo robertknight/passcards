@@ -1,4 +1,4 @@
-/// <reference path="../typings/firefox-addon-sdk.d.ts" />
+/// <reference path="../typings/firefox-content-script.d.ts" />
 
 // the 'content script' for the extension's main panel.
 //
@@ -6,9 +6,11 @@
 // the browser integration interface (an implementation of page_access.PageAccess)
 // for use by the app when it loads.
 
+import collectionutil = require('../../../lib/base/collectionutil');
 import stringutil = require('../../../lib/base/stringutil');
 import page_access = require('../../../webui/page_access');
 import rpc = require('../../../lib/net/rpc');
+import site_info_service = require('../../../lib/siteinfo/service');
 
 var selfWorker: ContentWorker = <any>self;
 
@@ -37,6 +39,12 @@ appRpc.onAsync('find-fields', (done) => {
 appRpc.onAsync('autofill', (done: (err: any, count: number) => void, fields: page_access.AutoFillEntry[]) => {
 	addonRpc.call('autofill', [fields], (err: any, count: number) => {
 		done(err, count);
+	});
+});
+
+appRpc.onAsync('fetch-url', (done: (err:any, info: site_info_service.UrlResponse) => void, url: string) => {
+	addonRpc.call('fetch-url', [url], (err: any, info: site_info_service.UrlResponse) => {
+		done(err, info);
 	});
 });
 
