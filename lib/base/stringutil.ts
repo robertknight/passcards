@@ -10,6 +10,10 @@ export function indexOfIgnoreCase(haystack: string, needle: string) : number {
 	return haystack.toLowerCase().indexOf(needle.toLowerCase());
 }
 
+export function equalIgnoreCase(a: string, b: string) : boolean {
+	return indexOfIgnoreCase(a, b) == 0 && a.length == b.length;
+}
+
 /** Returns a space-separated list of all the keys in @p obj which
   * have truthy values assigned to them.
   */

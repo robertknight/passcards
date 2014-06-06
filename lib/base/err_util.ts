@@ -4,6 +4,7 @@ interface ES6Function extends Function {
 	name: string;
 }
 
+/** Base class for custom errors */
 export class BaseError implements Error {
 	private err: Error;
 
@@ -14,6 +15,14 @@ export class BaseError implements Error {
 		this.err = new Error(message);
 		this.name = (<ES6Function>this.constructor).name;
 		this.message = message;
+	}
+}
+
+/** Base class for errors when querying HTTP-based APIs
+  */
+export class ApiError extends BaseError {
+	constructor(public url: string, public status: number, public message: string) {
+		super(message);
 	}
 }
 

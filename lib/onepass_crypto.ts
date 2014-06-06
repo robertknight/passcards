@@ -8,6 +8,7 @@ import Q = require('q');
 import underscore = require('underscore');
 import uuid = require('node-uuid');
 
+import collectionutil = require('./base/collectionutil');
 import webworker_pool = require('./webworker_pool');
 import crypto_worker = require('./crypto_worker');
 import pbkdf2Lib = require('./crypto/pbkdf2');
@@ -76,7 +77,7 @@ export function randomBytes(length: number) : string {
 		var theWindow = <Window><any>window;
 		if (theWindow.crypto && theWindow.crypto.getRandomValues) {
 			var buffer = new Uint8Array(length);
-			return pbkdf2Lib.stringFromBuffer(theWindow.crypto.getRandomValues(buffer));
+			return collectionutil.stringFromBuffer(theWindow.crypto.getRandomValues(buffer));
 		}
 	}
 
@@ -262,10 +263,10 @@ export class CryptoJsCrypto implements CryptoImpl {
 		// Hence we use a custom implementation of PBKDF2 based on Rusha
 
 		var pbkdf2Impl = new pbkdf2Lib.PBKDF2();
-		var passBuf = pbkdf2Lib.bufferFromString(pass);
-		var saltBuf = pbkdf2Lib.bufferFromString(salt);
+		var passBuf = collectionutil.bufferFromString(pass);
+		var saltBuf = collectionutil.bufferFromString(salt);
 		var key = pbkdf2Impl.key(passBuf, saltBuf, iterCount, keyLen);
-		return pbkdf2Lib.stringFromBuffer(key);
+		return collectionutil.stringFromBuffer(key);
 	}
 	
 	/** Derive a key from a password using PBKDF2. If initWorkers() has been called,
@@ -311,7 +312,7 @@ export class CryptoJsCrypto implements CryptoImpl {
 			var theWindow = <Window><any>window;
 			if (theWindow.crypto && theWindow.crypto.getRandomValues) {
 				var buffer = new Uint8Array(length);
-				return pbkdf2Lib.stringFromBuffer(theWindow.crypto.getRandomValues(buffer));
+				return collectionutil.stringFromBuffer(theWindow.crypto.getRandomValues(buffer));
 			}
 		}
 

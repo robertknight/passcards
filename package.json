@@ -29,9 +29,12 @@
     "underscore": ">=1.6.0",
     "URIjs": ">=1.13",
     "urlrouter": ">=0.5.4",
-    "fastclick": "~1.0.2"
+    "fastclick": "~1.0.2",
+    "request": "~2.39.0"
   },
-  "bundledDependencies" : ["dropbox"],
+  "bundledDependencies": [
+    "dropbox"
+  ],
   "license": "BSD-3-Clause",
   "main": "build/cli.js",
   "scripts": {

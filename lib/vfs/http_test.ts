@@ -2,7 +2,6 @@ import fs = require('fs');
 import os = require('os');
 
 import testLib = require('../test');
-import http_client = require('../http_client');
 import http_vfs = require('./http');
 import nodefs = require('./node');
 
@@ -12,7 +11,7 @@ var fsRoot = <string>(<any>os).tmpdir() + '/http-vfs-test';
 
 var fileVfs = new nodefs.FileVFS(fsRoot);
 var httpVfsServer = new http_vfs.Server(fileVfs);
-var httpVfs = new http_vfs.Client(new http_client.Client('127.0.0.1', PORT));
+var httpVfs = new http_vfs.Client('http://127.0.0.1:' + PORT);
 
 function setup() : Q.Promise<void> {
 	return fileVfs.mkpath('.').then(() => {

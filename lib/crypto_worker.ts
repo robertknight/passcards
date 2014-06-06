@@ -1,6 +1,7 @@
 // crypto_worker implements a Web Worker for handling async
 // decryption tasks off the main browser thread
 
+import collectionutil = require('./base/collectionutil');
 import env = require('./base/env');
 import pbkdf2Lib = require('./crypto/pbkdf2');
 
@@ -33,12 +34,12 @@ export function startWorker(worker: MessagePort) {
 
 	worker.onmessage = (e) => {
 		var req = <Request>e.data;
-		var passBuf = pbkdf2Lib.bufferFromString(req.pass);
-		var saltBuf = pbkdf2Lib.bufferFromString(req.salt);
+		var passBuf = collectionutil.bufferFromString(req.pass);
+		var saltBuf = collectionutil.bufferFromString(req.salt);
 		var derivedKeyBlock = pbkdf2.keyBlock(passBuf, saltBuf, req.iterations, req.blockIndex);
 		var response = {
 			requestId: req.id,
-			keyBlock: pbkdf2Lib.stringFromBuffer(new Uint8Array(derivedKeyBlock))
+			keyBlock: collectionutil.stringFromBuffer(new Uint8Array(derivedKeyBlock))
 		};
 
 		worker.postMessage(response);

@@ -1,86 +1,154 @@
+/// <reference path="../typings/sprintf.d.ts" />
+/// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
+
 import http = require('http');
 import Q = require('q');
+import sprintf = require('sprintf');
+import urlLib = require('url');
 
+import asyncutil = require('./base/asyncutil');
+import err_util = require('./base/err_util');
 import streamutil = require('./base/streamutil');
-import stringutil = require('./base/stringutil');
 
-/** Simple HTTP client with a promise-based API.
-  *
-  * Under Node.js this uses http.Client.
-  *
-  * TODO: Browser implementation that uses either
-  *  XMLHTTPRequest directly or jQuery. Or just use
-  *  browserify's 'http' implementation.
-  *
-  * TODO: Look for an existing library that can be used
-  *  instead.
+export interface Reply {
+	url: string;
+	status: number;
+	body: string;
+	headers: {[index: string] : string};
+}
+
+export class BaseError extends err_util.BaseError {
+	private reply: Reply;
+
+	constructor(message: string, reply: Reply) {
+		super(message);
+		this.reply = reply;
+	}
+
+	status() : number {
+		return this.reply.status;
+	}
+}
+
+export class UnexpectedStatusError extends BaseError {
+	constructor(reply: Reply) {
+		super(sprintf('Unexpected response status %d', reply.status), reply);
+	}
+}
+
+export class RedirectLimitExceeded extends BaseError {
+	constructor(reply: Reply) {
+		super('Redirect limit exceeded', reply);
+	}
+}
+
+/** Utility function which takes a promise for a reply
+  * and returns a promise for the content of the reply if it has
+  * an expected status code or rejects the promise otherwise.
   */
-export class Client {
-	/** Create a new HTTP client which connects to the given
-	  * hostname and port.
-	  *
-	  * If @p scheme is unset, the scheme from the current page is used
-	  * (in a browser context) or 'http' otherwise.
-	  */
-	constructor(public host: string, public port: number, public scheme?: string) {
-	}
-
-	get(path: string) : Q.Promise<string> {
-		return this.request('GET', path, null);
-	}
-	delete(path: string) : Q.Promise<string> {
-		return this.request('DELETE', path, null);
-	}
-	post<T>(path: string, data:T) : Q.Promise<string> {
-		return this.request('POST', path, data);
-	}
-	put<T>(path: string, data:T) : Q.Promise<string> {
-		return this.request('PUT', path, data);
-	}
-
-	request<T>(method: string, path: string, data: T) : Q.Promise<string> {
-		if (!stringutil.startsWith(path, '/')) {
-			path = '/' + path;
+export function expect(reply: Q.Promise<Reply>, status: number) : Q.Promise<string> {
+	return reply.then((reply) => {
+		if (reply.status == status) {
+			return reply.body;
+		} else {
+			throw new UnexpectedStatusError(reply);
 		}
+	});
+}
 
-		var response = Q.defer<string>();
-		var request = http.request({
-			method: method,
-			path: path,
-			host: this.host,
-			port: this.port,
-			scheme: this.scheme,
-			withCredentials: false
-		}, (resp: http.ClientResponse) => {
-			streamutil.readAll(resp)
-			.then((content) => {
-				if (resp.statusCode == 200) {
-					response.resolve(content);
+function isRedirect(reply: Reply) {
+	return reply.status == 301 || reply.status == 302 || reply.status == 307;
+}
+
+export interface RequestOptions {
+	redirectLimit: number;
+}
+
+export function get(url: string, opts: RequestOptions) : Q.Promise<Reply> {
+	var currentUrl = url;
+	var finalReply: Reply;
+	var redirectCount = 0;
+
+	return asyncutil.until(() => {
+		return request('GET', currentUrl).then((reply) => {
+			if (isRedirect(reply)) {
+				if (opts.redirectLimit != null) {
+					++redirectCount;
+					if (redirectCount > opts.redirectLimit) {
+						throw new RedirectLimitExceeded(reply);
+					}
+					currentUrl = reply.headers['Location'];
+					return false;
 				} else {
-					response.reject({status: resp.statusCode, body: content});
+					// don't auto-follow redirects
+					return true;
 				}
-			}, (err) => {
-				response.reject(err);
-			}).done();
-		});
-		if (data) {
-			switch (typeof data) {
-				case 'string':
-					request.write(data);
-					break;
-				case 'object':
-				case 'array':
-					request.write(JSON.stringify(data));
-					break;
-				case undefined:
-					break;
-				default:
-					throw 'Unable to serialize data type ' + typeof data;
+			} else {
+				finalReply = reply;
+				return true;
 			}
-		}
-		request.end();
+		});
+	}).then(() => {
+		return finalReply;
+	});
+}
 
-		return response.promise;
+interface RequestOpts {
+};
+
+export function request<T>(method: string, url: string, data?: T) : Q.Promise<Reply> {
+	var urlParts = urlLib.parse(url);
+
+	var requestOpts = {
+		method: method,
+		path: urlParts.path,
+		host: urlParts.hostname,
+		scheme: urlParts.protocol,
+		port: urlParts.port,
+		withCredentials: false
+	};
+
+	// strip trailing colon from protocol.
+	// Node's http module treats the protocol the same with or without the trailing colon
+	// but http-browserify simply appends '://' to the protocol when forming the URL.
+	//
+	// Would be fixed by https://github.com/substack/http-browserify/pull/42
+	requestOpts.scheme = requestOpts.scheme.replace(/:$/,'');
+
+	var response = Q.defer<Reply>();
+	var request = http.request(requestOpts, (resp: http.ClientResponse) => {
+		streamutil.readAll(resp)
+		.then((content) => {
+			response.resolve({
+				url: url,
+				status: resp.statusCode,
+				body: content,
+				headers: resp.headers
+			});
+		}, (err) => {
+			response.reject(err);
+		}).done();
+	});
+	if (data) {
+		switch (typeof data) {
+			case 'string':
+				request.write(data);
+				break;
+			case 'object':
+			case 'array':
+				request.write(JSON.stringify(data));
+				break;
+			case undefined:
+				break;
+			default:
+				throw 'Unable to serialize data type ' + typeof data;
+		}
 	}
+	request.on('error', (err: any) => {
+		response.reject(err);
+	});
+	request.end();
+
+	return response.promise;
 }
 

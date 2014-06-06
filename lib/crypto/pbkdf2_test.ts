@@ -1,5 +1,6 @@
 /// <reference path="../../typings/DefinitelyTyped/node/node.d.ts" />
 
+import collectionutil = require('../base/collectionutil');
 import testLib = require('../test');
 import pbkdf2Lib = require('./pbkdf2');
 
@@ -71,10 +72,10 @@ var PBKDF2_TEST_VECTORS = [
 testLib.addTest('SHA-1', (assert) => {
 	var hash = new pbkdf2Lib.SHA1();
 	SHA1_TEST_VECTORS.forEach(function(tst) {
-		var srcBuf = pbkdf2Lib.bufferFromString(tst.msg);
+		var srcBuf = collectionutil.bufferFromString(tst.msg);
 		var digest = new Int32Array(5);
 		hash.hash(srcBuf, digest);
-		var actual = pbkdf2Lib.hexlify(digest);
+		var actual = collectionutil.hexlify(digest);
 		assert.equal(actual, tst.digest, 'check SHA-1 digests match');
 	});
 });
@@ -82,12 +83,12 @@ testLib.addTest('SHA-1', (assert) => {
 testLib.addTest('HMAC-SHA1', (assert) => {
 	var sha1 = new pbkdf2Lib.SHA1();
 	HMAC_TEST_VECTORS.forEach(function(tst) {
-		var keyBuf = pbkdf2Lib.bufferFromString(tst.key);
-		var msgBuf = pbkdf2Lib.bufferFromString(tst.message);
+		var keyBuf = collectionutil.bufferFromString(tst.key);
+		var msgBuf = collectionutil.bufferFromString(tst.message);
 		var digest = new Int32Array(5);
 		var hmac = new pbkdf2Lib.HMAC(sha1, keyBuf);
 		hmac.mac(msgBuf, digest);
-		var actual = pbkdf2Lib.hexlify(digest);
+		var actual = collectionutil.hexlify(digest);
 		assert.equal(actual, tst.hmac, 'check HMACs match');
 	});
 });
@@ -95,9 +96,9 @@ testLib.addTest('HMAC-SHA1', (assert) => {
 testLib.addTest('PBKDF2-HMAC-SHA1', (assert) => {
 	var pbkdf2 = new pbkdf2Lib.PBKDF2();
 	PBKDF2_TEST_VECTORS.forEach(function(tst) {
-		var passBuf = pbkdf2Lib.bufferFromString(tst.pass);
-		var saltBuf = pbkdf2Lib.bufferFromString(tst.salt);
-		var actualKey = pbkdf2Lib.hexlify(pbkdf2.key(passBuf, saltBuf, tst.iterations, tst.dkLen));
+		var passBuf = collectionutil.bufferFromString(tst.pass);
+		var saltBuf = collectionutil.bufferFromString(tst.salt);
+		var actualKey = collectionutil.hexlify(pbkdf2.key(passBuf, saltBuf, tst.iterations, tst.dkLen));
 		assert.equal(actualKey, tst.key, 'check pbkdf2Lib keys match');
 	});
 });
@@ -139,10 +140,19 @@ testLib.addAsyncTest('pbkdf2Lib Parallel', (assert) => {
 			// pbkdf2 lib exported by the standalone pbkdf2 bundle
 			modPath = 'pbkdf2';
 		}
+
+		function bufferFromString(str: string) : Uint8Array {
+			var destBuf = new Uint8Array(str.length);
+			for (var i=0; i < str.length; i++) {
+				destBuf[i] = str.charCodeAt(i);
+			}
+			return destBuf;
+		}
+
 		var pbkdf2Lib = require(modPath);
 		var pbkdf2 = new pbkdf2Lib.PBKDF2();
-		var passBuf = pbkdf2Lib.bufferFromString(blockParams.params.pass);
-		var saltBuf = pbkdf2Lib.bufferFromString(blockParams.params.salt);
+		var passBuf = bufferFromString(blockParams.params.pass);
+		var saltBuf = bufferFromString(blockParams.params.salt);
 		var keyBlock = pbkdf2.keyBlock(passBuf,
 		  saltBuf,
 		  blockParams.params.iterations,
@@ -172,7 +182,7 @@ testLib.addAsyncTest('pbkdf2Lib Parallel', (assert) => {
 				++resultIndex;
 			}
 		});
-		assert.equal(pbkdf2Lib.hexlify(result), expectedKey, 'Check pbkdf2Lib result matches');
+		assert.equal(collectionutil.hexlify(result), expectedKey, 'Check pbkdf2Lib result matches');
 		testLib.continueTests();
 	});
 });

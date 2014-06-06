@@ -8,11 +8,11 @@ import key_agent = require('../lib/key_agent');
 
 export class HttpKeyAgent implements key_agent.KeyAgent {
 	private agentPID : Q.Promise<number>;
-	private client : http_client.Client
+	private agentUrl: string;
 
 	constructor() {
 		this.agentPID = agent_server.startAgent();
-		this.client = new http_client.Client('localhost', agent_server.AGENT_PORT);
+		this.agentUrl = 'http://localhost:' + agent_server.AGENT_PORT;
 	}
 
 	addKey(id: string, key: string) : Q.Promise<void> {
@@ -68,7 +68,8 @@ export class HttpKeyAgent implements key_agent.KeyAgent {
 
 	private sendRequest<T>(method: string, path: string, data: T) : Q.Promise<string> {
 		return this.agentPID.then(() => {
-			return this.client.request(method, path, data);
+			var url = this.agentUrl + path;
+			return http_client.expect(http_client.request(method, url, data), 200);
 		});
 	}
 }

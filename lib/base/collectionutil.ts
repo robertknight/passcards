@@ -3,6 +3,10 @@ interface BiDiMapEntry<T1,T2> {
 	key2: T2;
 }
 
+export interface OMap<T> {
+	[index: string] : T
+}
+
 /** A bi-directional map between two types of key.
   *
   * Currently only suitable for small maps.
@@ -40,5 +44,117 @@ export class BiDiMap<T1,T2> {
 
 export function prettyJSON(object: any) : string {
 	return JSON.stringify(object, null /* replacer */, 2);
+}
+
+/** An interface for buffers which is compatible
+  * with ordinary arrays, node Buffers, Uint8Array etc.
+  */
+export interface AbstractBuffer {
+	[index: number]: number;
+	length: number;
+}
+
+/** Copy the contents of @p src to @p dest. */
+export function copyBuffer(dest: AbstractBuffer, src: AbstractBuffer) {
+	var sharedLength = Math.min(src.length, dest.length);
+	for (var i=0; i < sharedLength; i++) {
+		dest[i] = src[i];
+	}
+}
+
+/** Produce a hex representation of the data in a typed array */
+export function hexlify(buf: ArrayBufferView, len?: number) : string {
+	var hex = '';
+	var byteBuf = new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength);
+	len = len || byteBuf.length;
+	for (var i=0; i < len; i++) {
+		if (byteBuf[i] < 16) {
+			hex += '0';
+		}
+		hex += byteBuf[i].toString(16);
+	}
+	return hex;
+};
+
+/** Convert a string containing binary data into a typed array */
+export function bufferFromString(str: string) : Uint8Array {
+	var destBuf = new Uint8Array(str.length);
+	for (var i=0; i < str.length; i++) {
+		destBuf[i] = str.charCodeAt(i);
+	}
+	return destBuf;
+}
+
+/** Convert a buffer into a binary string. */
+export function stringFromBuffer(buf: AbstractBuffer) : string {
+	var str = '';
+	for (var i=0; i < buf.length; i++) {
+		str += String.fromCharCode(buf[i]);
+	}
+	return str;
+}
+
+/** Convert a Node buffer or typed array into an ordinary
+  * JS array.
+  */
+export function bufferToArray(buffer: AbstractBuffer) : number[] {
+	var result: number[] = [];
+	for (var i=0; i < buffer.length; i++) {
+		result.push(buffer[i]);
+	}
+	return result;
+}
+
+/** Compares the first @p length indexes of two buffers and returns 0 if they are equal,
+  * a value < 0 if the first mismatching value is less in @p first or a value > 0
+  * otherwise.
+  */
+export function compare(first: AbstractBuffer, second: AbstractBuffer, length: number) : number {
+	var sharedLength = Math.min(first.length, second.length);
+	for (var i=0; i < sharedLength; i++) {
+		var diff = first[i] - second[i];
+		if (diff != 0) {
+			return diff;
+		}
+	}
+	if (sharedLength > first.length) {
+		return -1;
+	} else if (sharedLength > second.length) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+/** A wrapper around a DataView which uses little-endian ordering
+  * for the (get|set)(U)int(16|32)() functions.
+  */
+export class LittleEndianDataView {
+	constructor(private view: DataView) {
+	}
+
+	getUint8(offset: number) {
+		return this.view.getUint8(offset);
+	}
+
+	getUint16(offset: number) {
+		return this.view.getUint16(offset, true);
+	}
+
+	getUint32(offset: number) {
+		return this.view.getUint32(offset, true);
+	}
+
+	getInt32(offset: number) {
+		return this.view.getInt32(offset, true);
+	}
+
+	setInt32(offset: number, data: number) {
+		this.view.setInt32(offset, data, true);
+	}
+
+	setUint32(offset: number, data: number) {
+		this.view.setUint32(offset, data, true);
+	}
 }
 

@@ -32,7 +32,7 @@ import stringutil = require('../base/stringutil');
  * DELETE /path - Delete file
  */
 export class Client implements vfs.VFS {
-	constructor(public client: http_client.Client) {
+	constructor(public url: string) {
 	}
 
 	login() : Q.Promise<string> {
@@ -88,14 +88,16 @@ export class Client implements vfs.VFS {
 		if (stringutil.endsWith(path, '/')) {
 			return Q.reject(sprintf('Cannot read file. %s is a directory', path));
 		}
-		return this.client.get(path);
+		return http_client.expect(this.request('GET', path), 200).then((content) => {
+			return content;
+		});
 	}
 
 	write(path: string, content: string) : Q.Promise<void> {
 		if (stringutil.endsWith(path, '/')) {
 			return Q.reject(sprintf('Cannot write file. %s is a directory', path));
 		}
-		return this.client.put(path, content).then(() => {
+		return http_client.expect(this.request('PUT', path, content), 200).then(() => {
 			return <void>null;
 		});
 	}
@@ -105,13 +107,13 @@ export class Client implements vfs.VFS {
 			path += '/';
 		}
 
-		return this.client.get(path).then((content) => {
+		return http_client.expect(this.request('GET', path), 200).then((content) => {
 			return JSON.parse(content);
 		});
 	}
 
 	rm(path: string) : Q.Promise<void> {
-		return this.client.delete(path).then(() => {
+		return http_client.expect(this.request('DELETE', path), 200).then(() => {
 			return <void>null;
 		});
 	}
@@ -120,9 +122,18 @@ export class Client implements vfs.VFS {
 		if (!stringutil.endsWith(path, '/')) {
 			path += '/';
 		}
-		return this.client.put(path, null).then(() => {
+		return http_client.expect(this.request('PUT', path, null), 200).then(() => {
 			return <void>null;
 		});
+	}
+
+	private request(method: string, path: string, data?: any) : Q.Promise<http_client.Reply> {
+		var reqUrl = this.url;
+		if (!stringutil.startsWith(path, '/')) {
+			reqUrl += '/';
+		}
+		reqUrl += path;
+		return http_client.request(method, reqUrl, data);
 	}
 }
 
@@ -133,61 +144,60 @@ export class Server {
 	server: http.Server;
 
 	constructor(public fs: vfs.VFS) {
-		var fail = (res: http.ServerResponse, err: any) => {
-			res.statusCode = 400;
-			res.end(err);
-		};
-		var done = (res: http.ServerResponse, content?: any) => {
-			res.statusCode = 200;
-			res.end(content);
-		};
-
 		var router = (req: http.ServerRequest, res: http.ServerResponse) => {
+			var fail = (err: any) => {
+				res.statusCode = 400;
+				res.end(JSON.stringify(err));
+			};
+			var done = (content?: any) => {
+				res.statusCode = 200;
+				res.end(content);
+			};
 			res.setHeader('Access-Control-Allow-Origin', '*');
 			var path = url.parse(req.url).pathname;
 			if (req.method == 'GET') {
 				this.fs.stat(path).then((fileInfo) => {
 					if (fileInfo.isDir) {
 						this.fs.list(path).then((files) => {
-							done(res, JSON.stringify(files));
+							done(JSON.stringify(files));
 						}).fail((err) => {
-							fail(res, err);
+							fail(err);
 						});
 					} else {
 						this.fs.read(path).then((content) => {
-							done(res, content);
+							done(content);
 						}).fail((err) => {
-							fail(res, err);
+							fail(err);
 						});
 					}
 				}).fail((err) => {
-					fail(res, err);
+					fail(err);
 				});
 			} else if (req.method == 'PUT') {
 				if (stringutil.endsWith(path, '/')) {
 					this.fs.mkpath(path).then(() => {
-						done(res);
+						done();
 					}).fail((err) => {
-						fail(res, err);
+						fail(err);
 					});
 				} else {
 					streamutil.readAll(req).then((content) => {
 						this.fs.write(path, content).then(() => {
-							done(res);
+							done();
 						}).fail((err) => {
-							fail(res, err);
+							fail(err);
 						});
 					});
 				}
 			} else if (req.method == 'DELETE') {
 				this.fs.rm(path).then(() => {
-					done(res);
+					done();
 				}).fail((err) => {
-					fail(res, err);
+					fail(err);
 				});
 			} else if (req.method == 'OPTIONS') {
 				res.setHeader('Access-Control-Allow-Methods', 'GET, PUT, DELETE');
-				done(res);
+				done();
 			} else {
 				throw 'Unhandled method ' + req.method;
 			}

@@ -16,7 +16,6 @@ import autofill = require('./autofill');
 import dropboxvfs = require('../lib/vfs/dropbox');
 import env = require('../lib/base/env');
 import key_agent = require('../lib/key_agent');
-import http_client = require('../lib/http_client');
 import http_vfs = require('../lib/vfs/http');
 import item_search = require('../lib/item_search');
 import onepass = require('../lib/onepass');
@@ -793,15 +792,14 @@ export class App {
 					disableLocationCleanup: true
 				});
 			} else if (firefoxAddOn.syncService === 'httpfs') {
-				fs = new http_vfs.Client(new http_client.Client('localhost', 3030, 'http'));
+				fs = new http_vfs.Client('http://localhost:3030');
 			}
 		}
 
 		if (!fs) {
 			var opts = <any>url.parse(document.location.href, true /* parse query */).query;
 			if (opts.httpfs) {
-				var hostPort = opts.httpfs.split(':');
-				fs = new http_vfs.Client(new http_client.Client(hostPort[0], parseInt(hostPort[1])));
+				fs = new http_vfs.Client(opts.httpfs);
 			} else {
 				fs = new dropboxvfs.DropboxVFS();
 			}

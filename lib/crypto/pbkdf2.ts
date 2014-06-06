@@ -37,34 +37,7 @@
 /* tslint:disable:no-duplicate-variable */
 /* tslint:disable:no-use-before-declare */
 
-/// <reference path="../../typings/DefinitelyTyped/node/node.d.ts" />
-
-interface Buffer {
-	[index: number] : number;
-	length : number;
-}
-
-function copyBuffer(dest: Buffer, src: Buffer) {
-	for (var i=0; i < dest.length; i++) {
-		dest[i] = src[i];
-	}
-}
-
-export function bufferFromString(str: string) : Uint8Array {
-	var destBuf = new Uint8Array(str.length);
-	for (var i=0; i < str.length; i++) {
-		destBuf[i] = str.charCodeAt(i);
-	}
-	return destBuf;
-}
-
-export function stringFromBuffer(buf: Uint8Array) : string {
-	var str = '';
-	for (var i=0; i < buf.length; i++) {
-		str += String.fromCharCode(buf[i]);
-	}
-	return str;
-}
+import collectionutil = require('../base/collectionutil');
 
 var bitsToBytes = function(n: number) {
 	return n >> 3;
@@ -80,19 +53,6 @@ var roundUp = function(n: number, denom: number) {
 
 var padLength = function(len: number) {
 	return bitsToBytes(roundUp(bytesToBits(len) + 1 + 64, 512));
-};
-
-export function hexlify(buf: ArrayBufferView, len?: number) : string {
-	var hex = '';
-	var byteBuf = new Uint8Array(buf.buffer);
-	len = len || byteBuf.length;
-	for (var i=0; i < len; i++) {
-		if (byteBuf[i] < 16) {
-			hex += '0';
-		}
-		hex += byteBuf[i].toString(16);
-	}
-	return hex;
 };
 
 // asm.js-style implementation of SHA-1, taken from
@@ -399,7 +359,7 @@ export class PBKDF2 {
 		var hmac = this.createMAC(password);
 		var paddedSalt = new Uint8Array(salt.length + 4);
 		var paddedSaltView = new DataView(paddedSalt.buffer);
-		copyBuffer(paddedSalt, salt);
+		collectionutil.copyBuffer(paddedSalt, salt);
 		paddedSaltView.setInt32(salt.length, blockIndex+1, false /* big endian */);
 
 		var chunk = new Int32Array(hmac.digestLen() / 4);
@@ -408,7 +368,7 @@ export class PBKDF2 {
 		hmac.mac(paddedSalt, chunk);
 
 		var currentBlock = new Int32Array(chunk.length);
-		copyBuffer(currentBlock, chunk);
+		collectionutil.copyBuffer(currentBlock, chunk);
 
 		for (var i=1; i < iterations; i++) {
 			hmac.mac(chunk8, chunk);
