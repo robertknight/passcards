@@ -362,4 +362,12 @@ testLib.addAsyncTest('remove items', (assert) => {
 	}).done();
 });
 
+testLib.addAsyncTest('generate password', (assert) => {
+	runCLI('gen-password').then((status) => {
+		assert.equal(status, 0);
+		assert.ok(fakeTerm.didPrint(/[A-Za-z0-9]{3}-[A-Za-z0-9]{3}-[A-Za-z0-9]{4}/));
+		testLib.continueTests();
+	}).done();
+});
+
 testLib.runTests();

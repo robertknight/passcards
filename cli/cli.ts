@@ -111,6 +111,8 @@ export class CLI {
 		var removeCommand = subcommands.addParser('remove');
 		removeCommand.addArgument(['pattern'], {action:'store'});
 
+		subcommands.addParser('gen-password');
+
 		return parser;
 	}
 
@@ -415,6 +417,11 @@ export class CLI {
 		return result.promise;
 	}
 
+	private genPasswordCommand() : Q.Promise<number> {
+		this.printf(crypto.generatePassword(12));
+		return Q.resolve(0);
+	}
+
 	private listCommand(vault: onepass.Vault, pattern: string) : Q.Promise<number> {
 		var result = Q.defer<number>();
 		vault.listItems().then((items) => {
@@ -547,23 +554,27 @@ export class CLI {
 
 		handlers['add'] = (args, result) => {
 			asyncutil.resolveWith(exitStatus, this.addItemCommand(currentVault, args.type, args.title));
-		}
+		};
 
 		handlers['trash'] = (args, result) => {
 			asyncutil.resolveWith(exitStatus, this.trashItemCommand(currentVault, args.item, true));
-		}
+		};
 
 		handlers['restore'] = (args, result) => {
 			asyncutil.resolveWith(exitStatus, this.trashItemCommand(currentVault, args.item, false));
-		}
+		};
 
 		handlers['set-password'] = (args, result) => {
 			asyncutil.resolveWith(exitStatus, this.setPasswordCommand(currentVault, args.iterations));
-		}
+		};
 
 		handlers['remove'] = (args, result) => {
 			asyncutil.resolveWith(exitStatus, this.removeCommand(currentVault, args.pattern));
-		}
+		};
+
+		handlers['gen-password'] = (args, result) => {
+			asyncutil.resolveWith(exitStatus, this.genPasswordCommand());
+		};
 
 		// process commands
 		var exitStatus = Q.defer<number>();
