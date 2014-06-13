@@ -1,3 +1,5 @@
+/// <reference path="../../typings/sprintf.d.ts" />
+
 // http_vfs provides a client and server for a simple file-system
 // interface exposed via a RESTish API.
 //
