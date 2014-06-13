@@ -31,8 +31,10 @@ export interface AddKeyRequest {
 	key : string;
 }
 
-export var AGENT_LOG = '/tmp/1pass-agent.log';
-export var AGENT_PID_FILE = '/tmp/1pass-agent.pid';
+export var AGENT_PORT = 4789;
+
+var AGENT_LOG = '/tmp/1pass-agent.log';
+var AGENT_PID_FILE = '/tmp/1pass-agent.pid';
 
 var KEY_TIMEOUT = 2 * 60 * 1000;
 
@@ -166,7 +168,7 @@ class Server {
 
 function isCurrentVersionRunning() : Q.Promise<boolean> {
 	var result = Q.defer<boolean>();
-	var req = http.get({host: 'localhost', port: 3000, path: '/version'}, (resp: http.ClientResponse) => {
+	var req = http.get({host: 'localhost', port: AGENT_PORT, path: '/version'}, (resp: http.ClientResponse) => {
 		streamutil.readAll(resp).then((content) => {
 			if (content == currentVersion()) {
 				result.resolve(true);
@@ -255,7 +257,7 @@ export function stopAgent() : Q.Promise<void> {
 
 if (require.main === module) {
 	var server = new Server();
-	server.listen(3000).then(() => {
+	server.listen(AGENT_PORT).then(() => {
 		fs.writeFileSync(AGENT_PID_FILE, process.pid);
 	});
 }

@@ -12,7 +12,7 @@ export class HttpKeyAgent implements onepass.KeyAgent {
 
 	constructor() {
 		this.agentPID = agent_server.startAgent();
-		this.client = new http_client.Client('localhost', 3000);
+		this.client = new http_client.Client('localhost', agent_server.AGENT_PORT);
 	}
 
 	addKey(id: string, key: string) : Q.Promise<void> {
