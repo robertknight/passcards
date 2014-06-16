@@ -109,13 +109,12 @@ class FakeKeyAgent extends onepass.SimpleKeyAgent {
 }
 
 var TEST_VAULT_PATH = 'lib/test-data/test.agilekeychain';
-var fakeTerm = new FakeIO();
-fakeTerm.password = 'logMEin';
 
-var keyAgent = new FakeKeyAgent();
-var fakeClipboard = new clipboard.FakeClipboard();
+var fakeTerm : FakeIO;
+var keyAgent : FakeKeyAgent;
+var fakeClipboard : clipboard.FakeClipboard;
+var app : cli.CLI;
 
-var app = new cli.CLI(fakeTerm, keyAgent, fakeClipboard);
 var stdArgs = ['--vault', TEST_VAULT_PATH];
 
 function runCLI(...args: any[]) : Q.Promise<number> {
@@ -138,10 +137,35 @@ function cloneTestVault() : Q.Promise<string> {
 	});
 }
 
+testLib.beforeTest(() => {
+	fakeClipboard = new clipboard.FakeClipboard();
+	fakeTerm = new FakeIO();
+	fakeTerm.password = 'logMEin';
+	keyAgent = new FakeKeyAgent();
+
+	app = new cli.CLI(fakeTerm, keyAgent, fakeClipboard);
+});
+
 testLib.addAsyncTest('list vault', (assert) => {
 	runCLI('list')
 	.then((status) => {
 		assert.equal(status, 0);
+		assert.ok(fakeTerm.didPrint(/Facebook.*Login/));
+		testLib.continueTests();
+	})
+	.done();
+});
+
+testLib.addAsyncTest('list vault with pattern', (assert) => {
+	runCLI('list', '-p', 'nomatch')
+	.then((status) => {
+		assert.equal(status, 0);
+		assert.ok(fakeTerm.didPrint(/0 matching item/));
+		return runCLI('list', '-p', 'face');
+	})
+	.then((status) => {
+		assert.equal(status, 0);
+		assert.ok(fakeTerm.didPrint(/1 matching item/));
 		assert.ok(fakeTerm.didPrint(/Facebook.*Login/));
 		testLib.continueTests();
 	})

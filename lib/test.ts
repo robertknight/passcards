@@ -49,6 +49,7 @@ export function continueTests() {
 	qunit.start();
 }
 
+/** Add a setup function to invoke before each test case */
 export function beforeTest(func: () => void) {
 	qunit.testStart(func);
 }

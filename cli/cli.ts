@@ -428,12 +428,15 @@ export class CLI {
 			items.sort((a, b) => {
 				return a.title.toLowerCase().localeCompare(b.title.toLowerCase());
 			});
+
+			var matchCount = 0;
 			items.forEach((item) => {
 				if (!pattern || item_search.matchItem(item, pattern)) {
+					++matchCount;
 					this.printf('%s (%s, %s)', item.title, item.typeDescription(), item.shortID());
 				}
 			});
-			this.printf('\n%d matching item(s) in vault', items.length);
+			this.printf('\n%d matching item(s) in vault', matchCount);
 			result.resolve(0);
 		}).done();
 		return result.promise;
