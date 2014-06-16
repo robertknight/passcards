@@ -36,6 +36,8 @@ export function addTest(name : string, testFunc : (assert: Assert) => void) {
   * continueTests() once all async operations have completed to signal
   * the end of the test.
   *
+  * Note that all asynchronous tests are executed concurrently.
+  *
   * See qunit.asyncTest()
   */
 export function addAsyncTest(name : string, testFunc : (assert: Assert) => void) {
@@ -49,8 +51,13 @@ export function continueTests() {
 	qunit.start();
 }
 
+export interface TestStartParams {
+	name: string;
+	module : string;
+}
+
 /** Add a setup function to invoke before each test case */
-export function beforeTest(func: () => void) {
+export function beforeTest(func: (details?: TestStartParams) => void) {
 	qunit.testStart(func);
 }
 
@@ -91,6 +98,9 @@ export function runTests(filter?: string) {
 			return testCase.name.indexOf(filter) != -1;
 		});
 	}
+
+	// randomize ordering of tests
+	testList = underscore(testList).shuffle();
 
 	testList.forEach((testCase) => {
 		if (testCase.async) {

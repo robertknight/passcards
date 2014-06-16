@@ -109,20 +109,29 @@ class FakeKeyAgent extends onepass.SimpleKeyAgent {
 }
 
 var TEST_VAULT_PATH = 'lib/test-data/test.agilekeychain';
-
-var fakeTerm : FakeIO;
-var keyAgent : FakeKeyAgent;
-var fakeClipboard : clipboard.FakeClipboard;
-var app : cli.CLI;
-
 var stdArgs = ['--vault', TEST_VAULT_PATH];
 
-function runCLI(...args: any[]) : Q.Promise<number> {
-	return app.exec(stdArgs.concat(args));
-}
+class CLITest {
+	fakeTerm : FakeIO;
+	keyAgent : FakeKeyAgent;
+	fakeClipboard : clipboard.FakeClipboard;
+	app : cli.CLI;
 
-function runCLIWithVault(path: string, ...args: any[]) : Q.Promise<number> {
-	return app.exec(['--vault', path].concat(args));
+	constructor() {
+		this.fakeClipboard = new clipboard.FakeClipboard();
+		this.fakeTerm = new FakeIO();
+		this.fakeTerm.password = 'logMEin';
+		this.keyAgent = new FakeKeyAgent();
+		this.app = new cli.CLI(this.fakeTerm, this.keyAgent, this.fakeClipboard);
+	}
+
+	runCLI(...args: any[]) : Q.Promise<number> {
+		return this.app.exec(stdArgs.concat(args));
+	}
+
+	runCLIWithVault(path: string, ...args: any[]) : Q.Promise<number> {
+		return this.app.exec(['--vault', path].concat(args));
+	}
 }
 
 function cloneTestVault() : Q.Promise<string> {
@@ -137,117 +146,113 @@ function cloneTestVault() : Q.Promise<string> {
 	});
 }
 
-testLib.beforeTest(() => {
-	fakeClipboard = new clipboard.FakeClipboard();
-	fakeTerm = new FakeIO();
-	fakeTerm.password = 'logMEin';
-	keyAgent = new FakeKeyAgent();
-
-	app = new cli.CLI(fakeTerm, keyAgent, fakeClipboard);
-});
-
 testLib.addAsyncTest('list vault', (assert) => {
-	runCLI('list')
+	var env = new CLITest();
+	env.runCLI('list')
 	.then((status) => {
 		assert.equal(status, 0);
-		assert.ok(fakeTerm.didPrint(/Facebook.*Login/));
+		assert.ok(env.fakeTerm.didPrint(/Facebook.*Login/));
 		testLib.continueTests();
 	})
 	.done();
 });
 
 testLib.addAsyncTest('list vault with pattern', (assert) => {
-	runCLI('list', '-p', 'nomatch')
+	var env = new CLITest();
+	env.runCLI('list', '-p', 'nomatch')
 	.then((status) => {
 		assert.equal(status, 0);
-		assert.ok(fakeTerm.didPrint(/0 matching item/));
-		return runCLI('list', '-p', 'face');
+		assert.ok(env.fakeTerm.didPrint(/0 matching item/));
+		return env.runCLI('list', '-p', 'face');
 	})
 	.then((status) => {
 		assert.equal(status, 0);
-		assert.ok(fakeTerm.didPrint(/1 matching item/));
-		assert.ok(fakeTerm.didPrint(/Facebook.*Login/));
+		assert.ok(env.fakeTerm.didPrint(/1 matching item/));
+		assert.ok(env.fakeTerm.didPrint(/Facebook.*Login/));
 		testLib.continueTests();
 	})
 	.done();
 });
 
 testLib.addAsyncTest('wrong password', (assert) => {
-	var term = new FakeIO();
-	term.password = 'wrong-password';
-	var app = new cli.CLI(term);
-	app.exec(stdArgs.concat(['list']))
+	var env = new CLITest();
+	env.fakeTerm.password = 'wrong-password';
+	env.runCLI('list')
 	.then((status) => {
 		assert.equal(status, 2);
-		assert.ok(term.didPrint(/Unlocking failed/));
+		assert.ok(env.fakeTerm.didPrint(/Unlocking failed/));
 		testLib.continueTests();
 	})
 	.done();
 });
 
 testLib.addAsyncTest('show item', (assert) => {
-	runCLI('show', 'facebook')
+	var env = new CLITest();
+	env.runCLI('show', 'facebook')
 	.then((status) => {
 		assert.equal(status, 0);
-		assert.ok(fakeTerm.didPrint(/username.*john\.doe@gmail.com/));
-		assert.ok(fakeTerm.didPrint(/password.*Wwk-ZWc-T9MO/));
+		assert.ok(env.fakeTerm.didPrint(/username.*john\.doe@gmail.com/));
+		assert.ok(env.fakeTerm.didPrint(/password.*Wwk-ZWc-T9MO/));
 		testLib.continueTests();
 	})
 	.done();
 });
 
 testLib.addAsyncTest('show overview', (assert) => {
-	runCLI('show-overview', 'facebook')
+	var env = new CLITest();
+	env.runCLI('show-overview', 'facebook')
 	.then((status) => {
 		assert.equal(status, 0);
-		assert.ok(fakeTerm.didPrint(/Facebook.*Login/));
-		assert.ok(fakeTerm.didPrint(/ID: CA20BB325873446966ED1F4E641B5A36/));
+		assert.ok(env.fakeTerm.didPrint(/Facebook.*Login/));
+		assert.ok(env.fakeTerm.didPrint(/ID: CA20BB325873446966ED1F4E641B5A36/));
 		testLib.continueTests();
 	})
 	.done();
 });
 
 testLib.addAsyncTest('lock', (assert) => {
-	fakeTerm.passRequestCount = 0;
+	var env = new CLITest();
+	env.fakeTerm.passRequestCount = 0;
 
-	keyAgent.forgetKeys().then(() => {
-		return runCLI('show', 'facebook')
+	env.keyAgent.forgetKeys().then(() => {
+		return env.runCLI('show', 'facebook')
 	}).then((status) => {
 		assert.equal(status, 0);
-		assert.equal(fakeTerm.passRequestCount, 1);
-		assert.equal(keyAgent.keyCount(), 1);
-		return runCLI('lock')
+		assert.equal(env.fakeTerm.passRequestCount, 1);
+		assert.equal(env.keyAgent.keyCount(), 1);
+		return env.runCLI('lock')
 	})
 	.then((status) => {
 		assert.equal(status, 0);
-		assert.equal(keyAgent.keyCount(), 0);
-		return runCLI('show', 'facebook')
+		assert.equal(env.keyAgent.keyCount(), 0);
+		return env.runCLI('show', 'facebook')
 	})
 	.then((status) => {
 		assert.equal(status, 0);
-		assert.equal(keyAgent.keyCount(), 1);
-		assert.equal(fakeTerm.passRequestCount, 2);
+		assert.equal(env.keyAgent.keyCount(), 1);
+		assert.equal(env.fakeTerm.passRequestCount, 2);
 		testLib.continueTests();
 	})
 	.done();
 });
 
 testLib.addAsyncTest('copy', (assert) => {
-	runCLI('copy', 'facebook')
+	var env = new CLITest();
+	env.runCLI('copy', 'facebook')
 	.then((status) => {
 		assert.equal(status, 0);
-		assert.equal(fakeClipboard.data, 'Wwk-ZWc-T9MO');
-		return runCLI('copy', 'facebook', 'user');
+		assert.equal(env.fakeClipboard.data, 'Wwk-ZWc-T9MO');
+		return env.runCLI('copy', 'facebook', 'user');
 	})
 	.then((status) => {
 		assert.equal(status, 0);
-		assert.equal(fakeClipboard.data, 'john.doe@gmail.com');
-		return runCLI('copy', 'facebook', 'web');
+		assert.equal(env.fakeClipboard.data, 'john.doe@gmail.com');
+		return env.runCLI('copy', 'facebook', 'web');
 	})
 	.then((status) => {
 		assert.equal(status, 0);
-		assert.equal(fakeClipboard.data, 'facebook.com');
-		return runCLI('copy', 'facebook', 'no-such-field');
+		assert.equal(env.fakeClipboard.data, 'facebook.com');
+		return env.runCLI('copy', 'facebook', 'no-such-field');
 	})
 	.then((status) => {
 		assert.equal(status, 1);
@@ -257,7 +262,8 @@ testLib.addAsyncTest('copy', (assert) => {
 });
 
 testLib.addAsyncTest('add login', (assert) => {
-	fakeTerm.replies = fakeTerm.replies.concat([{
+	var env = new CLITest();
+	env.fakeTerm.replies = env.fakeTerm.replies.concat([{
 		match: /Website/,
 		response: 'mydomain.com'
 	},{
@@ -274,47 +280,49 @@ testLib.addAsyncTest('add login', (assert) => {
 	var vaultPath : string;
 	cloneTestVault().then((path) => {
 		vaultPath = path;
-		return runCLIWithVault(path, 'add', 'login', 'MyDomain')
+		return env.runCLIWithVault(path, 'add', 'login', 'MyDomain')
 	}).then((status) => {
 		assert.equal(status, 0);
-		return runCLIWithVault(vaultPath, 'show', 'mydomain');
+		return env.runCLIWithVault(vaultPath, 'show', 'mydomain');
 	})
 	.then((status) => {
 		assert.equal(status, 0);
-		assert.ok(fakeTerm.didPrint(/mydomain.com/));
-		assert.ok(fakeTerm.didPrint(/testpass/));
-		assert.ok(fakeTerm.didPrint(/jim\.smith@gmail\.com/));
+		assert.ok(env.fakeTerm.didPrint(/mydomain.com/));
+		assert.ok(env.fakeTerm.didPrint(/testpass/));
+		assert.ok(env.fakeTerm.didPrint(/jim\.smith@gmail\.com/));
 		testLib.continueTests();
 	})
 	.done();
 });
 
 testLib.addAsyncTest('trash/restore item', (assert) => {
+	var env = new CLITest();
 	var vaultPath : string;
 	cloneTestVault().then((path) => {
 		vaultPath = path;
-		return runCLIWithVault(path, 'trash', 'facebook');
+		return env.runCLIWithVault(path, 'trash', 'facebook');
 	}).then((status) => {
 		assert.equal(status, 0);
-		return runCLIWithVault(vaultPath, 'show', 'facebook');
+		return env.runCLIWithVault(vaultPath, 'show', 'facebook');
 	}).then((status) => {
 		assert.equal(status, 0);
-		assert.ok(fakeTerm.didPrint(/In Trash: Yes/));
-		return runCLIWithVault(vaultPath, 'restore', 'facebook');
+		assert.ok(env.fakeTerm.didPrint(/In Trash: Yes/));
+		return env.runCLIWithVault(vaultPath, 'restore', 'facebook');
 	}).then((status) => {
 		assert.equal(status, 0);
-		fakeTerm.output = [];
-		return runCLIWithVault(vaultPath, 'show', 'facebook');
+		env.fakeTerm.output = [];
+		return env.runCLIWithVault(vaultPath, 'show', 'facebook');
 	}).then((status) => {
 		assert.equal(status, 0);
-		assert.ok(!fakeTerm.didPrint(/In Trash/));
+		assert.ok(!env.fakeTerm.didPrint(/In Trash/));
 
 		testLib.continueTests();
 	}).done();
 });
 
 testLib.addAsyncTest('change password', (assert) => {
-	fakeTerm.replies = fakeTerm.replies.concat([{
+	var env = new CLITest();
+	env.fakeTerm.replies = env.fakeTerm.replies.concat([{
 		match: /Re-enter existing/,
 		response: 'logMEin'
 	},{
@@ -331,32 +339,31 @@ testLib.addAsyncTest('change password', (assert) => {
 	var vaultPath : string;
 	cloneTestVault().then((path) => {
 		vaultPath = path;
-		return runCLIWithVault(path, 'set-password');
+		return env.runCLIWithVault(path, 'set-password');
 	}).then((status) => {
 		assert.equal(status, 0);
-		return runCLIWithVault(vaultPath, 'lock');
+		return env.runCLIWithVault(vaultPath, 'lock');
 	}).then((status) => {
 		assert.equal(status, 0);
-		fakeTerm.password = 'newpass';
-		return runCLIWithVault(vaultPath, 'list');
+		env.fakeTerm.password = 'newpass';
+		return env.runCLIWithVault(vaultPath, 'list');
 	}).then((status) => {
 		assert.equal(status, 0);
-
-		fakeTerm.password = 'logMEin';
 		testLib.continueTests();
 	}).done();
 });
 
 testLib.addAsyncTest('item pattern formats', (assert) => {
+	var env = new CLITest();
 	var patterns = ['facebook', 'FACEB', 'ca20', 'CA20'];
 	var tests: Array<() => Q.Promise<any>> = [];
 
 	patterns.forEach((pattern, index) => {
 		tests.push(() => {
-			return runCLI('show', pattern)
+			return env.runCLI('show', pattern)
 			.then((status) => {
 				assert.equal(status, 0);
-				assert.ok(fakeTerm.didPrint(/Facebook.*Login/));
+				assert.ok(env.fakeTerm.didPrint(/Facebook.*Login/));
 				return true;
 			});
 		});
@@ -368,7 +375,8 @@ testLib.addAsyncTest('item pattern formats', (assert) => {
 });
 
 testLib.addAsyncTest('remove items', (assert) => {
-	fakeTerm.replies.push({
+	var env = new CLITest();
+	env.fakeTerm.replies.push({
 		match: /Do you really want to remove these 1 item\(s\)/,
 		response: 'y'
 	});
@@ -376,20 +384,21 @@ testLib.addAsyncTest('remove items', (assert) => {
 	var vaultPath : string;
 	cloneTestVault().then((path) => {
 		vaultPath = path;
-		return runCLIWithVault(vaultPath, 'remove', 'faceb');
+		return env.runCLIWithVault(vaultPath, 'remove', 'faceb');
 	}).then((status) => {
 		assert.equal(status, 0);
-		return runCLIWithVault(vaultPath, 'list');
+		return env.runCLIWithVault(vaultPath, 'list');
 	}).then((status) => {
-		assert.ok(fakeTerm.didPrint(/0 matching item\(s\)/));
+		assert.ok(env.fakeTerm.didPrint(/0 matching item\(s\)/));
 		testLib.continueTests();
 	}).done();
 });
 
 testLib.addAsyncTest('generate password', (assert) => {
-	runCLI('gen-password').then((status) => {
+	var env = new CLITest();
+	env.runCLI('gen-password').then((status) => {
 		assert.equal(status, 0);
-		assert.ok(fakeTerm.didPrint(/[A-Za-z0-9]{3}-[A-Za-z0-9]{3}-[A-Za-z0-9]{4}/));
+		assert.ok(env.fakeTerm.didPrint(/[A-Za-z0-9]{3}-[A-Za-z0-9]{3}-[A-Za-z0-9]{4}/));
 		testLib.continueTests();
 	}).done();
 });
