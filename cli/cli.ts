@@ -57,12 +57,14 @@ export class CLI {
 			action: 'store',
 			nargs: 1,
 			defaultValue: 'file',
-			dest: 'storage'
+			dest: 'storage',
+			help: 'Specifies the type of local or cloud-based storage to use'
 		});
 		parser.addArgument(['-v', '--vault'], {
 			action: 'store',
 			nargs: 1,
-			dest: 'vault'
+			dest: 'vault',
+			help: 'Specify the path of the vault to open'
 		});
 
 		var subcommands = parser.addSubparsers({dest:'command'});
@@ -72,7 +74,8 @@ export class CLI {
 			action:'store',
 			dest: 'pattern',
 			nargs: 1,
-			type: 'string'
+			type: 'string',
+			help: 'List only items matching PATTERN'
 		})
 
 		var showJSONCommand = subcommands.addParser('show-json');
