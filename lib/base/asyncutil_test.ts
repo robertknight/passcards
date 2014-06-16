@@ -22,5 +22,5 @@ testLib.addAsyncTest('test run sequence', (assert) => {
 	});
 });
 
-testLib.runTests();
+testLib.start();
 

@@ -16,5 +16,5 @@ testLib.addTest('add/fetch keys', (assert) => {
 	assert.equal(map.get2('four'), null);
 });
 
-testLib.runTests();
+testLib.start();
 

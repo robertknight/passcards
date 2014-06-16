@@ -68,6 +68,6 @@ testLib.teardownSuite(() => {
 });
 
 agent_server.stopAgent().then(() => {
-	testLib.runTests();
+	testLib.start();
 }).done();
 

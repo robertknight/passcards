@@ -35,4 +35,4 @@ testLib.addTest('match item', (assert) => {
 	assert.equal(item_search.matchField(content, 'pass').length, 1);
 });
 
-testLib.runTests();
+testLib.start();

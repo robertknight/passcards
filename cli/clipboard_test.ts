@@ -21,4 +21,4 @@ testLib.addAsyncTest('get/set/clear', (assert) => {
 	.done();
 });
 
-testLib.runTests();
+testLib.start();

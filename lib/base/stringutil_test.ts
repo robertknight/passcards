@@ -12,5 +12,5 @@ testLib.addTest('truthy keys', (assert) => {
 	assert.equal(stringutil.truthyKeys(obj), 'class1 class3');
 });
 
-testLib.runTests();
+testLib.start();
 

@@ -172,5 +172,5 @@ testLib.addAsyncTest('ignore paths above root', (assert) => {
 	}).done();
 });
 
-testLib.runTests();
+testLib.start();
 

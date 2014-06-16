@@ -403,4 +403,4 @@ testLib.addAsyncTest('generate password', (assert) => {
 	}).done();
 });
 
-testLib.runTests();
+testLib.start();

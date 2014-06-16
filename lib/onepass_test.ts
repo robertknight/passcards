@@ -517,4 +517,4 @@ testLib.addTest('Item content account and password accessors', (assert) => {
 	assert.equal(content.password(), 'the-item-password');
 });
 
-testLib.runTests();
+testLib.start();

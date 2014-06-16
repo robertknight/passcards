@@ -80,6 +80,6 @@ setup().then(() => {
 	testLib.teardownSuite(() => {
 		httpVfsServer.close();
 	});
-	testLib.runTests();
+	testLib.start();
 });
 

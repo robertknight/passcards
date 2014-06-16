@@ -177,5 +177,5 @@ testLib.addAsyncTest('pbkdf2Lib Parallel', (assert) => {
 	});
 });
 
-testLib.runTests();
+testLib.start();
 

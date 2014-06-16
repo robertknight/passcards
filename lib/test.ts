@@ -1,7 +1,10 @@
 /// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
-/// <reference path="../typings/xdiff.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
 
+/// <reference path="../typings/argparse.d.ts" />
+/// <reference path="../typings/xdiff.d.ts" />
+
+import argparse = require('argparse');
 var qunit = require('qunitjs');
 import xdiff = require('xdiff');
 import underscore = require('underscore');
@@ -91,18 +94,62 @@ interface TestSuiteResult {
 	runtime: number
 }
 
-/** Run all tests queued with addTest() and addAsyncTest() */
-export function runTests(filter?: string) {
-	if (filter) {
-		testList = testList.filter((testCase) => {
-			return testCase.name.indexOf(filter) != -1;
-		});
+/** Start the test suite. The default mode is to run tests added with
+  * addTest() and addAsyncTest().
+  */
+export function start(args?: string[]) {
+	if (!args && env.isNodeJS()) {
+		args = process.argv.slice(2);
 	}
 
-	// randomize ordering of tests
-	testList = underscore(testList).shuffle();
+	var parser = new argparse.ArgumentParser({
+		description: 'Unit test suite'
+	});
+	parser.addArgument(['-f', '--filter'], {
+		action: 'store',
+		nargs: 1,
+		dest: 'filter',
+		help: 'Run only tests whose name matches FILTER'
+	});
+	parser.addArgument(['-l', '--list'], {
+		action: 'store',
+		nargs: 0,
+		dest: 'list',
+		help: 'List names of available tests'
+	});
+	parser.addArgument(['-v', '--verbose'], {
+		action: 'store',
+		nargs: 0,
+		dest: 'verbose'
+	});
 
-	testList.forEach((testCase) => {
+	var opts = parser.parseArgs(args);
+	var tests = testList;
+	if (opts.filter) {
+		tests = tests.filter((testCase) => {
+			return testCase.name.indexOf(opts.filter) != -1;
+		});
+		if (opts.verbose) {
+			var testNames = tests.map((testCase) => {
+				return '"' + testCase.name + '"';
+			});
+			console.log(sprintf('Running %d matching tests: %s', tests.length, testNames.join(", ")));
+		}
+	}
+	if (opts.list) {
+		tests.forEach((testCase) => {
+			console.log(testCase.name);
+		});
+	} else {
+		run(tests);
+	}
+}
+
+function run(tests: TestCase[]) {
+	// randomize ordering of tests
+	tests = underscore(tests).shuffle();
+
+	tests.forEach((testCase) => {
 		if (testCase.async) {
 			qunit.asyncTest(testCase.name, testCase.testFunc);
 		} else {
