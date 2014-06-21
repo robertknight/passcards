@@ -7,7 +7,6 @@
 import Q = require('q');
 import argparse = require('argparse');
 import mkdirp = require('mkdirp')
-import fs = require('fs');
 import sprintf = require('sprintf');
 import Path = require('path');
 
@@ -16,7 +15,6 @@ import clipboard = require('./clipboard');
 import collectionutil = require('../lib/base/collectionutil');
 import consoleio = require('../lib/console');
 import crypto = require('../lib/onepass_crypto');
-import dropboxvfs = require('../lib/vfs/dropbox');
 import item_search = require('../lib/item_search');
 import onepass = require('../lib/onepass');
 import nodefs = require('../lib/vfs/node');
@@ -52,13 +50,6 @@ export class CLI {
 	private static createParser() : argparse.ArgumentParser {
 		var parser = new argparse.ArgumentParser({
 			description: '1Password command-line client'
-		});
-		parser.addArgument(['-s', '--storage'], {
-			action: 'store',
-			nargs: 1,
-			defaultValue: 'file',
-			dest: 'storage',
-			help: 'Specifies the type of local or cloud-based storage to use'
 		});
 		parser.addArgument(['-v', '--vault'], {
 			action: 'store',
@@ -192,45 +183,20 @@ export class CLI {
 		}
 	}
 
-	private initVault(storageType: string, customVaultPath: string) : Q.Promise<onepass.Vault> {
-		// connect to sync service and open vault
-		var credFile : string = this.configDir + '/dropbox-credentials.json';
-		var credentials : Object = null;
-		if (fs.existsSync(credFile)) {
-			credentials = JSON.parse(fs.readFileSync(credFile).toString());
-		}
-
-		var storage : vfs.VFS;
+	private initVault(customVaultPath: string) : Q.Promise<onepass.Vault> {
+		var storage : vfs.VFS = new nodefs.FileVFS('/');
 		var dropboxRoot : string;
 
-		if (storageType == 'file') {
-			storage = new nodefs.FileVFS('/');
-			dropboxRoot = process.env.HOME + '/Dropbox';
-			if (customVaultPath) {
-				customVaultPath = Path.resolve(customVaultPath);
-			}
-		} else if (storageType == 'dropbox') {
-			storage = new dropboxvfs.DropboxVFS();
-			dropboxRoot = '/';
+		storage = new nodefs.FileVFS('/');
+		dropboxRoot = process.env.HOME + '/Dropbox';
+		if (customVaultPath) {
+			customVaultPath = Path.resolve(customVaultPath);
 		}
 
-		var authenticated = Q.defer<void>();
-		if (credentials) {
-			storage.setCredentials(credentials);
-			authenticated.resolve(null);
-		} else {
-			var account = storage.login();
-			account.then(() => {
-				fs.writeFileSync(credFile, JSON.stringify(storage.credentials()));
-				authenticated.resolve(null);
-			}, (err) => {
-				authenticated.reject(err);
-			}).done();
-		}
-
+		var authenticated = Q.resolve<void>(null);
 		var vault = Q.defer<onepass.Vault>();
 
-		authenticated.promise.then(() => {
+		authenticated.then(() => {
 			var vaultPath : Q.Promise<string>;
 			if (customVaultPath) {
 				vaultPath = Q.resolve(customVaultPath);
@@ -526,7 +492,7 @@ export class CLI {
 
 		var currentVault : onepass.Vault;
 
-		var vault = this.initVault(args.storage, args.vault ? args.vault[0] : null);
+		var vault = this.initVault(args.vault ? args.vault[0] : null);
 		var vaultReady = vault.then((vault) => {
 			currentVault = vault;
 			return this.unlockVault(vault);
