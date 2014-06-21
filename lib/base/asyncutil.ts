@@ -43,14 +43,33 @@ export function eraseResult<T>(p: Q.Promise<T>) : Q.Promise<void> {
   *
   * Returns an array containing the results of each operation.
   */
-export function runSequence(funcs: Array<() => Q.Promise<any>>, results?: any[]) : Q.Promise<any[]> {
+export function series(funcs: Array<() => Q.Promise<any>>, results?: any[]) : Q.Promise<any[]> {
 	results = results || [];
 	if (funcs.length == 0) {
 		return Q.resolve(results);
 	}
 	return funcs[0]().then((result) => {
 		results.push(result);
-		return runSequence(funcs.slice(1), results);
+		return series(funcs.slice(1), results);
+	});
+}
+
+/** Async version of a while() loop.
+  *
+  * Returns a promise which is resolved once the loop is complete.
+  *
+  * At each iteration, func() is invoked and it returns a promise for
+  * completion of the current iteration of the loop. If the promise
+  * is resolved with true, the loop exits, otherwise the next iteration
+  * begins by invoking func() again.
+  */
+export function until(func: () => Q.Promise<boolean>) : Q.Promise<boolean> {
+	return func().then((done) => {
+		if (done) {
+			return Q.resolve(true);
+		} else {
+			return until(func);
+		}
 	});
 }
 

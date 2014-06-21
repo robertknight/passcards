@@ -369,7 +369,7 @@ testLib.addAsyncTest('item pattern formats', (assert) => {
 		});
 	});
 
-	asyncutil.runSequence(tests).then(() => {
+	asyncutil.series(tests).then(() => {
 		testLib.continueTests();
 	});
 });
