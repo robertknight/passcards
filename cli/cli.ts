@@ -30,8 +30,10 @@ enum ShowItemFormat {
 	ShowFull
 }
 
+// reasons for a command to fail
 var NO_SUCH_ITEM_ERR = 'No items matched the pattern';
 var NO_SUCH_FIELD_ERR = 'No fields matched the pattern';
+var ACTION_CANCELED_ERR = 'Action canceled';
 
 export class CLI {
 	private configDir : string;
@@ -331,21 +333,17 @@ export class CLI {
 
 		return status.promise;
 	}
-	
-	private trashItemCommand(vault: onepass.Vault, pattern: string, trash: boolean) : Q.Promise<number> {
-		var result = Q.defer<number>();
 
-		item_search.lookupItems(vault, pattern).then((items) => {
+	private trashItemCommand(vault: onepass.Vault, pattern: string, trash: boolean) : Q.Promise<void[]> {
+		return item_search.lookupItems(vault, pattern).then((items) => {
 			var trashOps : Q.Promise<void>[] = [];
 			items.forEach((item) => {
 				item.trashed = trash;
 				trashOps.push(item.save());
 			});
 
-			asyncutil.resolveWithValue(result, Q.all(trashOps), 0);
-		}).done();
-
-		return result.promise;
+			return Q.all(trashOps);
+		});
 	}
 
 	private setPasswordCommand(vault: onepass.Vault, iterations?: number) : Q.Promise<number> {
@@ -383,16 +381,14 @@ export class CLI {
 		return result.promise;
 	}
 
-	private removeCommand(vault: onepass.Vault, pattern: string) : Q.Promise<number> {
-		var result = Q.defer<number>();
+	private removeCommand(vault: onepass.Vault, pattern: string) : Q.Promise<void> {
 		var items : onepass.Item[];
 
-		item_search.lookupItems(vault, pattern).then((items_) => {
+		return item_search.lookupItems(vault, pattern).then((items_) => {
 			items = items_;
 			if (items.length == 0) {
 				this.printf('No matching items');
-				result.resolve(1);
-				return;
+				throw NO_SUCH_ITEM_ERR;
 			}
 
 			items.forEach((item) => {
@@ -406,26 +402,22 @@ export class CLI {
 				items.forEach((item) => {
 					removeOps.push(item.remove());
 				});
-				Q.all(removeOps).then(() => {
+				return Q.all(removeOps).then(() => {
 					this.printf(sprintf('%d items were removed', items.length));
-					result.resolve(0);
-				}).done();
+				});
 			} else {
-				result.resolve(1);
+				throw ACTION_CANCELED_ERR;
 			}
-		}).done();
-
-		return result.promise;
+		});
 	}
 
-	private genPasswordCommand() : Q.Promise<number> {
+	private genPasswordCommand() : Q.Promise<void> {
 		this.printf(crypto.generatePassword(12));
-		return Q.resolve(0);
+		return Q.resolve<void>(null);
 	}
 
-	private listCommand(vault: onepass.Vault, pattern: string) : Q.Promise<number> {
-		var result = Q.defer<number>();
-		vault.listItems().then((items) => {
+	private listCommand(vault: onepass.Vault, pattern: string) : Q.Promise<void> {
+		return vault.listItems().then((items) => {
 			items.sort((a, b) => {
 				return a.title.toLowerCase().localeCompare(b.title.toLowerCase());
 			});
@@ -438,19 +430,16 @@ export class CLI {
 				}
 			});
 			this.printf('\n%d matching item(s) in vault', matchCount);
-			result.resolve(0);
-		}).done();
-		return result.promise;
+		});
 	}
 
-	private showItemCommand(vault: onepass.Vault, pattern: string, format: ShowItemFormat) : Q.Promise<number> {
-		var result = Q.defer<number>();
-		item_search.lookupItems(vault, pattern).then((items) => {
+	private showItemCommand(vault: onepass.Vault, pattern: string, format: ShowItemFormat) : Q.Promise<void> {
+		return item_search.lookupItems(vault, pattern).then((items) => {
 			var itemContents : Q.Promise<onepass.ItemContent>[] = [];
 			items.forEach((item) => {
 				itemContents.push(item.getContent());
 			});
-			Q.all(itemContents).then((contents) => {
+			return Q.all(itemContents).then((contents) => {
 				items.forEach((item, index) => {
 					if (index > 0) {
 						this.printf('');
@@ -467,10 +456,8 @@ export class CLI {
 						this.printf('%s', collectionutil.prettyJSON(contents[index]));
 					}
 				});
-				result.resolve(0);
-			}).done();
-		}).done();
-		return result.promise;
+			});
+		});
 	}
 
 	private copyItemCommand(vault: onepass.Vault, pattern: string, field: string) : Q.Promise<void> {
