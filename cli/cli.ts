@@ -21,7 +21,7 @@ import nodefs = require('../lib/vfs/node');
 import vfs = require('../lib/vfs/vfs');
 
 interface HandlerMap {
-	[index: string] : (args: any, result : Q.Deferred<number>) => void;
+	[index: string] : (args: any) => Q.Promise<any>;
 }
 
 enum ShowItemFormat {
@@ -31,6 +31,7 @@ enum ShowItemFormat {
 }
 
 var NO_SUCH_ITEM_ERR = 'No items matched the pattern';
+var NO_SUCH_FIELD_ERR = 'No fields matched the pattern';
 
 export class CLI {
 	private configDir : string;
@@ -472,10 +473,9 @@ export class CLI {
 		return result.promise;
 	}
 
-	private copyItemCommand(vault: onepass.Vault, pattern: string, field: string) : Q.Promise<number> {
-		var result = Q.defer<number>();
-		this.selectItem(vault, pattern).then((item) => {
-			item.getContent().then((content) => {
+	private copyItemCommand(vault: onepass.Vault, pattern: string, field: string) : Q.Promise<void> {
+		return this.selectItem(vault, pattern).then((item) => {
+			return item.getContent().then((content) => {
 				var matches = item_search.matchField(content, field);
 				if (matches.length > 0) {
 					var label : string;
@@ -492,23 +492,15 @@ export class CLI {
 						copied = this.clipboard.setData(match.field.value);
 					}
 
-					copied.then(() => {
+					return copied.then(() => {
 						this.printf('Copied "%s" from "%s" to clipboard', label, item.title);
-						result.resolve(0);
-					}, (err) => {
-						this.printf('Unable to copy data: %s', err);
-						result.resolve(1);
-					}).done();
-
+					});
 				} else {
 					this.printf('No fields matching "%s"', field);
-					result.resolve(1);
+					throw NO_SUCH_FIELD_ERR;
 				}
-			}).done();
-		}).fail(() => {
-			result.resolve(1);
+			});
 		});
-		return result.promise;
 	}
 
 	/** Starts the command-line interface and returns
@@ -528,59 +520,69 @@ export class CLI {
 		
 		var handlers : HandlerMap = {};
 
-		handlers['list'] = (args, result) => {
-			asyncutil.resolveWith(result, this.listCommand(currentVault, args.pattern ? args.pattern[0] : null));		
+		handlers['list'] = (args) => {
+			return this.listCommand(currentVault, args.pattern ? args.pattern[0] : null);
 		};
 
-		handlers['show-json'] = (args, result) => {
-			asyncutil.resolveWith(exitStatus, this.showItemCommand(currentVault, args.pattern, ShowItemFormat.ShowJSON));
+		handlers['show-json'] = (args) => {
+			return this.showItemCommand(currentVault, args.pattern, ShowItemFormat.ShowJSON);
 		};
 
-		handlers['show-overview'] = (args, result) => {
-			asyncutil.resolveWith(exitStatus, this.showItemCommand(currentVault, args.pattern, ShowItemFormat.ShowOverview));
+		handlers['show-overview'] = (args) => {
+			return this.showItemCommand(currentVault, args.pattern, ShowItemFormat.ShowOverview);
 		};
 
-		handlers['show'] = (args, result) => {
-			asyncutil.resolveWith(exitStatus, this.showItemCommand(currentVault, args.pattern, ShowItemFormat.ShowFull));
+		handlers['show'] = (args) => {
+			return this.showItemCommand(currentVault, args.pattern, ShowItemFormat.ShowFull);
 		};
 
-		handlers['lock'] = (args, result) => {
-			asyncutil.resolveWithValue(result, currentVault.lock(), 0);
+		handlers['lock'] = (args) => {
+			return currentVault.lock();
 		};
 
-		handlers['copy'] = (args, result) => {
-			asyncutil.resolveWith(exitStatus, this.copyItemCommand(currentVault, args.item, args.field));	
+		handlers['copy'] = (args) => {
+			return this.copyItemCommand(currentVault, args.item, args.field);
 		};
 
-		handlers['add'] = (args, result) => {
-			asyncutil.resolveWith(exitStatus, this.addItemCommand(currentVault, args.type, args.title));
+		handlers['add'] = (args) => {
+			return this.addItemCommand(currentVault, args.type, args.title);
 		};
 
-		handlers['trash'] = (args, result) => {
-			asyncutil.resolveWith(exitStatus, this.trashItemCommand(currentVault, args.item, true));
+		handlers['trash'] = (args) => {
+			return this.trashItemCommand(currentVault, args.item, true);
 		};
 
-		handlers['restore'] = (args, result) => {
-			asyncutil.resolveWith(exitStatus, this.trashItemCommand(currentVault, args.item, false));
+		handlers['restore'] = (args) => {
+			return this.trashItemCommand(currentVault, args.item, false);
 		};
 
-		handlers['set-password'] = (args, result) => {
-			asyncutil.resolveWith(exitStatus, this.setPasswordCommand(currentVault, args.iterations));
+		handlers['set-password'] = (args) => {
+			return this.setPasswordCommand(currentVault, args.iterations);
 		};
 
-		handlers['remove'] = (args, result) => {
-			asyncutil.resolveWith(exitStatus, this.removeCommand(currentVault, args.pattern));
+		handlers['remove'] = (args) => {
+			return this.removeCommand(currentVault, args.pattern);
 		};
 
-		handlers['gen-password'] = (args, result) => {
-			asyncutil.resolveWith(exitStatus, this.genPasswordCommand());
+		handlers['gen-password'] = (args) => {
+			return this.genPasswordCommand();
 		};
 
 		// process commands
 		var exitStatus = Q.defer<number>();
 		vaultReady.then(() => {
 			if (handlers[args.command]) {
-				handlers[args.command](args, exitStatus);
+				handlers[args.command](args).then((result) => {
+					if (typeof result == 'number') {
+						// if the handler returns an exit status, use that
+						exitStatus.resolve(<number>result);
+					} else {
+						// otherwise assume success
+						exitStatus.resolve(0);
+					}
+				}).fail(() => {
+					exitStatus.resolve(1);
+				});
 			} else {
 				this.printf('Unknown command: %s', args.command);
 				exitStatus.resolve(1);
