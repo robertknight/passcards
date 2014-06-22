@@ -1,6 +1,10 @@
 declare module "argparse" {
+	export interface ArgumentParserOptions {
+		description: string
+	}
+
 	export var ArgumentParser : {
-		new(options: {description : string}) : ArgumentParser;
+		new(options: ArgumentParserOptions) : ArgumentParser;
 	}
 
 	export interface ArgumentOptions {
@@ -12,7 +16,7 @@ declare module "argparse" {
 	}
 
 	export interface Subparsers {
-		addParser(command: string) : ArgumentParser;
+		addParser(command: string, options?: ArgumentParserOptions) : ArgumentParser;
 	}
 
 	export interface ArgumentParser {

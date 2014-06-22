@@ -65,7 +65,9 @@ export class CLI {
 
 		var subcommands = parser.addSubparsers({dest:'command'});
 
-		var listCommand = subcommands.addParser('list');
+		var listCommand = subcommands.addParser('list', {
+			description: 'List items in the vault'
+		});
 		listCommand.addArgument(['-p', '--pattern'], {
 			action:'store',
 			dest: 'pattern',
@@ -74,32 +76,68 @@ export class CLI {
 			help: 'List only items matching PATTERN'
 		})
 
+		var itemPatternArg = () => {
+			return {
+				action: 'store',
+				help: 'Pattern specifying the items'
+			};
+		};
+
 		var showJSONCommand = subcommands.addParser('show-json');
-		showJSONCommand.addArgument(['pattern'], {action:'store'});
+		showJSONCommand.addArgument(['pattern'], itemPatternArg());
 
-		var showOverviewCommand = subcommands.addParser('show-overview');
-		showOverviewCommand.addArgument(['pattern'], {action:'store'});
+		var showOverviewCommand = subcommands.addParser('show-overview', {
+			description: 'Show the overview (title, type etc.) data for items'
+		});
+		showOverviewCommand.addArgument(['pattern'], itemPatternArg());
 
-		var showCommand = subcommands.addParser('show');
-		showCommand.addArgument(['pattern'], {action:'store'});
+		var showCommand = subcommands.addParser('show', {
+			description: 'Show the complete data for items'
+		});
+		showCommand.addArgument(['pattern'], itemPatternArg());
 
-		subcommands.addParser('lock');
+		subcommands.addParser('lock', {
+			description: 'Lock the vault so that the master password will be required ' +
+			'for any further commands'
+		});
 
-		var copyCommand = subcommands.addParser('copy');
-		copyCommand.addArgument(['item'], {action:'store'});
-		copyCommand.addArgument(['field'], {action:'store', nargs: '?', defaultValue:'password'});
+		var copyCommand = subcommands.addParser('copy', {
+			description: 'Copy the value of a field from an item to the clipboard'
+		});
+		copyCommand.addArgument(['item'], itemPatternArg());
+		copyCommand.addArgument(['field'], {
+			action: 'store',
+			nargs: '?',
+			defaultValue: 'password',
+			help: 'Pattern specifying the name of the field to copy (eg. "username"). ' +
+			      'Defaults to copying the password'
+		});
 
-		var addCommand = subcommands.addParser('add');
-		addCommand.addArgument(['type'], {action:'store'});
-		addCommand.addArgument(['title'], {action:'store'});
+		var addCommand = subcommands.addParser('add', {
+			description: 'Add a new item to the vault'
+		});
+		addCommand.addArgument(['type'], {
+			action: 'store',
+			help: 'Type of item to add. The only supported value is currently "login"'
+		});
+		addCommand.addArgument(['title'], {
+			action: 'store',
+			help: 'The title of the new item'
+		});
 
-		var trashCommand = subcommands.addParser('trash');
-		trashCommand.addArgument(['item'], {action:'store'});
+		var trashCommand = subcommands.addParser('trash', {
+			description: 'Move items in the vault to the trash'
+		});
+		trashCommand.addArgument(['item'], itemPatternArg());
 
-		var restoreCommand = subcommands.addParser('restore');
-		restoreCommand.addArgument(['item'], {action:'store'});
+		var restoreCommand = subcommands.addParser('restore', {
+			description: 'Restore items in the vault that were previously trashed'
+		});
+		restoreCommand.addArgument(['item'], itemPatternArg());
 
-		var setPassCommand = subcommands.addParser('set-password');
+		var setPassCommand = subcommands.addParser('set-password', {
+			description: 'Change the master password for the vault'
+		});
 		setPassCommand.addArgument(['--iterations'], {
 			action: 'store',
 			dest: 'iterations',
@@ -107,10 +145,14 @@ export class CLI {
 			type: 'string'
 		});
 
-		var removeCommand = subcommands.addParser('remove');
-		removeCommand.addArgument(['pattern'], {action:'store'});
+		var removeCommand = subcommands.addParser('remove', {
+			description: 'Remove items from the vault. This action is permanent and cannot be undone.'
+		});
+		removeCommand.addArgument(['pattern'], itemPatternArg());
 
-		subcommands.addParser('gen-password');
+		subcommands.addParser('gen-password', {
+			description: 'Generate a new random password'
+		});
 
 		return parser;
 	}
