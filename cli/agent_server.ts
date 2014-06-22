@@ -9,7 +9,7 @@ import path = require('path');
 import Q = require('q');
 import urlrouter = require('urlrouter');
 
-import consoleio = require('../lib/console');
+import consoleio = require('./console');
 import crypto = require('../lib/onepass_crypto');
 import onepass = require('../lib/onepass');
 import streamutil = require('../lib/base/streamutil');
