@@ -30,6 +30,8 @@ enum ShowItemFormat {
 	ShowFull
 }
 
+var NO_SUCH_ITEM_ERR = 'No items matched the pattern';
+
 export class CLI {
 	private configDir : string;
 	private io : consoleio.TermIO;
@@ -240,6 +242,35 @@ export class CLI {
 		return password.promise;
 	}
 
+	/** Returns the item from @p vault matching a given @p pattern.
+	  * If there are multiple matching items the user is prompted to select one.
+	  */
+	private selectItem(vault: onepass.Vault, pattern: string) : Q.Promise<onepass.Item> {
+		return item_search.lookupItems(vault, pattern).then((items) => {
+			if (items.length < 1) {
+				this.printf('No items matching pattern "%s"', pattern);
+				return Q.reject(NO_SUCH_ITEM_ERR);
+			} else if (items.length == 1) {
+				return Q.resolve(items[0]);
+			} else {
+				this.printf('Multiple items match "%s":\n', pattern);
+				items.forEach((item, index) => {
+					this.printf('  [%d] %s', index+1, item.title);
+				});
+				this.printf('');
+				return this.io.readLine('Select Item: ').then((indexStr) => {
+					var index = parseInt(indexStr) - 1 || 0;
+					if (index < 0) {
+						index = 0;
+					} else if (index >= items.length) {
+						index = items.length-1;
+					}
+					return items[index];
+				});
+			}
+		});
+	}
+
 	private addItemCommand(vault: onepass.Vault, type: string, title: string) : Q.Promise<number> {
 		var status = Q.defer<number>();
 
@@ -443,12 +474,7 @@ export class CLI {
 
 	private copyItemCommand(vault: onepass.Vault, pattern: string, field: string) : Q.Promise<number> {
 		var result = Q.defer<number>();
-		item_search.lookupItems(vault, pattern).then((items) => {
-			if (items.length < 1) {
-				this.printf('No items matching "%s"', pattern);
-				result.resolve(1);
-			}
-			var item = items[0];
+		this.selectItem(vault, pattern).then((item) => {
 			item.getContent().then((content) => {
 				var matches = item_search.matchField(content, field);
 				if (matches.length > 0) {
@@ -479,7 +505,9 @@ export class CLI {
 					result.resolve(1);
 				}
 			}).done();
-		}).done();
+		}).fail(() => {
+			result.resolve(1);
+		});
 		return result.promise;
 	}
 
