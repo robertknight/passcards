@@ -261,6 +261,46 @@ testLib.addAsyncTest('copy', (assert) => {
 	.done();
 });
 
+testLib.addAsyncTest('select matching item', (assert) => {
+	var env = new CLITest();
+	env.fakeTerm.replies = env.fakeTerm.replies.concat([{
+		match: /Website/,
+		response: 'facebook.com'
+	},{
+		match: /Username/,
+		response: 'jane.smith@gmail.com'
+	},{
+		match: /Password/,
+		response: 'jane',
+	},{
+		match: /Re-enter/,
+		response: 'jane'
+	},{
+		match: /Select Item/,
+		response: '2'
+	}]);
+
+	var vaultPath : string;
+	cloneTestVault().then((path) => {
+		vaultPath = path;
+
+		// add a second Facebook account to the vault
+		return env.runCLIWithVault(path, 'add', 'login', 'Facebook (Jane)');
+	}).then((status) => {
+		assert.equal(status, 0);
+
+		// copy an item from the vault. Since there are multiple items
+		// matching the pattern, the CLI will prompt to select one
+		return env.runCLIWithVault(vaultPath, 'copy', 'facebook');
+	}).then((status) => {
+		// check that the password for the right item was copied
+		assert.equal(status, 0);
+		assert.equal(env.fakeClipboard.data, 'jane');
+
+		testLib.continueTests();
+	}).done();
+});
+
 testLib.addAsyncTest('add login', (assert) => {
 	var env = new CLITest();
 	env.fakeTerm.replies = env.fakeTerm.replies.concat([{
