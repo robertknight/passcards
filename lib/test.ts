@@ -4,6 +4,17 @@
 /// <reference path="../typings/argparse.d.ts" />
 /// <reference path="../typings/xdiff.d.ts" />
 
+// test.ts provides a wrapper around QUnitJS (qunitjs.com)
+//
+// Test cases are added using addTest() and addAsyncTest().
+//
+// Once all test cases have been added, the test suite should be
+// started using start()
+//
+// In addition to wrappers around methods for adding test functions
+// and invoking the tests, there are also utility methods for comparing
+// nested objects and arrays.
+
 import argparse = require('argparse');
 var qunit = require('qunitjs');
 import xdiff = require('xdiff');
@@ -12,6 +23,14 @@ import sprintf = require('sprintf');
 
 import env = require('./base/env');
 
+/** Interface for testing the values of objects during
+  * a test.
+  *
+  * See http://api.qunitjs.com/category/assert/
+  *
+  * The assert methods throw if an assertion fails. The test harness catches such
+  * failures and outputs diagnostics.
+  */
 export interface Assert {
 	notEqual<T>(actual: T, notExpected: T, message?: string) : void;
 	equal<T>(actual: T, expected: T, message?: string) : void;
@@ -64,6 +83,9 @@ export function beforeTest(func: (details?: TestStartParams) => void) {
 	qunit.testStart(func);
 }
 
+/** Registers a teardown function to be executed once all test cases
+  * have finished.
+  */
 export function teardownSuite(func: () => void) {
 	qunit.done(func);
 }
@@ -96,6 +118,12 @@ interface TestSuiteResult {
 
 /** Start the test suite. The default mode is to run tests added with
   * addTest() and addAsyncTest().
+  *
+  * The test runner has a command-line parser which provides options
+  * to list available tests, filter which tests are run and adjust
+  * the verbosity of test output.
+  *
+  * @param args Command-line arguments for the test.
   */
 export function start(args?: string[]) {
 	if (!args && env.isNodeJS()) {
