@@ -5,10 +5,38 @@ import underscore = require('underscore');
 import onepass = require('./onepass');
 import stringutil = require('./base/stringutil');
 
-export interface FieldMatch {
-	url? : onepass.ItemUrl;
-	field? : onepass.ItemField;
-	formField? : onepass.WebFormField;
+export class FieldMatch {
+	url : onepass.ItemUrl;
+	field : onepass.ItemField;
+	formField : onepass.WebFormField;
+
+	static fromURL(url: onepass.ItemUrl) : FieldMatch {
+		var match = new FieldMatch;
+		match.url = url;
+		return match;
+	}
+
+	static fromField(field: onepass.ItemField) : FieldMatch {
+		var match = new FieldMatch;
+		match.field = field;
+		return match;
+	}
+
+	static fromFormField(field: onepass.WebFormField) : FieldMatch {
+		var match = new FieldMatch;
+		match.formField = field;
+		return match;
+	}
+
+	name() : string {
+		if (this.url) {
+			return this.url.label;
+		} else if (this.field) {
+			return this.field.title;
+		} else if (this.formField) {
+			return this.formField.name;
+		}
+	}
 }
 
 /** Returns true if an item matches a given @p pattern.
@@ -48,18 +76,18 @@ export function matchField(content: onepass.ItemContent, pattern: string) : Fiel
 	var matches : FieldMatch[] = [];
 	content.urls.forEach((url) => {
 		if (matchLabel(pattern, url.label)) {
-			matches.push({url : url});
+			matches.push(FieldMatch.fromURL(url));
 		}
 	});
 	content.formFields.forEach((field) => {
 		if (matchLabel(pattern, field.name) || matchLabel(pattern, field.designation)) {
-			matches.push({formField : field});
+			matches.push(FieldMatch.fromFormField(field));
 		}
 	});
 	content.sections.forEach((section) => {
 		section.fields.forEach((field) => {
 			if (matchLabel(pattern, field.title)) {
-				matches.push({field : field});
+				matches.push(FieldMatch.fromField(field));
 			}
 		});
 	});

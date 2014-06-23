@@ -15,6 +15,7 @@ import clipboard = require('./clipboard');
 import collectionutil = require('../lib/base/collectionutil');
 import consoleio = require('./console');
 import crypto = require('../lib/onepass_crypto');
+import edit_item = require('./edit_item');
 import item_search = require('../lib/item_search');
 import onepass = require('../lib/onepass');
 import nodefs = require('../lib/vfs/node');
@@ -124,6 +125,11 @@ export class CLI {
 			action: 'store',
 			help: 'The title of the new item'
 		});
+
+		var editCommand = subcommands.addParser('edit', {
+			description: 'Edit an existing item in the vault'
+		});
+		editCommand.addArgument(['item'], itemPatternArg());
 
 		var trashCommand = subcommands.addParser('trash', {
 			description: 'Move items in the vault to the trash'
@@ -376,6 +382,13 @@ export class CLI {
 		return status.promise;
 	}
 
+	private editItemCommand(vault: onepass.Vault, pattern: string) : Q.Promise<boolean> {
+		return this.selectItem(vault, pattern).then((item) => {
+			var editLoop = new edit_item.EditItemPrompt(item, this.io);
+			return editLoop.run();
+		});
+	}
+
 	private trashItemCommand(vault: onepass.Vault, pattern: string, trash: boolean) : Q.Promise<void[]> {
 		return item_search.lookupItems(vault, pattern).then((items) => {
 			var trashOps : Q.Promise<void>[] = [];
@@ -577,6 +590,10 @@ export class CLI {
 			return this.addItemCommand(currentVault, args.type, args.title);
 		};
 
+		handlers['edit'] = (args) => {
+			return this.editItemCommand(currentVault, args.item);
+		};
+
 		handlers['trash'] = (args) => {
 			return this.trashItemCommand(currentVault, args.item, true);
 		};
@@ -600,8 +617,9 @@ export class CLI {
 		// process commands
 		var exitStatus = Q.defer<number>();
 		vaultReady.then(() => {
-			if (handlers[args.command]) {
-				handlers[args.command](args).then((result) => {
+			var handler = handlers[args.command];
+			if (handler) {
+				handler(args).then((result) => {
 					if (typeof result == 'number') {
 						// if the handler returns an exit status, use that
 						exitStatus.resolve(<number>result);
