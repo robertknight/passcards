@@ -19,3 +19,47 @@ export function truthyKeys(obj: Object) : string {
 	return keys.join(' ');
 }
 
+/** Splits a shell/REPL command-line into tokens. Tokens are delimited by spaces
+  * except where they are escaped by a backslash or enclosed within single
+  * or double quotes.
+  *
+  * eg. parseCommandLine('one "two three" four\ five six') => ['one', 'two three', 'four five', 'six]
+  */
+export function parseCommandLine(str: string) : string[] {
+	var tokens : string[] = [];
+	var token = '';
+
+	var escapeNext = false;
+	var quoteChar = '';
+
+	for (var i=0; i < str.length; i++) {
+		if (escapeNext) {
+			token += str[i];
+			escapeNext = false;
+			continue;
+		}
+
+		if (str[i] == ' ' && !quoteChar) {
+			tokens.push(token);
+			token = '';
+		} else if (str[i] == "'" || str[i] == '"') {
+			if (!quoteChar) {
+				quoteChar = str[i];
+			} else if (quoteChar == str[i]) {
+				quoteChar = null;
+			} else {
+				token += str[i];
+			}
+		} else if (str[i] == '\\') {
+			escapeNext = true;
+		} else {
+			token += str[i];
+		}
+	}
+	if (token.length > 0) {
+		tokens.push(token);
+	}
+
+	return tokens;
+}
+

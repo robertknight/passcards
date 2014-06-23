@@ -12,5 +12,18 @@ testLib.addTest('truthy keys', (assert) => {
 	assert.equal(stringutil.truthyKeys(obj), 'class1 class3');
 });
 
+testLib.addTest('parse command line', (assert) => {
+	var cases = [
+		{ cmd: 'one two three', expect: ['one', 'two', 'three'] },
+		{ cmd: 'one "two three"', expect: ['one', 'two three'] },
+		{ cmd: 'one\\ two\\ three', expect: ['one two three'] },
+		{ cmd: 'one "two \'three\' four" five', expect: ['one', "two 'three' four", 'five'] }
+	];
+	cases.forEach((testCase) => {
+		var actual = stringutil.parseCommandLine(testCase.cmd);
+		assert.deepEqual(actual, testCase.expect);
+	});
+});
+
 testLib.start();
 
