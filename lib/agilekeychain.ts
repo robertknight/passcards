@@ -48,7 +48,7 @@ export class ItemField {
 	  * 'address' - ItemAddress object
 	  * 'date' - A UNIX timestamp
 	  * 'monthYear' - Date as an integer with digits YYYYMM (eg. 201405)
-	  * 'string', 'URL', 'cctype', 'phone', 'gener', 'email', 'menu'
+	  * 'string', 'URL', 'cctype', 'phone', 'gender', 'email', 'menu'
 	  */
 	k: string;
 	/** Internal name of the field */

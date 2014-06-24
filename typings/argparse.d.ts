@@ -20,7 +20,7 @@ declare module "argparse" {
 	}
 
 	export interface ArgumentParser {
-		addArgument(syntax : string[], options : ArgumentOptions) : void;
+		addArgument(syntax : string[], options? : ArgumentOptions) : void;
 		addSubparsers(opts : {dest : string}) : Subparsers;
 		parseArgs(args?: string[]) : any;
 	}

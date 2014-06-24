@@ -15,7 +15,7 @@ import clipboard = require('./clipboard');
 import collectionutil = require('../lib/base/collectionutil');
 import consoleio = require('./console');
 import crypto = require('../lib/onepass_crypto');
-import edit_item = require('./edit_item');
+import edit_cmd = require('./edit_cmd');
 import item_search = require('../lib/item_search');
 import onepass = require('../lib/onepass');
 import nodefs = require('../lib/vfs/node');
@@ -41,6 +41,7 @@ export class CLI {
 	private io : consoleio.TermIO;
 	private keyAgent : onepass.KeyAgent;
 	private clipboard : clipboard.Clipboard;
+	private editCommand : edit_cmd.CommandHandler;
 
 	constructor(io? : consoleio.TermIO, agent? : onepass.KeyAgent, clipboardImpl?: clipboard.Clipboard) {
 		this.configDir = process.env.HOME + "/.config/onepass-web";
@@ -53,7 +54,7 @@ export class CLI {
 		consoleio.printf.apply(null, [this.io, format].concat(args));
 	}
 
-	private static createParser() : argparse.ArgumentParser {
+	private createParser() : argparse.ArgumentParser {
 		var parser = new argparse.ArgumentParser({
 			description: '1Password command-line client'
 		});
@@ -126,10 +127,7 @@ export class CLI {
 			help: 'The title of the new item'
 		});
 
-		var editCommand = subcommands.addParser('edit', {
-			description: 'Edit an existing item in the vault'
-		});
-		editCommand.addArgument(['item'], itemPatternArg());
+		this.editCommand = new edit_cmd.EditCommand(subcommands);
 
 		var trashCommand = subcommands.addParser('trash', {
 			description: 'Move items in the vault to the trash'
@@ -382,13 +380,6 @@ export class CLI {
 		return status.promise;
 	}
 
-	private editItemCommand(vault: onepass.Vault, pattern: string) : Q.Promise<boolean> {
-		return this.selectItem(vault, pattern).then((item) => {
-			var editLoop = new edit_item.EditItemPrompt(item, this.io);
-			return editLoop.run();
-		});
-	}
-
 	private trashItemCommand(vault: onepass.Vault, pattern: string, trash: boolean) : Q.Promise<void[]> {
 		return item_search.lookupItems(vault, pattern).then((items) => {
 			var trashOps : Q.Promise<void>[] = [];
@@ -549,7 +540,7 @@ export class CLI {
 	  * a promise for the exit code.
 	  */
 	exec(argv: string[]) : Q.Promise<number> {
-		var args = CLI.createParser().parseArgs(argv);
+		var args = this.createParser().parseArgs(argv);
 		mkdirp.sync(this.configDir)
 
 		var currentVault : onepass.Vault;
@@ -591,7 +582,7 @@ export class CLI {
 		};
 
 		handlers['edit'] = (args) => {
-			return this.editItemCommand(currentVault, args.item);
+			return this.editCommand.handle(args);
 		};
 
 		handlers['trash'] = (args) => {
