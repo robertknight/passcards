@@ -37,6 +37,42 @@ export class FieldMatch {
 			return this.formField.name;
 		}
 	}
+
+	setName(name: string) {
+		if (this.url) {
+			this.url.label = name;
+		} else if (this.field) {
+			this.field.title = name;
+		} else if (this.formField) {
+			this.formField.name = name;
+		}
+	}
+
+	value() : string {
+		if (this.url) {
+			return this.url.url;
+		} else if (this.field) {
+			return this.field.value;
+		} else if (this.formField) {
+			return this.formField.value;
+		}
+	}
+
+	setValue(value: string) {
+		if (this.url) {
+			this.url.url = value;
+		} else if (this.field) {
+			this.field.value = value;
+		} else if (this.formField) {
+			this.formField.value = value;
+		}
+	}
+
+	isPassword() : boolean {
+		// FIXME - Use enums for field data types
+		return this.field && this.field.kind == 'C' ||
+		       this.formField && this.formField.type == onepass.FormFieldType.Password;
+	}
 }
 
 /** Returns true if an item matches a given @p pattern.

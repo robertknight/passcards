@@ -971,7 +971,9 @@ export class ItemSection {
 }
 
 export class ItemField {
+	// FIXME: Use an enum for this
 	kind : string;
+
 	name : string;
 	title : string;
 	value : any;

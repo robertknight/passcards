@@ -10,15 +10,15 @@ import mkdirp = require('mkdirp')
 import sprintf = require('sprintf');
 import Path = require('path');
 
-import asyncutil = require('../lib/base/asyncutil');
+import cli_common = require('./cli_common');
 import clipboard = require('./clipboard');
 import collectionutil = require('../lib/base/collectionutil');
 import consoleio = require('./console');
 import crypto = require('../lib/onepass_crypto');
 import edit_cmd = require('./edit_cmd');
 import item_search = require('../lib/item_search');
-import onepass = require('../lib/onepass');
 import nodefs = require('../lib/vfs/node');
+import onepass = require('../lib/onepass');
 import vfs = require('../lib/vfs/vfs');
 
 interface HandlerMap {
@@ -41,13 +41,17 @@ export class CLI {
 	private io : consoleio.TermIO;
 	private keyAgent : onepass.KeyAgent;
 	private clipboard : clipboard.Clipboard;
-	private editCommand : edit_cmd.CommandHandler;
+	private editCommand : cli_common.CommandHandler;
+	private passwordGenerator : () => string;
 
 	constructor(io? : consoleio.TermIO, agent? : onepass.KeyAgent, clipboardImpl?: clipboard.Clipboard) {
 		this.configDir = process.env.HOME + "/.config/onepass-web";
 		this.io = io || new consoleio.ConsoleIO();
 		this.keyAgent = agent || new onepass.SimpleKeyAgent();
 		this.clipboard = clipboardImpl || clipboard.createPlatformClipboard();
+		this.passwordGenerator = () => {
+			return crypto.generatePassword(12);
+		};
 	}
 
 	private printf(format: string, ...args: any[]) {
@@ -127,7 +131,7 @@ export class CLI {
 			help: 'The title of the new item'
 		});
 
-		this.editCommand = new edit_cmd.EditCommand(subcommands);
+		this.editCommand = new edit_cmd.EditCommand(this.io, subcommands, this.passwordGenerator);
 
 		var trashCommand = subcommands.addParser('trash', {
 			description: 'Move items in the vault to the trash'
@@ -267,28 +271,7 @@ export class CLI {
 	}
 
 	private passwordFieldPrompt() : Q.Promise<string> {
-		var password = Q.defer<string>();
-		
-		this.io.readPassword("Password (or '-' to generate a random password): ")
-		.then((input) => {
-			if (input == '-') {
-				password.resolve(crypto.generatePassword(12));
-			} else {
-				this.io.readPassword("Re-enter password: ")
-				.then((input2) => {
-					if (input == input2) {
-						password.resolve(input);
-					} else {
-						this.printf('Passwords do not match');
-						asyncutil.resolveWith(password, this.passwordFieldPrompt());
-					}
-				})
-				.done();
-			}
-		})
-		.done();
-
-		return password.promise;
+		return consoleio.passwordFieldPrompt(this.io, this.passwordGenerator);
 	}
 
 	/** Returns the item from @p vault matching a given @p pattern.
@@ -582,7 +565,9 @@ export class CLI {
 		};
 
 		handlers['edit'] = (args) => {
-			return this.editCommand.handle(args);
+			return this.selectItem(currentVault, args.item).then((item) => {
+				return this.editCommand.handle(args, item);
+			});
 		};
 
 		handlers['trash'] = (args) => {
@@ -618,7 +603,8 @@ export class CLI {
 						// otherwise assume success
 						exitStatus.resolve(0);
 					}
-				}).fail(() => {
+				}).fail((err) => {
+					this.printf('%s', err);
 					exitStatus.resolve(1);
 				});
 			} else {

@@ -7,6 +7,8 @@ import promptly = require('promptly');
 import sprintf = require('sprintf');
 import Q = require('q');
 
+import asyncutil = require('../lib/base/asyncutil');
+
 /** Interface for terminal input/output. */
 export interface TermIO {
 	print(text: string) : void
@@ -46,5 +48,29 @@ export class ConsoleIO implements TermIO {
 
 export function printf(out: TermIO, format: string, ...args: any[]) {
 	out.print(sprintf.apply(null, [format].concat(args)));
+}
+
+export function passwordFieldPrompt(io: TermIO, randomPassFunc : () => string) : Q.Promise<string> {
+	var password : string;
+	return asyncutil.until(() => {
+		return io.readPassword("Password (or '-' to generate a random password): ").then((passOne) => {
+			if (passOne == '-') {
+				password = randomPassFunc();
+				return Q.resolve(true);
+			} else {
+				return io.readPassword('Re-enter password: ').then((passTwo) => {
+					if (passTwo == passOne) {
+						password = passOne;
+						return true;
+					} else {
+						printf(io, 'Passwords do not match');
+						return false;
+					}
+				});
+			}
+		});
+	}).then(() => {
+		return password;
+	});
 }
 

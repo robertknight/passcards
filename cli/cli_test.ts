@@ -111,6 +111,25 @@ class FakeKeyAgent extends onepass.SimpleKeyAgent {
 var TEST_VAULT_PATH = 'lib/test-data/test.agilekeychain';
 var stdArgs = ['--vault', TEST_VAULT_PATH];
 
+// utility class for specifying responses to CLI
+// prompts
+class PromptMatcher {
+	private replies: PromptReply[];
+	private query: RegExp;
+
+	constructor(replies: PromptReply[], query: RegExp) {
+		this.replies = replies;
+		this.query = query;
+	}
+
+	with(response: string) {
+		this.replies.push({
+			match: this.query,
+			response: response
+		});
+	}
+}
+
 class CLITest {
 	fakeTerm : FakeIO;
 	keyAgent : FakeKeyAgent;
@@ -131,6 +150,10 @@ class CLITest {
 
 	runCLIWithVault(path: string, ...args: any[]) : Q.Promise<number> {
 		return this.app.exec(['--vault', path].concat(args));
+	}
+
+	replyTo(query: RegExp) : PromptMatcher {
+		return new PromptMatcher(this.fakeTerm.replies, query);
 	}
 }
 
@@ -439,6 +462,30 @@ testLib.addAsyncTest('generate password', (assert) => {
 	env.runCLI('gen-password').then((status) => {
 		assert.equal(status, 0);
 		assert.ok(env.fakeTerm.didPrint(/[A-Za-z0-9]{3}-[A-Za-z0-9]{3}-[A-Za-z0-9]{4}/));
+		testLib.continueTests();
+	}).done();
+});
+
+testLib.addAsyncTest('edit item - set field', (assert) => {
+	var env = new CLITest();
+	var vaultPath : string;
+
+	env.replyTo(/New Value/).with('newuser');
+	env.replyTo(/Password \(or/).with('newpass');
+	env.replyTo(/Re-enter/).with('newpass');
+
+	cloneTestVault().then((path) => {
+		vaultPath = path;
+		return env.runCLIWithVault(vaultPath, 'edit', 'faceb', 'set-field', 'pass');
+	}).then((status) => {
+		assert.equal(status, 0);
+		return env.runCLIWithVault(vaultPath, 'edit', 'faceb', 'set-field', 'user');
+	}).then((status) => {
+		assert.equal(status, 0);
+		return env.runCLIWithVault(vaultPath, 'show', 'faceb');
+	}).then(() => {
+		assert.ok(env.fakeTerm.didPrint(/username.*newuser/));
+		assert.ok(env.fakeTerm.didPrint(/password.*newpass/));
 		testLib.continueTests();
 	}).done();
 });
