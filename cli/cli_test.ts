@@ -286,22 +286,11 @@ testLib.addAsyncTest('copy', (assert) => {
 
 testLib.addAsyncTest('select matching item', (assert) => {
 	var env = new CLITest();
-	env.fakeTerm.replies = env.fakeTerm.replies.concat([{
-		match: /Website/,
-		response: 'facebook.com'
-	},{
-		match: /Username/,
-		response: 'jane.smith@gmail.com'
-	},{
-		match: /Password/,
-		response: 'jane',
-	},{
-		match: /Re-enter/,
-		response: 'jane'
-	},{
-		match: /Select Item/,
-		response: '2'
-	}]);
+	env.replyTo(/Website/).with('facebook.com');
+	env.replyTo(/Username/).with('jane.smith@gmail.com');
+	env.replyTo(/Password/).with('jane');
+	env.replyTo(/Re-enter/).with('jane');
+	env.replyTo(/Select Item/).with('2');
 
 	var vaultPath : string;
 	cloneTestVault().then((path) => {
@@ -326,19 +315,10 @@ testLib.addAsyncTest('select matching item', (assert) => {
 
 testLib.addAsyncTest('add login', (assert) => {
 	var env = new CLITest();
-	env.fakeTerm.replies = env.fakeTerm.replies.concat([{
-		match: /Website/,
-		response: 'mydomain.com'
-	},{
-		match: /Username/,
-		response: 'jim.smith@gmail.com'
-	},{
-		match: /Password/,
-		response: 'testpass'
-	},{
-		match: /Re-enter/,
-		response: 'testpass'
-	}]);
+	env.replyTo(/Website/).with('mydomain.com');
+	env.replyTo(/Username/).with('jim.smith@gmail.com');
+	env.replyTo(/Password/).with('testpass');
+	env.replyTo(/Re-enter/).with('testpass');
 
 	var vaultPath : string;
 	cloneTestVault().then((path) => {
@@ -385,19 +365,10 @@ testLib.addAsyncTest('trash/restore item', (assert) => {
 
 testLib.addAsyncTest('change password', (assert) => {
 	var env = new CLITest();
-	env.fakeTerm.replies = env.fakeTerm.replies.concat([{
-		match: /Re-enter existing/,
-		response: 'logMEin'
-	},{
-		match: /New password/,
-		response: 'newpass'
-	},{
-		match: /Re-enter new/,
-		response: 'newpass'
-	},{
-		match: /Hint for new/,
-		response: 'the-hint'
-	}]);
+	env.replyTo(/Re-enter existing/).with('logMEin');
+	env.replyTo(/New password/).with('newpass');
+	env.replyTo(/Re-enter new/).with('newpass');
+	env.replyTo(/Hint for new/).with('the-hint');
 
 	var vaultPath : string;
 	cloneTestVault().then((path) => {
@@ -439,10 +410,7 @@ testLib.addAsyncTest('item pattern formats', (assert) => {
 
 testLib.addAsyncTest('remove items', (assert) => {
 	var env = new CLITest();
-	env.fakeTerm.replies.push({
-		match: /Do you really want to remove these 1 item\(s\)/,
-		response: 'y'
-	});
+	env.replyTo(/Do you really want to remove these 1 item\(s\)/).with('y');
 
 	var vaultPath : string;
 	cloneTestVault().then((path) => {
