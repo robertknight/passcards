@@ -7,6 +7,7 @@ import onepass = require('../lib/onepass');
 
 var NO_SUCH_SECTION_ERROR = 'No matching section found';
 var NO_SUCH_FIELD_ERROR = 'No matching field found';
+var UNKNOWN_FIELD_TYPE_ERROR = 'Unsupported field type';
 
 export class EditCommand {
 	private io: consoleio.TermIO;
@@ -45,7 +46,7 @@ export class EditCommand {
 			nargs: 1,
 			dest: 'type',
 			help: 'Type of data for this item',
-			default: 'text',
+			defaultValue: ['text'],
 			choices: ['text', 'password']
 		});
 		addFieldCmd.addArgument(['value'], {
@@ -82,7 +83,7 @@ export class EditCommand {
 				case 'add-section':
 					return this.addSection(content, args.section);
 				case 'add-field':
-					return this.addField(content, args.section, args.field, args.type, args.value.join(' '));
+					return this.addField(content, args.section, args.field, args.type[0], args.value.join(' '));
 				case 'rename-section':
 					return this.renameSection(content, args.section, args.new_name);
 				case 'set-field':
@@ -118,6 +119,9 @@ export class EditCommand {
 			'text' : onepass.FieldType.Text,
 			'password' : onepass.FieldType.Password
 		};
+		if (fieldTypes[typeName] === undefined) {
+			return Q.reject(UNKNOWN_FIELD_TYPE_ERROR);
+		}
 
 		var section = sections[0];
 		var field = new onepass.ItemField();

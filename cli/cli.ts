@@ -89,18 +89,19 @@ export class CLI {
 			};
 		};
 
-		var showJSONCommand = subcommands.addParser('show-json');
-		showJSONCommand.addArgument(['pattern'], itemPatternArg());
-
-		var showOverviewCommand = subcommands.addParser('show-overview', {
-			description: 'Show the overview (title, type etc.) data for items'
-		});
-		showOverviewCommand.addArgument(['pattern'], itemPatternArg());
-
 		var showCommand = subcommands.addParser('show', {
-			description: 'Show the complete data for items'
+			description: 'Show the contents of an item'
 		});
 		showCommand.addArgument(['pattern'], itemPatternArg());
+		showCommand.addArgument(['--format'], {
+			action: 'store',
+			nargs: 1,
+			dest: 'format',
+			help: 'Output format for item contents',
+			defaultValue: ['full'],
+			type: 'string',
+			choices: ['overview', 'full', 'json']
+		});
 
 		subcommands.addParser('lock', {
 			description: 'Lock the vault so that the master password will be required ' +
@@ -463,29 +464,21 @@ export class CLI {
 	}
 
 	private showItemCommand(vault: onepass.Vault, pattern: string, format: ShowItemFormat) : Q.Promise<void> {
-		return item_search.lookupItems(vault, pattern).then((items) => {
-			var itemContents : Q.Promise<onepass.ItemContent>[] = [];
-			items.forEach((item) => {
-				itemContents.push(item.getContent());
-			});
-			return Q.all(itemContents).then((contents) => {
-				items.forEach((item, index) => {
-					if (index > 0) {
-						this.printf('');
-					}
-
-					if (format == ShowItemFormat.ShowOverview ||
-					    format == ShowItemFormat.ShowFull) {
-						this.printOverview(item);
-					}
-					if (format == ShowItemFormat.ShowFull) {
-						this.printDetails(contents[index]);
-					}
-					if (format == ShowItemFormat.ShowJSON) {
-						this.printf('%s', collectionutil.prettyJSON(contents[index]));
-					}
-				});
-			});
+		var item: onepass.Item;
+		return this.selectItem(vault, pattern).then((_item) => {
+			item = _item;
+			return item.getContent();
+		}).then((content) => {
+			if (format == ShowItemFormat.ShowOverview ||
+				format == ShowItemFormat.ShowFull) {
+				this.printOverview(item);
+			}
+			if (format == ShowItemFormat.ShowFull) {
+				this.printDetails(content);
+			}
+			if (format == ShowItemFormat.ShowJSON) {
+				this.printf('%s', collectionutil.prettyJSON(content));
+			}
 		});
 	}
 
@@ -540,16 +533,22 @@ export class CLI {
 			return this.listCommand(currentVault, args.pattern ? args.pattern[0] : null);
 		};
 
-		handlers['show-json'] = (args) => {
-			return this.showItemCommand(currentVault, args.pattern, ShowItemFormat.ShowJSON);
-		};
-
-		handlers['show-overview'] = (args) => {
-			return this.showItemCommand(currentVault, args.pattern, ShowItemFormat.ShowOverview);
-		};
-
 		handlers['show'] = (args) => {
-			return this.showItemCommand(currentVault, args.pattern, ShowItemFormat.ShowFull);
+			var format: ShowItemFormat;
+			switch (args.format[0]) {
+			case 'full':
+				format = ShowItemFormat.ShowFull;
+				break;
+			case 'overview':
+				format = ShowItemFormat.ShowOverview;
+				break;
+			case 'json':
+				format = ShowItemFormat.ShowJSON;
+				break;
+			default:
+				return Q.reject('Unsupported output format: ' + args.format[0]);
+			}
+			return this.showItemCommand(currentVault, args.pattern, format);
 		};
 
 		handlers['lock'] = (args) => {

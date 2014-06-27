@@ -249,7 +249,7 @@ testLib.addAsyncTest('show item', (assert) => {
 
 testLib.addAsyncTest('show overview', (assert) => {
 	var env = new CLITest(assert);
-	env.run('show-overview', 'facebook')
+	env.run('show', '--format=overview', 'facebook')
 	.then(() => {
 		assert.ok(env.fakeTerm.didPrint(/Facebook.*Login/));
 		assert.ok(env.fakeTerm.didPrint(/ID: CA20BB325873446966ED1F4E641B5A36/));
