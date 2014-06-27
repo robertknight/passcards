@@ -446,4 +446,20 @@ testLib.addAsyncTest('edit item - set field', (assert) => {
 	}).done();
 });
 
+testLib.addAsyncTest('edit item - add section and field', (assert) => {
+	var env = new CLITest(assert);
+
+	env.newVault().then(() => {
+		return env.run('edit', 'faceb', 'add-section', 'NewSection');
+	}).then(() => {
+		return env.run('edit', 'faceb', 'add-field', 'newsection', 'customfield', 'customvalue');
+	}).then(() => {
+		return env.run('show', 'faceb');
+	}).then(() => {
+		assert.ok(env.fakeTerm.didPrint(/NewSection/));
+		assert.ok(env.fakeTerm.didPrint(/customfield.*customvalue/));
+		testLib.continueTests();
+	}).done();
+});
+
 testLib.start();

@@ -25,5 +25,9 @@ testLib.addTest('parse command line', (assert) => {
 	});
 });
 
+testLib.addTest('string search ignoring case', (assert) => {
+	assert.equal(stringutil.indexOfIgnoreCase('fooBARbaz','bar'), 3);
+});
+
 testLib.start();
 

@@ -942,6 +942,10 @@ export class ItemSection {
 	title : string;
 	fields : ItemField[];
 
+	constructor() {
+		this.fields = [];
+	}
+
 	static toAgileKeychainObject(section: ItemSection) : agilekeychain.ItemSection {
 		var keychainSection = new agilekeychain.ItemSection();
 		keychainSection.name = section.name;
@@ -970,10 +974,35 @@ export class ItemSection {
 	}
 }
 
-export class ItemField {
-	// FIXME: Use an enum for this
-	kind : string;
+export enum FieldType {
+	Text,
+	Password,
+	Address,
+	Date,
+	MonthYear,
+	URL,
+	CreditCardType,
+	PhoneNumber,
+	Gender,
+	Email,
+	Menu
+}
 
+var fieldKindMap = new collectionutil.BiDiMap<FieldType, string>()
+ .add(FieldType.Text, 'string')
+ .add(FieldType.Password, 'concealed')
+ .add(FieldType.Address, 'address')
+ .add(FieldType.Date, 'date')
+ .add(FieldType.MonthYear, 'monthYear')
+ .add(FieldType.URL, 'URL')
+ .add(FieldType.CreditCardType, 'cctype')
+ .add(FieldType.PhoneNumber, 'phone')
+ .add(FieldType.Gender, 'gender')
+ .add(FieldType.Email, 'email')
+ .add(FieldType.Menu, 'menu');
+
+export class ItemField {
+	kind : FieldType;
 	name : string;
 	title : string;
 	value : any;
@@ -984,7 +1013,7 @@ export class ItemField {
 
 	static toAgileKeychainObject(field: ItemField) : agilekeychain.ItemField {
 		var keychainField = new agilekeychain.ItemField;
-		keychainField.k = field.kind;
+		keychainField.k = fieldKindMap.get(field.kind);
 		keychainField.n = field.name;
 		keychainField.t = field.title;
 		keychainField.v = field.value;
@@ -993,7 +1022,7 @@ export class ItemField {
 
 	static fromAgileKeychainObject(fieldData: agilekeychain.ItemField) : ItemField {
 		var field = new ItemField;
-		field.kind = fieldData.k;
+		field.kind = fieldKindMap.get2(fieldData.k);
 		field.name = fieldData.n;
 		field.title = fieldData.t;
 		field.value = fieldData.v;

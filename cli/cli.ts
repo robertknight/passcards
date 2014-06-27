@@ -213,7 +213,7 @@ export class CLI {
 					this.printf('  %s', section.title);
 				}
 				section.fields.forEach((field) => {
-					this.printf('  %s: %s', field.title, field.valueString());
+					this.printf('    %s: %s', field.title, field.valueString());
 				});
 			});
 		}

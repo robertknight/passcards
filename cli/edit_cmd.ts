@@ -5,6 +5,8 @@ import consoleio = require('./console');
 import item_search = require('../lib/item_search');
 import onepass = require('../lib/onepass');
 
+var NO_SUCH_SECTION_ERROR = 'No matching section found';
+
 export class EditCommand {
 	private io: consoleio.TermIO;
 	private passwordGenerator: () => string;
@@ -36,7 +38,12 @@ export class EditCommand {
 			nargs: 1,
 			dest: 'type',
 			help: 'Type of data for this item',
-			choices: ['text', 'password', 'email']
+			default: 'text',
+			choices: ['text', 'password']
+		});
+		addFieldCmd.addArgument(['value'], {
+			action: 'store',
+			nargs: '*'
 		});
 
 		// commands for updating sections and fields
@@ -71,7 +78,7 @@ export class EditCommand {
 				case 'add-section':
 					return this.addSection(content, args.section);
 				case 'add-field':
-					return this.addField(content, args.section, args.field);
+					return this.addField(content, args.section, args.field, args.type, args.value.join(' '));
 				case 'rename-section':
 					return this.renameSection(content, args.section, args.new_name);
 				case 'set-field':
@@ -91,21 +98,38 @@ export class EditCommand {
 
 	private selectField(content: onepass.ItemContent, field: string) : item_search.FieldMatch {
 		var matches = item_search.matchField(content, field);
-		if (matches.length == 0) {
-			return null;
-		} else if (matches.length == 1) {
-			return matches[0];
-		} else {
-			return matches[0];
+		return matches.length > 0 ? matches[0] : null;
+	}
+
+	private addSection(content: onepass.ItemContent, sectionTitle: string) : Q.Promise<void> {
+		var section = new onepass.ItemSection;
+		section.name = sectionTitle;
+		section.title = sectionTitle;
+		content.sections.push(section);
+		return null;
+	}
+
+	private addField(content: onepass.ItemContent, sectionName: string, fieldTitle: string, typeName: string,
+	  value: string) : Q.Promise<void> {
+		var sections = item_search.matchSection(content, sectionName);
+		if (sections.length == 0) {
+			return Q.reject(NO_SUCH_SECTION_ERROR);
 		}
-	}
 
-	private addSection(content: onepass.ItemContent, section: string) : Q.Promise<void> {
-		return Q.reject(null);
-	}
+		var fieldTypes : { [index: string] : onepass.FieldType } = {
+			'text' : onepass.FieldType.Text,
+			'password' : onepass.FieldType.Password
+		};
 
-	private addField(content: onepass.ItemContent, section: string, field: string) : Q.Promise<void> {
-		return Q.reject(null);
+		var section = sections[0];
+		var field = new onepass.ItemField();
+		field.kind = fieldTypes[typeName];
+		field.title = fieldTitle;
+		field.value = value;
+
+		section.fields.push(field);
+
+		return null;
 	}
 
 	private renameSection(content: onepass.ItemContent, section: string, newName: string) : Q.Promise<void> {

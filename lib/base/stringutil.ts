@@ -6,6 +6,10 @@ export function endsWith(str: string, suffix: string) : boolean {
 	return str.lastIndexOf(suffix) == str.length - suffix.length;
 }
 
+export function indexOfIgnoreCase(haystack: string, needle: string) : number {
+	return haystack.toLowerCase().indexOf(needle.toLowerCase());
+}
+
 /** Returns a space-separated list of all the keys in @p obj which
   * have truthy values assigned to them.
   */

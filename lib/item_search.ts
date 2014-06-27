@@ -69,8 +69,7 @@ export class FieldMatch {
 	}
 
 	isPassword() : boolean {
-		// FIXME - Use enums for field data types
-		return this.field && this.field.kind == 'C' ||
+		return this.field && this.field.kind == onepass.FieldType.Password ||
 		       this.formField && this.formField.type == onepass.FormFieldType.Password;
 	}
 }
@@ -128,6 +127,12 @@ export function matchField(content: onepass.ItemContent, pattern: string) : Fiel
 		});
 	});
 	return matches;
+}
+
+export function matchSection(content: onepass.ItemContent, pattern: string) : onepass.ItemSection[] {
+	return underscore.filter(content.sections, (section) => {
+		return stringutil.indexOfIgnoreCase(section.title, pattern) != -1;
+	});
 }
 
 function matchLabel(pattern: string, label: string) : boolean {
