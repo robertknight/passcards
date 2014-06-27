@@ -6,6 +6,7 @@ import item_search = require('../lib/item_search');
 import onepass = require('../lib/onepass');
 
 var NO_SUCH_SECTION_ERROR = 'No matching section found';
+var NO_SUCH_FIELD_ERROR = 'No matching field found';
 
 export class EditCommand {
 	private io: consoleio.TermIO;
@@ -22,7 +23,7 @@ export class EditCommand {
 		});
 		this.parser.addArgument(['item'], {
 			action: 'store',
-			help: 'Pattern specifying the items'
+			help: 'Pattern specifying the item'
 		});
 		var editCmds = this.parser.addSubparsers({dest:'action'});
 
@@ -58,16 +59,9 @@ export class EditCommand {
 			nargs: '*'
 		});
 
-		var renameFieldCmd = editCmds.addParser('rename-field');
-		renameFieldCmd.addArgument(['field']);
-		renameFieldCmd.addArgument(['new_name']);
-
-		// commands for removing sections and fields
-		var removeSectionCmd = editCmds.addParser('remove-section');
-		removeSectionCmd.addArgument(['section']);
-
-		var removeFieldCmd = editCmds.addParser('remove-field');
-		removeFieldCmd.addArgument(['field']);
+		// TODO - Add commands for:
+		// - Renaming fields
+		// - Removing sections and fields
 	}
 
 	handle(args: any, item: onepass.Item) : Q.Promise<void> {
@@ -83,12 +77,6 @@ export class EditCommand {
 					return this.renameSection(content, args.section, args.new_name);
 				case 'set-field':
 					return this.setField(content, args.field, args.value.join(' '));
-				case 'rename-field':
-					return this.renameField(content, args.field, args.new_name);
-				case 'remove-section':
-					return this.removeSection(content, args.section);
-				case 'remove-field':
-					return this.removeField(content, args.field);
 			}
 		}).then(() => {
 			item.setContent(content);
@@ -155,25 +143,7 @@ export class EditCommand {
 				});
 			}
 		} else {
-			return Q.reject('No matching field found');
+			return Q.reject(NO_SUCH_FIELD_ERROR);
 		}
-	}
-
-	private renameField(content: onepass.ItemContent, field: string, newName: string) : Q.Promise<void> {
-		var match = this.selectField(content, field);
-		if (match) {
-			match.setName(newName);
-			return Q.resolve<void>(null);
-		} else {
-			return Q.reject('No matching field found');
-		}
-	}
-
-	private removeSection(content: onepass.ItemContent, section: string) : Q.Promise<void> {
-		return Q.reject(null);
-	}
-
-	private removeField(content: onepass.ItemContent, field: string) : Q.Promise<void> {
-		return Q.reject(null);
 	}
 }
