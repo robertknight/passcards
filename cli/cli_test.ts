@@ -108,9 +108,6 @@ class FakeKeyAgent extends onepass.SimpleKeyAgent {
 	}
 }
 
-var TEST_VAULT_PATH = 'lib/test-data/test.agilekeychain';
-var stdArgs = ['--vault', TEST_VAULT_PATH];
-
 // utility class for specifying responses to CLI
 // prompts
 class PromptMatcher {
@@ -130,12 +127,36 @@ class PromptMatcher {
 	}
 }
 
+var TEST_VAULT_PATH = 'lib/test-data/test.agilekeychain';
+
+function cloneVault(vaultPath: string) : Q.Promise<string> {
+	var fs = new nodefs.FileVFS('/');
+	var tempPath = path.join(<string>(<any>os).tmpdir(), 'test-vault');
+	return vfs.VFSUtil.rmrf(fs, tempPath).then(() => {
+		return fs.stat(path.resolve(vaultPath));
+	}).then((srcFolder) => {
+		return vfs.VFSUtil.cp(fs, srcFolder, tempPath);
+	}).then(() => {
+		return tempPath;
+	});
+}
+
+/** CLITest sets up an environment for a CLI test,
+  * including a cli.CLI instance with a fake console. clipboard
+  * and key agent.
+  *
+  * By default the test uses a shared read-only test vault.
+  * Use newVault() to create a copy of this if the test needs
+  * to modify items in the vault.
+  */
 class CLITest {
 	fakeTerm : FakeIO;
 	keyAgent : FakeKeyAgent;
 	fakeClipboard : clipboard.FakeClipboard;
-	app : cli.CLI;
-	assert: testLib.Assert;
+
+	private app : cli.CLI;
+	private assert: testLib.Assert;
+	private vaultPath: string;
 
 	constructor(assert: testLib.Assert) {
 		this.fakeClipboard = new clipboard.FakeClipboard();
@@ -144,41 +165,39 @@ class CLITest {
 		this.keyAgent = new FakeKeyAgent();
 		this.app = new cli.CLI(this.fakeTerm, this.keyAgent, this.fakeClipboard);
 		this.assert = assert;
+		this.vaultPath = TEST_VAULT_PATH;
 	}
 
+	/** Create a new writable vault for testing. Subsequent run() calls
+	  * will use this vault.
+	  */
+	newVault() : Q.Promise<string> {
+		return cloneVault(TEST_VAULT_PATH).then((path) => {
+			this.vaultPath = path;
+			return path;
+		});
+	}
+
+	/** Run a CLI command, expecting it to exit successfully. */
 	run(...args: any[]) : Q.Promise<number> {
 		return this.runExpectingStatus.apply(this, [0].concat(args));
 	}
 
+	/** Run a CLI command, expecting a given exit status */
 	runExpectingStatus(expectedStatus: number, ...args: any[]) : Q.Promise<number> {
-		return this.app.exec(stdArgs.concat(args)).then((status) => {
+		var vaultArgs = ['--vault', this.vaultPath];
+		return this.app.exec(vaultArgs.concat(args)).then((status) => {
 			this.assert.equal(status, expectedStatus);
 			return status;
 		});
 	}
 
-	runWithVault(path: string, ...args: any[]) : Q.Promise<number> {
-		return this.app.exec(['--vault', path].concat(args)).then((status) => {
-			this.assert.equal(status, 0);
-			return status;
-		});
-	}
-
+	/** Create a matcher to set a canned reply to prompts from
+	  * the CLI matching @p query
+	  */
 	replyTo(query: RegExp) : PromptMatcher {
 		return new PromptMatcher(this.fakeTerm.replies, query);
 	}
-}
-
-function cloneTestVault() : Q.Promise<string> {
-	var fs = new nodefs.FileVFS('/');
-	var tempPath = path.join(<string>(<any>os).tmpdir(), 'test-vault');
-	return vfs.VFSUtil.rmrf(fs, tempPath).then(() => {
-		return fs.stat(path.resolve(TEST_VAULT_PATH));
-	}).then((srcFolder) => {
-		return vfs.VFSUtil.cp(fs, srcFolder, tempPath);
-	}).then(() => {
-		return tempPath;
-	});
 }
 
 testLib.addAsyncTest('list vault', (assert) => {
@@ -291,16 +310,13 @@ testLib.addAsyncTest('select matching item', (assert) => {
 	env.replyTo(/Re-enter/).with('jane');
 	env.replyTo(/Select Item/).with('2');
 
-	var vaultPath : string;
-	cloneTestVault().then((path) => {
-		vaultPath = path;
-
+	env.newVault().then(() => {
 		// add a second Facebook account to the vault
-		return env.runWithVault(path, 'add', 'login', 'Facebook (Jane)');
+		return env.run('add', 'login', 'Facebook (Jane)');
 	}).then(() => {
 		// copy an item from the vault. Since there are multiple items
 		// matching the pattern, the CLI will prompt to select one
-		return env.runWithVault(vaultPath, 'copy', 'facebook');
+		return env.run('copy', 'facebook');
 	}).then(() => {
 		// check that the password for the right item was copied
 		assert.equal(env.fakeClipboard.data, 'jane');
@@ -316,12 +332,10 @@ testLib.addAsyncTest('add login', (assert) => {
 	env.replyTo(/Password/).with('testpass');
 	env.replyTo(/Re-enter/).with('testpass');
 
-	var vaultPath : string;
-	cloneTestVault().then((path) => {
-		vaultPath = path;
-		return env.runWithVault(path, 'add', 'login', 'MyDomain')
+	env.newVault().then(() => {
+		return env.run('add', 'login', 'MyDomain')
 	}).then(() => {
-		return env.runWithVault(vaultPath, 'show', 'mydomain');
+		return env.run('show', 'mydomain');
 	})
 	.then(() => {
 		assert.ok(env.fakeTerm.didPrint(/mydomain.com/));
@@ -334,18 +348,16 @@ testLib.addAsyncTest('add login', (assert) => {
 
 testLib.addAsyncTest('trash/restore item', (assert) => {
 	var env = new CLITest(assert);
-	var vaultPath : string;
-	cloneTestVault().then((path) => {
-		vaultPath = path;
-		return env.runWithVault(path, 'trash', 'facebook');
+	env.newVault().then(() => {
+		return env.run('trash', 'facebook');
 	}).then(() => {
-		return env.runWithVault(vaultPath, 'show', 'facebook');
+		return env.run('show', 'facebook');
 	}).then(() => {
 		assert.ok(env.fakeTerm.didPrint(/In Trash: Yes/));
-		return env.runWithVault(vaultPath, 'restore', 'facebook');
+		return env.run('restore', 'facebook');
 	}).then(() => {
 		env.fakeTerm.output = [];
-		return env.runWithVault(vaultPath, 'show', 'facebook');
+		return env.run('show', 'facebook');
 	}).then(() => {
 		assert.ok(!env.fakeTerm.didPrint(/In Trash/));
 
@@ -360,15 +372,13 @@ testLib.addAsyncTest('change password', (assert) => {
 	env.replyTo(/Re-enter new/).with('newpass');
 	env.replyTo(/Hint for new/).with('the-hint');
 
-	var vaultPath : string;
-	cloneTestVault().then((path) => {
-		vaultPath = path;
-		return env.runWithVault(path, 'set-password');
+	env.newVault().then(() => {
+		return env.run('set-password');
 	}).then(() => {
-		return env.runWithVault(vaultPath, 'lock');
+		return env.run('lock');
 	}).then(() => {
 		env.fakeTerm.password = 'newpass';
-		return env.runWithVault(vaultPath, 'list');
+		return env.run('list');
 	}).then(() => {
 		testLib.continueTests();
 	}).done();
@@ -398,13 +408,11 @@ testLib.addAsyncTest('remove items', (assert) => {
 	var env = new CLITest(assert);
 	env.replyTo(/Do you really want to remove these 1 item\(s\)/).with('y');
 
-	var vaultPath : string;
-	cloneTestVault().then((path) => {
-		vaultPath = path;
-		return env.runWithVault(vaultPath, 'remove', 'faceb');
+	env.newVault().then(() => {
+		return env.run('remove', 'faceb');
 	}).then(() => {
-		return env.runWithVault(vaultPath, 'list');
-	}).then((status) => {
+		return env.run('list');
+	}).then(() => {
 		assert.ok(env.fakeTerm.didPrint(/0 matching item\(s\)/));
 		testLib.continueTests();
 	}).done();
@@ -420,19 +428,17 @@ testLib.addAsyncTest('generate password', (assert) => {
 
 testLib.addAsyncTest('edit item - set field', (assert) => {
 	var env = new CLITest(assert);
-	var vaultPath : string;
 
 	env.replyTo(/New Value/).with('newuser');
 	env.replyTo(/Password \(or/).with('newpass');
 	env.replyTo(/Re-enter/).with('newpass');
 
-	cloneTestVault().then((path) => {
-		vaultPath = path;
-		return env.runWithVault(vaultPath, 'edit', 'faceb', 'set-field', 'pass');
+	env.newVault().then(() => {
+		return env.run('edit', 'faceb', 'set-field', 'pass');
 	}).then(() => {
-		return env.runWithVault(vaultPath, 'edit', 'faceb', 'set-field', 'user');
+		return env.run('edit', 'faceb', 'set-field', 'user');
 	}).then(() => {
-		return env.runWithVault(vaultPath, 'show', 'faceb');
+		return env.run('show', 'faceb');
 	}).then(() => {
 		assert.ok(env.fakeTerm.didPrint(/username.*newuser/));
 		assert.ok(env.fakeTerm.didPrint(/password.*newpass/));
