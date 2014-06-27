@@ -8,7 +8,7 @@ declare module "argparse" {
 	}
 
 	export interface ArgumentOptions {
-		action : string;
+		action? : string;
 		dest? : string;
 		nargs? : any; // number or string
 		type? : string;

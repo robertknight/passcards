@@ -29,11 +29,17 @@ export class EditCommand {
 
 		// commands for adding sections and fields
 		var addSectionCmd = editCmds.addParser('add-section');
-		addSectionCmd.addArgument(['section']);
+		addSectionCmd.addArgument(['section'], {
+			help: 'Title of the new section'
+		});
 
 		var addFieldCmd = editCmds.addParser('add-field');
-		addFieldCmd.addArgument(['section']);
-		addFieldCmd.addArgument(['field']);
+		addFieldCmd.addArgument(['section'], {
+			help: 'Pattern specifying the section to add a field to'
+		});
+		addFieldCmd.addArgument(['field'], {
+			help: 'Title of the new field'
+		});
 		addFieldCmd.addArgument(['-t', '--type'], {
 			action: 'store',
 			nargs: 1,
@@ -49,11 +55,15 @@ export class EditCommand {
 
 		// commands for updating sections and fields
 		var renameSectionCmd = editCmds.addParser('rename-section');
-		renameSectionCmd.addArgument(['section']);
+		renameSectionCmd.addArgument(['section'], {
+			help: 'Pattern specifying section to rename'
+		});
 		renameSectionCmd.addArgument(['new_name']);
 
 		var setFieldCmd = editCmds.addParser('set-field');
-		setFieldCmd.addArgument(['field']);
+		setFieldCmd.addArgument(['field'], {
+			help: 'Pattern specifying field to update'
+		});
 		setFieldCmd.addArgument(['value'], {
 			action: 'store',
 			nargs: '*'
