@@ -439,7 +439,7 @@ testLib.addAsyncTest('generate password', (assert) => {
 testLib.addAsyncTest('edit item - set field', (assert) => {
 	var env = new CLITest(assert);
 
-	env.replyTo(/New Value/).with('newuser');
+	env.replyTo(/New value for "username"/).with('newuser');
 	env.replyTo(/Password \(or/).with('newpass');
 	env.replyTo(/Re-enter/).with('newpass');
 
@@ -468,6 +468,22 @@ testLib.addAsyncTest('edit item - add section and field', (assert) => {
 	}).then(() => {
 		assert.ok(env.fakeTerm.didPrint(/NewSection/));
 		assert.ok(env.fakeTerm.didPrint(/customfield.*customvalue/));
+		testLib.continueTests();
+	}).done();
+});
+
+testLib.addAsyncTest('edit item - remove field', (assert) => {
+	var env = new CLITest(assert);
+	env.newVault().then(() => {
+		return env.run('edit', 'faceb', 'add-section', 'NewSection');
+	}).then(() => {
+		return env.run('edit', 'faceb', 'add-field', 'newsection', 'customfield', 'customvalue');
+	}).then(() => {
+		return env.run('edit', 'faceb', 'remove-field', 'customfield');
+	}).then(() => {
+		return env.run('show', 'faceb');
+	}).then(() => {
+		assert.ok(!env.fakeTerm.didPrint(/customfield/));
 		testLib.continueTests();
 	}).done();
 });

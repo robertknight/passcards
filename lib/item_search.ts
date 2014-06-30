@@ -9,6 +9,7 @@ export class FieldMatch {
 	url : onepass.ItemUrl;
 	field : onepass.ItemField;
 	formField : onepass.WebFormField;
+	section : onepass.ItemSection;
 
 	static fromURL(url: onepass.ItemUrl) : FieldMatch {
 		var match = new FieldMatch;
@@ -16,9 +17,10 @@ export class FieldMatch {
 		return match;
 	}
 
-	static fromField(field: onepass.ItemField) : FieldMatch {
+	static fromField(section: onepass.ItemSection, field: onepass.ItemField) : FieldMatch {
 		var match = new FieldMatch;
 		match.field = field;
+		match.section = section;
 		return match;
 	}
 
@@ -122,7 +124,7 @@ export function matchField(content: onepass.ItemContent, pattern: string) : Fiel
 	content.sections.forEach((section) => {
 		section.fields.forEach((field) => {
 			if (matchLabel(pattern, field.title)) {
-				matches.push(FieldMatch.fromField(field));
+				matches.push(FieldMatch.fromField(section, field));
 			}
 		});
 	});
@@ -136,6 +138,6 @@ export function matchSection(content: onepass.ItemContent, pattern: string) : on
 }
 
 function matchLabel(pattern: string, label: string) : boolean {
-	return label && label.indexOf(pattern) != -1;
+	return label && stringutil.indexOfIgnoreCase(label, pattern) != -1;
 }
 

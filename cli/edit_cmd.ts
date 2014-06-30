@@ -1,5 +1,7 @@
 import argparse = require('argparse');
+import sprintf = require('sprintf');
 import Q = require('q');
+import underscore = require('underscore');
 
 import consoleio = require('./console');
 import item_search = require('../lib/item_search');
@@ -70,6 +72,11 @@ export class EditCommand {
 			nargs: '*'
 		});
 
+		var removeFieldCmd = editCmds.addParser('remove-field');
+		removeFieldCmd.addArgument(['field'], {
+			help: 'Pattern specifying field to remove'
+		});
+
 		// TODO - Add commands for:
 		// - Renaming fields
 		// - Removing sections and fields
@@ -88,6 +95,8 @@ export class EditCommand {
 					return this.renameSection(content, args.section, args.new_name);
 				case 'set-field':
 					return this.setField(content, args.field, args.value.join(' '));
+				case 'remove-field':
+					return this.removeField(content, args.field);
 			}
 		}).then(() => {
 			item.setContent(content);
@@ -149,7 +158,7 @@ export class EditCommand {
 				if (match.isPassword()) {
 					newValPromise = consoleio.passwordFieldPrompt(this.io, this.passwordGenerator);
 				} else {
-					newValPromise = this.io.readLine('New Value >');
+					newValPromise = this.io.readLine(sprintf('New value for "%s">', match.name()));
 				}
 				return newValPromise.then((newValue) => {
 					match.setValue(newValue);
@@ -159,5 +168,15 @@ export class EditCommand {
 		} else {
 			return Q.reject(NO_SUCH_FIELD_ERROR);
 		}
+	}
+
+	private removeField(content: onepass.ItemContent, field: string) : Q.Promise<void> {
+		var match = this.selectField(content, field);
+		if (!match) {
+			return Q.reject(NO_SUCH_FIELD_ERROR);
+		}
+		match.section.fields = underscore.filter(match.section.fields, (field) => {
+			return field != match.field;
+		});
 	}
 }
