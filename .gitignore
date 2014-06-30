@@ -5,3 +5,4 @@ tags
 build
 node_modules
 webui/scripts
+webui/style
