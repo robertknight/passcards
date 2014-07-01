@@ -16,7 +16,13 @@ import stringutil = require('./base/stringutil');
   *  instead.
   */
 export class Client {
-	constructor(public host: string, public port: number) {
+	/** Create a new HTTP client which connects to the given
+	  * hostname and port.
+	  *
+	  * If @p scheme is unset, the scheme from the current page is used
+	  * (in a browser context) or 'http' otherwise.
+	  */
+	constructor(public host: string, public port: number, public scheme?: string) {
 	}
 
 	get(path: string) : Q.Promise<string> {
@@ -43,6 +49,7 @@ export class Client {
 			path: path,
 			host: this.host,
 			port: this.port,
+			scheme: this.scheme,
 			withCredentials: false
 		}, (resp: http.ClientResponse) => {
 			streamutil.readAll(resp)

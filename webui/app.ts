@@ -13,6 +13,7 @@ import underscore = require('underscore');
 import url = require('url');
 
 import dropboxvfs = require('../lib/vfs/dropbox');
+import env = require('../lib/base/env');
 import http_client = require('../lib/http_client');
 import http_vfs = require('../lib/vfs/http');
 import onepass = require('../lib/onepass');
@@ -431,13 +432,19 @@ export class App {
 		fastclick.FastClick.attach(document.body);
 
 		// VFS setup
-		var opts = <any>url.parse(document.location.href, true /* parse query */).query;
 		var fs: vfs.VFS;
-		if (opts.httpfs) {
-			var hostPort = opts.httpfs.split(':');
-			fs = new http_vfs.Client(new http_client.Client(hostPort[0], parseInt(hostPort[1])));
-		} else {
-			fs = new dropboxvfs.DropboxVFS();
+		if (env.isFirefoxAddon()) {
+			fs = new http_vfs.Client(new http_client.Client('localhost', 3030, 'http'));
+		}
+
+		if (!fs) {
+			var opts = <any>url.parse(document.location.href, true /* parse query */).query;
+			if (opts.httpfs) {
+				var hostPort = opts.httpfs.split(':');
+				fs = new http_vfs.Client(new http_client.Client(hostPort[0], parseInt(hostPort[1])));
+			} else {
+				fs = new dropboxvfs.DropboxVFS();
+			}
 		}
 
 		var account = fs.login();

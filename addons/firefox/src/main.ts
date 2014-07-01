@@ -14,8 +14,7 @@ var showPanel = (state) => {
 	mainPanel = panel.Panel({
 		width: 300,
 		height: 400,
-		contentScriptFile : self_.data.url('webui_bundle.js'),
-		contentURL : self_.data.url('panel.html'),
+		contentURL : self_.data.url('index.html'),
 		onHide: onPanelHidden
 	});
 
