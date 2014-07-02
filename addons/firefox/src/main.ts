@@ -11,12 +11,14 @@ var self_ = require('sdk/self');
 var mainPanel;
 
 var showPanel = (state) => {
-	mainPanel = panel.Panel({
-		width: 300,
-		height: 400,
-		contentURL : self_.data.url('index.html'),
-		onHide: onPanelHidden
-	});
+	if (!mainPanel) {
+		mainPanel = panel.Panel({
+			width: 300,
+			height: 400,
+			contentURL : self_.data.url('index.html'),
+			onHide: onPanelHidden
+		});
+	}
 
 	if (state.checked) {
 		mainPanel.show({
