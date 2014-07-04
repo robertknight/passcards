@@ -16,7 +16,15 @@ var showPanel = (state) => {
 			width: 300,
 			height: 400,
 			contentURL : self_.data.url('index.html'),
+			contentScriptFile: self_.data.url('scripts/panel_content.js'),
+			contentScriptWhen: 'start',
 			onHide: onPanelHidden
+		});
+		tabs.on('ready', (tab) => {
+			mainPanel.port.emit('pagechanged', tab.url);
+		});
+		tabs.on('activate', (tab) => {
+			mainPanel.port.emit('pagechanged', tab.url);
 		});
 	}
 

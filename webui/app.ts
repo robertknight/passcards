@@ -17,6 +17,7 @@ import env = require('../lib/base/env');
 import http_client = require('../lib/http_client');
 import http_vfs = require('../lib/vfs/http');
 import onepass = require('../lib/onepass');
+import page_access = require('./page_access');
 import stringutil = require('../lib/base/stringutil');
 import vfs = require('../lib/vfs/vfs');
 
@@ -34,6 +35,7 @@ class AppViewState {
 	items: onepass.Item[];
 	selectedItem: onepass.Item;
 	isLocked: boolean;
+	currentURL: string;
 }
 
 class AppView extends reactts.ReactComponentBase<{}, AppViewState> {
@@ -64,6 +66,12 @@ class AppView extends reactts.ReactComponentBase<{}, AppViewState> {
 		this.setState(state);
 	}
 
+	setCurrentURL(url: string) {
+		var state = this.state;
+		state.currentURL = url;
+		this.setState(state);
+	}
+
 	setLocked(locked: boolean) {
 		var state = this.state;
 		state.isLocked = locked;
@@ -85,7 +93,8 @@ class AppView extends reactts.ReactComponentBase<{}, AppViewState> {
 		} else {
 			children.push(new ItemListView({
 				items: this.state.items,
-				onSelectedItemChanged: (item) => { this.setSelectedItem(item); }
+				onSelectedItemChanged: (item) => { this.setSelectedItem(item); },
+				currentURL: this.state.currentURL
 			}));
 			children.push(new DetailsView({
 				item: this.state.selectedItem,
@@ -184,6 +193,7 @@ class UnlockPane extends reactts.ReactComponentBase<UnlockPaneProps, UnlockPaneS
 // Search box to search through items in the view
 class SearchFieldProps {
 	onQueryChanged: (query: string) => void;
+	filter: string;
 }
 
 class SearchField extends reactts.ReactComponentBase<SearchFieldProps, {}> {
@@ -201,7 +211,8 @@ class SearchField extends reactts.ReactComponentBase<SearchFieldProps, {}> {
 				react.DOM.input({className: 'searchFieldInput',
 					type: 'text',
 					placeholder: 'Search...',
-					ref: 'searchField'
+					ref: 'searchField',
+					value: this.props.filter
 				})
 			);
 	}
@@ -214,11 +225,22 @@ class ItemListViewState {
 class ItemListViewProps {
 	items: onepass.Item[];
 	onSelectedItemChanged: (item: onepass.Item) => void;
+	currentURL: string;
 }
 
 class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, ItemListViewState> {
 	getInitialState() {
-		return new ItemListViewState();
+		var state = new ItemListViewState();
+		if (this.props.currentURL) {
+			state.filter = this.props.currentURL;
+		}
+		return state;
+	}
+
+	componentWillReceiveProps(nextProps: ItemListViewProps) {
+		if (this.props.currentURL) {
+			this.updateFilter(this.props.currentURL);
+		}
 	}
 
 	updateFilter = (filter: string) => {
@@ -229,7 +251,7 @@ class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, ItemLis
 
 	render() {
 		return react.DOM.div({className: 'itemListView'},
-			new SearchField({onQueryChanged: this.updateFilter}),
+			new SearchField({onQueryChanged: this.updateFilter, filter: this.state.filter}),
 			new ItemList({items: this.props.items, filter: this.state.filter,
 			              onSelectedItemChanged: this.props.onSelectedItemChanged})
 		);
@@ -424,8 +446,11 @@ function itemIconURL(item: onepass.Item) : string {
 	}
 }
 
+declare var firefoxAddOn: page_access.PageAccess;
+
 export class App {
 	vault : Q.Promise<onepass.Vault>;
+	private appView : AppView;
 
 	constructor() {
 		// UI setup
@@ -451,7 +476,7 @@ export class App {
 		var vault = Q.defer<onepass.Vault>();
 		this.vault = vault.promise;
 		
-		var appView = new AppView({});
+		this.appView = new AppView({});
 		onepass_crypto.CryptoJsCrypto.initWorkers();
 
 		account.then(() => {
@@ -459,10 +484,21 @@ export class App {
 		}).done();
 
 		vault.promise.then((vault) => {
-			appView.setVault(vault);
+			this.appView.setVault(vault);
 		}).done();
+
+		// Browser extension connector
+		if (firefoxAddOn) {
+			this.setupBrowserInteraction(firefoxAddOn);
+		}
 		
-		react.renderComponent(appView, document.getElementById('app-view'));
+		react.renderComponent(this.appView, document.getElementById('app-view'));
+	}
+
+	private setupBrowserInteraction(access: page_access.PageAccess) {
+		access.addPageChangedListener((url) => {
+			this.appView.setCurrentURL(url);
+		});
 	}
 }
 

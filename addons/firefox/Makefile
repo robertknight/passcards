@@ -1,4 +1,4 @@
-all: lib/main.js data/index.html data/scripts/webui_bundle.js data/scripts/crypto_worker.js data/style/app.css data/panel.html data/test.js
+all: lib/main.js data/index.html data/scripts/webui_bundle.js data/scripts/crypto_worker.js data/style/app.css data/panel.html data/scripts/panel_content.js
 
 lib/main.js: src/main.ts
 	tsc src/main.ts --outDir lib
@@ -18,14 +18,14 @@ data/scripts/crypto_worker.js: data/scripts ../../webui/scripts/crypto_worker.js
 data/scripts/webui_bundle.js: data/scripts ../../webui/scripts/webui_bundle.js
 	cp ../../webui/scripts/webui_bundle.js data/scripts/
 
+data/scripts/panel_content.js: data/scripts src/panel_content.ts
+	tsc src/panel_content.ts --outDir data/scripts
+
 data/style/app.css: data/style ../../webui/style/app.css
 	cp ../../webui/style/app.css data/style/
 
 data/panel.html: src/panel.html
 	cp src/panel.html data/
-
-data/test.js: src/test.js
-	browserify src/test.js > data/test.js
 
 clean:
 	rm -rf data/*
