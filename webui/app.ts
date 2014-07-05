@@ -16,6 +16,7 @@ import dropboxvfs = require('../lib/vfs/dropbox');
 import env = require('../lib/base/env');
 import http_client = require('../lib/http_client');
 import http_vfs = require('../lib/vfs/http');
+import item_search = require('../lib/item_search');
 import onepass = require('../lib/onepass');
 import page_access = require('./page_access');
 import stringutil = require('../lib/base/stringutil');
@@ -208,7 +209,6 @@ class UnlockPane extends reactts.ReactComponentBase<UnlockPaneProps, UnlockPaneS
 // Search box to search through items in the view
 class SearchFieldProps {
 	onQueryChanged: (query: string) => void;
-	filter: string;
 }
 
 class SearchField extends reactts.ReactComponentBase<SearchFieldProps, {}> {
@@ -226,8 +226,7 @@ class SearchField extends reactts.ReactComponentBase<SearchFieldProps, {}> {
 				react.DOM.input({className: 'searchFieldInput',
 					type: 'text',
 					placeholder: 'Search...',
-					ref: 'searchField',
-					defaultValue: this.props.filter
+					ref: 'searchField'
 				})
 			);
 	}
@@ -246,16 +245,7 @@ class ItemListViewProps {
 class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, ItemListViewState> {
 	getInitialState() {
 		var state = new ItemListViewState();
-		if (this.props.currentURL) {
-			state.filter = this.props.currentURL;
-		}
 		return state;
-	}
-
-	componentWillReceiveProps(nextProps: ItemListViewProps) {
-		if (nextProps.currentURL) {
-			this.updateFilter(nextProps.currentURL);
-		}
 	}
 
 	updateFilter = (filter: string) => {
@@ -265,9 +255,15 @@ class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, ItemLis
 	}
 
 	render() {
+		var filterURL : string;
+		if (!this.state.filter && this.props.currentURL) {
+			filterURL = this.props.currentURL;
+		}
+
 		return react.DOM.div({className: 'itemListView'},
-			new SearchField({onQueryChanged: this.updateFilter, filter: this.state.filter}),
+			new SearchField({onQueryChanged: this.updateFilter}),
 			new ItemList({items: this.props.items, filter: this.state.filter,
+			              filterURL: filterURL,
 			              onSelectedItemChanged: this.props.onSelectedItemChanged})
 		);
 	}
@@ -303,7 +299,6 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 	}
 
 	componentDidMount() {
-		console.log($(this.refs['backLink'].getDOMNode()));
 		$(this.refs['backLink'].getDOMNode()).click(() => {
 			this.props.onGoBack();
 		});
@@ -384,11 +379,11 @@ class ItemListState {
 class ItemListProps {
 	items: onepass.Item[];
 	filter: string;
+	filterURL: string;
 	onSelectedItemChanged: (item: onepass.Item) => void;
 }
 
 class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> {
-	
 
 	itemAccount(item: onepass.Item) : string {
 		// TODO - Extract item contents and save account name
@@ -410,29 +405,45 @@ class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> 
 		return new ItemListState();
 	}
 
+	createListItem(item: onepass.Item) : Item {
+		return new Item({
+			key: item.uuid,
+			title: item.title,
+			iconURL: itemIconURL(item),
+			accountName: this.itemAccount(item),
+			location: item.location,
+			domain: itemDomain(item),
+			onSelected: () => {
+				this.setSelectedItem(item);
+			}
+		});
+	}
+
 	render() {
 		var listItems : Item[] = [];
-		this.props.items.forEach((item) => {
-			if (this.props.filter && item.title.toLowerCase().indexOf(this.props.filter) == -1) {
-				return;
+
+		if (this.props.filter) {
+			this.props.items.forEach((item) => {
+				if (this.props.filter && item.title.toLowerCase().indexOf(this.props.filter) == -1) {
+					return;
+				}
+				listItems.push(this.createListItem(item));
+			});
+			listItems.sort((a, b) => {
+				return a.props.title.toLowerCase().localeCompare(b.props.title.toLowerCase());
+			});
+		} else if (this.props.filterURL) {
+			var matchingItems = item_search.filterItemsByUrl(this.props.items, this.props.filterURL);
+			if (matchingItems.length == 0) {
+				// if no items appear to match this URL, show the
+				// complete list and let the user browse or filter
+				matchingItems = this.props.items;
 			}
 
-			listItems.push(new Item({
-				key: item.uuid,
-				title: item.title,
-				iconURL: itemIconURL(item),
-				accountName: this.itemAccount(item),
-				location: item.location,
-				domain: itemDomain(item),
-				onSelected: () => {
-					this.setSelectedItem(item);
-				}
-			}));
-		});
-
-		listItems.sort((a, b) => {
-			return a.props.title.toLowerCase().localeCompare(b.props.title.toLowerCase());
-		});
+			matchingItems.forEach((item) => {
+				listItems.push(this.createListItem(item));
+			});
+		}
 		
 		return react.DOM.div({className: 'itemList'},
 			listItems
