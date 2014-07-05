@@ -137,7 +137,8 @@ export function itemUrlScore(item: onepass.Item, url: string) {
 	url = stripQuery(url);
 
 	// exact match
-	if (itemUrl == url) {
+	if (itemUrl.length > 0 &&
+	    itemUrl == url) {
 		return 1;
 	}
 
@@ -145,12 +146,14 @@ export function itemUrlScore(item: onepass.Item, url: string) {
 	var parsedItemUrl = urijs(itemUrl);
 	var parsedUrl = urijs(url);
 
-	if (parsedItemUrl.authority() == parsedUrl.authority()) {
+	if (parsedItemUrl.authority().length > 0 &&
+	    parsedItemUrl.authority() == parsedUrl.authority()) {
 		return 0.8;
 	}
 
 	// primary domain match
-	if (parsedItemUrl.domain() == parsedUrl.domain()) {
+	if (parsedItemUrl.domain().length > 0 &&
+	    parsedItemUrl.domain() == parsedUrl.domain()) {
 		return 0.5;
 	}
 

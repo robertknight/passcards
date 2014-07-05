@@ -57,6 +57,10 @@ testLib.addTest('URL match score', (assert) => {
 
 	// unrelated domains
 	assert.equal(item_search.itemUrlScore(item, 'google.com'), 0);
+	
+	// invalid URLs
+	assert.equal(item_search.itemUrlScore(itemWithTitleAndUrl('Foo', ''), 'about:newtab'), 0);
+	assert.equal(item_search.itemUrlScore(itemWithTitleAndUrl('Foo', ''), ''), 0);
 });
 
 testLib.addTest('filter items by URL match', (assert) => {
