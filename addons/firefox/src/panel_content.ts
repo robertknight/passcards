@@ -50,3 +50,6 @@ pageAccess.autofill = (fields) => {
 	self_.port.emit('autofill', fields);
 };
 
+// notify the add-on that the panel content is ready
+self_.port.emit('ready');
+

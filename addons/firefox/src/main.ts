@@ -69,13 +69,13 @@ function main() {
 				var worker = tabWorkers[tabs.activeTab.id];
 				worker.port.emit('autofill', entries);
 			});
+			mainPanel.port.on('ready', () => {
+				notifyPageChanged(tabs.activeTab);
+			});
 
 			for (var tab in tabs) {
 				if (tab.id) {
 					setupTab(tab);
-					if (tab === tabs.activeTab) {
-						notifyPageChanged(tab);
-					}
 				}
 			}
 		}
