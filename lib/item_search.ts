@@ -1,6 +1,8 @@
 /// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
+/// <reference path="../typings/URIjs.d.ts" />
 
 import underscore = require('underscore');
+import urijs = require('URIjs');
 
 import onepass = require('./onepass');
 import stringutil = require('./base/stringutil');
@@ -104,6 +106,66 @@ export function lookupItems(vault: onepass.Vault, pattern: string) : Q.Promise<o
 			return matchItem(item, pattern);
 		});
 	});
+}
+
+// Returns the part of a URL before the query string
+function stripQuery(url: string) : string {
+	var queryOffset = url.indexOf('?');
+	var strippedUrl : string;
+	if (queryOffset != -1) {
+		strippedUrl = url.slice(0, queryOffset);
+	} else {
+		strippedUrl = url;
+	}
+	while (stringutil.endsWith(strippedUrl, '/')) {
+		strippedUrl = strippedUrl.slice(0, strippedUrl.length - 1);
+	}
+	return strippedUrl;
+}
+
+/** Returns a score indicating the relevance of an item to a URL.
+  * A positive (> 0) score indicates some relevance. A zero or negative
+  * score indicates no match.
+  */
+export function itemUrlScore(item: onepass.Item, url: string) {
+	if (url.indexOf(':') == -1) {
+		// assume HTTPS if URL is lacking a scheme
+		url = 'https://' + url;
+	}
+
+	var itemUrl = stripQuery(item.location);
+	url = stripQuery(url);
+
+	// exact match
+	if (itemUrl == url) {
+		return 1;
+	}
+
+	// full authority match
+	var parsedItemUrl = urijs(itemUrl);
+	var parsedUrl = urijs(url);
+
+	if (parsedItemUrl.authority() == parsedUrl.authority()) {
+		return 0.8;
+	}
+
+	// primary domain match
+	if (parsedItemUrl.domain() == parsedUrl.domain()) {
+		return 0.5;
+	}
+
+	return 0;
+}
+
+/** Returns a ranked list of items which may match a given URL. */
+export function filterItemsByUrl(items: onepass.Item[], url: string) : onepass.Item[] {
+	var matches = underscore.filter(items, (item) => {
+		return itemUrlScore(item, url) > 0;
+	});
+	matches.sort((a, b) => {
+		return itemUrlScore(b, url) - itemUrlScore(a, url);
+	});
+	return matches;
 }
 
 /** Returns a list of fields in an item's content which match @p pattern */
