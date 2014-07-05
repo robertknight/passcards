@@ -420,30 +420,35 @@ class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> 
 	}
 
 	render() {
-		var listItems : Item[] = [];
+		var matchingItems : onepass.Item[] = [];
+		var matchesAreSorted = false;
 
 		if (this.props.filter) {
-			this.props.items.forEach((item) => {
-				if (this.props.filter && item.title.toLowerCase().indexOf(this.props.filter) == -1) {
-					return;
-				}
-				listItems.push(this.createListItem(item));
-			});
-			listItems.sort((a, b) => {
-				return a.props.title.toLowerCase().localeCompare(b.props.title.toLowerCase());
+			matchingItems = underscore.filter(this.props.items, (item) => {
+				return item_search.matchItem(item, this.props.filter);
 			});
 		} else if (this.props.filterURL) {
-			var matchingItems = item_search.filterItemsByUrl(this.props.items, this.props.filterURL);
-			if (matchingItems.length == 0) {
+			matchingItems = item_search.filterItemsByUrl(this.props.items, this.props.filterURL);
+			if (matchingItems.length > 0) {
+				matchesAreSorted = true;
+			} else {
 				// if no items appear to match this URL, show the
 				// complete list and let the user browse or filter
 				matchingItems = this.props.items;
 			}
+		} else {
+			matchingItems = this.props.items;
+		}
 
-			matchingItems.forEach((item) => {
-				listItems.push(this.createListItem(item));
+		if (!matchesAreSorted) {
+			matchingItems.sort((a, b) => {
+				return a.title.toLowerCase().localeCompare(b.title.toLowerCase());
 			});
 		}
+
+		var listItems = matchingItems.map((item) => {
+			return this.createListItem(item);
+		});
 		
 		return react.DOM.div({className: 'itemList'},
 			listItems
