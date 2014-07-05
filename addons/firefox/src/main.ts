@@ -44,12 +44,15 @@ function main() {
 	var showPanel = (state) => {
 		if (!mainPanel) {
 			mainPanel = panel.Panel({
-				width: 300,
+				width: 400,
 				height: 400,
 				contentURL : self_.data.url('index.html'),
 				contentScriptFile: self_.data.url('scripts/panel_content.js'),
 				contentScriptWhen: 'start',
 				onHide: onPanelHidden
+			});
+			mainPanel.port.on('oauth-credentials-received', (hash: string) => {
+				mainPanel.contentURL = self_.data.url('index.html') + hash;
 			});
 			for (var tab in tabs) {
 				setupTab(tab);

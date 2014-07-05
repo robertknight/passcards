@@ -43,8 +43,23 @@ declare module "dropbox" {
 	}
 
 	export module AuthDriver {
+		export var BrowserBase : {
+			cleanupLocation() : void;
+		}
+
+		interface RedirectDriverOpts {
+			redirectUrl?: string;
+			redirectFile?: string;
+			scope?: string;
+			rememberUser?: boolean;
+		}
+
 		export var NodeServer : {
 			new(port: number) : AuthDriver;
+		}
+
+		export var Redirect : {
+			new(options: RedirectDriverOpts) : AuthDriver;
 		}
 	}
 

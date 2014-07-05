@@ -19,6 +19,16 @@ export interface AutoFillEntry {
 /** Interface exposed by browser extensions.
   */
 export interface PageAccess {
+	/** Returns the URI that should be used as the redirect target
+	  * for OAuth authentication requests.
+	  *
+	  * In the Firefox add-on this must be set as redirects
+	  * from external websites back to resource:// URLs are
+	  * disallowed, so a redirect back to a dummy http://
+	  * URL is used, which is intercepted by the add-on.
+	  */
+	oauthRedirectUrl() : string;
+
 	/** Register a callback that is invoked when the URL
 	  * of the active page changes, either by switching tabs
 	  * or by switching page in the active tab.

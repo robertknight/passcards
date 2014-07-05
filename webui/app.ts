@@ -459,7 +459,10 @@ export class App {
 		// VFS setup
 		var fs: vfs.VFS;
 		if (env.isFirefoxAddon()) {
-			fs = new http_vfs.Client(new http_client.Client('localhost', 3030, 'http'));
+			fs = new dropboxvfs.DropboxVFS({
+				authRedirectUrl: firefoxAddOn.oauthRedirectUrl(),
+				disableLocationCleanup: true
+			});
 		}
 
 		if (!fs) {

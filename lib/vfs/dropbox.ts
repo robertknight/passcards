@@ -6,15 +6,51 @@ import Q = require('q');
 
 import vfs = require('./vfs');
 
+export interface Options {
+	/** The URL which the browser should be redirected back to
+	  * after completing OAuth login.
+	  *
+	  * This defaults to the current page's URL.
+	  *
+	  * In some environments (eg. Firefox addons) this may need
+	  * to be modified to account for security restrictions.
+	  */
+	authRedirectUrl: string;
+	disableLocationCleanup: boolean;
+}
+
 export class DropboxVFS implements vfs.VFS {
 	private client : dropbox.Client;
 
-	constructor() {
+	constructor(options?: Options) {
 		var apiKeys = { "key" : "3lq6pyowxfvad8z" }
 		this.client = new dropbox.Client(apiKeys);
+
+		var redirectOpts: dropbox.AuthDriver.RedirectDriverOpts = {};
+		if (options) {
+			redirectOpts.redirectUrl = options.authRedirectUrl;
+		}
+		this.client.authDriver(new dropbox.AuthDriver.Redirect(redirectOpts));
 		this.client.onError.addListener((error) => {
 			console.log(error);
 		});
+
+		if (options && options.disableLocationCleanup) {
+			// the Dropbox redirect OAuth driver tries to use
+			// window.history.replaceState() to remove the access token
+			// from window.location's hash.
+			//
+			// This fails in the Firefox add-on environment when the
+			// host page is at a resource:// URL , possibly due to the
+			// same security restrictions that prevent the page from
+			// trying to redirect itself to a resource:// URL
+			//
+			// Here we make the cleanupLocation() function a no-op to
+			// prevent this.
+			dropbox.AuthDriver.BrowserBase.cleanupLocation = () => {
+				/* no-op */
+			};
+		}
 	}
 
 	login() : Q.Promise<string> {
