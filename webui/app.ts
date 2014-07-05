@@ -94,6 +94,11 @@ class AppView extends reactts.ReactComponentBase<{}, AppViewState> {
 	setCurrentURL(url: string) {
 		var state = this.state;
 		state.currentURL = url;
+
+		// switch back to the main item
+		// list when the current page changes
+		state.selectedItem = null;
+
 		this.setState(state);
 	}
 
