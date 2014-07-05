@@ -12,6 +12,7 @@ import reactts = require('react-typescript');
 import underscore = require('underscore');
 import url = require('url');
 
+import autofill = require('./autofill');
 import dropboxvfs = require('../lib/vfs/dropbox');
 import env = require('../lib/base/env');
 import http_client = require('../lib/http_client');
@@ -55,6 +56,14 @@ class AppViewState {
 
 /** The main top-level app view. */
 class AppView extends reactts.ReactComponentBase<{}, AppViewState> {
+	private autofillHandler: autofill.AutoFillHandler;
+
+	constructor(autofillHandler: autofill.AutoFillHandler) {
+		super({});
+
+		this.autofillHandler = autofillHandler;
+	}
+
 	getInitialState() {
 		var state = new AppViewState;
 		state.mainView = ActiveView.UnlockPane;
@@ -94,6 +103,10 @@ class AppView extends reactts.ReactComponentBase<{}, AppViewState> {
 		this.setState(state);
 	}
 
+	autofill(item: onepass.Item) {
+		this.autofillHandler.autofill(item);
+	}
+
 	render() {
 		var children: react.ReactComponent<any,any>[] = [];
 		if (this.state.isLocked) {
@@ -117,6 +130,9 @@ class AppView extends reactts.ReactComponentBase<{}, AppViewState> {
 				iconURL: this.state.selectedItem ? itemIconURL(this.state.selectedItem) : '',
 				onGoBack: () => {
 					this.setSelectedItem(null);
+				},
+				autofill: () => {
+					this.autofill(this.state.selectedItem);
 				}
 			}));
 		}
@@ -162,7 +178,6 @@ class UnlockPane extends reactts.ReactComponentBase<UnlockPaneProps, UnlockPaneS
 			this.props.vault.unlock(masterPass).then(() => {
 				this.setUnlockState(UnlockState.Success);
 				this.props.onUnlock();
-				console.log('vault unlocked!');
 			})
 			.fail((err) => {
 				this.setUnlockState(UnlockState.Failed);
@@ -275,6 +290,7 @@ class DetailsViewProps {
 	iconURL: string;
 
 	onGoBack: () => any;
+	autofill: () => void;
 }
 
 class ItemSectionProps {
@@ -302,6 +318,9 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 		$(this.refs['backLink'].getDOMNode()).click(() => {
 			this.props.onGoBack();
 		});
+		$(this.refs['autofillBtn'].getDOMNode()).click(() => {
+			this.props.autofill();
+		});
 	}
 
 	render() {
@@ -316,7 +335,8 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 					react.DOM.img({className: 'detailsHeaderIcon itemIcon', src:this.props.iconURL}),
 					react.DOM.div({},
 						react.DOM.div({className: 'detailsTitle'}, this.props.item.title),
-						react.DOM.div({className: 'detailsLocation'}, this.props.item.location))),
+						react.DOM.div({className: 'detailsLocation'}, this.props.item.location))
+				),
 				react.DOM.div({className: 'detailsCore'},
 					react.DOM.div({className: 'detailsField detailsAccount'},
 						react.DOM.div({className: 'detailsFieldLabel'}, 'Account'),
@@ -337,6 +357,9 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 		},
 			react.DOM.div({className: stringutil.truthyKeys({toolbar: true, detailsToolbar: true})},
 				react.DOM.a({className: 'toolbarLink', href:'#', ref:'backLink'}, 'Back')),
+				react.DOM.div({className: 'itemActionBar'},
+						react.DOM.input({className: 'itemActionButton', type: 'button', value: 'Autofill', ref: 'autofillBtn'})
+				),
 			detailsContent ? detailsContent : []
 		);
 	}
@@ -506,7 +529,12 @@ export class App {
 			}
 		}
 
-		this.appView = new AppView({});
+		var pageAccess: page_access.PageAccess;
+		if (firefoxAddOn) {
+			pageAccess = firefoxAddOn;
+		}
+
+		this.appView = new AppView(new autofill.AutoFiller(pageAccess));
 		onepass_crypto.CryptoJsCrypto.initWorkers();
 
 		var setupView = new SetupView({});
@@ -516,9 +544,8 @@ export class App {
 			var vault = new onepass.Vault(fs, '/1Password/1Password.agilekeychain');
 			react.renderComponent(this.appView, document.getElementById('app-view'));
 			this.appView.setVault(vault);
-
-			if (firefoxAddOn) {
-				this.setupBrowserInteraction(firefoxAddOn);
+			if (pageAccess) {
+				this.setupBrowserInteraction(pageAccess);
 			}
 		}).fail((err) => {
 			console.log('Failed to setup vault', err);

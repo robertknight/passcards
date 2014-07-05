@@ -11,9 +11,12 @@ var self_ = require('sdk/self');
 
 var mainPanel;
 var toolbarButton;
+var tabWorkers = {};
 
 function setupTab(tab) {
-	// TODO - Install page access script
+	tabWorkers[tab.id] = tab.attach({
+		contentScriptFile: self_.data.url('scripts/page.js')
+	});
 }
 
 function notifyPageChanged(tab) {
@@ -32,6 +35,7 @@ function main() {
 	preferences_service.set('javascript.options.strict', false);
 
 	tabs.on('ready', (tab) => {
+		setupTab(tab);
 		if (tab === tabs.activeTab) {
 			notifyPageChanged(tab);
 		}
@@ -54,10 +58,24 @@ function main() {
 			mainPanel.port.on('oauth-credentials-received', (hash: string) => {
 				mainPanel.contentURL = self_.data.url('index.html') + hash;
 			});
+			mainPanel.port.on('find-fields', () => {
+				var worker = tabWorkers[tabs.activeTab.id];
+				worker.port.once('found-fields', (fields) => {
+					mainPanel.port.emit('found-fields', fields);
+				});
+				worker.port.emit('find-fields');
+			});
+			mainPanel.port.on('autofill', (entries: any[]) => {
+				var worker = tabWorkers[tabs.activeTab.id];
+				worker.port.emit('autofill', entries);
+			});
+
 			for (var tab in tabs) {
-				setupTab(tab);
-				if (tab === tabs.activeTab) {
-					notifyPageChanged(tab);
+				if (tab.id) {
+					setupTab(tab);
+					if (tab === tabs.activeTab) {
+						notifyPageChanged(tab);
+					}
 				}
 			}
 		}

@@ -40,9 +40,10 @@ self_.port.on('pagechanged', (url: string) => {
 });
 
 pageAccess.findForms = (callback) => {
-	console.log('finding forms in page');
-	// TODO - Submit request to collect forms on
-	// current page
+	self_.port.once('found-fields', (fields) => {
+		callback(cloneInto(fields, unsafeWindow));
+	});
+	self_.port.emit('find-fields');
 };
 
 pageAccess.autofill = (fields) => {

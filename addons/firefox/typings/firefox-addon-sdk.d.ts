@@ -5,4 +5,5 @@ interface CreateOptions {
 }
 
 declare function createObjectIn(object: Object, options: CreateOptions);
+declare function cloneInto<T>(object: T, target: Window);
 declare var unsafeWindow: Window;
