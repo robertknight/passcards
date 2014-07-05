@@ -1,46 +1,21 @@
 /// <reference path="../typings/firefox-addon-sdk.d.ts" />
 
-/// FIXME - AVOID DUPLICATING THIS
-declare enum FieldType {
-    Text = 0,
-    Password = 1,
-    Other = 2,
-}
-interface InputField {
-    id: string;
-    name: string;
-    type: FieldType;
-}
-interface AutoFillEntry {
-    fieldId: string;
-    fieldName: string;
-    value: string;
-}
+import page_access = require('../../../webui/page_access');
 
-/** Interface exposed by browser extensions.
-*/
-interface PageAccess {
-    /** Register a callback that is invoked when the URL
-    * of the active page changes, either by switching tabs
-    * or by switching page in the active tab.
-    */
-    addPageChangedListener(listener: (url: string) => void): void;
-    /** Fetch a list of auto-fillable fields on the current page. */
-    findForms(callback: (formList: InputField[]) => void): void;
-    /** Auto-fill fields on the current page */
-    autofill(fields: AutoFillEntry[]): void;
-}
-/// FIXME - AVOID DUPLICATING THIS
-
-var pageAccess: PageAccess = createObjectIn(unsafeWindow, { defineAs: 'firefoxAddOn' });
+var pageAccess: page_access.PageAccess = createObjectIn(unsafeWindow, { defineAs: 'firefoxAddOn' });
 var pageChangedListeners: Array<(url: string) => void> = [];
+var currentURL: string;
 
 pageAccess.addPageChangedListener = (listener) => {
 	pageChangedListeners.push(listener);
+	if (currentURL) {
+		listener(currentURL);
+	}
 }
 
 var self_ = <any>self;
 self_.port.on('pagechanged', (url: string) => {
+	currentURL = url;
 	pageChangedListeners.forEach((listener) => {
 		listener(url);
 	});
@@ -48,9 +23,10 @@ self_.port.on('pagechanged', (url: string) => {
 
 pageAccess.findForms = (callback) => {
 	console.log('finding forms in page');
+	// TODO - Submit request to collect forms on
+	// current page
 };
 
 pageAccess.autofill = (fields) => {
 	self_.port.emit('autofill', fields);
 };
-

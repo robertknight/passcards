@@ -212,7 +212,7 @@ class SearchField extends reactts.ReactComponentBase<SearchFieldProps, {}> {
 					type: 'text',
 					placeholder: 'Search...',
 					ref: 'searchField',
-					value: this.props.filter
+					defaultValue: this.props.filter
 				})
 			);
 	}
@@ -238,8 +238,8 @@ class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, ItemLis
 	}
 
 	componentWillReceiveProps(nextProps: ItemListViewProps) {
-		if (this.props.currentURL) {
-			this.updateFilter(this.props.currentURL);
+		if (nextProps.currentURL) {
+			this.updateFilter(nextProps.currentURL);
 		}
 	}
 

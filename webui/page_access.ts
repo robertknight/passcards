@@ -1,5 +1,3 @@
-export declare var firefoxAddOn: PageAccess;
-
 export enum FieldType {
 	Text,
 	Password,
