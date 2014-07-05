@@ -29,6 +29,20 @@ enum ActiveView {
 	ItemDetailView
 }
 
+/** The app setup screen. This is responsible for introducing the user
+  * to the app and displaying the initial status page when connecting
+  * to cloud storage.
+  */
+class SetupView extends reactts.ReactComponentBase<{}, {}> {
+	render() {
+		return react.DOM.div({className: 'setupView'},
+			react.DOM.div({className: 'loginText'},
+				'Connecting to Dropbox...'
+			)
+		);
+	}
+}
+
 class AppViewState {
 	mainView: ActiveView;
 	vault: onepass.Vault;
@@ -38,6 +52,7 @@ class AppViewState {
 	currentURL: string;
 }
 
+/** The main top-level app view. */
 class AppView extends reactts.ReactComponentBase<{}, AppViewState> {
 	getInitialState() {
 		var state = new AppViewState;
@@ -475,27 +490,23 @@ export class App {
 			}
 		}
 
-		var account = fs.login();
-		var vault = Q.defer<onepass.Vault>();
-		this.vault = vault.promise;
-		
 		this.appView = new AppView({});
 		onepass_crypto.CryptoJsCrypto.initWorkers();
 
-		account.then(() => {
-			vault.resolve(new onepass.Vault(fs, '/1Password/1Password.agilekeychain'));
-		}).done();
-
-		vault.promise.then((vault) => {
-			this.appView.setVault(vault);
-		}).done();
-
-		// Browser extension connector
-		if (firefoxAddOn) {
-			this.setupBrowserInteraction(firefoxAddOn);
-		}
+		var setupView = new SetupView({});
+		react.renderComponent(setupView, document.getElementById('app-view'));
 		
-		react.renderComponent(this.appView, document.getElementById('app-view'));
+		fs.login().then(() => {
+			var vault = new onepass.Vault(fs, '/1Password/1Password.agilekeychain');
+			react.renderComponent(this.appView, document.getElementById('app-view'));
+			this.appView.setVault(vault);
+
+			if (firefoxAddOn) {
+				this.setupBrowserInteraction(firefoxAddOn);
+			}
+		}).fail((err) => {
+			console.log('Failed to setup vault', err);
+		});
 	}
 
 	private setupBrowserInteraction(access: page_access.PageAccess) {
