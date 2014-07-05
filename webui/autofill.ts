@@ -24,16 +24,16 @@ export class AutoFiller {
 					var isPasswordField = false;
 
 					usernameKeys.forEach((key) => {
-						if ((field.id && field.id.indexOf(key) != -1) ||
-							(field.name && field.name.indexOf(key) != -1) ||
+						if ((field.id && field.id.toLowerCase().indexOf(key) != -1) ||
+							(field.name && field.name.toLowerCase().indexOf(key) != -1) ||
 							field.type === page_access.FieldType.Email) {
 
 							isUsernameField = true;
 						}
 					});
 					if (!isUsernameField) {
-						if ((field.id && field.id.indexOf('password') != -1) ||
-							(field.name && field.name.indexOf('password') != -1) ||
+						if ((field.id && field.id.toLowerCase().indexOf('password') != -1) ||
+							(field.name && field.name.toLowerCase().indexOf('password') != -1) ||
 							field.type === page_access.FieldType.Password) {
 
 							isPasswordField = true;

@@ -6,6 +6,21 @@ var self_ = <any>self;
 
 import page_access = require('../../../webui/page_access');
 
+function inputFieldType(typeStr: string) : page_access.FieldType {
+	switch (typeStr.toLowerCase()) {
+		case 'email':
+			return page_access.FieldType.Email;
+		case 'password':
+			return page_access.FieldType.Password;
+		case 'checkbox':
+		case 'button':
+		case 'radio':
+			return page_access.FieldType.Other;
+		default:
+			return page_access.FieldType.Text;
+	}
+}
+
 self_.port.on('find-fields', () => {
 	var fieldElements = document.getElementsByTagName('input');
 	var fields: page_access.InputField[] = [];
@@ -14,7 +29,7 @@ self_.port.on('find-fields', () => {
 		fields.push({
 			id: elt.id,
 			name: elt.name,
-			type: page_access.FieldType.Text /* TODO - Map <input> type here */
+			type: inputFieldType(elt.type)
 		});
 	}
 	self_.port.emit('found-fields', fields);
