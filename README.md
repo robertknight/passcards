@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/robertknight/1pass-web.png?branch=master)](https://travis-ci.org/robertknight/1pass-web)
 
-This is a web and command-line based password manager under development.
+This is a web, browser extension and command-line based password manager under development.
 
 It uses the [1Password](https://agilebits.com/onepassword) password vault format and is designed
 to be usable alongside the official 1Password apps.
@@ -23,7 +23,13 @@ See `1pass --help` for a list of supported commands.
 The web client is currently in the very early stages of development.
 You can access the [current alpha version here](https://robertknight.github.io/1pass-web/app/index.html)
 
+## Browser Extensions
+
+A browser extension for Firefox is also in the early stages of development. It requires Firefox 30 or later.
+
 ### Local Development
+
+### CLI and Web UI
 
 Local development requires Node.js 0.10 and make. To build the CLI and web clients, clone the source and run `make`.
 
@@ -35,3 +41,7 @@ If you want to host the web app from a different location you will need to regis
 API keys from the [Dropbox App Console]("https://www.dropbox.com/developers/apps"). When registering a new app,
 you currently need to give it full Dropbox access permissions (though this requirement could easily be dropped
 if necessary) and enable the 'implicit' authorization flow.
+
+### Firefox Extension
+
+The Firefox extension is built using the [add-on SDK](https://developer.mozilla.org/en-US/Add-ons/SDK). You'll need the _cfx_ tool from the SDK to run the extension locally for development or build an XPI for distribution.
