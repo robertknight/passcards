@@ -62,6 +62,17 @@ class AppView extends reactts.ReactComponentBase<{}, AppViewState> {
 		super({});
 
 		this.autofillHandler = autofillHandler;
+
+		// trigger a refresh of the item list when the view
+		// loses focus.
+		//
+		// It would be preferable to set up a long-poll or
+		// other notification to the cloud sync service to
+		// pick up changes without requiring the user
+		// to hide and re-show the view
+		document.addEventListener('blur', () => {
+			this.refreshItems();
+		});
 	}
 
 	getInitialState() {
@@ -75,14 +86,20 @@ class AppView extends reactts.ReactComponentBase<{}, AppViewState> {
 	setVault(vault: onepass.Vault) {
 		var state = this.state;
 		state.vault = vault;
+		this.setState(state);
 
-		vault.listItems().then((items) => {
+		this.refreshItems();
+	}
+
+	refreshItems() {
+		if (!this.state.vault) {
+			return;
+		}
+		this.state.vault.listItems().then((items) => {
 			var state = this.state;
 			state.items = items;
 			this.setState(state);
 		});
-
-		this.setState(state);
 	}
 
 	setSelectedItem(item: onepass.Item) {
