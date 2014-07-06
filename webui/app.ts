@@ -535,7 +535,7 @@ export class App {
 		}
 
 		var pageAccess: page_access.PageAccess;
-		if (firefoxAddOn) {
+		if (typeof firefoxAddOn != 'undefined') {
 			pageAccess = new page_access.ExtensionPageAccess(firefoxAddOn);
 		}
 
