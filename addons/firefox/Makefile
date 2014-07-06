@@ -1,4 +1,4 @@
-all: lib/main.js data/index.html data/scripts/webui_bundle.js data/scripts/crypto_worker.js data/style/app.css data/panel.html data/scripts/panel_content.js data/scripts/page.js
+all: lib/main.js data/index.html data/scripts/webui_bundle.js data/scripts/crypto_worker.js data/style/app.css data/panel.html data/scripts/panel_content.js data/scripts/page.js data/icon-32.png data/icon-64.png
 
 lib/main.js: src/main.ts
 	tsc src/main.ts --outDir lib
@@ -8,6 +8,12 @@ data/scripts:
 
 data/style:
 	mkdir -p data/style
+
+data/icon-32.png: ../../icons/icon-32.png
+	cp ../../icons/icon-32.png data/
+
+data/icon-64.png: ../../icons/icon-64.png
+	cp ../../icons/icon-64.png data/
 
 data/index.html: ../../webui/index.html
 	cp ../../webui/index.html data/

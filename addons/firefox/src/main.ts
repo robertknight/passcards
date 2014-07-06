@@ -91,7 +91,6 @@ function main() {
 		id: 'key-icon',
 		label: 'Password Manager',
 		icon: {
-			'16' : './icon-16.png',
 			'32' : './icon-32.png',
 			'64' : './icon-64.png'
 		},
