@@ -1,7 +1,7 @@
 {
   "name": "onepass-cli",
   "description": "A 1Password command-line client and library",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "devDependencies": {
     "browserify": ">=3.46.0",
     "typescript": ">=1.0",
@@ -15,7 +15,7 @@
     "atob": ">=1.1",
     "btoa": ">=1.1",
     "crypto-js": ">=3.1",
-    "dropbox": "https://github.com/robertknight/dropbox-js/archive/5568865764d9deab69836569a69d72d200c88293.tar.gz",
+    "dropbox": "https://github.com/robertknight/dropbox-js/archive/c2b797baaa65280d2a59c7086b339f63a9cc842d.tar.gz",
     "es6-shim": ">=0.10.0",
     "jquery": ">=2.1.0",
     "mkdirp": ">=0.4.0",
@@ -27,9 +27,11 @@
     "react-typescript": "https://github.com/fdecampredon/react-typescript/archive/d8d183c57614a715b07e0dd1caae7b54b37172db.tar.gz",
     "sprintf": ">=0.1.3",
     "underscore": ">=1.6.0",
+    "URIjs": ">=1.13",
     "urlrouter": ">=0.5.4",
     "fastclick": "~1.0.2"
   },
+  "bundledDependencies" : ["dropbox"],
   "license": "BSD-3-Clause",
   "main": "build/cli.js",
   "scripts": {

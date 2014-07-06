@@ -3,7 +3,7 @@ export function startsWith(str: string, prefix: string) : boolean {
 }
 
 export function endsWith(str: string, suffix: string) : boolean {
-	return str.lastIndexOf(suffix) == str.length - suffix.length;
+	return str.length >= suffix.length && str.lastIndexOf(suffix) == str.length - suffix.length;
 }
 
 export function indexOfIgnoreCase(haystack: string, needle: string) : number {

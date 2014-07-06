@@ -64,7 +64,15 @@ $(submodule_marker): .gitmodules
 
 $(nodemodule_marker): package.json
 	@mkdir -p build && touch $(nodemodule_marker)
-	npm install .
+	@echo "Installing package dependencies..."
+	# --ignore-scripts is used to prevent running of the 'prepublish'
+	# script here, since that runs 'make all' and is intended to
+	# be used before actually publishing the app
+	@npm install --ignore-scripts
+	# Build dropbox-js. As long as we are using a fork of dropbox-js,
+	# we'll need to run this to build Dropbox before using it
+	@echo "Building dropbox-js..."
+	@(cd ./node_modules/dropbox && npm install --quiet . $(SILENCE_STDOUT))
 
 test-package: all
 	@cd `$(TMP_DIR_CMD)` \

@@ -270,7 +270,6 @@ testLib.addAsyncTest('Update item', (assert) => {
 	createTestVault().then((vault) => {
 		var item = new onepass.Item(vault);
 		item.title = 'Original item title';
-		item.location = 'mysite.com';
 
 		var content = new onepass.ItemContent();
 		content.formFields.push({
@@ -280,7 +279,19 @@ testLib.addAsyncTest('Update item', (assert) => {
 			designation: 'password',
 			value: 'original-password'
 		});
+		content.urls.push({
+			label: 'website',
+			url: 'mysite.com'
+		});
 		item.setContent(content);
+
+		// get a date a couple of seconds in the past.
+		// After saving we'll check that the item's save date
+		// was updated to the current time.
+		//
+		// Note that item save dates are rounded down to the nearest
+		// second on save.
+		var originalSaveDate = new Date(Date.now() - 2000);
 
 		var loadedItem : onepass.Item;
 		item.save().then(() => {
@@ -299,7 +310,7 @@ testLib.addAsyncTest('Update item', (assert) => {
 
 			loadedItem.title = 'New Item Title';
 			loadedItem.faveIndex = 42;
-			loadedItem.location = 'newsite.com';
+			content.urls[0].url = 'newsite.com';
 			loadedItem.trashed = true;
 
 			passwordField.value = 'new-password';
@@ -313,8 +324,14 @@ testLib.addAsyncTest('Update item', (assert) => {
 
 			assert.equal(loadedItem.title, 'New Item Title');
 			assert.equal(loadedItem.faveIndex, 42);
-			assert.equal(loadedItem.location, 'newsite.com');
 			assert.equal(loadedItem.trashed, true);
+			
+			// check that Item.location property is updated
+			// to match URL list on save
+			assert.equal(loadedItem.location, 'newsite.com');
+
+			// check that Item.updatedAt is updated on save
+			assert.ok(loadedItem.updatedAt > originalSaveDate);
 
 			return loadedItem.getContent();
 		}).then((content) => {

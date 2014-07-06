@@ -29,5 +29,16 @@ testLib.addTest('string search ignoring case', (assert) => {
 	assert.equal(stringutil.indexOfIgnoreCase('fooBARbaz','bar'), 3);
 });
 
+testLib.addTest('starts with', (assert) => {
+	assert.equal(stringutil.startsWith('one two', 'one'), true);
+	assert.equal(stringutil.startsWith('one two', 'three'), false);
+});
+
+testLib.addTest('ends with', (assert) => {
+	assert.equal(stringutil.endsWith('one two', 'two'), true);
+	assert.equal(stringutil.endsWith('one two', 'one'), false);
+	assert.equal(stringutil.endsWith('', '/'), false);
+});
+
 testLib.start();
 

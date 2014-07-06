@@ -12,10 +12,14 @@ import reactts = require('react-typescript');
 import underscore = require('underscore');
 import url = require('url');
 
+import autofill = require('./autofill');
 import dropboxvfs = require('../lib/vfs/dropbox');
+import env = require('../lib/base/env');
 import http_client = require('../lib/http_client');
 import http_vfs = require('../lib/vfs/http');
+import item_search = require('../lib/item_search');
 import onepass = require('../lib/onepass');
+import page_access = require('./page_access');
 import stringutil = require('../lib/base/stringutil');
 import vfs = require('../lib/vfs/vfs');
 
@@ -27,15 +31,50 @@ enum ActiveView {
 	ItemDetailView
 }
 
+/** The app setup screen. This is responsible for introducing the user
+  * to the app and displaying the initial status page when connecting
+  * to cloud storage.
+  */
+class SetupView extends reactts.ReactComponentBase<{}, {}> {
+	render() {
+		return react.DOM.div({className: 'setupView'},
+			react.DOM.div({className: 'loginText'},
+				'Connecting to Dropbox...'
+			)
+		);
+	}
+}
+
 class AppViewState {
 	mainView: ActiveView;
 	vault: onepass.Vault;
 	items: onepass.Item[];
 	selectedItem: onepass.Item;
 	isLocked: boolean;
+	currentURL: string;
 }
 
+/** The main top-level app view. */
 class AppView extends reactts.ReactComponentBase<{}, AppViewState> {
+	private autofillHandler: autofill.AutoFillHandler;
+
+	constructor(autofillHandler: autofill.AutoFillHandler) {
+		super({});
+
+		this.autofillHandler = autofillHandler;
+
+		// trigger a refresh of the item list when the view
+		// loses focus.
+		//
+		// It would be preferable to set up a long-poll or
+		// other notification to the cloud sync service to
+		// pick up changes without requiring the user
+		// to hide and re-show the view
+		document.addEventListener('blur', () => {
+			this.refreshItems();
+		});
+	}
+
 	getInitialState() {
 		var state = new AppViewState;
 		state.mainView = ActiveView.UnlockPane;
@@ -47,14 +86,20 @@ class AppView extends reactts.ReactComponentBase<{}, AppViewState> {
 	setVault(vault: onepass.Vault) {
 		var state = this.state;
 		state.vault = vault;
+		this.setState(state);
 
-		vault.listItems().then((items) => {
+		this.refreshItems();
+	}
+
+	refreshItems() {
+		if (!this.state.vault) {
+			return;
+		}
+		this.state.vault.listItems().then((items) => {
 			var state = this.state;
 			state.items = items;
 			this.setState(state);
 		});
-
-		this.setState(state);
 	}
 
 	setSelectedItem(item: onepass.Item) {
@@ -63,10 +108,25 @@ class AppView extends reactts.ReactComponentBase<{}, AppViewState> {
 		this.setState(state);
 	}
 
+	setCurrentURL(url: string) {
+		var state = this.state;
+		state.currentURL = url;
+
+		// switch back to the main item
+		// list when the current page changes
+		state.selectedItem = null;
+
+		this.setState(state);
+	}
+
 	setLocked(locked: boolean) {
 		var state = this.state;
 		state.isLocked = locked;
 		this.setState(state);
+	}
+
+	autofill(item: onepass.Item) {
+		this.autofillHandler.autofill(item);
 	}
 
 	render() {
@@ -84,13 +144,17 @@ class AppView extends reactts.ReactComponentBase<{}, AppViewState> {
 		} else {
 			children.push(new ItemListView({
 				items: this.state.items,
-				onSelectedItemChanged: (item) => { this.setSelectedItem(item); }
+				onSelectedItemChanged: (item) => { this.setSelectedItem(item); },
+				currentURL: this.state.currentURL
 			}));
 			children.push(new DetailsView({
 				item: this.state.selectedItem,
 				iconURL: this.state.selectedItem ? itemIconURL(this.state.selectedItem) : '',
 				onGoBack: () => {
 					this.setSelectedItem(null);
+				},
+				autofill: () => {
+					this.autofill(this.state.selectedItem);
 				}
 			}));
 		}
@@ -136,7 +200,6 @@ class UnlockPane extends reactts.ReactComponentBase<UnlockPaneProps, UnlockPaneS
 			this.props.vault.unlock(masterPass).then(() => {
 				this.setUnlockState(UnlockState.Success);
 				this.props.onUnlock();
-				console.log('vault unlocked!');
 			})
 			.fail((err) => {
 				this.setUnlockState(UnlockState.Failed);
@@ -213,11 +276,13 @@ class ItemListViewState {
 class ItemListViewProps {
 	items: onepass.Item[];
 	onSelectedItemChanged: (item: onepass.Item) => void;
+	currentURL: string;
 }
 
 class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, ItemListViewState> {
 	getInitialState() {
-		return new ItemListViewState();
+		var state = new ItemListViewState();
+		return state;
 	}
 
 	updateFilter = (filter: string) => {
@@ -227,9 +292,15 @@ class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, ItemLis
 	}
 
 	render() {
+		var filterURL : string;
+		if (!this.state.filter && this.props.currentURL) {
+			filterURL = this.props.currentURL;
+		}
+
 		return react.DOM.div({className: 'itemListView'},
 			new SearchField({onQueryChanged: this.updateFilter}),
 			new ItemList({items: this.props.items, filter: this.state.filter,
+			              filterURL: filterURL,
 			              onSelectedItemChanged: this.props.onSelectedItemChanged})
 		);
 	}
@@ -241,6 +312,7 @@ class DetailsViewProps {
 	iconURL: string;
 
 	onGoBack: () => any;
+	autofill: () => void;
 }
 
 class ItemSectionProps {
@@ -265,9 +337,11 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 	}
 
 	componentDidMount() {
-		console.log($(this.refs['backLink'].getDOMNode()));
 		$(this.refs['backLink'].getDOMNode()).click(() => {
 			this.props.onGoBack();
+		});
+		$(this.refs['autofillBtn'].getDOMNode()).click(() => {
+			this.props.autofill();
 		});
 	}
 
@@ -283,7 +357,8 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 					react.DOM.img({className: 'detailsHeaderIcon itemIcon', src:this.props.iconURL}),
 					react.DOM.div({},
 						react.DOM.div({className: 'detailsTitle'}, this.props.item.title),
-						react.DOM.div({className: 'detailsLocation'}, this.props.item.location))),
+						react.DOM.div({className: 'detailsLocation'}, this.props.item.location))
+				),
 				react.DOM.div({className: 'detailsCore'},
 					react.DOM.div({className: 'detailsField detailsAccount'},
 						react.DOM.div({className: 'detailsFieldLabel'}, 'Account'),
@@ -304,6 +379,9 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 		},
 			react.DOM.div({className: stringutil.truthyKeys({toolbar: true, detailsToolbar: true})},
 				react.DOM.a({className: 'toolbarLink', href:'#', ref:'backLink'}, 'Back')),
+				react.DOM.div({className: 'itemActionBar'},
+						react.DOM.input({className: 'itemActionButton', type: 'button', value: 'Autofill', ref: 'autofillBtn'})
+				),
 			detailsContent ? detailsContent : []
 		);
 	}
@@ -346,11 +424,11 @@ class ItemListState {
 class ItemListProps {
 	items: onepass.Item[];
 	filter: string;
+	filterURL: string;
 	onSelectedItemChanged: (item: onepass.Item) => void;
 }
 
 class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> {
-	
 
 	itemAccount(item: onepass.Item) : string {
 		// TODO - Extract item contents and save account name
@@ -372,28 +450,49 @@ class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> 
 		return new ItemListState();
 	}
 
-	render() {
-		var listItems : Item[] = [];
-		this.props.items.forEach((item) => {
-			if (this.props.filter && item.title.toLowerCase().indexOf(this.props.filter) == -1) {
-				return;
+	createListItem(item: onepass.Item) : Item {
+		return new Item({
+			key: item.uuid,
+			title: item.title,
+			iconURL: itemIconURL(item),
+			accountName: this.itemAccount(item),
+			location: item.location,
+			domain: itemDomain(item),
+			onSelected: () => {
+				this.setSelectedItem(item);
 			}
-
-			listItems.push(new Item({
-				key: item.uuid,
-				title: item.title,
-				iconURL: itemIconURL(item),
-				accountName: this.itemAccount(item),
-				location: item.location,
-				domain: itemDomain(item),
-				onSelected: () => {
-					this.setSelectedItem(item);
-				}
-			}));
 		});
+	}
 
-		listItems.sort((a, b) => {
-			return a.props.title.toLowerCase().localeCompare(b.props.title.toLowerCase());
+	render() {
+		var matchingItems : onepass.Item[] = [];
+		var matchesAreSorted = false;
+
+		if (this.props.filter) {
+			matchingItems = underscore.filter(this.props.items, (item) => {
+				return item_search.matchItem(item, this.props.filter);
+			});
+		} else if (this.props.filterURL) {
+			matchingItems = item_search.filterItemsByUrl(this.props.items, this.props.filterURL);
+			if (matchingItems.length > 0) {
+				matchesAreSorted = true;
+			} else {
+				// if no items appear to match this URL, show the
+				// complete list and let the user browse or filter
+				matchingItems = this.props.items;
+			}
+		} else {
+			matchingItems = this.props.items;
+		}
+
+		if (!matchesAreSorted) {
+			matchingItems.sort((a, b) => {
+				return a.title.toLowerCase().localeCompare(b.title.toLowerCase());
+			});
+		}
+
+		var listItems = matchingItems.map((item) => {
+			return this.createListItem(item);
 		});
 		
 		return react.DOM.div({className: 'itemList'},
@@ -423,39 +522,63 @@ function itemIconURL(item: onepass.Item) : string {
 	}
 }
 
+declare var firefoxAddOn: page_access.ExtensionConnector;
+
 export class App {
 	vault : Q.Promise<onepass.Vault>;
+	private appView : AppView;
 
 	constructor() {
 		// UI setup
 		fastclick.FastClick.attach(document.body);
 
 		// VFS setup
-		var opts = <any>url.parse(document.location.href, true /* parse query */).query;
 		var fs: vfs.VFS;
-		if (opts.httpfs) {
-			var hostPort = opts.httpfs.split(':');
-			fs = new http_vfs.Client(new http_client.Client(hostPort[0], parseInt(hostPort[1])));
-		} else {
-			fs = new dropboxvfs.DropboxVFS();
+		if (env.isFirefoxAddon()) {
+			fs = new dropboxvfs.DropboxVFS({
+				authRedirectUrl: firefoxAddOn.oauthRedirectUrl,
+				disableLocationCleanup: true
+			});
 		}
 
-		var account = fs.login();
-		var vault = Q.defer<onepass.Vault>();
-		this.vault = vault.promise;
-		
-		var appView = new AppView({});
+		if (!fs) {
+			var opts = <any>url.parse(document.location.href, true /* parse query */).query;
+			if (opts.httpfs) {
+				var hostPort = opts.httpfs.split(':');
+				fs = new http_vfs.Client(new http_client.Client(hostPort[0], parseInt(hostPort[1])));
+			} else {
+				fs = new dropboxvfs.DropboxVFS();
+			}
+		}
+
+		var pageAccess: page_access.PageAccess;
+		if (typeof firefoxAddOn != 'undefined') {
+			pageAccess = new page_access.ExtensionPageAccess(firefoxAddOn);
+		}
+
+		this.appView = new AppView(new autofill.AutoFiller(pageAccess));
 		onepass_crypto.CryptoJsCrypto.initWorkers();
 
-		account.then(() => {
-			vault.resolve(new onepass.Vault(fs, '/1Password/1Password.agilekeychain'));
-		}).done();
-
-		vault.promise.then((vault) => {
-			appView.setVault(vault);
-		}).done();
+		var setupView = new SetupView({});
+		react.renderComponent(setupView, document.getElementById('app-view'));
 		
-		react.renderComponent(appView, document.getElementById('app-view'));
+		fs.login().then(() => {
+			var vault = new onepass.Vault(fs, '/1Password/1Password.agilekeychain');
+			react.renderComponent(this.appView, document.getElementById('app-view'));
+			this.appView.setVault(vault);
+			if (pageAccess) {
+				this.setupBrowserInteraction(pageAccess);
+			}
+		}).fail((err) => {
+			console.log('Failed to setup vault', err.toString());
+		});
+	}
+
+	private setupBrowserInteraction(access: page_access.PageAccess) {
+		access.addPageChangedListener((url) => {
+			console.log('current URL set to', url);
+			this.appView.setCurrentURL(url);
+		});
 	}
 }
 

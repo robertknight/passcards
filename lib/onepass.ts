@@ -332,6 +332,14 @@ export class Item {
 			return Q.reject('Unable to save new item, no content set');
 		}
 
+		// update last-modified time
+		this.updatedAt = new Date();
+
+		// set item location to match current URL list
+		if (this.content && this.content.urls.length > 0) {
+			this.location = this.content.urls[0].url;
+		}
+
 		this.vault = vault;
 		return this.vault.saveItem(this);
 	}

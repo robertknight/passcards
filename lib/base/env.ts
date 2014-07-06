@@ -22,3 +22,10 @@ export function isWebWorker() {
 	return typeof importScripts != 'undefined';
 }
 
+/** Returns true if running as a page script
+  * in a Firefox Jetpack add-on
+  */
+export function isFirefoxAddon() {
+	return isBrowser() && window.location.protocol == 'resource:';
+}
+
