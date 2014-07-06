@@ -17,39 +17,52 @@ if (stringutil.startsWith(window.location.href, OAUTH_REDIRECT_URL)) {
 	self_.port.emit('oauth-credentials-received', window.location.hash);
 }
 
-var pageAccess: page_access.PageAccess = createObjectIn(unsafeWindow, { defineAs: 'firefoxAddOn' });
-var pageChangedListeners: Array<(url: string) => void> = [];
-var currentURL: string;
+var pageAccess: page_access.ExtensionConnector = createObjectIn(unsafeWindow, { defineAs: 'firefoxAddOn' });
 
-pageAccess.oauthRedirectUrl = () => {
-	return OAUTH_REDIRECT_URL;
-};
+pageAccess.oauthRedirectUrl = OAUTH_REDIRECT_URL;
 
-pageAccess.addPageChangedListener = (listener) => {
-	pageChangedListeners.push(listener);
-	if (currentURL) {
-		listener(currentURL);
-	}
+function postMessageToFrontend(m: page_access.Message) {
+	// in Firefox >= 31 we should use window.postMessage() instead.
+	// In Firefox <= 30 document.defaultView.postMessage() needs
+	// to be used.
+	//
+	// See https://developer.mozilla.org/en-US/Add-ons/SDK/Guides/Content_Scripts/Interacting_with_page_scripts#postMessage()_before_Firefox_31
+	//
+	document.defaultView.postMessage(m, '*');
 }
 
-self_.port.on('pagechanged', (url: string) => {
-	currentURL = url;
-	pageChangedListeners.forEach((listener) => {
-		listener(url);
-	});
-});
-
-pageAccess.findForms = (callback) => {
+pageAccess.findForms = exportFunction(() => {
 	self_.port.once('found-fields', (fields) => {
-		callback(cloneInto(fields, unsafeWindow));
+		var fields = cloneInto(fields, unsafeWindow);
+		var msg: page_access.Message = {
+			fromContentScript: true,
+			type: page_access.MessageType.FieldsFound,
+			pageURL: pageAccess.currentUrl,
+			fields: fields
+		};
+		postMessageToFrontend(msg);
 	});
 	self_.port.emit('find-fields');
-};
+}, pageAccess);
 
-pageAccess.autofill = (fields) => {
+pageAccess.autofill = exportFunction((fields) => {
 	self_.port.emit('autofill', fields);
-};
+}, pageAccess);
 
-// notify the add-on that the panel content is ready
+self_.port.on('pagechanged', (url: string) => {
+	pageAccess.currentUrl = url;
+	var msg: page_access.Message = {
+		fromContentScript: true,
+		type: page_access.MessageType.PageChanged,
+		pageURL: url,
+		fields: []
+	}
+	postMessageToFrontend(msg);
+});
+
+// notify the add-on that the panel content script is ready.
+// Note that the panel content script is loaded _before_
+// the front-end so this event does not indicate that
+// the front-end itself is ready.
 self_.port.emit('ready');
 

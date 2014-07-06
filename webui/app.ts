@@ -505,7 +505,7 @@ function itemIconURL(item: onepass.Item) : string {
 	}
 }
 
-declare var firefoxAddOn: page_access.PageAccess;
+declare var firefoxAddOn: page_access.ExtensionConnector;
 
 export class App {
 	vault : Q.Promise<onepass.Vault>;
@@ -519,7 +519,7 @@ export class App {
 		var fs: vfs.VFS;
 		if (env.isFirefoxAddon()) {
 			fs = new dropboxvfs.DropboxVFS({
-				authRedirectUrl: firefoxAddOn.oauthRedirectUrl(),
+				authRedirectUrl: firefoxAddOn.oauthRedirectUrl,
 				disableLocationCleanup: true
 			});
 		}
@@ -536,7 +536,7 @@ export class App {
 
 		var pageAccess: page_access.PageAccess;
 		if (firefoxAddOn) {
-			pageAccess = firefoxAddOn;
+			pageAccess = new page_access.ExtensionPageAccess(firefoxAddOn);
 		}
 
 		this.appView = new AppView(new autofill.AutoFiller(pageAccess));
@@ -553,12 +553,13 @@ export class App {
 				this.setupBrowserInteraction(pageAccess);
 			}
 		}).fail((err) => {
-			console.log('Failed to setup vault', err);
+			console.log('Failed to setup vault', err.toString());
 		});
 	}
 
 	private setupBrowserInteraction(access: page_access.PageAccess) {
 		access.addPageChangedListener((url) => {
+			console.log('current URL set to', url);
 			this.appView.setCurrentURL(url);
 		});
 	}
