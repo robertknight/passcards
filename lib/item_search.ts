@@ -123,29 +123,39 @@ function stripQuery(url: string) : string {
 	return strippedUrl;
 }
 
+// strips the query string from a URL string and
+// prefixes an HTTPS scheme if none is set
+function normalizeUrl(url: string) : string {
+	if (url.indexOf(':') == -1) {
+		// assume HTTPS if URL is lacking a scheme
+		url = 'https://' + url;
+	}
+	return stripQuery(url);
+}
+
 /** Returns a score indicating the relevance of an item to a URL.
   * A positive (> 0) score indicates some relevance. A zero or negative
   * score indicates no match.
   */
 export function itemUrlScore(item: onepass.Item, url: string) {
-	if (url.indexOf(':') == -1) {
-		// assume HTTPS if URL is lacking a scheme
-		url = 'https://' + url;
-	}
+	var itemUrl = normalizeUrl(item.location);
+	url = normalizeUrl(url);
 
-	var itemUrl = stripQuery(item.location);
-	url = stripQuery(url);
+	var parsedItemUrl = urijs(itemUrl);
+	var parsedUrl = urijs(url);
+
+	// invalid URLs or no domain
+	if (!parsedUrl.domain() || !parsedItemUrl.domain()) {
+		return 0;
+	}
 
 	// exact match
 	if (itemUrl.length > 0 &&
 	    itemUrl == url) {
 		return 1;
 	}
-
+	
 	// full authority match
-	var parsedItemUrl = urijs(itemUrl);
-	var parsedUrl = urijs(url);
-
 	if (parsedItemUrl.authority().length > 0 &&
 	    parsedItemUrl.authority() == parsedUrl.authority()) {
 		return 0.8;

@@ -61,6 +61,9 @@ testLib.addTest('URL match score', (assert) => {
 	// invalid URLs
 	assert.equal(item_search.itemUrlScore(itemWithTitleAndUrl('Foo', ''), 'about:newtab'), 0);
 	assert.equal(item_search.itemUrlScore(itemWithTitleAndUrl('Foo', ''), ''), 0);
+
+	// no scheme in item URL
+	assert.equal(item_search.itemUrlScore(itemWithTitleAndUrl('Google', 'google.com'), 'google.com'), 1);
 });
 
 testLib.addTest('filter items by URL match', (assert) => {
