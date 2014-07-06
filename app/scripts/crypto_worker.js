@@ -25,6 +25,14 @@ function isWebWorker() {
     return typeof importScripts != 'undefined';
 }
 exports.isWebWorker = isWebWorker;
+
+/** Returns true if running as a page script
+* in a Firefox Jetpack add-on
+*/
+function isFirefoxAddon() {
+    return exports.isBrowser() && window.location.protocol == 'resource:';
+}
+exports.isFirefoxAddon = isFirefoxAddon;
 //# sourceMappingURL=env.js.map
 
 }).call(this,require("/usr/local/lib/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js"))
