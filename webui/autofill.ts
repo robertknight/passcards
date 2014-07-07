@@ -1,3 +1,5 @@
+import Q = require('q');
+
 import onepass = require('../lib/onepass');
 import page_access = require('./page_access');
 import stringutil = require('../lib/base/stringutil');
@@ -6,7 +8,10 @@ import stringutil = require('../lib/base/stringutil');
  * the active tab/page with values from a given @p item.
  */
 export interface AutoFillHandler {
-	autofill(item: onepass.Item) : void;
+	/** Autofill fields on the current page with values from a given @p item.
+	  * Returns a promise for the auto-filled entries.
+	  */
+	autofill(item: onepass.Item) : Q.Promise<page_access.AutoFillEntry[]>;
 }
 
 export class AutoFiller {
@@ -24,7 +29,8 @@ export class AutoFiller {
 		return keyMatch(field.id) || keyMatch(field.name) || keyMatch(field.ariaLabel) || keyMatch(field.placeholder);
 	}
 
-	autofill(item: onepass.Item) : void {
+	autofill(item: onepass.Item) : Q.Promise<page_access.AutoFillEntry[]> {
+		var result = Q.defer<page_access.AutoFillEntry[]>();
 		var usernameKeys = ['email', 'user', 'account'];
 
 		item.getContent().then((content) => {
@@ -67,8 +73,11 @@ export class AutoFiller {
 				});
 
 				this.pageAccess.autofill(autofillEntries);
+				result.resolve(autofillEntries);
 			});
 		}).done();
+
+		return result.promise;
 	}
 }
 

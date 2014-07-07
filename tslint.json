@@ -8,7 +8,9 @@
 		"no-unreachable" : true,
 		"no-unused-expression" : true,
 		"no-unused-variable" : true,
-		"variable-name" : true,
+		"variable-name" : [true,
+			"allow-leading-underscore"
+		],
 		"use-strict" : [true,
 			"check-module"
 		]
