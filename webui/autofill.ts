@@ -1,6 +1,10 @@
 import onepass = require('../lib/onepass');
 import page_access = require('./page_access');
+import stringutil = require('../lib/base/stringutil');
 
+/** Interface for initiating auto-fill of items in
+ * the active tab/page with values from a given @p item.
+ */
 export interface AutoFillHandler {
 	autofill(item: onepass.Item) : void;
 }
@@ -12,8 +16,20 @@ export class AutoFiller {
 		this.pageAccess = pageAccess;
 	}
 
+	// match the ID or name of a field against a key
+	private fieldMatch(field: page_access.InputField, key: string) {
+		var nameMatch = false;
+		if (field.id && stringutil.indexOfIgnoreCase(field.id, key) != -1) {
+			nameMatch = true;
+		}
+		if (field.name && stringutil.indexOfIgnoreCase(field.name, key) != -1) {
+			nameMatch = true;
+		}
+		return nameMatch;
+	}
+
 	autofill(item: onepass.Item) : void {
-		var usernameKeys = ['email', 'username'];
+		var usernameKeys = ['email', 'user', 'account'];
 
 		item.getContent().then((content) => {
 			this.pageAccess.findForms((fields) => {
@@ -23,40 +39,33 @@ export class AutoFiller {
 					var isUsernameField = false;
 					var isPasswordField = false;
 
-					usernameKeys.forEach((key) => {
-						if ((field.id && field.id.toLowerCase().indexOf(key) != -1) ||
-							(field.name && field.name.toLowerCase().indexOf(key) != -1) ||
-							field.type === page_access.FieldType.Email) {
-
-							isUsernameField = true;
-						}
-					});
-					if (!isUsernameField) {
-						if ((field.id && field.id.toLowerCase().indexOf('password') != -1) ||
-							(field.name && field.name.toLowerCase().indexOf('password') != -1) ||
-							field.type === page_access.FieldType.Password) {
-
-							isPasswordField = true;
-						}
+					if (this.fieldMatch(field, 'password') ||
+					    field.type == page_access.FieldType.Password) {
+						isPasswordField = true;
 					}
 
-					var entry: page_access.AutoFillEntry;
+					if (!isPasswordField) {
+						usernameKeys.forEach((key) => {
+							if (this.fieldMatch(field, key) ||
+								field.type === page_access.FieldType.Email) {
+								isUsernameField = true;
+							}
+						});
+					}
 
+					var autofillValue: string;
 					if (isUsernameField) {
-						entry = {
-							fieldId: field.id,
-							fieldName: field.name,
-							value: content.account()
-						};
+						autofillValue = content.account();
 					} else if (isPasswordField) {
-						entry = {
-							fieldId: field.id,
-							fieldName: field.name,
-							value: content.password()
-						};
+						autofillValue = content.password();
 					}
 
-					if (entry) {
+					if (autofillValue) {
+						var entry: page_access.AutoFillEntry = {
+							fieldId: field.id,
+							fieldName: field.name,
+							value: autofillValue
+						};
 						autofillEntries.push(entry);
 					}
 				});
