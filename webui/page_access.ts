@@ -6,9 +6,12 @@ export enum FieldType {
 }
 
 export interface InputField {
-	id: string;
-	name: string;
 	type: FieldType;
+
+	id?: string;
+	name?: string;
+	ariaLabel?: string;
+	placeholder?: string;
 }
 
 export interface AutoFillEntry {

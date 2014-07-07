@@ -26,11 +26,18 @@ self_.port.on('find-fields', () => {
 	var fields: page_access.InputField[] = [];
 	for (var i=0; i < fieldElements.length; i++) {
 		var elt = fieldElements.item(i);
-		fields.push({
+		var field : page_access.InputField = {
 			id: elt.id,
 			name: elt.name,
-			type: inputFieldType(elt.type)
-		});
+			type: inputFieldType(elt.type),
+			placeholder: elt.placeholder
+		};
+		var ariaAttr = elt.attributes['aria-label'];
+		if (ariaAttr) {
+			field.ariaLabel = ariaAttr.value;
+		}
+
+		fields.push(field);
 	}
 	self_.port.emit('found-fields', fields);
 });

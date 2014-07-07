@@ -18,14 +18,10 @@ export class AutoFiller {
 
 	// match the ID or name of a field against a key
 	private fieldMatch(field: page_access.InputField, key: string) {
-		var nameMatch = false;
-		if (field.id && stringutil.indexOfIgnoreCase(field.id, key) != -1) {
-			nameMatch = true;
+		var keyMatch = (propertyValue: string) => {
+			return propertyValue && stringutil.indexOfIgnoreCase(propertyValue, key) != -1;
 		}
-		if (field.name && stringutil.indexOfIgnoreCase(field.name, key) != -1) {
-			nameMatch = true;
-		}
-		return nameMatch;
+		return keyMatch(field.id) || keyMatch(field.name) || keyMatch(field.ariaLabel) || keyMatch(field.placeholder);
 	}
 
 	autofill(item: onepass.Item) : void {
