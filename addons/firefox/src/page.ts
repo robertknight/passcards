@@ -32,7 +32,7 @@ self_.port.on('find-fields', () => {
 			type: inputFieldType(elt.type),
 			placeholder: elt.placeholder
 		};
-		var ariaAttr = elt.attributes['aria-label'];
+		var ariaAttr = elt.attributes.getNamedItem('aria-label');
 		if (ariaAttr) {
 			field.ariaLabel = ariaAttr.value;
 		}

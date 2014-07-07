@@ -17,7 +17,7 @@ if (stringutil.startsWith(window.location.href, OAUTH_REDIRECT_URL)) {
 	self_.port.emit('oauth-credentials-received', window.location.hash);
 }
 
-var pageAccess: page_access.ExtensionConnector = createObjectIn(unsafeWindow, { defineAs: 'firefoxAddOn' });
+var pageAccess = createObjectIn<page_access.ExtensionConnector>(unsafeWindow, { defineAs: 'firefoxAddOn' });
 
 pageAccess.oauthRedirectUrl = OAUTH_REDIRECT_URL;
 
@@ -32,7 +32,7 @@ function postMessageToFrontend(m: page_access.Message) {
 }
 
 pageAccess.findForms = exportFunction(() => {
-	self_.port.once('found-fields', (fields) => {
+	self_.port.once('found-fields', (fields: page_access.InputField[]) => {
 		var fields = cloneInto(fields, unsafeWindow);
 		var msg: page_access.Message = {
 			fromContentScript: true,

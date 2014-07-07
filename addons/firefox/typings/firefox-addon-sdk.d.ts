@@ -8,8 +8,8 @@ interface ExportFuncOptions {
 	defineAs: string;
 }
 
-declare function createObjectIn(object: Object, options: CreateOptions);
-declare function cloneInto<T>(object: T, target: Window);
-declare function exportFunction(func: Function, target: Object, options?: ExportFuncOptions);
+declare function createObjectIn<T>(object: Object, options: CreateOptions) : T;
+declare function cloneInto<T>(object: T, target: Window) : T;
+declare function exportFunction<F extends Function>(func: F, target: Object, options?: ExportFuncOptions) : F;
 
 declare var unsafeWindow: Window;
