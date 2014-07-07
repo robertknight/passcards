@@ -34,6 +34,9 @@
 // in PBKDF2 by minimizing allocations of typed arrays and
 // strings.
 
+/* tslint:disable:no-duplicate-variable */
+/* tslint:disable:no-use-before-declare */
+
 /// <reference path="../../typings/DefinitelyTyped/node/node.d.ts" />
 
 interface Buffer {

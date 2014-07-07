@@ -250,11 +250,10 @@ class SearchFieldProps {
 
 class SearchField extends reactts.ReactComponentBase<SearchFieldProps, {}> {
 	componentDidMount() {
+		var searchField = this.refs['searchField'].getDOMNode();
 		var updateQuery = underscore.debounce(() => {
 			this.props.onQueryChanged($(searchField).val().toLowerCase());
 		}, 100);
-
-		var searchField = this.refs['searchField'].getDOMNode();
 		$(searchField).bind('input', <(eventObject: JQueryEventObject) => any>updateQuery);
 	}
 
