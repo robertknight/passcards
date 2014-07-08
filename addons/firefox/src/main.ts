@@ -13,10 +13,13 @@ var mainPanel;
 var toolbarButton;
 var tabWorkers = {};
 
-function setupTab(tab) {
-	tabWorkers[tab.id] = tab.attach({
-		contentScriptFile: self_.data.url('scripts/page.js')
-	});
+function getTabWorker(tab) {
+	if (!tabWorkers[tab.id]) {
+		tabWorkers[tab.id] = tab.attach({
+			contentScriptFile: self_.data.url('scripts/page.js')
+		});
+	}
+	return tabWorkers[tab.id];
 }
 
 function notifyPageChanged(tab) {
@@ -35,7 +38,6 @@ function main() {
 	preferences_service.set('javascript.options.strict', false);
 
 	tabs.on('ready', (tab) => {
-		setupTab(tab);
 		if (tab === tabs.activeTab) {
 			notifyPageChanged(tab);
 		}
@@ -44,7 +46,7 @@ function main() {
 	tabs.on('activate', (tab) => {
 		notifyPageChanged(tab);
 	});
-		
+
 	var showPanel = (state) => {
 		if (!mainPanel) {
 			mainPanel = panel.Panel({
@@ -59,25 +61,19 @@ function main() {
 				mainPanel.contentURL = self_.data.url('index.html') + hash;
 			});
 			mainPanel.port.on('find-fields', () => {
-				var worker = tabWorkers[tabs.activeTab.id];
+				var worker = getTabWorker(tabs.activeTab);
 				worker.port.once('found-fields', (fields) => {
 					mainPanel.port.emit('found-fields', fields);
 				});
 				worker.port.emit('find-fields');
 			});
 			mainPanel.port.on('autofill', (entries: any[]) => {
-				var worker = tabWorkers[tabs.activeTab.id];
+				var worker = getTabWorker(tabs.activeTab);
 				worker.port.emit('autofill', entries);
 			});
 			mainPanel.port.on('ready', () => {
 				notifyPageChanged(tabs.activeTab);
 			});
-
-			for (var tab in tabs) {
-				if (tab.id) {
-					setupTab(tab);
-				}
-			}
 		}
 
 		if (state.checked) {
