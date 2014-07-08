@@ -64,8 +64,7 @@ export class AutoFiller {
 
 					if (autofillValue) {
 						var entry: pageAccess.AutoFillEntry = {
-							fieldId: field.id,
-							fieldName: field.name,
+							key: field.key,
 							value: autofillValue
 						};
 						autofillEntries.push(entry);

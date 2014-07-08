@@ -48,12 +48,14 @@ testLib.addAsyncTest('simple user/password autofill', (assert) => {
 	var fakePage = new FakePageAccess();
 
 	fakePage.formList.push({
+		key: 'f1',
 		id: 'username',
 		name: 'username',
 		type: pageAccess.FieldType.Text
 	});
 
 	fakePage.formList.push({
+		key: 'f2',
 		id: '',
 		name: 'password',
 		type: pageAccess.FieldType.Password
@@ -63,12 +65,12 @@ testLib.addAsyncTest('simple user/password autofill', (assert) => {
 	autofiller.autofill(item).then(() => {
 
 		fakePage.autofillEntries.sort((a,b) => {
-			return a.fieldName.localeCompare(b.fieldName);
+			return a.key.localeCompare(b.key);
 		});
 
 		assert.deepEqual(fakePage.autofillEntries, [
-			{ fieldId: '', fieldName: 'password', value: 'testpass' },
-			{ fieldId: 'username', fieldName: 'username', value: 'testuser@gmail.com' }
+			{ key: 'f1', value: 'testuser@gmail.com' },
+			{ key: 'f2', value: 'testpass' }
 		]);
 
 		testLib.continueTests();

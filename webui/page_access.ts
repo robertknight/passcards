@@ -6,6 +6,7 @@ export enum FieldType {
 }
 
 export interface InputField {
+	key: any;
 	type: FieldType;
 
 	id?: string;
@@ -15,8 +16,7 @@ export interface InputField {
 }
 
 export interface AutoFillEntry {
-	fieldId: string;
-	fieldName: string;
+	key: any;
 	value: string;
 }
 
