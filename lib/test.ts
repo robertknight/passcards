@@ -2,6 +2,7 @@
 /// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
 
 /// <reference path="../typings/argparse.d.ts" />
+/// <reference path="../typings/sprintf.d.ts" />
 /// <reference path="../typings/xdiff.d.ts" />
 
 // test.ts provides a wrapper around QUnitJS (qunitjs.com)

@@ -5,7 +5,7 @@ export class Builder {
 	private _item: onepass.Item;
 	private content: onepass.ItemContent;
 
-	constructor(type: string) {
+	constructor(type: onepass.ItemType) {
 		this._item = new onepass.Item();
 		this.content = new onepass.ItemContent();
 

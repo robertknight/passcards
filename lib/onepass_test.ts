@@ -355,7 +355,7 @@ testLib.addAsyncTest('Remove item', (assert) => {
 		vault.loadItem('CA20BB325873446966ED1F4E641B5A36').then((item_) => {
 			item = item_;
 			assert.equal(item.title, 'Facebook');
-			assert.equal(item.typeName, 'webforms.WebForm');
+			assert.equal(item.typeName, onepass.ItemTypes.LOGIN);
 			return item.getContent();
 		}).then((content) => {
 			testLib.assertEqual(assert, content.urls, [ { label: 'website', 'url' : 'facebook.com' } ]);
@@ -370,12 +370,12 @@ testLib.addAsyncTest('Remove item', (assert) => {
 			// Only a tombstone should be left behind
 			assert.ok(item.isTombstone());
 			assert.equal(item.title, 'Unnamed');
-			assert.equal(item.typeName, 'system.Tombstone');
+			assert.equal(item.typeName, onepass.ItemTypes.TOMBSTONE);
 			return vault.loadItem(item.uuid);
 		}).then((loadedItem) => {
 			assert.ok(loadedItem.isTombstone());
 			assert.equal(loadedItem.title, 'Unnamed');
-			assert.equal(loadedItem.typeName, 'system.Tombstone');
+			assert.equal(loadedItem.typeName, onepass.ItemTypes.TOMBSTONE);
 			assert.equal(loadedItem.trashed, true);
 			assert.equal(loadedItem.faveIndex, null);
 			assert.equal(loadedItem.openContents, null);

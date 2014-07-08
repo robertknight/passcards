@@ -35,7 +35,7 @@ class FakePageAccess {
 }
 
 function itemWithUsernameAndPassword(user: string, password: string) : onepass.Item {
-	return new itemBuilder.Builder('webforms.WebForm')
+	return new itemBuilder.Builder(onepass.ItemTypes.LOGIN)
 	  .setTitle('Test Item')
 	  .addLogin(user)
 	  .addPassword(password)

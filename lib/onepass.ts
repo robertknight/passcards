@@ -38,13 +38,55 @@ function UNIXDateFromDate(date: Date) : number {
 	return (date.getTime() / 1000)|0;
 }
 
-export interface ItemType {
+// typedef for item type codes
+export interface ItemType extends String {
+}
+
+/** Constants for the different types of item
+  * that a vault may contain.
+  * 
+  * Item type codes are taken from 1Password v4
+  */
+export class ItemTypes {
+	// The most common type, for logins and other web forms
+	static LOGIN = <ItemType>'webforms.WebForm';
+
+	// Other item types
+	static CREDIT_CARD = <ItemType>'wallet.financial.CreditCard';
+	static ROUTER = <ItemType>'wallet.computer.Router';
+	static SECURE_NOTE = <ItemType>'securenotes.SecureNote';
+	static PASSWORD = <ItemType>'passwords.Password';
+	static EMAIL_ACCOUNT = <ItemType>'wallet.onlineservices.Email.v2';
+	static BANK_ACCOUNT = <ItemType>'wallet.financial.BankAccountUS';
+	static DATABASE = <ItemType>'wallet.computer.Database';
+	static DRIVERS_LICENSE = <ItemType>'wallet.government.DriversLicense';
+	static MEMBERSHIP = <ItemType>'wallet.membership.Membership';
+	static HUNTING_LICENSE = <ItemType>'wallet.government.HuntingLicense';
+	static PASSPORT = <ItemType>'wallet.government.Passport';
+	static REWARD_PROGRAM = <ItemType>'wallet.membership.RewardProgram';
+	static SERVER = <ItemType>'wallet.computer.UnixServer';
+	static SOCIAL_SECURITY = <ItemType>'wallet.government.SsnUS';
+	static SOFTWARE_LICENSE = <ItemType>'wallet.computer.License';
+	static IDENTITY = <ItemType>'identities.Identity';
+
+	// Non-item types
+	static FOLDER = <ItemType>'system.folder.Regular';
+	static SAVED_SEARCH = <ItemType>'system.folder.SavedSearch';
+
+	// Marker type used to deleted items. The ID is preserved
+	// but the type is set to Tombstone and all other data
+	// is removed
+	static TOMBSTONE = <ItemType>'system.Tombstone';
+}
+
+export interface ItemTypeInfo {
 	name : string;
 	shortAlias : string;
 }
 
 export interface ItemTypeMap {
-	[index: string] : ItemType;
+	// map of ItemType -> ItemTypeInfo
+	[index: string] : ItemTypeInfo;
 }
 
 export enum CryptoAlgorithm {
@@ -247,7 +289,7 @@ export class Item {
 	  * the overview data has been loaded.
 	  */
 	encrypted : string;
-	typeName : string;
+	typeName : ItemType;
 	uuid : string;
 	createdAt : Date;
 	location : string;
@@ -280,7 +322,7 @@ export class Item {
 
 		this.trashed = false;
 		this.securityLevel = 'SL5';
-		this.typeName = 'webforms.WebForm';
+		this.typeName = ItemTypes.LOGIN;
 		this.folderUuid = '';
 	}
 
@@ -352,7 +394,7 @@ export class Item {
 		if (!this.vault) {
 			return Q.reject('Item has no associated vault');
 		}
-		this.typeName = 'system.Tombstone';
+		this.typeName = ItemTypes.TOMBSTONE;
 		this.title = 'Unnamed';
 		this.trashed = true;
 		this.setContent(new ItemContent);
@@ -372,7 +414,7 @@ export class Item {
 	  * different 1Password clients.
 	  */
 	isTombstone() : boolean {
-		return this.typeName == 'system.Tombstone';
+		return this.typeName == ItemTypes.TOMBSTONE;
 	}
 
 	/** Returns a shortened version of the item's UUID, suitable for disambiguation
@@ -384,10 +426,10 @@ export class Item {
 
 	/** Returns the human-readable type name for this item's type. */
 	typeDescription() : string {
-		if (ITEM_TYPES[this.typeName]) {
-			return ITEM_TYPES[this.typeName].name;
+		if (ITEM_TYPES[<string>this.typeName]) {
+			return ITEM_TYPES[<string>this.typeName].name;
 		} else {
-			return this.typeName;
+			return <string>this.typeName;
 		}
 	}
 
