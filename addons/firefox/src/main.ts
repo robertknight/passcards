@@ -15,6 +15,9 @@ function getTabWorker(tab: Tab) {
 		tabWorkers[tab.id] = tab.attach({
 			contentScriptFile: self_.data.url('scripts/page.js')
 		});
+		tabWorkers[tab.id].on('detach', () => {
+			delete tabWorkers[tab.id];
+		});
 	}
 	return tabWorkers[tab.id];
 }

@@ -81,6 +81,7 @@ interface WorkerOptions {
 }
 
 interface ContentWorker {
+	on(event: string, callback: () => void): void;
 	port: Port;
 }
 
