@@ -1,19 +1,19 @@
 /// <reference path="../typings/firefox-addon-sdk.d.ts" />
 
-var buttons = require('sdk/ui/button/toggle');
-var panel = require('sdk/panel');
-var tabs = require('sdk/tabs');
-var preferences_service = require('sdk/preferences/service');
+import buttons = require('sdk/ui/button/toggle');
+import panel = require('sdk/panel');
+import tabs = require('sdk/tabs');
+import preferences_service = require('sdk/preferences/service');
 
 // use `self_` to avoid conflict with `self`
 // in lib.d.ts
 var self_ = require('sdk/self');
 
-var mainPanel;
-var toolbarButton;
-var tabWorkers = {};
+var mainPanel: panel.Panel;
+var toolbarButton: buttons.ToggleButton;
+var tabWorkers: {[index: string]: ContentWorker};
 
-function getTabWorker(tab) {
+function getTabWorker(tab: Tab) {
 	if (!tabWorkers[tab.id]) {
 		tabWorkers[tab.id] = tab.attach({
 			contentScriptFile: self_.data.url('scripts/page.js')
@@ -22,7 +22,9 @@ function getTabWorker(tab) {
 	return tabWorkers[tab.id];
 }
 
-function notifyPageChanged(tab) {
+var mainPanel: panel.Panel;
+
+function notifyPageChanged(tab: Tab) {
 	if (mainPanel) {
 		mainPanel.port.emit('pagechanged', tabs.activeTab.url);
 	}
@@ -47,7 +49,7 @@ function main() {
 		notifyPageChanged(tab);
 	});
 
-	var showPanel = (state) => {
+	var showPanel = (state: ButtonState) => {
 		if (!mainPanel) {
 			mainPanel = panel.Panel({
 				width: 400,
