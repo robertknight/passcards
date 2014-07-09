@@ -15,6 +15,7 @@ import url = require('url');
 import autofill = require('./autofill');
 import dropboxvfs = require('../lib/vfs/dropbox');
 import env = require('../lib/base/env');
+import key_agent = require('../lib/key_agent');
 import http_client = require('../lib/http_client');
 import http_vfs = require('../lib/vfs/http');
 import item_search = require('../lib/item_search');
@@ -562,9 +563,15 @@ export class App {
 		react.renderComponent(setupView, document.getElementById('app-view'));
 		
 		fs.login().then(() => {
-			var vault = new onepass.Vault(fs, '/1Password/1Password.agilekeychain');
+			var keyAgent = new key_agent.SimpleKeyAgent();
+			var vault = new onepass.Vault(fs, '/1Password/1Password.agilekeychain', keyAgent);
 			react.renderComponent(this.appView, document.getElementById('app-view'));
 			this.appView.setVault(vault);
+
+			keyAgent.onLock().listen(() => {
+				this.appView.setLocked(true);
+			});
+
 			if (pageAccess) {
 				this.setupBrowserInteraction(pageAccess);
 			}

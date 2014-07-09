@@ -4,6 +4,7 @@
 import Q = require('q');
 
 import crypto = require('./onepass_crypto');
+import event_stream = require('./base/event_stream');
 
 /** Specifies supported algorithms that key agents can use
   * to encrypt/decrypt data.
@@ -54,8 +55,11 @@ export interface KeyAgent {
 
 /** A simple key agent which just stores keys in memory */
 export class SimpleKeyAgent {
-	private crypto : crypto.CryptoImpl;
-	private keys : {[id:string] : string};
+	private autoLockTimeout: number;
+	private crypto: crypto.CryptoImpl;
+	private keys: {[id:string] : string};
+	private lockEvents: event_stream.EventStream<void>;
+	private lockTimeout: number;
 
 	keyCount() : number {
 		return Object.keys(this.keys).length;
@@ -64,10 +68,29 @@ export class SimpleKeyAgent {
 	constructor(cryptoImpl? : crypto.CryptoImpl) {
 		this.crypto = cryptoImpl || crypto.defaultCryptoImpl;
 		this.keys = {};
+		this.lockEvents = new event_stream.EventStream<void>();
+		this.autoLockTimeout = 2 * 60 * 1000;
+	}
+
+	private scheduleAutoLock() {
+		if (this.lockTimeout) {
+			clearTimeout(this.lockTimeout);
+		}
+		setTimeout(() => {
+			this.forgetKeys();
+		}, this.autoLockTimeout);
+	}
+
+	setAutoLockTimeout(timeout: number) {
+		this.autoLockTimeout = timeout;
+		if (this.lockTimeout) {
+			this.scheduleAutoLock();
+		}
 	}
 
 	addKey(id: string, key: string) : Q.Promise<void> {
 		this.keys[id] = key;
+		this.scheduleAutoLock();
 		return Q.resolve<void>(null);
 	}
 
@@ -76,7 +99,11 @@ export class SimpleKeyAgent {
 	}
 
 	forgetKeys() : Q.Promise<void> {
+		if (this.lockTimeout) {
+			clearTimeout(this.lockTimeout);
+		}
 		this.keys = {};
+		this.lockEvents.publish(null);
 		return Q.resolve<void>(null);
 	}
 
@@ -104,6 +131,10 @@ export class SimpleKeyAgent {
 			default:
 				return Q.reject('Unknown encryption algorithm');
 		}
+	}
+
+	onLock() : event_stream.EventStream<void> {
+		return this.lockEvents;
 	}
 }
 
