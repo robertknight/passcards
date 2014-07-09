@@ -59,6 +59,10 @@ declare module 'sdk/panel' {
 	export var Panel: Panel
 }
 
+declare module 'sdk/preferences/service' {
+	export function set(pref: string, value: any) : void;
+}
+
 interface ButtonState {
 	label?: string;
 	checked?: boolean;
@@ -72,21 +76,19 @@ interface ButtonOptions {
 	onChange?: (state?: ButtonState) => void;
 }
 
-declare module 'sdk/ui/button/toggle' {
-	export interface ToggleButton {
-		new(opts: ButtonOptions): ToggleButton;
-		state(target: any, state?: ButtonState) : ButtonState;
-	}
-
-	export var ToggleButton: ToggleButton;
-}
-
 interface WorkerOptions {
 	contentScriptFile: string;
 }
 
 interface ContentWorker {
 	port: Port;
+}
+
+declare module 'sdk/self' {
+	export interface Data {
+		url(path: string): string;
+	}
+	export var data: Data;
 }
 
 interface Tab {
@@ -106,7 +108,13 @@ declare module 'sdk/tabs' {
 	export = tabs;
 }
 
-declare module 'sdk/preferences/service' {
-	export function set(pref: string, value: any) : void;
+declare module 'sdk/ui/button/toggle' {
+	export interface ToggleButton {
+		new(opts: ButtonOptions): ToggleButton;
+		state(target: any, state?: ButtonState) : ButtonState;
+	}
+
+	export var ToggleButton: ToggleButton;
 }
+
 

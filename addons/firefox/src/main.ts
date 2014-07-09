@@ -2,16 +2,13 @@
 
 import buttons = require('sdk/ui/button/toggle');
 import panel = require('sdk/panel');
-import tabs = require('sdk/tabs');
 import preferences_service = require('sdk/preferences/service');
-
-// use `self_` to avoid conflict with `self`
-// in lib.d.ts
-var self_ = require('sdk/self');
+import self_ = require('sdk/self');
+import tabs = require('sdk/tabs');
 
 var mainPanel: panel.Panel;
 var toolbarButton: buttons.ToggleButton;
-var tabWorkers: {[index: string]: ContentWorker};
+var tabWorkers: {[index: string]: ContentWorker} = {};
 
 function getTabWorker(tab: Tab) {
 	if (!tabWorkers[tab.id]) {
