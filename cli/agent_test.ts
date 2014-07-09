@@ -1,8 +1,8 @@
 import agent = require('./agent');
 import agent_server = require('./agent_server');
 import crypto = require('../lib/onepass_crypto');
+import key_agent = require('../lib/key_agent');
 import testLib = require('../lib/test');
-import onepass = require('../lib/onepass');
 
 testLib.addAsyncTest('store keys', (assert) => {
 	var httpAgent = new agent.HttpKeyAgent();
@@ -34,8 +34,8 @@ testLib.addAsyncTest('decrypt data', (assert) => {
 
 	httpAgent.addKey('key1', itemPass)
 	.then(() => {
-		return httpAgent.decrypt('key1', encrypted, new onepass.CryptoParams(
-			onepass.CryptoAlgorithm.AES128_OpenSSLKey));
+		return httpAgent.decrypt('key1', encrypted, new key_agent.CryptoParams(
+			key_agent.CryptoAlgorithm.AES128_OpenSSLKey));
 	})
 	.then((decrypted) => {
 		assert.equal(decrypted, itemData);
@@ -49,7 +49,7 @@ testLib.addAsyncTest('encrypt data', (assert) => {
 
 	var itemData = JSON.stringify({secret: 'secret-data'});
 	var itemPass = 'the master key';
-	var params = new onepass.CryptoParams(onepass.CryptoAlgorithm.AES128_OpenSSLKey);
+	var params = new key_agent.CryptoParams(key_agent.CryptoAlgorithm.AES128_OpenSSLKey);
 
 	httpAgent.addKey('key2', itemPass).then(() => {
 		return httpAgent.encrypt('key2', itemData, params);

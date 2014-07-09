@@ -13,6 +13,7 @@ import asyncutil = require('./base/asyncutil');
 import agilekeychain = require('./agilekeychain');
 import collectionutil = require('./base/collectionutil');
 import crypto = require('./onepass_crypto');
+import keyAgent = require('./key_agent');
 import stringutil = require('./base/stringutil');
 import vfs = require('./vfs/vfs');
 
@@ -23,8 +24,6 @@ import vfs = require('./vfs/vfs');
   * the official 1Password v4 app for Mac (13/05/14)
   */
 export var DEFAULT_VAULT_PASS_ITERATIONS = 80000;
-
-var defaultCryptoImpl = new crypto.CryptoJsCrypto();
 
 // Converts a UNIX timestamp in seconds since
 // the epoch to a JS Date
@@ -89,10 +88,6 @@ export interface ItemTypeMap {
 	[index: string] : ItemTypeInfo;
 }
 
-export enum CryptoAlgorithm {
-	AES128_OpenSSLKey
-}
-
 export class DecryptionError {
 	context : string;
 
@@ -102,94 +97,6 @@ export class DecryptionError {
 
 	toString() : string {
 		return this.context || 'Decryption failed';
-	}
-}
-
-export class CryptoParams {
-	algo : CryptoAlgorithm;
-
-	constructor(algo: CryptoAlgorithm) {
-		this.algo = algo;
-	}
-}
-
-/** Interface for agent which handles storage of decryption
-  * keys and provides methods to encrypt and decrypt data
-  * using the stored keys.
-  */
-export interface KeyAgent {
-	/** Register a key with the agent for future use when decrypting items. */
-	addKey(id: string, key: string) : Q.Promise<void>;
-	/** Returns the IDs of stored keys. */
-	listKeys() : Q.Promise<string[]>;
-	/** Clear all stored keys. */
-	forgetKeys() : Q.Promise<void>;
-	/** Decrypt data for an item using the given key ID and crypto
-	  * parameters.
-	  *
-	  * Returns a promise for the decrypted plaintext.
-	  */
-	decrypt(id: string, cipherText: string, params: CryptoParams) : Q.Promise<string>;
-	/** Encrypt data for an item using the given key ID and crypto
-	  * parameters.
-	  *
-	  * Returns a promise for the encrypted text.
-	  */
-	encrypt(id: string, plainText: string, params: CryptoParams) : Q.Promise<string>;
-}
-
-/** A simple key agent which just stores keys in memory */
-export class SimpleKeyAgent {
-	private crypto : crypto.CryptoImpl;
-	private keys : {[id:string] : string};
-
-	keyCount() : number {
-		return Object.keys(this.keys).length;
-	}
-
-	constructor(cryptoImpl? : crypto.CryptoImpl) {
-		this.crypto = cryptoImpl || defaultCryptoImpl;
-		this.keys = {};
-	}
-
-	addKey(id: string, key: string) : Q.Promise<void> {
-		this.keys[id] = key;
-		return Q.resolve<void>(null);
-	}
-
-	listKeys() : Q.Promise<string[]> {
-		return Q.resolve(Object.keys(this.keys));
-	}
-
-	forgetKeys() : Q.Promise<void> {
-		this.keys = {};
-		return Q.resolve<void>(null);
-	}
-
-	decrypt(id: string, cipherText: string, params: CryptoParams) : Q.Promise<string> {
-		if (!this.keys.hasOwnProperty(id)) {
-			return Q.reject('No such key: ' + id);
-		}
-		switch (params.algo) {
-			case CryptoAlgorithm.AES128_OpenSSLKey:
-				return Q.resolve(crypto.decryptAgileKeychainItemData(this.crypto,
-					  this.keys[id], cipherText));
-			default:
-				return Q.reject('Unknown encryption algorithm');
-		}
-	}
-
-	encrypt(id: string, plainText: string, params: CryptoParams) : Q.Promise<string> {
-		if (!this.keys.hasOwnProperty(id)) {
-			return Q.reject('No such key: ' + id);
-		}
-		switch (params.algo) {
-			case CryptoAlgorithm.AES128_OpenSSLKey:
-				return Q.resolve(crypto.encryptAgileKeychainItemData(this.crypto,
-					this.keys[id], plainText));
-			default:
-				return Q.reject('Unknown encryption algorithm');
-		}
 	}
 }
 
@@ -495,17 +402,17 @@ export class Item {
 export class Vault {
 	private fs: vfs.VFS;
 	private path: string;
-	private keyAgent: KeyAgent;
+	private keyAgent: keyAgent.KeyAgent;
 	private keys : Q.Promise<agilekeychain.EncryptionKeyEntry[]>;
 
 	/** Setup a vault which is stored at @p path in a filesystem.
 	  * @p fs is the filesystem interface through which the
 	  * files that make up the vault are accessed.
 	  */
-	constructor(fs: vfs.VFS, path: string, keyAgent? : KeyAgent) {
+	constructor(fs: vfs.VFS, path: string, agent? : keyAgent.KeyAgent) {
 		this.fs = fs;
 		this.path = path;
-		this.keyAgent = keyAgent || new SimpleKeyAgent(defaultCryptoImpl);
+		this.keyAgent = agent || new keyAgent.SimpleKeyAgent(crypto.defaultCryptoImpl);
 	}
 
 	private getKeys() : Q.Promise<agilekeychain.EncryptionKeyEntry[]> {
@@ -715,7 +622,7 @@ export class Vault {
 			var result : Q.Promise<string>;
 			keys.forEach((key) => {
 				if (key.level == level) {
-					var cryptoParams = new CryptoParams(CryptoAlgorithm.AES128_OpenSSLKey);
+					var cryptoParams = new keyAgent.CryptoParams(keyAgent.CryptoAlgorithm.AES128_OpenSSLKey);
 					result = this.keyAgent.decrypt(key.identifier, data, cryptoParams);
 					return;
 				}
@@ -733,7 +640,7 @@ export class Vault {
 			var result : Q.Promise<string>;
 			keys.forEach((key) => {
 				if (key.level == level) {
-					var cryptoParams = new CryptoParams(CryptoAlgorithm.AES128_OpenSSLKey);
+					var cryptoParams = new keyAgent.CryptoParams(keyAgent.CryptoAlgorithm.AES128_OpenSSLKey);
 					result = this.keyAgent.encrypt(key.identifier, data, cryptoParams);
 					return;
 				}
@@ -1154,14 +1061,14 @@ var AES_128_KEY_LEN = 32; // 16 byte key + 16 byte IV
   * is high.
   */
 export function keyFromPasswordSync(pass: string, salt: string, iterCount: number) : string {
-	return defaultCryptoImpl.pbkdf2Sync(pass, salt, iterCount, AES_128_KEY_LEN);
+	return crypto.defaultCryptoImpl.pbkdf2Sync(pass, salt, iterCount, AES_128_KEY_LEN);
 }
 
 /** Derive an encryption key from a password for use with decryptKey()
   * This version is asynchronous and will not block the UI.
   */
 export function keyFromPassword(pass: string, salt: string, iterCount: number) : Q.Promise<string> {
-	return defaultCryptoImpl.pbkdf2(pass, salt, iterCount, AES_128_KEY_LEN);
+	return crypto.defaultCryptoImpl.pbkdf2(pass, salt, iterCount, AES_128_KEY_LEN);
 }
 
 /** Decrypt the master key for a vault.
@@ -1175,11 +1082,11 @@ export function keyFromPassword(pass: string, salt: string, iterCount: number) :
 export function decryptKey(derivedKey: string, encryptedKey: string, validation: string) : string {
 	var aesKey = derivedKey.substring(0, 16);
 	var iv = derivedKey.substring(16, 32);
-	var decryptedKey = defaultCryptoImpl.aesCbcDecrypt(aesKey, encryptedKey, iv);
+	var decryptedKey = crypto.defaultCryptoImpl.aesCbcDecrypt(aesKey, encryptedKey, iv);
 	var validationSaltCipher = crypto.extractSaltAndCipherText(validation);
 
-	var keyParams = crypto.openSSLKey(defaultCryptoImpl, decryptedKey, validationSaltCipher.salt);
-	var decryptedValidation = defaultCryptoImpl.aesCbcDecrypt(keyParams.key, validationSaltCipher.cipherText, keyParams.iv);
+	var keyParams = crypto.openSSLKey(crypto.defaultCryptoImpl, decryptedKey, validationSaltCipher.salt);
+	var decryptedValidation = crypto.defaultCryptoImpl.aesCbcDecrypt(keyParams.key, validationSaltCipher.cipherText, keyParams.iv);
 
 	if (decryptedValidation != decryptedKey) {
 		throw new DecryptionError('Incorrect password');
@@ -1207,11 +1114,11 @@ export interface EncryptedKey {
 export function encryptKey(derivedKey: string, decryptedKey: string) : EncryptedKey {
 	var aesKey = derivedKey.substring(0, 16);
 	var iv = derivedKey.substring(16, 32);
-	var encryptedKey = defaultCryptoImpl.aesCbcEncrypt(aesKey, decryptedKey, iv);
+	var encryptedKey = crypto.defaultCryptoImpl.aesCbcEncrypt(aesKey, decryptedKey, iv);
 
 	var validationSalt = crypto.randomBytes(8);
-	var keyParams = crypto.openSSLKey(defaultCryptoImpl, decryptedKey, validationSalt);
-	var validation = 'Salted__' + validationSalt + defaultCryptoImpl.aesCbcEncrypt(keyParams.key, decryptedKey, keyParams.iv);
+	var keyParams = crypto.openSSLKey(crypto.defaultCryptoImpl, decryptedKey, validationSalt);
+	var validation = 'Salted__' + validationSalt + crypto.defaultCryptoImpl.aesCbcEncrypt(keyParams.key, decryptedKey, keyParams.iv);
 
 	return {key: encryptedKey, validation: validation};
 }

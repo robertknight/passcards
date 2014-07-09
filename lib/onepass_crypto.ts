@@ -325,3 +325,5 @@ export class CryptoJsCrypto implements CryptoImpl {
 	}
 }
 
+export var defaultCryptoImpl = new CryptoJsCrypto();
+

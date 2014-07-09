@@ -4,9 +4,9 @@ import Q = require('q');
 
 import agent_server = require('./agent_server');
 import http_client = require('../lib/http_client');
-import onepass = require('../lib/onepass');
+import key_agent = require('../lib/key_agent');
 
-export class HttpKeyAgent implements onepass.KeyAgent {
+export class HttpKeyAgent implements key_agent.KeyAgent {
 	private agentPID : Q.Promise<number>;
 	private client : http_client.Client
 
@@ -42,11 +42,11 @@ export class HttpKeyAgent implements onepass.KeyAgent {
 		return done.promise;
 	}
 
-	decrypt(id: string, cipherText: string, params: onepass.CryptoParams) : Q.Promise<string> {
+	decrypt(id: string, cipherText: string, params: key_agent.CryptoParams) : Q.Promise<string> {
 		var plainText = Q.defer<string>();
 		this.sendRequest<agent_server.DecryptRequest>('POST', '/decrypt', {
 			id: id,
-			algo: onepass.CryptoAlgorithm.AES128_OpenSSLKey,
+			algo: key_agent.CryptoAlgorithm.AES128_OpenSSLKey,
 			cipherText: cipherText
 		}).then((result) => {
 			plainText.resolve(result);
@@ -54,11 +54,11 @@ export class HttpKeyAgent implements onepass.KeyAgent {
 		return plainText.promise;
 	}
 
-	encrypt(id: string, plainText: string, params: onepass.CryptoParams) : Q.Promise<string> {
+	encrypt(id: string, plainText: string, params: key_agent.CryptoParams) : Q.Promise<string> {
 		var cipherText = Q.defer<string>();
 		this.sendRequest<agent_server.EncryptRequest>('POST', '/encrypt', {
 			id: id,
-			algo: onepass.CryptoAlgorithm.AES128_OpenSSLKey,
+			algo: key_agent.CryptoAlgorithm.AES128_OpenSSLKey,
 			plainText: plainText
 		}).then((result) => {
 			cipherText.resolve(result);

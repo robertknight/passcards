@@ -11,18 +11,18 @@ import urlrouter = require('urlrouter');
 
 import consoleio = require('./console');
 import crypto = require('../lib/onepass_crypto');
-import onepass = require('../lib/onepass');
+import key_agent = require('../lib/key_agent');
 import streamutil = require('../lib/base/streamutil');
 
 export interface DecryptRequest {
 	id : string;
-	algo : onepass.CryptoAlgorithm;
+	algo : key_agent.CryptoAlgorithm;
 	cipherText : string
 }
 
 export interface EncryptRequest {
 	id : string;
-	algo : onepass.CryptoAlgorithm;
+	algo : key_agent.CryptoAlgorithm;
 	plainText : string;
 }
 
@@ -89,7 +89,7 @@ class Server {
 						return;
 					}
 					switch (params.algo) {
-						case onepass.CryptoAlgorithm.AES128_OpenSSLKey:
+						case key_agent.CryptoAlgorithm.AES128_OpenSSLKey:
 							var plainText = crypto.decryptAgileKeychainItemData(this.crypto, this.keys[params.id],
 							  params.cipherText);
 
@@ -116,7 +116,7 @@ class Server {
 						return;
 					}
 					switch (params.algo) {
-						case onepass.CryptoAlgorithm.AES128_OpenSSLKey:
+						case key_agent.CryptoAlgorithm.AES128_OpenSSLKey:
 							var cipherText = crypto.encryptAgileKeychainItemData(this.crypto, this.keys[params.id],
 							 params.plainText);
 

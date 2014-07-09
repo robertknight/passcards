@@ -17,6 +17,7 @@ import consoleio = require('./console');
 import crypto = require('../lib/onepass_crypto');
 import edit_cmd = require('./edit_cmd');
 import item_search = require('../lib/item_search');
+import key_agent = require('../lib/key_agent');
 import nodefs = require('../lib/vfs/node');
 import onepass = require('../lib/onepass');
 import vfs = require('../lib/vfs/vfs');
@@ -44,15 +45,15 @@ var ACTION_CANCELED_ERR = 'Action canceled';
 export class CLI {
 	private configDir : string;
 	private io : consoleio.TermIO;
-	private keyAgent : onepass.KeyAgent;
+	private keyAgent : key_agent.KeyAgent;
 	private clipboard : clipboard.Clipboard;
 	private editCommand : cli_common.CommandHandler;
 	private passwordGenerator : () => string;
 
-	constructor(io? : consoleio.TermIO, agent? : onepass.KeyAgent, clipboardImpl?: clipboard.Clipboard) {
+	constructor(io? : consoleio.TermIO, agent? : key_agent.KeyAgent, clipboardImpl?: clipboard.Clipboard) {
 		this.configDir = process.env.HOME + "/.config/onepass-web";
 		this.io = io || new consoleio.ConsoleIO();
-		this.keyAgent = agent || new onepass.SimpleKeyAgent();
+		this.keyAgent = agent || new key_agent.SimpleKeyAgent();
 		this.clipboard = clipboardImpl || clipboard.createPlatformClipboard();
 		this.passwordGenerator = () => {
 			return crypto.generatePassword(12);

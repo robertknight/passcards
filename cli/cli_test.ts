@@ -7,9 +7,9 @@ import asyncutil = require('../lib/base/asyncutil');
 import cli = require('./cli')
 import clipboard = require('./clipboard')
 import consoleio = require('./console')
+import key_agent = require('../lib/key_agent');
 import nodefs = require('../lib/vfs/node');
 import testLib = require('../lib/test')
-import onepass = require('../lib/onepass')
 import vfs = require('../lib/vfs/vfs');
 
 interface PromptReply {
@@ -71,7 +71,7 @@ class FakeIO implements consoleio.TermIO {
 // fake key agent which mirrors the real agent in returning
 // results asynchronously - whereas the default SimpleKeyAgent
 // implementation updates keys synchronously
-class FakeKeyAgent extends onepass.SimpleKeyAgent {
+class FakeKeyAgent extends key_agent.SimpleKeyAgent {
 
 	private delay() : Q.Promise<void> {
 		return Q.delay<void>(null, 0);
@@ -95,13 +95,13 @@ class FakeKeyAgent extends onepass.SimpleKeyAgent {
 		});
 	}
 
-	decrypt(id: string, cipherText: string, params: onepass.CryptoParams) : Q.Promise<string> {
+	decrypt(id: string, cipherText: string, params: key_agent.CryptoParams) : Q.Promise<string> {
 		return this.delay().then(() => {
 			return super.decrypt(id, cipherText, params);
 		});
 	}
 
-	encrypt(id: string, plainText: string, params: onepass.CryptoParams) : Q.Promise<string> {
+	encrypt(id: string, plainText: string, params: key_agent.CryptoParams) : Q.Promise<string> {
 		return this.delay().then(() => {
 			return super.encrypt(id, plainText, params);
 		});
