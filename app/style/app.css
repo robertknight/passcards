@@ -212,3 +212,14 @@ body {
   padding-bottom: 5px;
   border-bottom: 1px solid #dddddd;
 }
+.statusView {
+  background-color: rgba(255, 100, 100, 0.8);
+  color: white;
+  font-weight: bold;
+  padding-bottom: 5px;
+  padding-left: 10px;
+  padding-top: 5px;
+  position: absolute;
+  z-index: 10;
+  width: 100%;
+}
