@@ -32,6 +32,30 @@ enum ActiveView {
 	ItemDetailView
 }
 
+enum StatusType {
+	Error
+}
+
+class Status {
+	type: StatusType;
+	text: string;
+}
+
+class StatusViewProps {
+	status: Status;
+}
+
+/** A status bar for showing app-wide notifications, such
+  * as syncing progress, connection errors etc.
+  */
+class StatusView extends reactts.ReactComponentBase<StatusViewProps, {}> {
+	render() {
+		return react.DOM.div({className: 'statusView'},
+			this.props.status ? this.props.status.text : ''
+		);
+	}
+}
+
 /** The app setup screen. This is responsible for introducing the user
   * to the app and displaying the initial status page when connecting
   * to cloud storage.
@@ -53,6 +77,7 @@ class AppViewState {
 	selectedItem: onepass.Item;
 	isLocked: boolean;
 	currentURL: string;
+	status: Status;
 }
 
 /** The main top-level app view. */
@@ -129,6 +154,12 @@ class AppView extends reactts.ReactComponentBase<{}, AppViewState> {
 		this.setState(state);
 	}
 
+	showError(error: string) {
+		var state = this.state;
+		state.status = {type: StatusType.Error, text: error};
+		this.setState(state);
+	}
+
 	autofill(item: onepass.Item) {
 		this.autofillHandler.autofill(item);
 	}
@@ -142,6 +173,9 @@ class AppView extends reactts.ReactComponentBase<{}, AppViewState> {
 					isLocked: this.state.isLocked,
 					onUnlock: () => {
 						this.setLocked(false);
+					},
+					onUnlockErr: (err) => {
+						this.showError(err);
 					}
 				})
 			);
@@ -160,6 +194,11 @@ class AppView extends reactts.ReactComponentBase<{}, AppViewState> {
 				autofill: () => {
 					this.autofill(this.state.selectedItem);
 				}
+			}));
+		}
+		if (this.state.status) {
+			children.push(new StatusView({
+				status: this.state.status
 			}));
 		}
 
@@ -185,6 +224,7 @@ class UnlockPaneProps {
 	vault: onepass.Vault;
 	isLocked: boolean;
 	onUnlock: () => void;
+	onUnlockErr: (error: string) => void;
 }
 
 class UnlockPane extends reactts.ReactComponentBase<UnlockPaneProps, UnlockPaneState> {
@@ -207,6 +247,7 @@ class UnlockPane extends reactts.ReactComponentBase<UnlockPaneProps, UnlockPaneS
 			})
 			.fail((err) => {
 				this.setUnlockState(UnlockState.Failed);
+				this.props.onUnlockErr(err);
 			});
 		});
 	}
@@ -614,6 +655,7 @@ export class App {
 				this.setupBrowserInteraction(pageAccess);
 			}
 		}).fail((err) => {
+			this.appView.showError(err.toString());
 			console.log('Failed to setup vault', err.toString());
 		});
 	}
