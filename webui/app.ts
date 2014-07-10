@@ -373,6 +373,11 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 			return;
 		}
 
+		if (!this.props.item || this.props.item != nextProps.item) {
+			// forget previous item content when switching items
+			this.itemContent = null;
+		}
+
 		nextProps.item.getContent().then((content) => {
 			// TODO - Cache content and avoid using forceUpdate()
 			this.itemContent = content;
