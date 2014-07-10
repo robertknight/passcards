@@ -350,7 +350,45 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 		if (this.props.item && this.itemContent) {
 			var account = this.itemContent.account();
 			var password = this.itemContent.password();
-			var sections : react.ReactComponent<any,any>[] = [];
+			var coreFields: react.ReactComponent<any,any>[] = [];
+			var websites: react.ReactComponent<any,any>[] = [];
+			var sections: react.ReactComponent<any,any>[] = [];
+
+			this.itemContent.sections.forEach((section) => {
+				var fields: react.ReactComponent<any,any>[] = [];
+				section.fields.forEach((field) => {
+					if (field.value) {
+						fields.push(react.DOM.div({className: 'detailsField'},
+							react.DOM.div({className: 'detailsFieldLabel'}, field.title),
+							react.DOM.div({className: 'detailsFieldValue'}, field.value)
+						));
+					}
+				});
+				sections.push(react.DOM.div({className: 'detailsSection'},
+					fields)
+				);
+			});
+
+			this.itemContent.urls.forEach((url) => {
+				websites.push(react.DOM.div({className: 'detailsField'},
+					react.DOM.div({className: 'detailsFieldLabel'}, url.label),
+					react.DOM.div({className: 'detailsFieldValue'}, url.url)
+				));
+			});
+
+			if (account) {
+				coreFields.push(react.DOM.div({className: 'detailsField detailsAccount'},
+					react.DOM.div({className: 'detailsFieldLabel'}, 'Account'),
+					react.DOM.div({}, account))
+				);
+			}
+
+			if (password) {
+				coreFields.push(react.DOM.div({className: 'detailsField detailsPass'},
+					react.DOM.div({className: 'detailsFieldLabel'}, 'Password'),
+					react.DOM.div({}, password))
+				);
+			}
 
 			detailsContent = react.DOM.div({className: 'detailsContent'},
 				react.DOM.div({className: 'detailsHeader'},
@@ -360,12 +398,9 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 						react.DOM.div({className: 'detailsLocation'}, this.props.item.location))
 				),
 				react.DOM.div({className: 'detailsCore'},
-					react.DOM.div({className: 'detailsField detailsAccount'},
-						react.DOM.div({className: 'detailsFieldLabel'}, 'Account'),
-						react.DOM.div({}, account)),
-					react.DOM.div({className: 'detailsField detailsPass'},
-						react.DOM.div({className: 'detailsFieldLabel'}, 'Password'),
-						react.DOM.div({}, password))),
+					coreFields),
+				react.DOM.div({className: 'detailsURLs'},
+					websites),
 				react.DOM.div({className: 'detailsSections'},
 					sections)
 			);
