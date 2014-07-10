@@ -123,6 +123,9 @@ class AppView extends reactts.ReactComponentBase<{}, AppViewState> {
 	setLocked(locked: boolean) {
 		var state = this.state;
 		state.isLocked = locked;
+		if (locked) {
+			state.selectedItem = null;
+		}
 		this.setState(state);
 	}
 
