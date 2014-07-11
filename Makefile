@@ -1,17 +1,10 @@
-TMP_DIR_CMD=mktemp -d /tmp/onepass.XXXXX
-TSC=tsc --noImplicitAny --sourcemap
-TSC_NODE=$(TSC) -m commonjs
-TSLINT=tslint
-NODE=node
-FOREACH_FILE=tr ' ' '\n' | xargs -n 1
-ROOT_DIR=$(dir $(abspath package.json))
-SILENCE_CMD=1>/dev/null 2>/dev/null
-SILENCE_STDOUT=1>/dev/null
+include common.mk
 
 lib_srcs=$(shell find lib/ -name '*.ts')
 cli_srcs=$(shell find cli/ -name '*.ts')
 webui_srcs=$(shell find webui/ -name '*.ts')
-all_srcs=$(lib_srcs) $(cli_srcs) $(webui_srcs)
+firefox_addon_srcs=$(shell find addons/firefox/src -name '*.ts')
+all_srcs=$(lib_srcs) $(cli_srcs) $(webui_srcs) $(addon_srcs)
 test_files=$(shell find build/ -name '*_test.js')
 webui_script_dir=webui/scripts
 webui_css_dir=webui/style
@@ -20,12 +13,14 @@ webui_css_dir=webui/style
 # updates prior to build
 submodule_marker=build/submodule_marker
 nodemodule_marker=build/nodemodule_marker
-deps=$(submodule_marker) $(nodemodule_marker)
+dropboxjs_lib=node_modules/dropbox/lib/dropbox.js
+
+deps=$(submodule_marker) $(nodemodule_marker) $(dropboxjs_lib)
 
 all: build/current webui-build
 
 build/current: $(lib_srcs) $(cli_srcs) $(webui_srcs) $(deps)
-	@$(TSC_NODE) --outDir build $(lib_srcs) $(cli_srcs) $(webui_srcs)
+	@$(TSC) --outDir build $(lib_srcs) $(cli_srcs) $(webui_srcs)
 	@touch build/current
 
 webui-build: $(webui_script_dir)/webui_bundle.js $(webui_script_dir)/crypto_worker.js $(webui_css_dir)/app.css
@@ -56,6 +51,7 @@ lint: $(lint_files)
 
 build/%.ts.lint: %.ts
 	$(TSLINT) -f $<
+	@mkdir -p $(dir $@)
 	@touch $@
 
 $(submodule_marker): .gitmodules
@@ -69,6 +65,8 @@ $(nodemodule_marker): package.json
 	# script here, since that runs 'make all' and is intended to
 	# be used before actually publishing the app
 	@npm install --ignore-scripts
+	
+node_modules/dropbox/lib/dropbox.js: node_modules/dropbox/package.json
 	# Build dropbox-js. As long as we are using a fork of dropbox-js,
 	# we'll need to run this to build Dropbox before using it
 	@echo "Building dropbox-js..."

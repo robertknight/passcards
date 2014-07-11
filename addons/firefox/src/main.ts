@@ -22,8 +22,6 @@ function getTabWorker(tab: Tab) {
 	return tabWorkers[tab.id];
 }
 
-var mainPanel: panel.Panel;
-
 function notifyPageChanged(tab: Tab) {
 	if (mainPanel) {
 		mainPanel.port.emit('pagechanged', tabs.activeTab.url);

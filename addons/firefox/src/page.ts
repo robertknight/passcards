@@ -1,10 +1,12 @@
+/// <reference path="../typings/firefox-addon-sdk.d.ts" />
+
 // the page script which is injected into browser tabs
 // to collect details of fill-able fields and auto-fill
 // fields
 
-var self_ = <any>self;
-
 import page_access = require('../../../webui/page_access');
+
+var selfWorker: ContentWorker = <any>self;
 
 function inputFieldType(typeStr: string) : page_access.FieldType {
 	switch (typeStr.toLowerCase()) {
@@ -23,7 +25,7 @@ function inputFieldType(typeStr: string) : page_access.FieldType {
 
 var lastFields : HTMLInputElement[] = [];
 
-self_.port.on('find-fields', () => {
+selfWorker.port.on('find-fields', () => {
 	lastFields = [];
 
 	var fieldElements = document.getElementsByTagName('input');
@@ -46,10 +48,10 @@ self_.port.on('find-fields', () => {
 
 		fields.push(field);
 	}
-	self_.port.emit('found-fields', fields);
+	selfWorker.port.emit('found-fields', fields);
 });
 
-self_.port.on('autofill', (entries: page_access.AutoFillEntry[]) => {
+selfWorker.port.on('autofill', (entries: page_access.AutoFillEntry[]) => {
 	entries.forEach((entry) => {
 		if (typeof entry.key == 'number' && entry.key >= 0 && entry.key < lastFields.length) {
 			var elt = lastFields[entry.key];

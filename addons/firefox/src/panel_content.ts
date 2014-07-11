@@ -9,12 +9,12 @@
 import stringutil = require('../../../lib/base/stringutil');
 import page_access = require('../../../webui/page_access');
 
-var self_ = <any>self;
+var selfWorker: ContentWorker = <any>self;
 
 var OAUTH_REDIRECT_URL = 'http://localhost:8234';
 
 if (stringutil.startsWith(window.location.href, OAUTH_REDIRECT_URL)) {
-	self_.port.emit('oauth-credentials-received', window.location.hash);
+	selfWorker.port.emit('oauth-credentials-received', window.location.hash);
 }
 
 var pageAccess = createObjectIn<page_access.ExtensionConnector>(unsafeWindow, { defineAs: 'firefoxAddOn' });
@@ -32,24 +32,24 @@ function postMessageToFrontend(m: page_access.Message) {
 }
 
 pageAccess.findForms = exportFunction(() => {
-	self_.port.once('found-fields', (fields: page_access.InputField[]) => {
-		var fields = cloneInto(fields, unsafeWindow);
+	selfWorker.port.once('found-fields', (fields: page_access.InputField[]) => {
+		var fieldsClone = cloneInto(fields, unsafeWindow);
 		var msg: page_access.Message = {
 			fromContentScript: true,
 			type: page_access.MessageType.FieldsFound,
 			pageURL: pageAccess.currentUrl,
-			fields: fields
+			fields: fieldsClone
 		};
 		postMessageToFrontend(msg);
 	});
-	self_.port.emit('find-fields');
+	selfWorker.port.emit('find-fields');
 }, pageAccess);
 
 pageAccess.autofill = exportFunction((fields) => {
-	self_.port.emit('autofill', fields);
+	selfWorker.port.emit('autofill', fields);
 }, pageAccess);
 
-self_.port.on('pagechanged', (url: string) => {
+selfWorker.port.on('pagechanged', (url: string) => {
 	pageAccess.currentUrl = url;
 	var msg: page_access.Message = {
 		fromContentScript: true,
@@ -64,5 +64,5 @@ self_.port.on('pagechanged', (url: string) => {
 // Note that the panel content script is loaded _before_
 // the front-end so this event does not indicate that
 // the front-end itself is ready.
-self_.port.emit('ready');
+selfWorker.port.emit('ready');
 
