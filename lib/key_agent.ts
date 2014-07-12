@@ -69,10 +69,13 @@ export class SimpleKeyAgent {
 		this.crypto = cryptoImpl || crypto.defaultCryptoImpl;
 		this.keys = {};
 		this.lockEvents = new event_stream.EventStream<void>();
-		this.autoLockTimeout = 2 * 60 * 1000;
+		this.autoLockTimeout = 0;
 	}
 
 	private scheduleAutoLock() {
+		if (!this.autoLockTimeout) {
+			return;
+		}
 		if (this.lockTimeout) {
 			clearTimeout(this.lockTimeout);
 		}
@@ -81,6 +84,12 @@ export class SimpleKeyAgent {
 		}, this.autoLockTimeout);
 	}
 
+	/** Set a timeout after which the agent will automatically discard
+	  * its keys, thereby locking the vault.
+	  *
+	  * If timeout is zero or null, auto-lock is disabled.
+	  * Auto-lock is disabled by default in SimpleKeyAgent
+	  */
 	setAutoLockTimeout(timeout: number) {
 		this.autoLockTimeout = timeout;
 		if (this.lockTimeout) {

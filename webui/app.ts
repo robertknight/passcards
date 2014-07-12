@@ -648,6 +648,8 @@ export class App {
 		
 		fs.login().then(() => {
 			var keyAgent = new key_agent.SimpleKeyAgent();
+			keyAgent.setAutoLockTimeout(2 * 60 * 1000);
+
 			var vault = new onepass.Vault(fs, '/1Password/1Password.agilekeychain', keyAgent);
 			react.renderComponent(this.appView, document.getElementById('app-view'));
 			this.appView.setVault(vault);
