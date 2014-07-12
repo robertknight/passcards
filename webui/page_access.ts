@@ -81,6 +81,26 @@ export interface ExtensionConnector {
 	autofill(fields: AutoFillEntry[]) : void;
 }
 
+/** A stub extension connector with no-op findForms()
+  * and autofill() methods.
+  */
+export class FakeExtensionConnector {
+	currentUrl: string;
+	oauthRedirectUrl: string;
+
+	constructor() {
+		this.currentUrl = '';
+	}
+
+	findForms() : void {
+		/* no-op */
+	}
+
+	autofill(fields: AutoFillEntry[]) : void {
+		/* no-op */
+	}
+}
+
 /** Implementation of PageAccess which uses window.postMessage() to
   * communicate between the UI for an extension and the
   * priviledged extension code via an ExtensionConnector

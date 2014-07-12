@@ -638,6 +638,8 @@ export class App {
 		var pageAccess: page_access.PageAccess;
 		if (typeof firefoxAddOn != 'undefined') {
 			pageAccess = new page_access.ExtensionPageAccess(firefoxAddOn);
+		} else {
+			pageAccess = new page_access.ExtensionPageAccess(new page_access.FakeExtensionConnector());
 		}
 
 		this.appView = new AppView(new autofill.AutoFiller(pageAccess));
@@ -658,9 +660,8 @@ export class App {
 				this.appView.setLocked(true);
 			});
 
-			if (pageAccess) {
-				this.setupBrowserInteraction(pageAccess);
-			}
+			this.setupBrowserInteraction(pageAccess);
+
 		}).fail((err) => {
 			this.appView.showError(err.toString());
 			console.log('Failed to setup vault', err.toString());
