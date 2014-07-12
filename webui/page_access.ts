@@ -1,3 +1,5 @@
+import event_stream = require('../lib/base/event_stream');
+
 export enum FieldType {
 	Text,
 	Password,
@@ -45,14 +47,19 @@ export interface PageAccess {
 
 	/** Auto-fill fields on the current page */
 	autofill(fields: AutoFillEntry[]) : void;
+	
+	/** Emits events when the extension's UI is shown. */
+	showEvents: event_stream.EventStream<void>;
 }
 
 /** Types of messages exchanged between the app front-end
   * and priviledged extension code.
   */
 export enum MessageType {
-	PageChanged,
-	FieldsFound
+	PageChanged, ///< The URL of the browser's active tab changed
+	FieldsFound, ///< The set of auto-fillable fields on the active tab have been
+	             ///< collected
+	Show ///< The app UI became visible
 }
 
 /** A message exchanged between the app front-end
@@ -64,8 +71,8 @@ export interface Message {
 	  */
 	fromContentScript: boolean;
 	type: MessageType;
-	pageURL: string;
-	fields: InputField[];
+	pageURL?: string;
+	fields?: InputField[];
 }
 
 /** Interface exposed by priviledged browser extension code for triggering input field
@@ -111,10 +118,13 @@ export class ExtensionPageAccess {
 	private fieldsListeners: Array<(fields: InputField[]) => void>;
 	private connector: ExtensionConnector;
 
+	showEvents: event_stream.EventStream<void>;
+
 	constructor(extension: ExtensionConnector) {
 		this.connector = extension;
 		this.pageChangedListeners = [];
 		this.fieldsListeners = [];
+		this.showEvents = new event_stream.EventStream<void>();
 
 		window.addEventListener('message', (event) => {
 			if (event.source != window || typeof event.data.fromContentScript == 'undefined') {
@@ -133,6 +143,8 @@ export class ExtensionPageAccess {
 				this.fieldsListeners.forEach((listener) => {
 					listener(message.fields);
 				});
+			} else if (message.type == MessageType.Show) {
+				this.showEvents.publish(null);
 			}
 		});
 	}

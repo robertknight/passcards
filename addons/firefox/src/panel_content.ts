@@ -60,6 +60,13 @@ selfWorker.port.on('pagechanged', (url: string) => {
 	postMessageToFrontend(msg);
 });
 
+selfWorker.port.on('show', () => {
+	postMessageToFrontend({
+		fromContentScript: true,
+		type: page_access.MessageType.Show
+	});
+});
+
 // notify the add-on that the panel content script is ready.
 // Note that the panel content script is loaded _before_
 // the front-end so this event does not indicate that

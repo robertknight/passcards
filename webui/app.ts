@@ -26,6 +26,35 @@ import vfs = require('../lib/vfs/vfs');
 
 import onepass_crypto = require('../lib/onepass_crypto');
 
+/** Shortcut installs key handlers to handle a shortcut
+  * key and invoke a handler in response, irrespective
+  * of which element is focused at the time.
+  *
+  * Shortcuts remain in effect until disabled via remove()
+  */
+class Shortcut {
+	private listener: (ev: KeyboardEvent) => any;
+
+	/** Installs a shortcut which listens for a press of @p key
+	  * and invokes @p handler in response.
+	  *
+	  * The shortcut remains in effect until remove() is called.
+	  */
+	constructor(key: string, handler: () => void) {
+		this.listener = (e) => {
+			if (e.key == key) {
+				e.preventDefault();
+				handler();
+			}
+		};
+		document.addEventListener('keydown', this.listener);
+	}
+
+	remove() {
+		document.removeEventListener('keydown', this.listener);
+	}
+}
+
 enum ActiveView {
 	UnlockPane,
 	ItemList,
@@ -182,6 +211,7 @@ class AppView extends reactts.ReactComponentBase<{}, AppViewState> {
 		} else {
 			children.push(new ItemListView({
 				items: this.state.items,
+				selectedItem: this.state.selectedItem,
 				onSelectedItemChanged: (item) => { this.setSelectedItem(item); },
 				currentURL: this.state.currentURL
 			}));
@@ -250,6 +280,9 @@ class UnlockPane extends reactts.ReactComponentBase<UnlockPaneProps, UnlockPaneS
 				this.props.onUnlockErr(err);
 			});
 		});
+
+		var masterPassField = this.refs['masterPassField'].getDOMNode();
+		$(masterPassField).focus();
 	}
 
 	setUnlockState(unlockState: UnlockState) {
@@ -291,6 +324,9 @@ class UnlockPane extends reactts.ReactComponentBase<UnlockPaneProps, UnlockPaneS
 // Search box to search through items in the view
 class SearchFieldProps {
 	onQueryChanged: (query: string) => void;
+	onMoveUp: () => void;
+	onMoveDown: () => void;
+	onActivate: () => void;
 }
 
 class SearchField extends reactts.ReactComponentBase<SearchFieldProps, {}> {
@@ -300,6 +336,22 @@ class SearchField extends reactts.ReactComponentBase<SearchFieldProps, {}> {
 			this.props.onQueryChanged($(searchField).val().toLowerCase());
 		}, 100);
 		$(searchField).bind('input', <(eventObject: JQueryEventObject) => any>updateQuery);
+		$(searchField).keydown((e) => {
+			if (e.key == 'Down') {
+				e.preventDefault();
+				this.props.onMoveDown();
+			} else if (e.key == 'Up') {
+				e.preventDefault();
+				this.props.onMoveUp();
+			} else if (e.key == 'Enter') {
+				e.preventDefault();
+				this.props.onActivate();
+			}
+		});
+	}
+
+	focus() {
+		(<HTMLElement>this.refs['searchField'].getDOMNode()).focus();
 	}
 
 	render() {
@@ -319,6 +371,7 @@ class ItemListViewState {
 
 class ItemListViewProps {
 	items: onepass.Item[];
+	selectedItem: onepass.Item;
 	onSelectedItemChanged: (item: onepass.Item) => void;
 	currentURL: string;
 }
@@ -327,6 +380,17 @@ class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, ItemLis
 	getInitialState() {
 		var state = new ItemListViewState();
 		return state;
+	}
+
+	componentDidMount() {
+		this.focusSearchField();
+	}
+
+	componentWillReceiveProps(nextProps: ItemListViewProps) {
+		if (this.refs['searchField'] && !nextProps.selectedItem) {
+			// no item selected, focus search field to allow item list navigation
+			this.focusSearchField();
+		}
 	}
 
 	updateFilter = (filter: string) => {
@@ -340,13 +404,37 @@ class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, ItemLis
 		if (!this.state.filter && this.props.currentURL) {
 			filterURL = this.props.currentURL;
 		}
-
+		
 		return react.DOM.div({className: 'itemListView'},
-			new SearchField({onQueryChanged: this.updateFilter}),
+			new SearchField({
+				onQueryChanged: this.updateFilter,
+				ref: 'searchField',
+				onMoveUp: () => {
+					(<ItemList>this.refs['itemList']).hoverPrevItem();
+				},
+				onMoveDown: () => {
+					(<ItemList>this.refs['itemList']).hoverNextItem();
+				},
+				onActivate: () => {
+					this.props.onSelectedItemChanged((<ItemList>this.refs['itemList']).hoveredItem());
+				}
+			}),
 			new ItemList({items: this.props.items, filter: this.state.filter,
-			              filterURL: filterURL,
-			              onSelectedItemChanged: this.props.onSelectedItemChanged})
+				filterURL: filterURL,
+				onSelectedItemChanged: (item) => {
+					if (!item) {
+						this.focusSearchField();
+					}
+					this.props.onSelectedItemChanged(item);
+				},
+				ref: 'itemList'
+			})
 		);
+	}
+
+	private focusSearchField() {
+		var searchField: SearchField = <any>this.refs['searchField'];
+		searchField.focus();
 	}
 }
 
@@ -367,9 +455,16 @@ class ItemSectionProps {
 
 class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 	itemContent : onepass.ItemContent;
+	shortcuts: Shortcut[];
 
 	componentWillReceiveProps(nextProps: DetailsViewProps) {
 		if (!nextProps.item) {
+			if (this.props.item) {
+				this.shortcuts.forEach((shortcut) => {
+					shortcut.remove();
+				});
+				this.shortcuts = null;
+			}
 			return;
 		}
 
@@ -383,6 +478,17 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 			this.itemContent = content;
 			this.forceUpdate();
 		}).done();
+
+		if (!this.props.item) {
+			this.shortcuts = [
+				new Shortcut('Backspace', () => {
+					this.props.onGoBack();
+				}),
+				new Shortcut('a', () => {
+					this.props.autofill();
+				})
+			];
+		}
 	}
 
 	componentDidMount() {
@@ -457,14 +563,16 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 
 		return react.DOM.div({
 			className: stringutil.truthyKeys({
-				detailsView: true,
-				hasSelectedItem: this.props.item
-			})
-		},
+					detailsView: true,
+					hasSelectedItem: this.props.item
+				}),
+			ref: 'detailsView',
+			tabIndex: 0
+			},
 			react.DOM.div({className: stringutil.truthyKeys({toolbar: true, detailsToolbar: true})},
 				react.DOM.a({className: 'toolbarLink', href:'#', ref:'backLink'}, 'Back')),
 				react.DOM.div({className: 'itemActionBar'},
-						react.DOM.input({className: 'itemActionButton', type: 'button', value: 'Autofill', ref: 'autofillBtn'})
+						react.DOM.input({className: 'itemActionButton', accessKey:'a', type: 'button', value: 'Autofill', ref: 'autofillBtn'})
 				),
 			detailsContent ? detailsContent : []
 		);
@@ -480,6 +588,7 @@ class ItemProps {
 	location: string;
 	domain: string;
 	onSelected: () => void;
+	isHovered: boolean;
 }
 
 class Item extends reactts.ReactComponentBase<ItemProps, {}> {
@@ -490,7 +599,8 @@ class Item extends reactts.ReactComponentBase<ItemProps, {}> {
 	}
 
 	render() {
-		return react.DOM.div({className: 'itemOverview', ref: 'itemOverview'},
+		return react.DOM.div({className: stringutil.truthyKeys({itemOverview: true,
+				itemHovered: this.props.isHovered}), ref: 'itemOverview'},
 			react.DOM.img({className: 'itemIcon', src: this.props.iconURL}),
 			react.DOM.div({className: 'itemDetails'},
 				react.DOM.div({className: 'itemTitle'}, this.props.title),
@@ -502,7 +612,16 @@ class Item extends reactts.ReactComponentBase<ItemProps, {}> {
 }
 
 class ItemListState {
+	// TODO - Remove selected item here
 	selectedItem: onepass.Item;
+
+	hoveredIndex: number;
+	matchingItems: onepass.Item[];
+
+	constructor() {
+		this.hoveredIndex = 0;
+		this.matchingItems = [];
+	}
 }
 
 class ItemListProps {
@@ -534,7 +653,7 @@ class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> 
 		return new ItemListState();
 	}
 
-	createListItem(item: onepass.Item) : Item {
+	createListItem(item: onepass.Item, hovered: boolean) : Item {
 		return new Item({
 			key: item.uuid,
 			title: item.title,
@@ -544,29 +663,70 @@ class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> 
 			domain: itemDomain(item),
 			onSelected: () => {
 				this.setSelectedItem(item);
-			}
+			},
+			isHovered: hovered
 		});
 	}
 
+	hoverNextItem() {
+		if (this.state.hoveredIndex < this.state.matchingItems.length-1) {
+			++this.state.hoveredIndex;
+			this.setState(this.state);
+		}
+	}
+
+	hoverPrevItem() {
+		if (this.state.hoveredIndex > 0) {
+			--this.state.hoveredIndex;
+			this.setState(this.state);
+		}
+	}
+
+	hoveredItem() {
+		if (this.state.hoveredIndex < this.state.matchingItems.length) {
+			return this.state.matchingItems[this.state.hoveredIndex];
+		}
+		return null;
+	}
+
+	componentDidMount() {
+		this.updateMatchingItems(this.props);
+	}
+
+	componentWillReceiveProps(nextProps: ItemListProps) {
+		this.updateMatchingItems(nextProps);
+	}
+
 	render() {
-		var matchingItems : onepass.Item[] = [];
+		var listItems = this.state.matchingItems.map((item, index) => {
+			return this.createListItem(item, index == this.state.hoveredIndex);
+		});
+		
+		return react.DOM.div({className: 'itemList'},
+			listItems
+		);
+	}
+
+	private updateMatchingItems(props: ItemListProps) {
+		var prevHoveredItem = this.hoveredItem();
+		var matchingItems: onepass.Item[] = [];
 		var matchesAreSorted = false;
 
-		if (this.props.filter) {
-			matchingItems = underscore.filter(this.props.items, (item) => {
-				return item_search.matchItem(item, this.props.filter);
+		if (props.filter) {
+			matchingItems = underscore.filter(props.items, (item) => {
+				return item_search.matchItem(item, props.filter);
 			});
-		} else if (this.props.filterURL) {
-			matchingItems = item_search.filterItemsByUrl(this.props.items, this.props.filterURL);
+		} else if (props.filterURL) {
+			matchingItems = item_search.filterItemsByUrl(props.items, props.filterURL);
 			if (matchingItems.length > 0) {
 				matchesAreSorted = true;
 			} else {
 				// if no items appear to match this URL, show the
 				// complete list and let the user browse or filter
-				matchingItems = this.props.items;
+				matchingItems = props.items;
 			}
 		} else {
-			matchingItems = this.props.items;
+			matchingItems = props.items;
 		}
 
 		if (!matchesAreSorted) {
@@ -575,13 +735,14 @@ class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> 
 			});
 		}
 
-		var listItems = matchingItems.map((item) => {
-			return this.createListItem(item);
-		});
-		
-		return react.DOM.div({className: 'itemList'},
-			listItems
-		);
+		var nextHoveredIndex = matchingItems.indexOf(prevHoveredItem);
+		if (nextHoveredIndex == -1) {
+			nextHoveredIndex = 0;
+		}
+
+		this.state.hoveredIndex = nextHoveredIndex;
+		this.state.matchingItems = matchingItems;
+		this.setState(this.state);
 	}
 }
 
@@ -644,6 +805,16 @@ export class App {
 
 		this.appView = new AppView(new autofill.AutoFiller(pageAccess));
 		onepass_crypto.CryptoJsCrypto.initWorkers();
+
+		pageAccess.showEvents.listen(() => {
+			// in the Firefox add-on the active element loses focus when dismissing the
+			// panel by focusing another UI element such as the URL input bar.
+			//
+			// Restore focus to the active element when the panel is shown again
+			if (document.activeElement) {
+				(<HTMLElement>document.activeElement).focus();
+			}
+		});
 
 		var setupView = new SetupView({});
 		react.renderComponent(setupView, document.getElementById('app-view'));

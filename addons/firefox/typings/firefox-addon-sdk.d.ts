@@ -32,6 +32,19 @@ interface Port {
 	once(messageName: string, callback: (data?: any) => void) : void;
 }
 
+declare module 'sdk/hotkeys' {
+	export interface Options {
+		combo: string;
+		onPress: () => void;
+	}
+
+	export interface Hotkey {
+		new(opts: Options): Hotkey;
+	}
+
+	export var Hotkey: Hotkey;
+}
+
 declare module 'sdk/panel' {
 	export interface PanelOptions {
 		width?: number;
@@ -113,6 +126,7 @@ declare module 'sdk/ui/button/toggle' {
 	export interface ToggleButton {
 		new(opts: ButtonOptions): ToggleButton;
 		state(target: any, state?: ButtonState) : ButtonState;
+		click(): void;
 	}
 
 	export var ToggleButton: ToggleButton;

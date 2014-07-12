@@ -1,6 +1,7 @@
 /// <reference path="../typings/firefox-addon-sdk.d.ts" />
 
 import buttons = require('sdk/ui/button/toggle');
+import hotkeys = require('sdk/hotkeys');
 import panel = require('sdk/panel');
 import preferences_service = require('sdk/preferences/service');
 import self_ = require('sdk/self');
@@ -73,6 +74,7 @@ function main() {
 			});
 			mainPanel.port.on('ready', () => {
 				notifyPageChanged(tabs.activeTab);
+				mainPanel.port.emit('show');
 			});
 		}
 
@@ -80,6 +82,7 @@ function main() {
 			mainPanel.show({
 				position: toolbarButton
 			});
+			mainPanel.port.emit('show');
 		}
 	};
 
@@ -91,6 +94,13 @@ function main() {
 			'64' : './icon-64.png'
 		},
 		onChange: showPanel
+	});
+
+	var hotkey = hotkeys.Hotkey({
+		combo: 'alt-shift-p',
+		onPress: () => {
+			toolbarButton.click();
+		}
 	});
 }
 

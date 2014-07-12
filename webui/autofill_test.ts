@@ -1,4 +1,5 @@
 import autofill = require('./autofill');
+import event_stream = require('../lib/base/event_stream');
 import itemBuilder = require('../lib/item_builder');
 import onepass = require('../lib/onepass');
 import testLib = require('../lib/test');
@@ -9,6 +10,7 @@ class FakePageAccess {
 	
 	formList: pageAccess.InputField[];
 	autofillEntries: pageAccess.AutoFillEntry[];
+	showEvents: event_stream.EventStream<void>;
 
 	constructor() {
 		this.formList = [];
