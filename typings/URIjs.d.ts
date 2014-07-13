@@ -1,6 +1,11 @@
+// Partial typings for URIJS - http://medialize.github.io/URI.js/
+
 interface ParsedURI {
 	authority() : string;
 	domain() : string;
+	path() : string;
+	port() : string;
+	scheme() : string;
 	subdomain() : string;
 }
 

@@ -6,6 +6,7 @@ import urijs = require('URIjs');
 
 import onepass = require('./onepass');
 import stringutil = require('./base/stringutil');
+import url_util = require('./base/url_util');
 
 export class FieldMatch {
 	url : onepass.ItemUrl;
@@ -110,38 +111,13 @@ export function lookupItems(vault: onepass.Vault, pattern: string) : Q.Promise<o
 	});
 }
 
-// Returns the part of a URL before the query string
-function stripQuery(url: string) : string {
-	var queryOffset = url.indexOf('?');
-	var strippedUrl : string;
-	if (queryOffset != -1) {
-		strippedUrl = url.slice(0, queryOffset);
-	} else {
-		strippedUrl = url;
-	}
-	while (stringutil.endsWith(strippedUrl, '/')) {
-		strippedUrl = strippedUrl.slice(0, strippedUrl.length - 1);
-	}
-	return strippedUrl;
-}
-
-// strips the query string from a URL string and
-// prefixes an HTTPS scheme if none is set
-function normalizeUrl(url: string) : string {
-	if (url.indexOf(':') == -1) {
-		// assume HTTPS if URL is lacking a scheme
-		url = 'https://' + url;
-	}
-	return stripQuery(url);
-}
-
 /** Returns a score indicating the relevance of an item to a URL.
   * A positive (> 0) score indicates some relevance. A zero or negative
   * score indicates no match.
   */
 export function itemUrlScore(item: onepass.Item, url: string) {
-	var itemUrl = normalizeUrl(item.location);
-	url = normalizeUrl(url);
+	var itemUrl = url_util.normalize(item.location);
+	url = url_util.normalize(url);
 
 	var parsedItemUrl = urijs(itemUrl);
 	var parsedUrl = urijs(url);
