@@ -87,7 +87,7 @@ function main() {
 	};
 
 	toolbarButton = buttons.ToggleButton({
-		id: 'key-icon',
+		id: 'onepassweb-icon',
 		label: 'Password Manager',
 		icon: {
 			'32' : './icon-32.png',
