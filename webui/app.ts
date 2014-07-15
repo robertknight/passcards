@@ -21,39 +21,11 @@ import http_vfs = require('../lib/vfs/http');
 import item_search = require('../lib/item_search');
 import onepass = require('../lib/onepass');
 import page_access = require('./page_access');
+import shortcut = require('./base/shortcut');
 import stringutil = require('../lib/base/stringutil');
 import vfs = require('../lib/vfs/vfs');
 
 import onepass_crypto = require('../lib/onepass_crypto');
-
-/** Shortcut installs key handlers to handle a shortcut
-  * key and invoke a handler in response, irrespective
-  * of which element is focused at the time.
-  *
-  * Shortcuts remain in effect until disabled via remove()
-  */
-class Shortcut {
-	private listener: (ev: KeyboardEvent) => any;
-
-	/** Installs a shortcut which listens for a press of @p key
-	  * and invokes @p handler in response.
-	  *
-	  * The shortcut remains in effect until remove() is called.
-	  */
-	constructor(key: string, handler: () => void) {
-		this.listener = (e) => {
-			if (e.key == key) {
-				e.preventDefault();
-				handler();
-			}
-		};
-		document.addEventListener('keydown', this.listener);
-	}
-
-	remove() {
-		document.removeEventListener('keydown', this.listener);
-	}
-}
 
 enum ActiveView {
 	UnlockPane,
@@ -331,7 +303,7 @@ class SearchFieldProps {
 
 class SearchField extends reactts.ReactComponentBase<SearchFieldProps, {}> {
 	componentDidMount() {
-		var searchField = this.refs['searchField'].getDOMNode();
+		var searchField = this.fieldInput();
 		var updateQuery = underscore.debounce(() => {
 			this.props.onQueryChanged($(searchField).val().toLowerCase());
 		}, 100);
@@ -351,7 +323,15 @@ class SearchField extends reactts.ReactComponentBase<SearchFieldProps, {}> {
 	}
 
 	focus() {
-		(<HTMLElement>this.refs['searchField'].getDOMNode()).focus();
+		this.fieldInput().focus();
+	}
+
+	blur() {
+		this.fieldInput().blur();
+	}
+
+	private fieldInput() : HTMLElement {
+		return <HTMLElement>this.refs['searchField'].getDOMNode();
 	}
 
 	render() {
@@ -387,9 +367,17 @@ class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, ItemLis
 	}
 
 	componentWillReceiveProps(nextProps: ItemListViewProps) {
-		if (this.refs['searchField'] && !nextProps.selectedItem) {
-			// no item selected, focus search field to allow item list navigation
-			this.focusSearchField();
+		if (this.refs['searchField']) {
+			if (nextProps.selectedItem) {
+				// blur search field to allow keyboard navigation of selected
+				// item
+				setTimeout(() => {
+					this.blurSearchField();
+				}, 0);
+			} else {
+				// no item selected, focus search field to allow item list navigation
+				this.focusSearchField();
+			}
 		}
 	}
 
@@ -436,6 +424,11 @@ class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, ItemLis
 		var searchField: SearchField = <any>this.refs['searchField'];
 		searchField.focus();
 	}
+
+	private blurSearchField() {
+		var searchField: SearchField = <any>this.refs['searchField'];
+		searchField.blur();
+	}
 }
 
 // Detail view for an individual item
@@ -455,16 +448,10 @@ class ItemSectionProps {
 
 class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 	itemContent : onepass.ItemContent;
-	shortcuts: Shortcut[];
+	shortcuts: shortcut.Shortcut[];
 
 	componentWillReceiveProps(nextProps: DetailsViewProps) {
 		if (!nextProps.item) {
-			if (this.props.item) {
-				this.shortcuts.forEach((shortcut) => {
-					shortcut.remove();
-				});
-				this.shortcuts = null;
-			}
 			return;
 		}
 
@@ -478,17 +465,10 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 			this.itemContent = content;
 			this.forceUpdate();
 		}).done();
+	}
 
-		if (!this.props.item) {
-			this.shortcuts = [
-				new Shortcut('Backspace', () => {
-					this.props.onGoBack();
-				}),
-				new Shortcut('a', () => {
-					this.props.autofill();
-				})
-			];
-		}
+	componentDidUpdate() {
+		this.updateShortcutState();
 	}
 
 	componentDidMount() {
@@ -497,6 +477,31 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 		});
 		$(this.refs['autofillBtn'].getDOMNode()).click(() => {
 			this.props.autofill();
+		});
+
+		this.shortcuts = [
+			new shortcut.Shortcut('Backspace', () => {
+				this.props.onGoBack();
+			}),
+			new shortcut.Shortcut('a', () => {
+				this.props.autofill();
+			})
+		];
+		this.updateShortcutState();
+	}
+
+	componentDidUnmount() {
+		this.shortcuts.forEach((shortcut) => {
+			shortcut.remove();
+		});
+		this.shortcuts = [];
+	}
+
+	private updateShortcutState() {
+		// enable keyboard shortcuts when the details view
+		// is displaying an item
+		this.shortcuts.forEach((shortcut) => {
+			shortcut.setEnabled(this.props.item != null);
 		});
 	}
 
