@@ -1,6 +1,11 @@
 /** `rpc` provides an interface for making RPC calls between
   * isolated objects such as two Windows in different domains,
   * workers or browser extension scripts and web front-ends etc.
+  *
+  * This module uses callbacks rather than promises for portability
+  * between different Javascript environments (standard browser
+  * context, web workers, priviledged extension scripts, sandboxed
+  * 'content' scripts in browser extensions etc.)
   */
 
 /** Client provides a call() method to invoke an RPC
