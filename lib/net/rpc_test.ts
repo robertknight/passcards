@@ -1,3 +1,7 @@
+/// <reference path="../../typings/DefinitelyTyped/q/Q.d.ts" />
+
+import Q = require('q');
+
 import rpc = require('./rpc');
 import testLib = require('../test');
 
@@ -75,6 +79,23 @@ testLib.addAsyncTest('rpc call and reply', (assert) => {
 		return client.call('sayHello');
 	}).then(() => {
 		assert.equal(message, 'hello world');
+		testLib.continueTests();
+	}).done();
+});
+
+testLib.addAsyncTest('rpc async call and reply', (assert) => {
+	var clientPort = new FakePort();
+	var serverPort = new FakePort(clientPort);
+
+	var client = new rpc.RpcHandler(clientPort);
+	var server = new rpc.RpcHandler(serverPort);
+
+	server.onAsync('add', (a, b) => {
+		return Q.resolve(a + b);
+	});
+
+	client.call('add', 5, 6).then((sum) => {
+		assert.equal(sum, 11);
 		testLib.continueTests();
 	}).done();
 });

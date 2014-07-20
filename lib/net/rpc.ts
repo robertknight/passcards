@@ -95,6 +95,7 @@ export class RpcHandler implements Client, Server {
 	private handlers: {
 		method: string;
 		callback: (args: any) => any;
+		isAsync: boolean;
 	}[];
 
 	/** Construct an RPC handler which uses @p port to send and receive
@@ -119,12 +120,23 @@ export class RpcHandler implements Client, Server {
 			var handled = false;
 			this.handlers.forEach((handler) => {
 				if (handler.method == call.method) {
+					var result = handler.callback.apply(null, call.payload);
 					var reply = {
 						id: call.id,
 						method: call.method,
-						result: handler.callback.apply(null, call.payload)
+						result: <any>null
 					};
-					this.port.emit('rpc-reply', reply);
+
+					if (handler.isAsync) {
+						result.then((result: any) => {
+							reply.result = result;
+							this.port.emit('rpc-reply', reply);
+						}).done();
+					} else {
+						reply.result = result;
+						this.port.emit('rpc-reply', reply);
+					}
+
 					handled = true;
 				}
 			});
@@ -153,7 +165,16 @@ export class RpcHandler implements Client, Server {
 	on<R>(method: string, handler: (...args: any[]) => R) {
 		this.handlers.push({
 			method: method,
-			callback: handler
+			callback: handler,
+			isAsync: false
+		});
+	}
+
+	onAsync<R>(method: string, handler: (...args: any[]) => Q.Promise<R>) {
+		this.handlers.push({
+			method: method,
+			callback: handler,
+			isAsync: true
 		});
 	}
 }
