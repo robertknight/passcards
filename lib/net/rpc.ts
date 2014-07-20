@@ -1,21 +1,13 @@
-/// <reference path="../../typings/DefinitelyTyped/q/Q.d.ts" />
-/// <reference path="../../typings/sprintf.d.ts" />
-
 /** `rpc` provides an interface for making RPC calls between
   * isolated objects such as two Windows in different domains,
   * workers or browser extension scripts and web front-ends etc.
   */
 
-import Q = require('q');
-import sprintf = require('sprintf');
-
-import err = require('../base/err_util');
-
 /** Client provides a call() method to invoke an RPC
   * call on the server and receive a promise for the result.
   */
 export interface Client {
-	call<R>(method: string, ...args: any[]) : Q.Promise<R>;
+	call<R>(method: string, args: any[], callback: (err: any, result: R) => void) : void;
 }
 
 /** Provides an interface for handling an RPC call.
@@ -90,7 +82,7 @@ export class RpcHandler implements Client, Server {
 	private pending: {
 		id: number;
 		method: string;
-		response: Q.Deferred<any>;
+		callback: Function;
 	}[];
 	private handlers: {
 		method: string;
@@ -111,42 +103,43 @@ export class RpcHandler implements Client, Server {
 				return pending.id == reply.id;
 			});
 			if (pending.length != 1) {
-				throw new err.BaseError(sprintf('No matching RPC call found for message %d', reply.id));
+				throw new Error('No matching RPC call found for method: ' + reply.method)
 			}
-			pending[0].response.resolve(reply.result);
+			pending[0].callback(null, reply.result);
 		});
 
 		this.port.on('rpc-call', (call: CallMessage) => {
 			var handled = false;
 			this.handlers.forEach((handler) => {
 				if (handler.method == call.method) {
-					var result = handler.callback.apply(null, call.payload);
-					var reply = {
-						id: call.id,
-						method: call.method,
-						result: <any>null
-					};
-
 					if (handler.isAsync) {
-						result.then((result: any) => {
-							reply.result = result;
-							this.port.emit('rpc-reply', reply);
-						}).done();
+						var done = (result: any) => {
+							this.port.emit('rpc-reply', {
+								id: call.id,
+								method: call.method,
+								result: result
+							});
+						};
+						handler.callback.apply(null, [done].concat(call.payload));
 					} else {
-						reply.result = result;
+						var result = handler.callback.apply(null, call.payload);
+						var reply = {
+							id: call.id,
+							method: call.method,
+							result: result
+						};
 						this.port.emit('rpc-reply', reply);
 					}
-
 					handled = true;
 				}
 			});
 			if (!handled) {
-				throw new err.BaseError(sprintf('No handler for "%s" found', call.method));
+				throw new Error('No handler found for method: ' + call.method);
 			}
 		});
 	}
 
-	call<R>(method: string, ...args: any[]) : Q.Promise<R> {
+	call<R>(method: string, args: any[], callback: (err: any, result: R) => void) {
 		var call = {
 			id: ++this.id,
 			method: method,
@@ -155,11 +148,10 @@ export class RpcHandler implements Client, Server {
 		var pending = {
 			id: call.id,
 			method: method,
-			response: Q.defer<R>()
+			callback: callback
 		};
 		this.pending.push(pending);
 		this.port.emit('rpc-call', call);
-		return pending.response.promise;
 	}
 
 	on<R>(method: string, handler: (...args: any[]) => R) {
@@ -170,7 +162,7 @@ export class RpcHandler implements Client, Server {
 		});
 	}
 
-	onAsync<R>(method: string, handler: (...args: any[]) => Q.Promise<R>) {
+	onAsync<R>(method: string, handler: (done: (result: R) => void, ...args: any[]) => void) {
 		this.handlers.push({
 			method: method,
 			callback: handler,

@@ -1,7 +1,3 @@
-/// <reference path="../../typings/DefinitelyTyped/q/Q.d.ts" />
-
-import Q = require('q');
-
 import rpc = require('./rpc');
 import testLib = require('../test');
 
@@ -58,7 +54,7 @@ class FakeWindow implements rpc.WindowMessageInterface {
 	}
 };
 
-testLib.addAsyncTest('rpc call and reply', (assert) => {
+testLib.addAsyncTest('simple rpc call and reply', (assert) => {
 	var clientPort = new FakePort();
 	var serverPort = new FakePort(clientPort);
 
@@ -74,13 +70,10 @@ testLib.addAsyncTest('rpc call and reply', (assert) => {
 		message = 'hello world';
 	});
 
-	client.call('add', 3, 4).then((sum) => {
+	client.call('add', [3, 4], (err, sum) => {
 		assert.equal(sum, 7);
-		return client.call('sayHello');
-	}).then(() => {
-		assert.equal(message, 'hello world');
 		testLib.continueTests();
-	}).done();
+	});
 });
 
 testLib.addAsyncTest('rpc async call and reply', (assert) => {
@@ -90,14 +83,14 @@ testLib.addAsyncTest('rpc async call and reply', (assert) => {
 	var client = new rpc.RpcHandler(clientPort);
 	var server = new rpc.RpcHandler(serverPort);
 
-	server.onAsync('add', (a, b) => {
-		return Q.resolve(a + b);
+	server.onAsync('add', (done, a, b) => {
+		done(a+b);
 	});
 
-	client.call('add', 5, 6).then((sum) => {
+	client.call('add', [5, 6], (err, sum) => {
 		assert.equal(sum, 11);
 		testLib.continueTests();
-	}).done();
+	});
 });
 
 testLib.addAsyncTest('window.postMessage() rpc call and reply', (assert) => {
@@ -113,10 +106,10 @@ testLib.addAsyncTest('window.postMessage() rpc call and reply', (assert) => {
 	server.on('add', (a, b) => {
 		return a + b;
 	});
-	client.call('add', 3, 4).then((sum) => {
+	client.call('add', [3, 4], (err, sum) => {
 		assert.equal(sum, 7);
 		testLib.continueTests();
-	}).done();
+	});
 });
 
 testLib.start();
