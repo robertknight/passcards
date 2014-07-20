@@ -9,18 +9,24 @@ import tabs = require('sdk/tabs');
 
 import rpc = require('./rpc');
 
+interface PageWorker extends ContentWorker {
+	rpc?: rpc.RpcHandler;
+}
+
 var mainPanel: panel.Panel;
 var toolbarButton: buttons.ToggleButton;
-var tabWorkers: {[index: string]: ContentWorker} = {};
+var tabWorkers: {[index: string]: PageWorker} = {};
 
 function getTabWorker(tab: Tab) {
 	if (!tabWorkers[tab.id]) {
-		tabWorkers[tab.id] = tab.attach({
+		var worker : PageWorker = tab.attach({
 			contentScriptFile: self_.data.url('scripts/page.js')
 		});
-		tabWorkers[tab.id].on('detach', () => {
+		worker.rpc = new rpc.RpcHandler(worker.port);
+		worker.on('detach', () => {
 			delete tabWorkers[tab.id];
 		});
+		tabWorkers[tab.id] = worker;
 	}
 	return tabWorkers[tab.id];
 }
@@ -68,17 +74,17 @@ function main() {
 			});
 
 			panelRpc.onAsync('find-fields', (done) => {
-				var worker = getTabWorker(tabs.activeTab);
-				worker.port.once('found-fields', (fields) => {
+				getTabWorker(tabs.activeTab).rpc.call('find-fields', [], (err, fields) => {
 					done(fields);
 				});
-				worker.port.emit('find-fields');
 			});
 
-			mainPanel.port.on('autofill', (entries: any[]) => {
-				var worker = getTabWorker(tabs.activeTab);
-				worker.port.emit('autofill', entries);
+			panelRpc.onAsync('autofill', (done: (result: number) => void, entries: any[]) => {
+				getTabWorker(tabs.activeTab).rpc.call('autofill', [entries], (err: any, count: number) => {
+					done(count);
+				});
 			});
+
 			mainPanel.port.on('ready', () => {
 				notifyPageChanged(tabs.activeTab);
 				mainPanel.port.emit('show');

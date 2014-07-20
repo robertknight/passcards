@@ -51,7 +51,9 @@ pageAccess.findForms = exportFunction(() => {
 }, pageAccess);
 
 pageAccess.autofill = exportFunction((fields) => {
-	selfWorker.port.emit('autofill', fields);
+	addonRpc.call('autofill', [fields], (err, count) => {
+		console.log('auto-filled', count, 'fields');
+	});
 }, pageAccess);
 
 selfWorker.port.on('pagechanged', (url: string) => {

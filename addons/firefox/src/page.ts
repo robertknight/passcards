@@ -5,8 +5,10 @@
 // fields
 
 import page_access = require('../../../webui/page_access');
+import rpc = require('./rpc');
 
 var selfWorker: ContentWorker = <any>self;
+var portRpc = new rpc.RpcHandler(selfWorker.port);
 
 function inputFieldType(typeStr: string) : page_access.FieldType {
 	switch (typeStr.toLowerCase()) {
@@ -25,7 +27,7 @@ function inputFieldType(typeStr: string) : page_access.FieldType {
 
 var lastFields : HTMLInputElement[] = [];
 
-selfWorker.port.on('find-fields', () => {
+portRpc.on('find-fields', () => {
 	lastFields = [];
 
 	var fieldElements = document.getElementsByTagName('input');
@@ -48,14 +50,20 @@ selfWorker.port.on('find-fields', () => {
 
 		fields.push(field);
 	}
-	selfWorker.port.emit('found-fields', fields);
+
+	return fields;
 });
 
-selfWorker.port.on('autofill', (entries: page_access.AutoFillEntry[]) => {
+portRpc.on('autofill', (entries: page_access.AutoFillEntry[]) => {
+	var filled = 0;
+
 	entries.forEach((entry) => {
 		if (typeof entry.key == 'number' && entry.key >= 0 && entry.key < lastFields.length) {
 			var elt = lastFields[entry.key];
 			elt.value = entry.value;
+			++filled;
 		}
 	});
+
+	return filled;
 });
