@@ -7,6 +7,8 @@ import preferences_service = require('sdk/preferences/service');
 import self_ = require('sdk/self');
 import tabs = require('sdk/tabs');
 
+import rpc = require('./rpc');
+
 var mainPanel: panel.Panel;
 var toolbarButton: buttons.ToggleButton;
 var tabWorkers: {[index: string]: ContentWorker} = {};
@@ -58,16 +60,21 @@ function main() {
 				contentScriptWhen: 'start',
 				onHide: onPanelHidden
 			});
+			
+			var panelRpc = new rpc.RpcHandler(mainPanel.port);
+
 			mainPanel.port.on('oauth-credentials-received', (hash: string) => {
 				mainPanel.contentURL = self_.data.url('index.html') + hash;
 			});
-			mainPanel.port.on('find-fields', () => {
+
+			panelRpc.onAsync('find-fields', (done) => {
 				var worker = getTabWorker(tabs.activeTab);
 				worker.port.once('found-fields', (fields) => {
-					mainPanel.port.emit('found-fields', fields);
+					done(fields);
 				});
 				worker.port.emit('find-fields');
 			});
+
 			mainPanel.port.on('autofill', (entries: any[]) => {
 				var worker = getTabWorker(tabs.activeTab);
 				worker.port.emit('autofill', entries);

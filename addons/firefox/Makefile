@@ -12,8 +12,11 @@ build/xpi_content: lib/main.js data/index.html data/scripts/webui_bundle.js data
 	@mkdir -p build/xpi_content
 	@touch build/xpi_content
 
-lib/main.js: src/main.ts
+lib/main.js: src/main.ts src/rpc.ts
 	$(TSC) src/main.ts --outDir lib/
+
+src/rpc.ts: ../../lib/net/rpc.ts
+	cp ../../lib/net/rpc.ts src/rpc.ts
 
 data/scripts:
 	mkdir -p data/scripts

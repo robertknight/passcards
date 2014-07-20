@@ -8,6 +8,7 @@
 
 import stringutil = require('../../../lib/base/stringutil');
 import page_access = require('../../../webui/page_access');
+import rpc = require('../../../lib/net/rpc');
 
 var selfWorker: ContentWorker = <any>self;
 
@@ -18,6 +19,7 @@ if (stringutil.startsWith(window.location.href, OAUTH_REDIRECT_URL)) {
 }
 
 var pageAccess = createObjectIn<page_access.ExtensionConnector>(unsafeWindow, { defineAs: 'firefoxAddOn' });
+var addonRpc = new rpc.RpcHandler(selfWorker.port);
 
 pageAccess.oauthRedirectUrl = OAUTH_REDIRECT_URL;
 
@@ -32,7 +34,11 @@ function postMessageToFrontend(m: page_access.Message) {
 }
 
 pageAccess.findForms = exportFunction(() => {
-	selfWorker.port.once('found-fields', (fields: page_access.InputField[]) => {
+	addonRpc.call('find-fields', [], (err: any, fields: page_access.InputField[]) => {
+		if (err) {
+			console.log('Finding fields failed', err);
+			fields = [];
+		}
 		var fieldsClone = cloneInto(fields, unsafeWindow);
 		var msg: page_access.Message = {
 			fromContentScript: true,
@@ -42,7 +48,6 @@ pageAccess.findForms = exportFunction(() => {
 		};
 		postMessageToFrontend(msg);
 	});
-	selfWorker.port.emit('find-fields');
 }, pageAccess);
 
 pageAccess.autofill = exportFunction((fields) => {
