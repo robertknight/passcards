@@ -20,6 +20,7 @@ if (stringutil.startsWith(window.location.href, OAUTH_REDIRECT_URL)) {
 
 var pageAccess = createObjectIn<page_access.ExtensionConnector>(unsafeWindow, { defineAs: 'firefoxAddOn' });
 var addonRpc = new rpc.RpcHandler(selfWorker.port);
+var appRpc = new rpc.RpcHandler(new rpc.WindowMessagePort(window, '*'));
 
 pageAccess.oauthRedirectUrl = OAUTH_REDIRECT_URL;
 
@@ -33,28 +34,27 @@ function postMessageToFrontend(m: page_access.Message) {
 	document.defaultView.postMessage(m, '*');
 }
 
-pageAccess.findForms = exportFunction(() => {
+appRpc.onAsync('find-fields', (done) => {
 	addonRpc.call('find-fields', [], (err: any, fields: page_access.InputField[]) => {
 		if (err) {
 			console.log('Finding fields failed', err);
 			fields = [];
 		}
 		var fieldsClone = cloneInto(fields, unsafeWindow);
-		var msg: page_access.Message = {
-			fromContentScript: true,
-			type: page_access.MessageType.FieldsFound,
-			pageURL: pageAccess.currentUrl,
-			fields: fieldsClone
-		};
-		postMessageToFrontend(msg);
+		done(fieldsClone);
 	});
-}, pageAccess);
+});
 
-pageAccess.autofill = exportFunction((fields) => {
-	addonRpc.call('autofill', [fields], (err, count) => {
-		console.log('auto-filled', count, 'fields');
+appRpc.onAsync('autofill', (done: (err: any, count: number) => void, fields: page_access.AutoFillEntry[]) => {
+	addonRpc.call('autofill', [fields], (err: any, count: number) => {
+		if (err) {
+			console.log('autofill failed');
+			done(0);
+		} else {
+			done(count);
+		}
 	});
-}, pageAccess);
+});
 
 selfWorker.port.on('pagechanged', (url: string) => {
 	pageAccess.currentUrl = url;

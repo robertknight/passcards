@@ -1,4 +1,5 @@
 import event_stream = require('../lib/base/event_stream');
+import rpc = require('../lib/net/rpc');
 
 export enum FieldType {
 	Text,
@@ -50,6 +51,11 @@ export interface PageAccess {
 	
 	/** Emits events when the extension's UI is shown. */
 	showEvents: event_stream.EventStream<void>;
+
+	/** Emits events when the URL of the active page or
+	  * tab changes.
+	  */
+	pageChanged: event_stream.EventStream<string>;
 }
 
 /** Types of messages exchanged between the app front-end
@@ -84,8 +90,7 @@ export interface Message {
 export interface ExtensionConnector {
 	currentUrl: string;
 	oauthRedirectUrl: string;
-	findForms() : void;
-	autofill(fields: AutoFillEntry[]) : void;
+	syncService: string;
 }
 
 /** A stub extension connector with no-op findForms()
@@ -115,7 +120,7 @@ export class FakeExtensionConnector {
   */
 export class ExtensionPageAccess {
 	private pageChangedListeners: Array<(url:string) => void>;
-	private fieldsListeners: Array<(fields: InputField[]) => void>;
+	private rpc: rpc.RpcHandler;
 	private connector: ExtensionConnector;
 
 	showEvents: event_stream.EventStream<void>;
@@ -123,8 +128,8 @@ export class ExtensionPageAccess {
 	constructor(extension: ExtensionConnector) {
 		this.connector = extension;
 		this.pageChangedListeners = [];
-		this.fieldsListeners = [];
 		this.showEvents = new event_stream.EventStream<void>();
+		this.rpc = new rpc.RpcHandler(new rpc.WindowMessagePort(window, '*'));
 
 		window.addEventListener('message', (event) => {
 			if (event.source != window || typeof event.data.fromContentScript == 'undefined') {
@@ -138,10 +143,6 @@ export class ExtensionPageAccess {
 			if (message.type == MessageType.PageChanged) {
 				this.pageChangedListeners.forEach((listener) => {
 					listener(message.pageURL);
-				});
-			} else if (message.type == MessageType.FieldsFound) {
-				this.fieldsListeners.forEach((listener) => {
-					listener(message.fields);
 				});
 			} else if (message.type == MessageType.Show) {
 				this.showEvents.publish(null);
@@ -157,8 +158,13 @@ export class ExtensionPageAccess {
 	}
 
 	findForms(callback: (formList: InputField[]) => void) {
-		this.fieldsListeners.push(callback);
-		this.connector.findForms();
+		this.rpc.call('find-fields', [], (err: any, forms: InputField[]) => {
+			if (err) {
+				callback([]);
+				return;
+			}
+			callback(forms);
+		});
 	}
 
 	oauthRedirectUrl() {
@@ -166,7 +172,12 @@ export class ExtensionPageAccess {
 	}
 
 	autofill(fields: AutoFillEntry[]) {
-		this.connector.autofill(fields);
+		this.rpc.call('autofill', [], (err: any, count: number) => {
+			if (err) {
+				// TODO - Show user an indicator that autofill failed
+				return;
+			}
+		});
 	}
 };
 

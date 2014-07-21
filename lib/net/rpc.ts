@@ -65,7 +65,7 @@ export class WindowMessagePort {
 
 	on(method: string, handler: Function) : void {
 		this.window.addEventListener('message', (ev: MessageEvent) => {
-			if ('rpcMethod' in ev.data && ev.data.rpcMethod == method) {
+			if (typeof ev.data.rpcMethod !== 'undefined' && ev.data.rpcMethod == method) {
 				handler(ev.data.data);
 			}
 		});
