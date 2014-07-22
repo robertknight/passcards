@@ -75,13 +75,13 @@ function main() {
 
 			panelRpc.onAsync('find-fields', (done) => {
 				getTabWorker(tabs.activeTab).rpc.call('find-fields', [], (err, fields) => {
-					done(fields);
+					done(err, fields);
 				});
 			});
 
-			panelRpc.onAsync('autofill', (done: (result: number) => void, entries: any[]) => {
+			panelRpc.onAsync('autofill', (done: (err: any, result: number) => void, entries: any[]) => {
 				getTabWorker(tabs.activeTab).rpc.call('autofill', [entries], (err: any, count: number) => {
-					done(count);
+					done(err, count);
 				});
 			});
 

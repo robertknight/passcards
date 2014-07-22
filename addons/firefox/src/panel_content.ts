@@ -36,23 +36,13 @@ function postMessageToFrontend(m: page_access.Message) {
 
 appRpc.onAsync('find-fields', (done) => {
 	addonRpc.call('find-fields', [], (err: any, fields: page_access.InputField[]) => {
-		if (err) {
-			console.log('Finding fields failed', err);
-			fields = [];
-		}
-		var fieldsClone = cloneInto(fields, unsafeWindow);
-		done(fieldsClone);
+		done(cloneInto(err, unsafeWindow), cloneInto(fields, unsafeWindow));
 	});
 });
 
 appRpc.onAsync('autofill', (done: (err: any, count: number) => void, fields: page_access.AutoFillEntry[]) => {
 	addonRpc.call('autofill', [fields], (err: any, count: number) => {
-		if (err) {
-			console.log('autofill failed');
-			done(0);
-		} else {
-			done(count);
-		}
+		done(cloneInto(err, unsafeWindow), count);
 	});
 });
 
