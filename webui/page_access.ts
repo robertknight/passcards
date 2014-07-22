@@ -37,12 +37,6 @@ export interface PageAccess {
 	  */
 	oauthRedirectUrl() : string;
 
-	/** Register a callback that is invoked when the URL
-	  * of the active page changes, either by switching tabs
-	  * or by switching page in the active tab.
-	  */
-	addPageChangedListener(listener: (url: string) => void) : void;
-
 	/** Fetch a list of auto-fillable fields on the current page. */
 	findForms(callback: (formList: InputField[]) => void) : void;
 
@@ -119,15 +113,15 @@ export class FakeExtensionConnector {
   * which has access to browser tabs etc.
   */
 export class ExtensionPageAccess {
-	private pageChangedListeners: Array<(url:string) => void>;
 	private rpc: rpc.RpcHandler;
 	private connector: ExtensionConnector;
 
 	showEvents: event_stream.EventStream<void>;
+	pageChanged: event_stream.EventStream<string>;
 
 	constructor(extension: ExtensionConnector) {
 		this.connector = extension;
-		this.pageChangedListeners = [];
+		this.pageChanged = new event_stream.EventStream<string>();
 		this.showEvents = new event_stream.EventStream<void>();
 		this.rpc = new rpc.RpcHandler(new rpc.WindowMessagePort(window, '*'));
 
@@ -141,20 +135,11 @@ export class ExtensionPageAccess {
 			}
 
 			if (message.type == MessageType.PageChanged) {
-				this.pageChangedListeners.forEach((listener) => {
-					listener(message.pageURL);
-				});
+				this.pageChanged.publish(message.pageURL);
 			} else if (message.type == MessageType.Show) {
 				this.showEvents.publish(null);
 			}
 		});
-	}
-
-	addPageChangedListener(listener: (url: string) => void) {
-		this.pageChangedListeners.push(listener);
-		if (this.connector.currentUrl) {
-			listener(this.connector.currentUrl);
-		}
 	}
 
 	findForms(callback: (formList: InputField[]) => void) {

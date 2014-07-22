@@ -6,23 +6,21 @@ import testLib = require('../lib/test');
 import pageAccess = require('./page_access');
 
 class FakePageAccess {
-	private pageChangeListeners: Array<(url: string) => void>;
-	
 	formList: pageAccess.InputField[];
 	autofillEntries: pageAccess.AutoFillEntry[];
+
 	showEvents: event_stream.EventStream<void>;
+	pageChanged: event_stream.EventStream<string>;
 
 	constructor() {
 		this.formList = [];
 		this.autofillEntries = [];
+		this.showEvents = new event_stream.EventStream<void>();
+		this.pageChanged = new event_stream.EventStream<string>();
 	}
 
 	oauthRedirectUrl() {
 		return '';
-	}
-
-	addPageChangedListener(listener: (url: string) => void) : void {
-		this.pageChangeListeners.push(listener);
 	}
 
 	findForms(callback: (formList: pageAccess.InputField[]) => void) : void {

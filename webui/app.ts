@@ -845,7 +845,7 @@ export class App {
 	}
 
 	private setupBrowserInteraction(access: page_access.PageAccess) {
-		access.addPageChangedListener((url) => {
+		access.pageChanged.listen((url) => {
 			console.log('current URL set to', url);
 			this.appView.setCurrentURL(url);
 		});
