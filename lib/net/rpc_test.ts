@@ -76,6 +76,26 @@ testLib.addAsyncTest('simple rpc call and reply', (assert) => {
 	});
 });
 
+testLib.addAsyncTest('rpc error', (assert) => {
+	var clientPort = new FakePort();
+	var serverPort = new FakePort(clientPort);
+
+	var client = new rpc.RpcHandler(clientPort);
+	var server = new rpc.RpcHandler(serverPort);
+
+	server.on('divide', (a, b) => {
+		if (b === 0) {
+			throw new Error('divide-by-zero');
+		}
+		return a/b;
+	});
+	client.call('divide', [4, 0], (err, result) => {
+		assert.ok(err instanceof Error);
+		assert.equal(err.message, 'divide-by-zero');
+		testLib.continueTests();
+	});
+});
+
 testLib.addAsyncTest('rpc async call and reply', (assert) => {
 	var clientPort = new FakePort();
 	var serverPort = new FakePort(clientPort);
@@ -84,12 +104,49 @@ testLib.addAsyncTest('rpc async call and reply', (assert) => {
 	var server = new rpc.RpcHandler(serverPort);
 
 	server.onAsync('add', (done, a, b) => {
-		done(a+b);
+		done(null, a+b);
 	});
 
 	client.call('add', [5, 6], (err, sum) => {
 		assert.equal(sum, 11);
 		testLib.continueTests();
+	});
+});
+
+testLib.addAsyncTest('rpc async error', (assert) => {
+	var clientPort = new FakePort();
+	var serverPort = new FakePort(clientPort);
+
+	var client = new rpc.RpcHandler(clientPort);
+	var server = new rpc.RpcHandler(serverPort);
+
+	// handler that passes an error to done()
+	server.onAsync('divide', (done, a, b) => {
+		if (b === 0) {
+			done(new Error('divide-by-zero'), null);
+		} else {
+			done(null, a/b);
+		}
+	});
+
+	// handler that throws an exception directly in onAsync()
+	server.onAsync('divide2', (done, a, b) => {
+		if (b === 0) {
+			throw new Error('divide-by-zero');
+		} else {
+			done(null, a/b);
+		}
+	});
+
+	client.call('divide', [5, 0], (err, result) => {
+		assert.ok(err instanceof Error);
+		assert.equal(err.message, 'divide-by-zero');
+
+		client.call('divide2', [3, 0], (err, result) => {
+			assert.ok(err instanceof Error);
+			assert.equal(err.message, 'divide-by-zero');
+			testLib.continueTests();
+		});
 	});
 });
 

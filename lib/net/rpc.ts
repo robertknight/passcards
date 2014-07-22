@@ -12,13 +12,30 @@
   * call on the server and receive a promise for the result.
   */
 export interface Client {
+	/** Invoke an RPC call and invoke callback with the results.
+	  * The values in the arguments array are passed to handler registered
+	  * with Server.on() for the given method.
+	  */
 	call<R>(method: string, args: any[], callback: (err: any, result: R) => void) : void;
 }
 
 /** Provides an interface for handling an RPC call.
   */
 export interface Server {
+	/** Register a synchronous RPC handler. If a client runs Client.call() with
+	  * a matching the method name, @p handler will be invoked with the supplied
+	  * arguments. Any exception thrown will be converted to an error returned
+	  * via the callback passed to Client.call()
+	  */
 	on<R>(method: string, handler: (args: any) => R) : void;
+	/** Register an async RPC handler. This is similar to on() except that
+	  * instead of returning a value or throwing an exception, onAsync()
+	  * should call done() with the error or result when finished.
+	  *
+	  * If the handler throws an exception directly, that is equivalent to
+	  * calling done() with the exception.
+	  */
+	onAsync<R>(method: string, handler: (done: (err: any, result: R) => void, ...args: any[]) => void) : void;
 }
 
 export interface Message {
@@ -31,6 +48,7 @@ export interface CallMessage extends Message {
 }
 
 export interface ReplyMessage extends Message {
+	err: any;
 	result: any;
 }
 
@@ -110,31 +128,33 @@ export class RpcHandler implements Client, Server {
 			if (pending.length != 1) {
 				throw new Error('No matching RPC call found for method: ' + reply.method)
 			}
-			pending[0].callback(null, reply.result);
+			pending[0].callback(reply.err, reply.result);
 		});
 
 		this.port.on('rpc-call', (call: CallMessage) => {
 			var handled = false;
 			this.handlers.forEach((handler) => {
 				if (handler.method == call.method) {
-					if (handler.isAsync) {
-						var done = (result: any) => {
-							this.port.emit('rpc-reply', {
-								id: call.id,
-								method: call.method,
-								result: result
-							});
-						};
-						handler.callback.apply(null, [done].concat(call.payload));
-					} else {
-						var result = handler.callback.apply(null, call.payload);
-						var reply = {
+					var done = (err: any, result: any) => {
+						this.port.emit('rpc-reply', {
 							id: call.id,
 							method: call.method,
+							err: err,
 							result: result
-						};
-						this.port.emit('rpc-reply', reply);
+						});
+					};
+
+					try {
+						if (handler.isAsync) {
+							handler.callback.apply(null, [done].concat(call.payload));
+						} else {
+							var result = handler.callback.apply(null, call.payload);
+							done(null, result);
+						}
+					} catch (err) {
+						done(err, null);
 					}
+
 					handled = true;
 				}
 			});
@@ -167,7 +187,7 @@ export class RpcHandler implements Client, Server {
 		});
 	}
 
-	onAsync<R>(method: string, handler: (done: (result: R) => void, ...args: any[]) => void) {
+	onAsync<R>(method: string, handler: (done: (err: any, result: R) => void, ...args: any[]) => void) {
 		this.handlers.push({
 			method: method,
 			callback: handler,
