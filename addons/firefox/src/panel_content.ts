@@ -22,6 +22,7 @@ var pageAccess = createObjectIn<page_access.ExtensionConnector>(unsafeWindow, { 
 var addonRpc = new rpc.RpcHandler(selfWorker.port);
 var appRpc = new rpc.RpcHandler(new rpc.WindowMessagePort(window, '*'));
 
+pageAccess.syncService = selfWorker.options.syncService;
 pageAccess.oauthRedirectUrl = OAUTH_REDIRECT_URL;
 
 function postMessageToFrontend(m: page_access.Message) {

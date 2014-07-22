@@ -52,6 +52,7 @@ declare module 'sdk/panel' {
 		contentURL?: string;
 		contentScriptFile?: string;
 		contentScriptWhen?: string;
+		contentScriptOptions?: any;
 
 		onHide: () => void;
 	}
@@ -74,6 +75,7 @@ declare module 'sdk/panel' {
 
 declare module 'sdk/preferences/service' {
 	export function set(pref: string, value: any) : void;
+	export function get(pref: string, defaultValue: any) : void;
 }
 
 interface ButtonState {
@@ -96,6 +98,7 @@ interface WorkerOptions {
 interface ContentWorker {
 	on(event: string, callback: () => void): void;
 	port: Port;
+	options: any;
 }
 
 declare module 'sdk/self' {
@@ -103,6 +106,7 @@ declare module 'sdk/self' {
 		url(path: string): string;
 	}
 	export var data: Data;
+	export var id: string;
 }
 
 interface Tab {

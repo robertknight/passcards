@@ -785,10 +785,14 @@ export class App {
 		// VFS setup
 		var fs: vfs.VFS;
 		if (env.isFirefoxAddon()) {
-			fs = new dropboxvfs.DropboxVFS({
-				authRedirectUrl: firefoxAddOn.oauthRedirectUrl,
-				disableLocationCleanup: true
-			});
+			if (firefoxAddOn.syncService === 'dropbox') {
+				fs = new dropboxvfs.DropboxVFS({
+					authRedirectUrl: firefoxAddOn.oauthRedirectUrl,
+					disableLocationCleanup: true
+				});
+			} else if (firefoxAddOn.syncService === 'httpfs') {
+				fs = new http_vfs.Client(new http_client.Client('localhost', 3030, 'http'));
+			}
 		}
 
 		if (!fs) {

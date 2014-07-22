@@ -93,9 +93,11 @@ export interface ExtensionConnector {
 export class FakeExtensionConnector {
 	currentUrl: string;
 	oauthRedirectUrl: string;
+	syncService: string;
 
 	constructor() {
 		this.currentUrl = '';
+		this.syncService = 'dropbox';
 	}
 
 	findForms() : void {

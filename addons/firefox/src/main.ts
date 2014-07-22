@@ -46,6 +46,10 @@ function main() {
 	// number of console warnings from normal web pages
 	preferences_service.set('javascript.options.strict', false);
 
+	// read internal settings
+	var PREF_ROOT = 'extensions.' + self_.id + '.';
+	var syncService = preferences_service.get(PREF_ROOT + '.syncService', 'dropbox');
+
 	tabs.on('ready', (tab) => {
 		if (tab === tabs.activeTab) {
 			notifyPageChanged(tab);
@@ -64,6 +68,9 @@ function main() {
 				contentURL : self_.data.url('index.html'),
 				contentScriptFile: self_.data.url('scripts/panel_content.js'),
 				contentScriptWhen: 'start',
+				contentScriptOptions: {
+					syncService: syncService
+				},
 				onHide: onPanelHidden
 			});
 			
