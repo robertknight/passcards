@@ -75,15 +75,27 @@ export interface WindowMessageInterface {
 }
 
 /** A MessagePort implementation which uses the Window.postMessage() and
-  * Window.addEventListener() APIs for use with RpcHandler
+  * Window.addEventListener() APIs for use with RpcHandler.
+  *
+  * A WindowMessagePort has a send-tag and a receive-tag.
+  * The send-tag is included with all messages emitted via emit().
+  *
+  * The port will only invoke handlers passed to on() if the message's
+  * tag matches the WindowMessagePort's receive-tag.
   */
 export class WindowMessagePort {
-	constructor(public window: WindowMessageInterface, public targetOrigin: string) {
+	constructor(public window: WindowMessageInterface,
+	            public targetOrigin: string,
+	            public sendTag: string,
+				public receiveTag: string) {
 	}
 
 	on(method: string, handler: Function) : void {
 		this.window.addEventListener('message', (ev: MessageEvent) => {
-			if (typeof ev.data.rpcMethod !== 'undefined' && ev.data.rpcMethod == method) {
+			if (typeof ev.data.rpcMethod !== 'undefined' &&
+			    typeof ev.data.tag !== 'undefined' &&
+				ev.data.rpcMethod == method &&
+				ev.data.tag == this.receiveTag) {
 				handler(ev.data.data);
 			}
 		});
@@ -92,7 +104,8 @@ export class WindowMessagePort {
 	emit(method: string, data: Object) : void {
 		this.window.postMessage({
 			rpcMethod: method,
-			data: data
+			data: data,
+			tag: this.sendTag
 		}, this.targetOrigin);
 	}
 }

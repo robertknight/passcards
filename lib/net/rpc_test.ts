@@ -154,17 +154,34 @@ testLib.addAsyncTest('window.postMessage() rpc call and reply', (assert) => {
 	var fakeWindowA = new FakeWindow();
 	var fakeWindowB = new FakeWindow(fakeWindowA);
 
-	var windowPortA = new rpc.WindowMessagePort(fakeWindowA, '*');
-	var windowPortB = new rpc.WindowMessagePort(fakeWindowB, '*');
+	// create two ports which exchange messages between each other
+	var windowPortA = new rpc.WindowMessagePort(fakeWindowA, '*', 'port-a', 'port-b');
+	var windowPortB = new rpc.WindowMessagePort(fakeWindowB, '*', 'port-b', 'port-a');
+
+	// create another port connected to the first window, but with
+	// a receive tag set to a different value so it shouldn't receive messages
+	// sent to the first port
+	var windowPortC = new rpc.WindowMessagePort(fakeWindowA, '*', 'port-c', 'port-d');
 
 	var client = new rpc.RpcHandler(windowPortA);
 	var server = new rpc.RpcHandler(windowPortB);
+	var server2 = new rpc.RpcHandler(windowPortC);
+
+	var server1Calls = 0;
+	var server2Calls = 0;
 
 	server.on('add', (a, b) => {
+		++server1Calls;
 		return a + b;
+	});
+	server2.on('add', (a, b) => {
+		++server2Calls;
+		return 0;
 	});
 	client.call('add', [3, 4], (err, sum) => {
 		assert.equal(sum, 7);
+		assert.equal(server1Calls, 1);
+		assert.equal(server2Calls, 0);
 		testLib.continueTests();
 	});
 });

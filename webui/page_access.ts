@@ -125,7 +125,7 @@ export class ExtensionPageAccess {
 		this.connector = extension;
 		this.pageChanged = new event_stream.EventStream<string>();
 		this.showEvents = new event_stream.EventStream<void>();
-		this.rpc = new rpc.RpcHandler(new rpc.WindowMessagePort(window, '*'));
+		this.rpc = new rpc.RpcHandler(new rpc.WindowMessagePort(window, '*', 'extension-app', 'extension-core'));
 
 		window.addEventListener('message', (event) => {
 			if (event.source != window || typeof event.data.fromContentScript == 'undefined') {

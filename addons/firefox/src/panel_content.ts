@@ -20,7 +20,7 @@ if (stringutil.startsWith(window.location.href, OAUTH_REDIRECT_URL)) {
 
 var pageAccess = createObjectIn<page_access.ExtensionConnector>(unsafeWindow, { defineAs: 'firefoxAddOn' });
 var addonRpc = new rpc.RpcHandler(selfWorker.port);
-var appRpc = new rpc.RpcHandler(new rpc.WindowMessagePort(window, '*'));
+var appRpc = new rpc.RpcHandler(new rpc.WindowMessagePort(document.defaultView, '*', 'extension-core', 'extension-app'));
 
 pageAccess.syncService = selfWorker.options.syncService;
 pageAccess.oauthRedirectUrl = OAUTH_REDIRECT_URL;
