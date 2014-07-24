@@ -159,7 +159,7 @@ export class ExtensionPageAccess {
 	}
 
 	autofill(fields: AutoFillEntry[]) {
-		this.rpc.call('autofill', [], (err: any, count: number) => {
+		this.rpc.call('autofill', [fields], (err: any, count: number) => {
 			if (err) {
 				// TODO - Show user an indicator that autofill failed
 				return;
