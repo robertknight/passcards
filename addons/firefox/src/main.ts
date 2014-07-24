@@ -16,6 +16,7 @@ interface PageWorker extends ContentWorker {
 var mainPanel: panel.Panel;
 var toolbarButton: buttons.ToggleButton;
 var tabWorkers: {[index: string]: PageWorker} = {};
+var panelRpc: rpc.RpcHandler;
 
 function getTabWorker(tab: Tab) {
 	if (!tabWorkers[tab.id]) {
@@ -32,8 +33,8 @@ function getTabWorker(tab: Tab) {
 }
 
 function notifyPageChanged(tab: Tab) {
-	if (mainPanel) {
-		mainPanel.port.emit('pagechanged', tabs.activeTab.url);
+	if (panelRpc) {
+		panelRpc.call('pagechanged', [tabs.activeTab.url]);
 	}
 }
 
@@ -74,7 +75,7 @@ function main() {
 				onHide: onPanelHidden
 			});
 			
-			var panelRpc = new rpc.RpcHandler(mainPanel.port);
+			panelRpc = new rpc.RpcHandler(mainPanel.port);
 
 			mainPanel.port.on('oauth-credentials-received', (hash: string) => {
 				mainPanel.contentURL = self_.data.url('index.html') + hash;
@@ -92,9 +93,9 @@ function main() {
 				});
 			});
 
-			mainPanel.port.on('ready', () => {
+			panelRpc.on<void>('ready', () => {
 				notifyPageChanged(tabs.activeTab);
-				mainPanel.port.emit('show');
+				panelRpc.call('show', []);
 			});
 		}
 
@@ -102,7 +103,7 @@ function main() {
 			mainPanel.show({
 				position: toolbarButton
 			});
-			mainPanel.port.emit('show');
+			panelRpc.call('show', []);
 		}
 	};
 

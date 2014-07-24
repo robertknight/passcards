@@ -16,7 +16,7 @@ export interface Client {
 	  * The values in the arguments array are passed to handler registered
 	  * with Server.on() for the given method.
 	  */
-	call<R>(method: string, args: any[], callback: (err: any, result: R) => void) : void;
+	call<R>(method: string, args: any[], callback?: (err: any, result: R) => void) : void;
 }
 
 /** Provides an interface for handling an RPC call.
@@ -118,7 +118,7 @@ export class RpcHandler implements Client, Server {
 	private pending: {
 		id: number;
 		method: string;
-		callback: Function;
+		callback?: Function;
 	}[];
 	private handlers: {
 		method: string;
@@ -154,7 +154,9 @@ export class RpcHandler implements Client, Server {
 			if (pending.length != 1) {
 				throw new Error('No matching RPC call found for method: ' + reply.method)
 			}
-			pending[0].callback(reply.err, reply.result);
+			if (pending[0].callback) {
+				pending[0].callback(reply.err, reply.result);
+			}
 		});
 
 		this.port.on('rpc-call', (call: CallMessage) => {
@@ -190,7 +192,7 @@ export class RpcHandler implements Client, Server {
 		});
 	}
 
-	call<R>(method: string, args: any[], callback: (err: any, result: R) => void) {
+	call<R>(method: string, args: any[], callback?: (err: any, result: R) => void) {
 		var call = {
 			id: ++this.id,
 			method: method,

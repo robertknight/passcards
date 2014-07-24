@@ -52,29 +52,6 @@ export interface PageAccess {
 	pageChanged: event_stream.EventStream<string>;
 }
 
-/** Types of messages exchanged between the app front-end
-  * and priviledged extension code.
-  */
-export enum MessageType {
-	PageChanged, ///< The URL of the browser's active tab changed
-	FieldsFound, ///< The set of auto-fillable fields on the active tab have been
-	             ///< collected
-	Show ///< The app UI became visible
-}
-
-/** A message exchanged between the app front-end
-  * and priviledged extension code.
-  */
-export interface Message {
-	/** If set to true, indicates that this message is coming from
-	  * the priviledged extension code, as opposed to the front-end.
-	  */
-	fromContentScript: boolean;
-	type: MessageType;
-	pageURL?: string;
-	fields?: InputField[];
-}
-
 /** Interface exposed by priviledged browser extension code for triggering input field
   * searches and form autofills on the active tab.
   *
@@ -127,20 +104,11 @@ export class ExtensionPageAccess {
 		this.showEvents = new event_stream.EventStream<void>();
 		this.rpc = new rpc.RpcHandler(new rpc.WindowMessagePort(window, '*', 'extension-app', 'extension-core'));
 
-		window.addEventListener('message', (event) => {
-			if (event.source != window || typeof event.data.fromContentScript == 'undefined') {
-				return;
-			}
-			var message = <Message>event.data;
-			if (!message.fromContentScript) {
-				return;
-			}
-
-			if (message.type == MessageType.PageChanged) {
-				this.pageChanged.publish(message.pageURL);
-			} else if (message.type == MessageType.Show) {
-				this.showEvents.publish(null);
-			}
+		this.rpc.on<void>('pagechanged', (url: string) => {
+			this.pageChanged.publish(url);
+		});
+		this.rpc.on<void>('show', () => {
+			this.showEvents.publish(null);
 		});
 	}
 

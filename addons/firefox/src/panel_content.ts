@@ -28,16 +28,6 @@ appRpc.clone = (data) => {
 pageAccess.syncService = selfWorker.options.syncService;
 pageAccess.oauthRedirectUrl = OAUTH_REDIRECT_URL;
 
-function postMessageToFrontend(m: page_access.Message) {
-	// in Firefox >= 31 we should use window.postMessage() instead.
-	// In Firefox <= 30 document.defaultView.postMessage() needs
-	// to be used.
-	//
-	// See https://developer.mozilla.org/en-US/Add-ons/SDK/Guides/Content_Scripts/Interacting_with_page_scripts#postMessage()_before_Firefox_31
-	//
-	document.defaultView.postMessage(m, '*');
-}
-
 appRpc.onAsync('find-fields', (done) => {
 	addonRpc.call('find-fields', [], (err: any, fields: page_access.InputField[]) => {
 		done(err, fields);
@@ -50,27 +40,17 @@ appRpc.onAsync('autofill', (done: (err: any, count: number) => void, fields: pag
 	});
 });
 
-selfWorker.port.on('pagechanged', (url: string) => {
-	pageAccess.currentUrl = url;
-	var msg: page_access.Message = {
-		fromContentScript: true,
-		type: page_access.MessageType.PageChanged,
-		pageURL: url,
-		fields: []
-	}
-	postMessageToFrontend(msg);
+addonRpc.on<void>('pagechanged', (url: string) => {
+	appRpc.call('pagechanged', [url]);
 });
 
-selfWorker.port.on('show', () => {
-	postMessageToFrontend({
-		fromContentScript: true,
-		type: page_access.MessageType.Show
-	});
+addonRpc.on('show', () => {
+	appRpc.call('show', []);
 });
 
 // notify the add-on that the panel content script is ready.
 // Note that the panel content script is loaded _before_
 // the front-end so this event does not indicate that
 // the front-end itself is ready.
-selfWorker.port.emit('ready');
+addonRpc.call('ready', []);
 
