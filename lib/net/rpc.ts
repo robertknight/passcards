@@ -126,6 +126,16 @@ export class RpcHandler implements Client, Server {
 		isAsync: boolean;
 	}[];
 
+	/** A handler responsible for performing any special copying
+	  * of method arguments or replies needed before the data
+	  * is sent to the message port.
+	  *
+	  * For example in the Firefox extension objects being passed
+	  * from priviledged add-on code to pages needs to be copied
+	  * using cloneInto().
+	  */
+	clone: (data: any) => any;
+
 	/** Construct an RPC handler which uses @p port to send and receive
 	  * messages to/from the other side of the connection.
 	  */
@@ -133,6 +143,9 @@ export class RpcHandler implements Client, Server {
 		this.id = 1;
 		this.handlers = [];
 		this.pending = [];
+		this.clone = (data) => {
+			return data;
+		}
 
 		this.port.on('rpc-reply', (reply: ReplyMessage) => {
 			var pending = this.pending.filter((pending) => {
@@ -152,8 +165,8 @@ export class RpcHandler implements Client, Server {
 						this.port.emit('rpc-reply', {
 							id: call.id,
 							method: call.method,
-							err: err,
-							result: result
+							err: this.clone(err),
+							result: this.clone(result)
 						});
 					};
 
