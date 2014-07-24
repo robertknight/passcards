@@ -41,6 +41,7 @@ appRpc.onAsync('autofill', (done: (err: any, count: number) => void, fields: pag
 });
 
 addonRpc.on<void>('pagechanged', (url: string) => {
+	pageAccess.currentUrl = url;
 	appRpc.call('pagechanged', [url]);
 });
 

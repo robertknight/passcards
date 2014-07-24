@@ -77,7 +77,7 @@ class AppViewState {
 	items: onepass.Item[];
 	selectedItem: onepass.Item;
 	isLocked: boolean;
-	currentURL: string;
+	currentUrl: string;
 	status: Status;
 }
 
@@ -135,9 +135,11 @@ class AppView extends reactts.ReactComponentBase<{}, AppViewState> {
 		this.setState(state);
 	}
 
-	setCurrentURL(url: string) {
+	setCurrentUrl(url: string) {
+		console.log('current URL set to', url);
+
 		var state = this.state;
-		state.currentURL = url;
+		state.currentUrl = url;
 
 		// switch back to the main item
 		// list when the current page changes
@@ -185,7 +187,7 @@ class AppView extends reactts.ReactComponentBase<{}, AppViewState> {
 				items: this.state.items,
 				selectedItem: this.state.selectedItem,
 				onSelectedItemChanged: (item) => { this.setSelectedItem(item); },
-				currentURL: this.state.currentURL
+				currentUrl: this.state.currentUrl
 			}));
 			children.push(new DetailsView({
 				item: this.state.selectedItem,
@@ -353,7 +355,7 @@ class ItemListViewProps {
 	items: onepass.Item[];
 	selectedItem: onepass.Item;
 	onSelectedItemChanged: (item: onepass.Item) => void;
-	currentURL: string;
+	currentUrl: string;
 }
 
 class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, ItemListViewState> {
@@ -388,9 +390,9 @@ class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, ItemLis
 	}
 
 	render() {
-		var filterURL : string;
-		if (!this.state.filter && this.props.currentURL) {
-			filterURL = this.props.currentURL;
+		var filterUrl : string;
+		if (!this.state.filter && this.props.currentUrl) {
+			filterUrl = this.props.currentUrl;
 		}
 		
 		return react.DOM.div({className: 'itemListView'},
@@ -408,7 +410,7 @@ class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, ItemLis
 				}
 			}),
 			new ItemList({items: this.props.items, filter: this.state.filter,
-				filterURL: filterURL,
+				filterUrl: filterUrl,
 				onSelectedItemChanged: (item) => {
 					if (!item) {
 						this.focusSearchField();
@@ -632,7 +634,7 @@ class ItemListState {
 class ItemListProps {
 	items: onepass.Item[];
 	filter: string;
-	filterURL: string;
+	filterUrl: string;
 	onSelectedItemChanged: (item: onepass.Item) => void;
 }
 
@@ -721,8 +723,8 @@ class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> 
 			matchingItems = underscore.filter(props.items, (item) => {
 				return item_search.matchItem(item, props.filter);
 			});
-		} else if (props.filterURL) {
-			matchingItems = item_search.filterItemsByUrl(props.items, props.filterURL);
+		} else if (props.filterUrl) {
+			matchingItems = item_search.filterItemsByUrl(props.items, props.filterUrl);
 			if (matchingItems.length > 0) {
 				matchesAreSorted = true;
 			} else {
@@ -850,9 +852,9 @@ export class App {
 
 	private setupBrowserInteraction(access: page_access.PageAccess) {
 		access.pageChanged.listen((url) => {
-			console.log('current URL set to', url);
-			this.appView.setCurrentURL(url);
+			this.appView.setCurrentUrl(url);
 		});
+		this.appView.setCurrentUrl(access.currentUrl);
 	}
 }
 

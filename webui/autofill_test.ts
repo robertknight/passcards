@@ -5,18 +5,20 @@ import onepass = require('../lib/onepass');
 import testLib = require('../lib/test');
 import pageAccess = require('./page_access');
 
-class FakePageAccess {
+class FakePageAccess implements pageAccess.PageAccess {
 	formList: pageAccess.InputField[];
 	autofillEntries: pageAccess.AutoFillEntry[];
 
 	showEvents: event_stream.EventStream<void>;
 	pageChanged: event_stream.EventStream<string>;
+	currentUrl: string;
 
 	constructor() {
 		this.formList = [];
 		this.autofillEntries = [];
 		this.showEvents = new event_stream.EventStream<void>();
 		this.pageChanged = new event_stream.EventStream<string>();
+		this.currentUrl = '';
 	}
 
 	oauthRedirectUrl() {

@@ -50,6 +50,9 @@ export interface PageAccess {
 	  * tab changes.
 	  */
 	pageChanged: event_stream.EventStream<string>;
+
+	/** URL of the acitve page or tab. */
+	currentUrl: string;
 }
 
 /** Interface exposed by priviledged browser extension code for triggering input field
@@ -91,20 +94,23 @@ export class FakeExtensionConnector {
   * priviledged extension code via an ExtensionConnector
   * which has access to browser tabs etc.
   */
-export class ExtensionPageAccess {
+export class ExtensionPageAccess implements PageAccess {
 	private rpc: rpc.RpcHandler;
 	private connector: ExtensionConnector;
 
 	showEvents: event_stream.EventStream<void>;
 	pageChanged: event_stream.EventStream<string>;
+	currentUrl: string;
 
 	constructor(extension: ExtensionConnector) {
 		this.connector = extension;
 		this.pageChanged = new event_stream.EventStream<string>();
 		this.showEvents = new event_stream.EventStream<void>();
 		this.rpc = new rpc.RpcHandler(new rpc.WindowMessagePort(window, '*', 'extension-app', 'extension-core'));
+		this.currentUrl = extension.currentUrl;
 
 		this.rpc.on<void>('pagechanged', (url: string) => {
+			this.currentUrl = url;
 			this.pageChanged.publish(url);
 		});
 		this.rpc.on<void>('show', () => {
