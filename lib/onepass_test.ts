@@ -534,4 +534,22 @@ testLib.addTest('Item content account and password accessors', (assert) => {
 	assert.equal(content.password(), 'the-item-password');
 });
 
+testLib.addTest('Item field value formatting', (assert) => {
+	var dateField = onepass.ItemField.fromAgileKeychainObject({
+		k: 'date',
+		n: 'dob',
+		t: 'Date of Birth',
+		v: 567278822
+	});
+	assert.ok(dateField.valueString().match(/Dec 23 1987/) != null);
+
+	var monthYearField = onepass.ItemField.fromAgileKeychainObject({
+		k: 'monthYear',
+		n: 'expdate',
+		t: 'Expiry Date',
+		v: 201405
+	});
+	assert.equal(monthYearField.valueString(), '05/14');
+});
+
 testLib.start();

@@ -2,11 +2,13 @@
 /// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
 /// <reference path="../typings/atob.d.ts" />
+/// <reference path="../typings/sprintf.d.ts" />
 
 import atob = require('atob');
 import btoa = require('btoa');
 import Q = require('q');
 import Path = require('path');
+import sprintf = require('sprintf');
 import underscore = require('underscore');
 
 import asyncutil = require('./base/asyncutil');
@@ -969,7 +971,16 @@ export class ItemField {
 	value : any;
 
 	valueString() : string {
-		return this.value;
+		switch (this.kind) {
+		case FieldType.Date:
+			return dateFromUNIXDate(this.value).toString();
+		case FieldType.MonthYear:
+			var month = this.value % 100;
+			var year = (this.value / 100) % 100;
+			return sprintf('%02d/%d', month, year);
+		default:
+			return this.value;
+		}
 	}
 
 	static toAgileKeychainObject(field: ItemField) : agilekeychain.ItemField {
