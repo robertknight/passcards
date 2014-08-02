@@ -17,10 +17,11 @@
 // nested objects and arrays.
 
 import argparse = require('argparse');
-var qunit = require('qunitjs');
-import xdiff = require('xdiff');
-import underscore = require('underscore');
+import path = require('path');
 import sprintf = require('sprintf');
+import underscore = require('underscore');
+import xdiff = require('xdiff');
+var qunit = require('qunitjs');
 
 import env = require('./base/env');
 
@@ -172,6 +173,7 @@ export function start(args?: string[]) {
 			console.log(testCase.name);
 		});
 	} else {
+		console.log(sprintf('START: %s', path.basename(process.argv[1])));
 		run(tests);
 	}
 }
@@ -198,13 +200,13 @@ function run(tests: TestCase[]) {
 	});
 
 	qunit.testDone((result: TestResult) => {
-		var summary = result.passed == result.total ? 'PASS ' : 'FAIL';
-		var durationStr = sprintf(' (%sms)', result.runtime);
-		console.log(summary, ': ', result.name, durationStr);
+		var summary = result.passed == result.total ? 'PASS' : 'FAIL';
+		var resultStr = sprintf('%s: %s (%sms)', summary, result.name, result.runtime);
+		console.log(resultStr);
 	});
 
 	qunit.done((result: TestSuiteResult) => {
-		var summary = sprintf('tests run. total assertions: %d, failed: %d, duration: %dms', result.total, result.failed, result.runtime);
+		var summary = sprintf('END: Assertions: %d, Failed: %d, Duration: %dms', result.total, result.failed, result.runtime);
 		console.log(summary);
 		if (env.isNodeJS()) {
 			if (result.failed > 0) {
