@@ -3,18 +3,22 @@ import onepass = require('./onepass');
 /** Utility class for constructing vault items. */
 export class Builder {
 	private _item: onepass.Item;
-	private content: onepass.ItemContent;
+	private _content: onepass.ItemContent;
 
 	constructor(type: onepass.ItemType) {
 		this._item = new onepass.Item();
-		this.content = new onepass.ItemContent();
+		this._content = new onepass.ItemContent();
 
 		this._item.typeName = type;
-		this._item.setContent(this.content);
+		this._item.setContent(this._content);
 	}
 
 	item() : onepass.Item {
 		return this._item;
+	}
+
+	content() : onepass.ItemContent {
+		return this._content;
 	}
 
 	setTitle(title: string) : Builder {
@@ -31,7 +35,7 @@ export class Builder {
 	}
 
 	addFormField(name: string, designation: string, type: onepass.FormFieldType, value: string) : Builder {
-		this.content.formFields.push({
+		this._content.formFields.push({
 			id: '',
 			name: name,
 			designation: designation,
@@ -42,7 +46,10 @@ export class Builder {
 	}
 
 	addUrl(url: string) : Builder {
-		this.content.urls.push({
+		if (this._content.urls.length == 0) {
+			this._item.location = url;
+		}
+		this._content.urls.push({
 			label: 'website',
 			url: url
 		});

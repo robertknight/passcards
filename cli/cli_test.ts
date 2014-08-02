@@ -518,4 +518,19 @@ testLib.addAsyncTest('create new vault', (assert) => {
 	}).done();
 });
 
+testLib.addAsyncTest('repair items', (assert) => {
+	// This runs the 'repair' command in a vault where all
+	// items are valid. We should also check that it behaves
+	// as expected when there are items that do need to be
+	// repaired.
+
+	var env = new CLITest(assert);
+	return env.newVault().then(() => {
+		return env.run('repair')
+	}).then(() => {
+		assert.ok(env.fakeTerm.didPrint(/Checking 1 items/));
+		testLib.continueTests();
+	}).done();
+});
+
 testLib.start();

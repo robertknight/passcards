@@ -1,6 +1,7 @@
 /// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/mkdirp/mkdirp.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
+/// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
 
 /// <reference path="../typings/argparse.d.ts" />
 
@@ -9,13 +10,16 @@ import argparse = require('argparse');
 import mkdirp = require('mkdirp')
 import sprintf = require('sprintf');
 import Path = require('path');
+import underscore = require('underscore');
 
+import asyncutil = require('../lib/base/asyncutil');
 import cli_common = require('./cli_common');
 import clipboard = require('./clipboard');
 import collectionutil = require('../lib/base/collectionutil');
 import consoleio = require('./console');
 import crypto = require('../lib/onepass_crypto');
 import edit_cmd = require('./edit_cmd');
+import item_repair = require('../lib/item_repair');
 import item_search = require('../lib/item_search');
 import key_agent = require('../lib/key_agent');
 import nodefs = require('../lib/vfs/node');
@@ -176,6 +180,10 @@ export class CLI {
 			dest: 'iterations',
 			nargs: 1,
 			type: 'string'
+		});
+
+		subcommands.addParser('repair', {
+			description: 'Check and repair items in a vault'
 		});
 
 		return parser;
@@ -549,6 +557,29 @@ export class CLI {
 		});
 	}
 
+	private repairCommand(vault: onepass.Vault) : Q.Promise<void[]> {
+		return vault.listItems().then((items) => {
+			var sortedItems = underscore.sortBy(items, (item) => {
+				return item.title.toLowerCase();
+			});
+			var repairTasks: Array<() => Q.Promise<void>> = [];
+			this.printf('Checking %d items...', sortedItems.length);
+			sortedItems.forEach((item) => {
+				var repairTask = () => {
+					return item_repair.repairItem(item, (err) => {
+						this.printf('%s', err)
+					}, () => {
+						return this.io.readLine('Correct item? Y/N').then((result) => {
+							return result.match(/y/i) != null;
+						});
+					});
+				};
+				repairTasks.push(repairTask);
+			});
+			return asyncutil.series(repairTasks);
+		});
+	}
+
 	/** Starts the command-line interface and returns
 	  * a promise for the exit code.
 	  */
@@ -635,6 +666,10 @@ export class CLI {
 		handlers['new-vault'] = (args) => {
 			return this.newVaultCommand(new nodefs.FileVFS('/'), args.path, args.iterations);
 		}
+
+		handlers['repair'] = (args) => {
+			return this.repairCommand(currentVault);
+		};
 
 		// process commands
 		var exitStatus = Q.defer<number>();
