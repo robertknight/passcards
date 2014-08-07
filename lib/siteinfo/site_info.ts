@@ -41,6 +41,12 @@ export interface SiteInfoProvider {
 	  */
 	lookup(url: string) : QueryResult;
 
+	/** Return the current lookup status for a URL.
+	  * Unlike lookup() this does not trigger a query
+	  * if no site info is available for the URL.
+	  */
+	status(url: string) : QueryResult;
+
 	/** Tells the provider to forget any queried data for a URL.
 	  * This can be used to free up resources once a client has fetched data
 	  * for a given URL.
