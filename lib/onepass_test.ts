@@ -552,4 +552,16 @@ testLib.addTest('Item field value formatting', (assert) => {
 	assert.equal(monthYearField.valueString(), '05/14');
 });
 
+testLib.addTest('Default item properties', (assert) => {
+	var item = new onepass.Item();
+	assert.equal(item.securityLevel, 'SL5');
+	assert.strictEqual(item.location, '');
+	assert.strictEqual(item.trashed, false);
+	assert.equal(item.uuid.length, 32);
+
+	// check that new items get different IDs
+	var item2 = new onepass.Item();
+	assert.notEqual(item.uuid, item2.uuid);
+});
+
 testLib.start();

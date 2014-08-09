@@ -80,4 +80,15 @@ testLib.addTest('filter items by URL match', (assert) => {
 	assert.deepEqual(gmailMatches, [gmailItem, googleItem]);
 });
 
+testLib.addTest('item type patterns', (assert) => {
+	var types = item_search.matchType('card');
+	assert.deepEqual(types, [onepass.ItemTypes.CREDIT_CARD]);
+
+	types = item_search.matchType('router');
+	assert.deepEqual(types, [onepass.ItemTypes.ROUTER]);
+
+	types = item_search.matchType('login');
+	assert.deepEqual(types, [onepass.ItemTypes.LOGIN]);
+});
+
 testLib.start();

@@ -304,51 +304,42 @@ export class CLI {
 	  */
 	private selectItem(vault: onepass.Vault, pattern: string) : Q.Promise<onepass.Item> {
 		return item_search.lookupItems(vault, pattern).then((items) => {
-			if (items.length < 1) {
-				this.printf('No items matching pattern "%s"', pattern);
-				return Q.reject(NO_SUCH_ITEM_ERR);
-			} else if (items.length == 1) {
-				return Q.resolve(items[0]);
-			} else {
-				this.printf('Multiple items match "%s":\n', pattern);
-				items.forEach((item, index) => {
-					this.printf('  [%d] %s', index+1, item.title);
-				});
-				this.printf('');
-				return this.io.readLine('Select Item: ').then((indexStr) => {
-					var index = parseInt(indexStr) - 1 || 0;
-					if (index < 0) {
-						index = 0;
-					} else if (index >= items.length) {
-						index = items.length-1;
-					}
-					return items[index];
-				});
-			}
+			return this.select(items, 'items', 'Item', pattern, (item) => { return item.title; });
 		});
 	}
 
-	private addItemCommand(vault: onepass.Vault, type: string, title: string) : Q.Promise<number> {
-		var status = Q.defer<number>();
-
-		if (type !== 'login') {
-			this.printf('The only supported item type for the "add" command is currently "login"');
-			status.resolve(1);
-			return status.promise;
+	// prompt the user for a selection from a list of items
+	private select<T>(items: T[], plural: string, singular: string, pattern: string, captionFunc: (item: T) => string) : Q.Promise<T> {
+		if (items.length < 1) {
+			this.printf('No %s matching pattern "%s"', plural, pattern);
+			return Q.reject(NO_SUCH_ITEM_ERR);
+		}
+		else if (items.length == 1) {
+			return Q.resolve(items[0]);
 		}
 
-		var item = new onepass.Item(vault);
-		item.title = title;
-		var content = new onepass.ItemContent();
+		this.printf('Multiple %s match "%s":\n', plural, pattern);
+		items.forEach((item, index) => {
+			this.printf('  [%d] %s', index+1, captionFunc(item));
+		});
+		this.printf('');
+		return this.io.readLine(sprintf('Select %s: ', singular)).then((indexStr) => {
+			var index = parseInt(indexStr) - 1 || 0;
+			if (index < 0) {
+				index = 0;
+			} else if (index >= items.length) {
+				index = items.length-1;
+			}
+			return items[index];
+		});
+	}
 
-		var contentReady = Q.defer<onepass.ItemContent>();
-
-		this.io.readLine('Website: ').then((website) => {
+	private addLoginFields(content: onepass.ItemContent) : Q.Promise<onepass.ItemContent> {
+		return this.io.readLine('Website: ').then((website) => {
 			content.urls.push({
 				label: 'website',
 				url: website
 			});
-			item.location = website;
 			return this.io.readLine('Username: ');
 		})
 		.then((username) => {
@@ -369,23 +360,36 @@ export class CLI {
 				type: onepass.FormFieldType.Password,
 				value: password
 			});
-			contentReady.resolve(content);
-		})
-		.done();
-		
-		contentReady.promise.then(() => {
-			item.setContent(content);
-			return item.save();
-		})
-		.then(() => {
-			this.printf("Added new login '%s'", item.title);
-			status.resolve(0);
-		})
-		.fail((err) => {
-			status.resolve(1);
+			return content;
 		});
+	}
 
-		return status.promise;
+	private addItemCommand(vault: onepass.Vault, type: string, title: string) : Q.Promise<void> {
+		var types = item_search.matchType(type);
+		return this.select(types, 'item types', 'item type', type, (typeCode) => {
+			return onepass.ITEM_TYPES[<string>typeCode].name;
+		}).then((type) => {
+			var item = new onepass.Item(vault);
+			item.title = title;
+			item.typeName = type;
+
+			var content = new onepass.ItemContent();
+
+			var contentReady : Q.Promise<onepass.ItemContent>;
+			if (type == onepass.ItemTypes.LOGIN) {
+				contentReady = this.addLoginFields(content);
+			} else {
+				contentReady = Q.resolve(content);
+			}
+			
+			return contentReady.then(() => {
+				item.setContent(content);
+				return item.save();
+			}).then(() => {
+				this.printf("Added new item '%s'", item.title);
+				return Q.resolve<void>(null);
+			});
+		});
 	}
 
 	private trashItemCommand(vault: onepass.Vault, pattern: string, trash: boolean) : Q.Promise<void[]> {

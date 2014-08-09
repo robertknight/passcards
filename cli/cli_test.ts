@@ -356,6 +356,18 @@ testLib.addAsyncTest('add login', (assert) => {
 	.done();
 });
 
+testLib.addAsyncTest('add credit card', (assert) => {
+	var env = new CLITest(assert);
+	env.newVault().then(() => {
+		return env.run('add', 'card', 'MasterCard');
+	}).then(() => {
+		return env.run('show', 'master');
+	}).then(() => {
+		assert.ok(env.fakeTerm.didPrint(/MasterCard \(Credit Card\)/));
+		testLib.continueTests();
+	}).done();
+});
+
 testLib.addAsyncTest('trash/restore item', (assert) => {
 	var env = new CLITest(assert);
 	env.newVault().then(() => {
@@ -370,7 +382,6 @@ testLib.addAsyncTest('trash/restore item', (assert) => {
 		return env.run('show', 'facebook');
 	}).then(() => {
 		assert.ok(!env.fakeTerm.didPrint(/In Trash/));
-
 		testLib.continueTests();
 	}).done();
 });

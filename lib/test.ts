@@ -36,6 +36,7 @@ export interface Assert {
 	notEqual<T>(actual: T, notExpected: T, message?: string) : void;
 	equal<T>(actual: T, expected: T, message?: string) : void;
 	deepEqual<T>(actual: T, expected: T, message?: string) : void;
+	strictEqual<T>(actual: T, expected: T, message?: string) : void;
 	ok(result: boolean, message?: string) : void;
 	throws<T>(func: Function, expected?: T, message?: string) : void;
 }

@@ -233,6 +233,7 @@ export class Item {
 		this.securityLevel = 'SL5';
 		this.typeName = ItemTypes.LOGIN;
 		this.folderUuid = '';
+		this.location = '';
 	}
 
 	/** Retrieves and decrypts the content of a 1Password item.

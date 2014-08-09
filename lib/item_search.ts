@@ -192,3 +192,13 @@ function matchLabel(pattern: string, label: string) : boolean {
 	return label && stringutil.indexOfIgnoreCase(label, pattern) != -1;
 }
 
+export function matchType(pattern: string) : onepass.ItemType[] {
+	var typeKeys = underscore.filter(Object.keys(onepass.ItemTypes), (key) => {
+		return stringutil.indexOfIgnoreCase(key, pattern) != -1;
+	});
+	var typeCodes : onepass.ItemType[] = typeKeys.map((key) => {
+		return (<any>onepass.ItemTypes)[key];
+	});
+	return typeCodes;
+}
+
