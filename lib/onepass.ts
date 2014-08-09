@@ -908,6 +908,8 @@ export class ItemSection {
 
 	constructor() {
 		this.fields = [];
+		this.title = '';
+		this.name = '';
 	}
 
 	static toAgileKeychainObject(section: ItemSection) : agilekeychain.ItemSection {

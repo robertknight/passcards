@@ -379,6 +379,8 @@ export class CLI {
 			if (type == onepass.ItemTypes.LOGIN) {
 				contentReady = this.addLoginFields(content);
 			} else {
+				// add a default section with a blank title
+				content.sections.push(new onepass.ItemSection());
 				contentReady = Q.resolve(content);
 			}
 			
