@@ -160,8 +160,9 @@ class IconFetcher {
 			queueItem.status = reply.status;
 			if (reply.status == 200) {
 				var buffer = collection_util.bufferFromString(reply.body);
-				queueItem.icon = iconFromData(url, buffer);
-				if (!queueItem.icon) {
+				try {
+					queueItem.icon = iconFromData(url, buffer);
+				} catch (ex) {
 					var start = collection_util.hexlify(buffer.subarray(0,50));
 					console.log('Failed to decode icon', url, 'from data of length', buffer.length, start);
 				}
@@ -201,14 +202,11 @@ export class SiteInfoService implements site_info.SiteInfoProvider {
 
 	forget(url: string) {
 		url = url_util.normalize(url);
-		console.log('SiteInfoService.forget', url);
 		delete this.cache[url];
 	}
 
 	lookup(url: string) : site_info.QueryResult {
 		url = url_util.normalize(url);
-
-		console.log('SiteInfoService.lookup', 'icon lookup for', url, 'is cached?', this.cache.hasOwnProperty(url));
 
 		if (this.cache[url]) {
 			return this.cache[url];

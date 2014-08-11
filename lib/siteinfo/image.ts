@@ -1,6 +1,7 @@
 // Functions for determining the type and size of an image
 
 import collectionutil = require('../base/collectionutil');
+import err_util = require('../base/err_util');
 
 export enum ImageType {
 	Png,
@@ -12,6 +13,14 @@ export interface ImageInfo {
 	type: ImageType;
 	width: number;
 	height: number;
+}
+
+/** Error thrown if decoding metadata for a recognized image type fails.
+  */
+export class DecodeError extends err_util.BaseError {
+	constructor(message: string) {
+		super(message);
+	}
 }
 
 var detectors: Array<(data: Uint8Array) => ImageInfo> = [];
@@ -26,7 +35,7 @@ detectors.push((data) => {
 	var headerStart = PNG_SIG.length;
 	var chunkType = data.subarray(headerStart + 4, headerStart + 8);
 	if (collectionutil.stringFromBuffer(chunkType) != 'IHDR') {
-		return null;
+		throw new DecodeError('Missing IHDR chunk');
 	}
 
 	var dataView = new DataView(data.buffer, data.byteOffset);
@@ -53,7 +62,7 @@ detectors.push((data) => {
 	while (true) {
 		if (segmentInfo.getUint8(segmentStart) != 0xFF) {
 			// invalid segment marker
-			return null;
+			throw new DecodeError('Invalid segment type');
 		}
 
 		var segmentType = segmentInfo.getUint8(segmentStart + 1);
@@ -101,7 +110,7 @@ detectors.push((data) => {
 	);
 	var biSize = bmpInfoHeader.getUint32(0);
 	if (biSize != 40 /* sizeof(BITMAPINFOHEADER) */) {
-		return null;
+		throw new DecodeError('Unsupported bitmap type');
 	}
 	var biWidth = bmpInfoHeader.getInt32(4);
 	var biHeight = bmpInfoHeader.getInt32(8);
@@ -116,6 +125,9 @@ detectors.push((data) => {
 /** Detects the image type and size of the data in @p data.
   * Returns the image metadata if successfully detected or
   * null if there is no match.
+  *
+  * Throws DecodeError if the image type is recognized but cannot
+  * be decoded.
   */
 export function getInfo(data: Uint8Array) : ImageInfo {
 	for (var i=0; i < detectors.length; i++) {

@@ -11,6 +11,7 @@ import asyncutil = require('../base/asyncutil');
 import collection_util = require('../base/collectionutil');
 import http_client = require('../http_client');
 import ico = require('./ico');
+import image = require('./image');
 import http_vfs = require('../vfs/http');
 import node_vfs = require('../vfs/node');
 import site_info = require('./site_info');
@@ -147,6 +148,17 @@ testLib.addTest('read ICO icon', (assert) => {
 		assert.equal(icon.height, expectedIcon.height);
 		assert.deepEqual(collection_util.bufferToArray(icon.data), collection_util.bufferToArray(expectedData));
 	});
+});
+
+testLib.addTest('image decode error', (assert) => {
+	var PNG_SIG = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
+	var invalidIconData = PNG_SIG.concat([0, 1, 2, 3, 4, 5]);
+	try {
+		site_info_service.iconFromData('foo.png', new Uint8Array(invalidIconData));
+		assert.ok(false);
+	} catch (ex) {
+		assert.ok(ex instanceof image.DecodeError);
+	}
 });
 
 testLib.addTest('extract largest ICO icon', (assert) => {
