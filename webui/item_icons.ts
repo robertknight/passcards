@@ -203,9 +203,9 @@ export class ItemIconProvider {
 			icon = iconsBySize[iconsBySize.length-1];
 		}
 		
-		// FIXME - TypeScript ctor for Blob
-		// is missing arguments
-		var iconBlob = new Blob([icon.data]);
+		// FIXME [TS/1.1] - Blob ctor is missing arguments
+		var _blob = <any>Blob;
+		var iconBlob = new _blob([icon.data]);
 		var blobUrl = URL.createObjectURL(iconBlob);
 
 		return blobUrl;

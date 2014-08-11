@@ -3,21 +3,10 @@
 
 // [TS/1.0] IDBKeyRange static methods are
 // represented as interface methods
-declare var IDBKeyRange : {
+/*declare var IDBKeyRange : {
 	bound(lower: any, upper: any, lowerOpen?: boolean, upperOpen?: boolean): IDBKeyRange;
     only(value: any): IDBKeyRange;
     lowerBound(bound: any, open?: boolean): IDBKeyRange;
     upperBound(bound: any, open?: boolean): IDBKeyRange;
-}
+}*/
 
-/*
-interface BlobPropertyBag {
-	type?: string;
-	endings?: string;
-}
-
-interface Blob {
-	// [TS/1.0] - Blob ctor is missing args
-	new(parts?: Array, props?: BlobPropertyBag);
-}
-*/
