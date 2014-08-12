@@ -1,7 +1,7 @@
 {
-  "name": "1pass-web",
-  "title": "1pass-web",
-  "id": "1pass@robertknight.github.io",
+  "name": "passcards",
+  "title": "passcards",
+  "id": "passcards@robertknight.github.io",
   "description": "A Simple Password Manager",
   "author": "Robert Knight",
   "license": "MPL 2.0",

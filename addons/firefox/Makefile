@@ -1,8 +1,8 @@
 include ../../common.mk
 
-all: 1pass-web.xpi
+all: passcards.xpi
 
-1pass-web.xpi: build/xpi_content
+passcards.xpi: build/xpi_content
 	$(CFX) xpi
 
 run: build/xpi_content

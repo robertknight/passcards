@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/robertknight/1pass-web.png?branch=master)](https://travis-ci.org/robertknight/1pass-web)
 
-This is a web, browser extension and command-line based password manager under development.
+*passcards* is a web, browser extension and command-line based password manager under development.
 
 It uses the [1Password](https://agilebits.com/onepassword) password vault format and is designed
 to be usable alongside the official 1Password apps.
@@ -12,11 +12,11 @@ you'll need to enable Dropbox syncing within the official 1Password apps.
 ## Command-line Client Installation
 
 ```
-npm install -g onepass-cli
+npm install -g passcards
 ```
 
-After installing the command-line app, it can be run using `1pass <command>`.
-See `1pass --help` for a list of supported commands.
+After installing the command-line app, it can be run using `passcards <command>`.
+See `passcards --help` for a list of supported commands.
 
 ## Web App
 

@@ -74,7 +74,7 @@ node_modules/dropbox/lib/dropbox.js: node_modules/dropbox/package.json
 test-package: all
 	@cd `$(TMP_DIR_CMD)` \
 	&& npm install --quiet $(ROOT_DIR) $(SILENCE_STDOUT) \
-	&& ./node_modules/onepass-cli/1pass --help $(SILENCE_STDOUT) \
+	&& ./node_modules/passcards/passcards --help $(SILENCE_STDOUT) \
 	&& echo npm package OK
 	
 clean:

@@ -1,7 +1,7 @@
 {
-  "name": "onepass-cli",
-  "description": "A 1Password command-line client and library",
-  "version": "0.6.1",
+  "name": "passcards",
+  "description": "A 1Password-compatible password manager",
+  "version": "0.7.0",
   "devDependencies": {
     "browserify": ">=3.46.0",
     "typescript": ">=1.0",
@@ -42,7 +42,7 @@
     "test": "make test"
   },
   "bin": {
-    "1pass": "./1pass"
+    "passcards": "./passcards"
   },
   "repository": {
     "type": "git",
@@ -55,6 +55,6 @@
   },
   "files": [
     "build",
-    "1pass"
+    "passcards"
   ]
 }
