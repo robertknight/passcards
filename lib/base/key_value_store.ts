@@ -3,6 +3,7 @@
 
 import Q = require('q');
 
+import err_util = require('./err_util');
 import stringutil = require('./stringutil');
 
 /** Interface for async key/value storage. */
@@ -39,7 +40,9 @@ export class IndexedDBStore implements Store {
 			var db = <IDBDatabase>(req.result);
 			_db.resolve(db);
 		};
-		req.onerror = (err) => {
+		req.onerror = (e) => {
+			var err = new err_util.BaseError('Failed to open IndexedDB database');
+			err.sourceErr = e.error;
 			_db.reject(err);
 		};
 

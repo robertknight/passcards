@@ -6,6 +6,11 @@ interface ES6Function extends Function {
 
 /** Base class for custom errors */
 export class BaseError implements Error {
+	/** When wrapping one error with another,
+	  * this is used to store the original error.
+	  */
+	public sourceErr: Error;
+
 	private err: Error;
 
 	name: string;
