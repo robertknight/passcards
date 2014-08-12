@@ -27,6 +27,15 @@ export function truthyKeys(obj: Object) : string {
 	return keys.join(' ');
 }
 
+/** Replace the last occurrence of @p pattern in @p subject with @p replacement */
+export function replaceLast(subject: string, pattern: string, replacement: string) : string {
+	var index = subject.lastIndexOf(pattern);
+	if (index == -1) {
+		return subject;
+	}
+	return subject.slice(0, index) + replacement + subject.slice(index + pattern.length);
+}
+
 /** Splits a shell/REPL command-line into tokens. Tokens are delimited by spaces
   * except where they are escaped by a backslash or enclosed within single
   * or double quotes.

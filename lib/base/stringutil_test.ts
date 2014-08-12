@@ -48,5 +48,9 @@ testLib.addTest('ends with', (assert) => {
 	assert.equal(stringutil.endsWith('', '/'), false);
 });
 
+testLib.addTest('replace last', (assert) => {
+	assert.equal(stringutil.replaceLast('one two one', 'one', 'three'), 'one two three');
+});
+
 testLib.start();
 

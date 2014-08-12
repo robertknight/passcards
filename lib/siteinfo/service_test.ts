@@ -16,6 +16,7 @@ import http_vfs = require('../vfs/http');
 import node_vfs = require('../vfs/node');
 import site_info = require('./site_info');
 import site_info_service = require('./service');
+import stringutil = require('../base/stringutil');
 import testLib = require('../test');
 
 var urlFetcher : site_info_service.UrlFetcher = {
@@ -29,7 +30,7 @@ var urlFetcher : site_info_service.UrlFetcher = {
 	}
 };
 
-var TEST_SITE_PATH = path.join(path.dirname(module.filename).replace('build/', ''),
+var TEST_SITE_PATH = path.join(stringutil.replaceLast(path.dirname(module.filename), 'build/', ''),
   '../test-data/site-icons');
 
 testLib.addTest('extract page links', (assert) => {
