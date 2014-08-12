@@ -14,11 +14,19 @@
 	-webkit-flex-direction: column;
 }
 
-.flex-center {
+.flex-cross-center {
 	align-items: center;
 	-webkit-align-items: center;
+}
+
+.flex-axis-center {
 	justify-content: center;
 	-webkit-justify-content: center;
+}
+
+.flex-center {
+	.flex-axis-center;
+	.flex-cross-center;
 }
 
 .touch-scrolling {
@@ -135,10 +143,15 @@ html, body {
 .itemOverview {
 	.flex;
 	.flex-row;
+	.flex-cross-center;
 
 	margin-top: 5px;
 	margin-bottom: 5px;
+
 	cursor: pointer;
+
+	padding-left: 5px;
+	padding-right: 5px;
 }
 
 .itemOverview:hover {
@@ -149,17 +162,37 @@ html, body {
 	background-color: #eeeeee;
 }
 
-.itemIcon {
+.itemIconContainer {
 	width: 48px;
 	height: 48px;
-	padding: 5px;
+
+	background-color: white;
+
 	border: 1px solid #cccccc;
 	border-radius: 2px;
 }
 
+.itemIcon {
+	/* horizontally center icon in outline.
+	 * limit to max size of 48x48 but prefer
+	 * intrinsic size
+	 */
+	max-width: 48px;
+	max-height: 48px;
+
+	margin-left: auto;
+	margin-right: auto;
+
+	/* vertically center icon in outline */
+	display: block;
+	position: relative;
+	top: 50%;
+	transform: translateY(-50%);
+}
+
 .itemDetails {
 	padding: 5px;
-	margin: 5px;
+	margin-left: 5px;
 }
 
 .itemTitle {

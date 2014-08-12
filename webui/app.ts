@@ -695,7 +695,9 @@ class Item extends reactts.ReactComponentBase<ItemProps, ItemState> {
 		return react.DOM.div({className: stringutil.truthyKeys({itemOverview: true,
 				itemHovered: this.props.isHovered,
 				itemVisible: this.props.visible}), ref: 'itemOverview'},
-			react.DOM.img({className: 'itemIcon', src: iconUrl}),
+			react.DOM.div({className: 'itemIconContainer'},
+				react.DOM.img({className: 'itemIcon', src: iconUrl})
+			),
 			react.DOM.div({className: 'itemDetails'},
 				react.DOM.div({className: 'itemTitle'}, this.props.title),
 				react.DOM.div({className: 'itemLocation'}, this.props.domain),
