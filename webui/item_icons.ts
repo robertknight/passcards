@@ -1,7 +1,9 @@
+/// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
 /// <reference path="../typings/URIjs.d.ts" />
 /// <reference path="../typings/dom.d.ts" />
 
+import Q = require('q');
 import underscore = require('underscore');
 import urijs = require('URIjs');
 
@@ -41,6 +43,9 @@ export class ItemIconProvider {
 	private provider: site_info.SiteInfoProvider;
 	private iconSize: number;
 
+	private static LOADING_ICON = 'loading.png';
+	private static DEFAULT_ICON = 'default.png';
+
 	/** Stream of icon update events.
 	  * Emits the normalized URL (using url_util.normalize) of the location
 	  * when the icon for that location is updated.
@@ -69,23 +74,7 @@ export class ItemIconProvider {
 			var entry = this.provider.status(url);
 
 			if (entry.state == site_info.QueryState.Ready) {
-				var icon = this.tempCache[url];
-				icon.iconUrl = this.makeIconUrl(entry.info.icons, this.iconSize);
-				if (icon.iconUrl != '') {
-					icon.state = IconFetchState.Found;
-				} else {
-					icon.state = IconFetchState.NoIcon;
-				}
-				this.updated.publish(url);
-
-				if (entry.info.icons.length == 0) {
-					// if a query against the actual location returns no suitable icons,
-					// try a query against the main domain
-					var fallbackUrl = this.fallbackUrlForIcon(url);
-					if (fallbackUrl && fallbackUrl != url) {
-						this.query(this.fallbackUrlForIcon(url));
-					}
-				}
+				this.updateCacheEntry(url, entry.info.icons);
 
 				// cache icons for future use
 				this.diskCache.insert(url, {
@@ -119,7 +108,7 @@ export class ItemIconProvider {
 
 		if (url.length == 0) {
 			return {
-				iconUrl: 'loading.png',
+				iconUrl: ItemIconProvider.DEFAULT_ICON,
 				state: IconFetchState.NoIcon
 			}
 		}
@@ -135,15 +124,19 @@ export class ItemIconProvider {
 			return cachedIcon;
 		} else {
 			var icon : ItemIcon = {
-				iconUrl: 'loading.png',
+				iconUrl: ItemIconProvider.LOADING_ICON,
 				state: IconFetchState.Fetching
 			};
 			this.tempCache[url] = icon;
 			
 			this.diskCache.query(url).then((entry) => {
-				this.updateCacheEntry(url, entry.icons);
+				if (entry) {
+					this.updateCacheEntry(url, entry.icons);
+				} else {
+					this.provider.lookup(url);
+				}
 			}).fail((err) => {
-				console.log('Disk cache lookup for', url, 'failed:', err, err.message);
+				console.log('Disk cache lookup for', url, 'failed:', err, err.message, err.fileName, err.lineNumber);
 				this.provider.lookup(url);
 			});
 
@@ -158,6 +151,7 @@ export class ItemIconProvider {
 			icon.state = IconFetchState.Found;
 		} else {
 			icon.state = IconFetchState.NoIcon;
+			icon.iconUrl = ItemIconProvider.DEFAULT_ICON;
 		}
 		this.updated.publish(url);
 
@@ -238,6 +232,10 @@ class Cache {
 	constructor(private store: key_value_store.Store) {
 	}
 
+	/** Look up the icons for @p url in the cache.
+	  * Resolves with the cache entry if found or undefined
+	  * if no such entry exists.
+	  */
 	query(url: string) : Q.Promise<CacheEntry> {
 		return this.withKey(url, (key) => {
 			return this.store.get<CacheEntry>(key);
