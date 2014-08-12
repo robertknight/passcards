@@ -21,6 +21,15 @@ export class IndexedDBStore implements Store {
 		var DB_VERSION = 1;
 		var _db = Q.defer<IDBDatabase>();
 
+		// FIXME [Firefox] - When a DB is opened with a new Fx release,
+		// then later we try to open the same DB with an older Fx release
+		// which uses an earlier schema version for IDB databases the open
+		// request may fail.
+		//
+		// In this case Firefox 31 prints a useful error message to the
+		// Browser Console but does not return a useful error to the
+		// onerror() handler below.
+
 		var req = indexedDB.open(dbName, DB_VERSION);
 		req.onupgradeneeded = () => {
 			var db = <IDBDatabase>(req.result);
