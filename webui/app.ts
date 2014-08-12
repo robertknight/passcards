@@ -1,5 +1,6 @@
 /// <reference path="../typings/DefinitelyTyped/jquery/jquery.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
+/// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
 /// <reference path="../node_modules/react-typescript/declarations/react.d.ts" />
 /// <reference path="../node_modules/react-typescript/declarations/react-typescript.d.ts" />
 /// <reference path="../typings/fastclick.d.ts" />
@@ -9,14 +10,16 @@ import fastclick = require('fastclick');
 import Q = require('q');
 import react = require('react');
 import reactts = require('react-typescript');
-import underscore = require('underscore');
 import url = require('url');
+import underscore = require('underscore');
 
 import autofill = require('./autofill');
 import dropboxvfs = require('../lib/vfs/dropbox');
 import env = require('../lib/base/env');
 import key_agent = require('../lib/key_agent');
+import key_value_store = require('../lib/base/key_value_store');
 import http_vfs = require('../lib/vfs/http');
+import item_icons = require('./item_icons');
 import item_search = require('../lib/item_search');
 import onepass = require('../lib/onepass');
 import page_access = require('./page_access');
@@ -25,6 +28,22 @@ import stringutil = require('../lib/base/stringutil');
 import vfs = require('../lib/vfs/vfs');
 
 import onepass_crypto = require('../lib/onepass_crypto');
+
+/** Converts a map of (component name -> unmounted React component)
+  * into an array of components where the map key is set
+  * as the 'key' attribute of the component's props.
+  *
+  * The ordering of the components in the result array is arbitrary.
+  */
+function mapToComponentArray(map: Object) {
+	var ary: Array<react.ReactComponent<any,any>> = [];
+	Object.keys(map).forEach((k) => {
+		var child = (<any>map)[k];
+		child.props.key = k;
+		ary.push(child);
+	});
+	return ary;
+}
 
 enum ActiveView {
 	UnlockPane,
@@ -80,14 +99,19 @@ class AppViewState {
 	status: Status;
 }
 
+interface AppServices {
+	autofiller: autofill.AutoFillHandler;
+	iconProvider: item_icons.ItemIconProvider;
+}
+
+interface AppViewProps {
+	services: AppServices;
+}
+
 /** The main top-level app view. */
-class AppView extends reactts.ReactComponentBase<{}, AppViewState> {
-	private autofillHandler: autofill.AutoFillHandler;
-
-	constructor(autofillHandler: autofill.AutoFillHandler) {
-		super({});
-
-		this.autofillHandler = autofillHandler;
+class AppView extends reactts.ReactComponentBase<AppViewProps, AppViewState> {
+	constructor(props: AppViewProps) {
+		super(props);
 
 		// trigger a refresh of the item list when the view
 		// loses focus.
@@ -163,50 +187,55 @@ class AppView extends reactts.ReactComponentBase<{}, AppViewState> {
 	}
 
 	autofill(item: onepass.Item) {
-		this.autofillHandler.autofill(item);
+		this.props.services.autofiller.autofill(item);
 	}
 
 	render() {
-		var children: react.ReactComponent<any,any>[] = [];
+		var children : {
+			unlockPane?: UnlockPane;
+			itemList?: ItemListView;
+			itemDetails?: DetailsView;
+			statusView?: StatusView;
+		} = {};
+
 		if (this.state.isLocked) {
-			children.push(
-				new UnlockPane({
-					vault: this.state.vault,
-					isLocked: this.state.isLocked,
-					onUnlock: () => {
-						this.setLocked(false);
-					},
-					onUnlockErr: (err) => {
-						this.showError(err);
-					}
-				})
-			);
+			children.unlockPane = new UnlockPane({
+				vault: this.state.vault,
+				isLocked: this.state.isLocked,
+				onUnlock: () => {
+					this.setLocked(false);
+				},
+				onUnlockErr: (err) => {
+					this.showError(err);
+				}
+			});
 		} else {
-			children.push(new ItemListView({
+			children.itemList = new ItemListView({
 				items: this.state.items,
 				selectedItem: this.state.selectedItem,
 				onSelectedItemChanged: (item) => { this.setSelectedItem(item); },
-				currentUrl: this.state.currentUrl
-			}));
-			children.push(new DetailsView({
+				currentUrl: this.state.currentUrl,
+				iconProvider: this.props.services.iconProvider
+			});
+			children.itemDetails = new DetailsView({
 				item: this.state.selectedItem,
-				iconURL: this.state.selectedItem ? itemIconURL(this.state.selectedItem) : '',
+				iconProvider: this.props.services.iconProvider,
 				onGoBack: () => {
 					this.setSelectedItem(null);
 				},
 				autofill: () => {
 					this.autofill(this.state.selectedItem);
 				}
-			}));
+			});
 		}
 		if (this.state.status) {
-			children.push(new StatusView({
+			children.statusView = new StatusView({
 				status: this.state.status
-			}));
+			});
 		}
 
 		return react.DOM.div({className: 'appView'},
-			children
+			mapToComponentArray(children)
 		);
 	}
 }
@@ -355,6 +384,7 @@ class ItemListViewProps {
 	selectedItem: onepass.Item;
 	onSelectedItemChanged: (item: onepass.Item) => void;
 	currentUrl: string;
+	iconProvider: item_icons.ItemIconProvider;
 }
 
 class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, ItemListViewState> {
@@ -416,7 +446,8 @@ class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, ItemLis
 					}
 					this.props.onSelectedItemChanged(item);
 				},
-				ref: 'itemList'
+				ref: 'itemList',
+				iconProvider: this.props.iconProvider
 			})
 		);
 	}
@@ -435,7 +466,7 @@ class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, ItemLis
 // Detail view for an individual item
 class DetailsViewProps {
 	item: onepass.Item;
-	iconURL: string;
+	iconProvider: item_icons.ItemIconProvider;
 
 	onGoBack: () => any;
 	autofill: () => void;
@@ -448,8 +479,24 @@ class ItemSectionProps {
 }
 
 class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
-	itemContent : onepass.ItemContent;
-	shortcuts: shortcut.Shortcut[];
+	private itemContent : onepass.ItemContent;
+	private shortcuts: shortcut.Shortcut[];
+	private iconUpdateListener: (url: string) => void;
+
+	// FIXME - This is duplicated for the Item component
+	private setupIconUpdateListener(iconProvider: item_icons.ItemIconProvider) {
+		if (!this.iconUpdateListener) {
+			this.iconUpdateListener = (url) => {
+				if (this.props.item && this.props.iconProvider.updateMatches(url, this.props.item.location)) {
+					this.forceUpdate();
+				}
+			};
+		}
+		if (this.props.iconProvider) {
+			this.props.iconProvider.updated.ignore(this.iconUpdateListener);
+		}
+		iconProvider.updated.listen(this.iconUpdateListener);
+	}
 
 	componentWillReceiveProps(nextProps: DetailsViewProps) {
 		if (!nextProps.item) {
@@ -466,6 +513,8 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 			this.itemContent = content;
 			this.forceUpdate();
 		}).done();
+
+		this.setupIconUpdateListener(nextProps.iconProvider);
 	}
 
 	componentDidUpdate() {
@@ -489,6 +538,7 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 			})
 		];
 		this.updateShortcutState();
+		this.setupIconUpdateListener(this.props.iconProvider);
 	}
 
 	componentDidUnmount() {
@@ -499,8 +549,6 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 	}
 
 	private updateShortcutState() {
-		// enable keyboard shortcuts when the details view
-		// is displaying an item
 		this.shortcuts.forEach((shortcut) => {
 			shortcut.setEnabled(this.props.item != null);
 		});
@@ -551,9 +599,10 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 				);
 			}
 
+			var iconUrl = this.props.iconProvider.query(this.props.item.location).iconUrl;
 			detailsContent = react.DOM.div({className: 'detailsContent'},
 				react.DOM.div({className: 'detailsHeader'},
-					react.DOM.img({className: 'detailsHeaderIcon itemIcon', src:this.props.iconURL}),
+					react.DOM.img({className: 'detailsHeaderIcon itemIcon', src: iconUrl}),
 					react.DOM.div({},
 						react.DOM.div({className: 'detailsTitle'}, this.props.item.title),
 						react.DOM.div({className: 'detailsLocation'}, this.props.item.location))
@@ -586,28 +635,67 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 }
 
 // Item in the overall view
+interface ItemState {
+}
+
 class ItemProps {
 	key: string;
 	title: string;
-	iconURL: string;
 	accountName: string;
 	location: string;
 	domain: string;
 	onSelected: () => void;
 	isHovered: boolean;
+	iconProvider: item_icons.ItemIconProvider;
+	visible: boolean;
 }
 
-class Item extends reactts.ReactComponentBase<ItemProps, {}> {
+class Item extends reactts.ReactComponentBase<ItemProps, ItemState> {
+	private iconUpdateListener: (url: string) => void;
+
+	private setupIconUpdateListener(iconProvider: item_icons.ItemIconProvider) {
+		if (!this.iconUpdateListener) {
+			this.iconUpdateListener = (url) => {
+				if (this.isMounted() && this.props.iconProvider.updateMatches(url, this.props.location)) {
+					this.forceUpdate();
+				}
+			};
+		}
+		if (this.props.iconProvider) {
+			this.props.iconProvider.updated.ignore(this.iconUpdateListener);
+		}
+		iconProvider.updated.listen(this.iconUpdateListener);
+	}
+
+	getInitialState() {
+		return {};
+	}
+
 	componentDidMount() {
 		$(this.refs['itemOverview'].getDOMNode()).click(() => {
 			this.props.onSelected();
 		});
+		if (!this.iconUpdateListener) {
+			this.setupIconUpdateListener(this.props.iconProvider);
+		}
+	}
+
+	componentWillReceiveProps(nextProps: ItemProps) {
+		this.setupIconUpdateListener(nextProps.iconProvider);
 	}
 
 	render() {
+		var iconUrl: string;
+		if (this.props.visible) {
+			iconUrl = this.props.iconProvider.query(this.props.location).iconUrl;
+		} else {
+			iconUrl = '';
+		}
+
 		return react.DOM.div({className: stringutil.truthyKeys({itemOverview: true,
-				itemHovered: this.props.isHovered}), ref: 'itemOverview'},
-			react.DOM.img({className: 'itemIcon', src: this.props.iconURL}),
+				itemHovered: this.props.isHovered,
+				itemVisible: this.props.visible}), ref: 'itemOverview'},
+			react.DOM.img({className: 'itemIcon', src: iconUrl}),
 			react.DOM.div({className: 'itemDetails'},
 				react.DOM.div({className: 'itemTitle'}, this.props.title),
 				react.DOM.div({className: 'itemLocation'}, this.props.domain),
@@ -617,17 +705,17 @@ class Item extends reactts.ReactComponentBase<ItemProps, {}> {
 	}
 }
 
-class ItemListState {
+interface ItemListState {
 	// TODO - Remove selected item here
-	selectedItem: onepass.Item;
+	selectedItem?: onepass.Item;
 
-	hoveredIndex: number;
-	matchingItems: onepass.Item[];
+	hoveredIndex?: number;
+	matchingItems?: onepass.Item[];
 
-	constructor() {
-		this.hoveredIndex = 0;
-		this.matchingItems = [];
-	}
+	visibleIndexes? : {
+		first: number;
+		last: number;
+	};
 }
 
 class ItemListProps {
@@ -635,6 +723,7 @@ class ItemListProps {
 	filter: string;
 	filterUrl: string;
 	onSelectedItemChanged: (item: onepass.Item) => void;
+	iconProvider: item_icons.ItemIconProvider;
 }
 
 class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> {
@@ -656,21 +745,30 @@ class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> 
 	}
 
 	getInitialState() {
-		return new ItemListState();
+		return {
+			selectedItem: <onepass.Item>null,
+			hoveredIndex: 0,
+			matchingItems: <onepass.Item[]>[],
+		};
 	}
 
-	createListItem(item: onepass.Item, hovered: boolean) : Item {
+	createListItem(item: onepass.Item, state: {
+		hovered: boolean;
+		visible: boolean
+	}) : Item {
 		return new Item({
 			key: item.uuid,
 			title: item.title,
-			iconURL: itemIconURL(item),
 			accountName: this.itemAccount(item),
 			location: item.location,
 			domain: itemDomain(item),
 			onSelected: () => {
 				this.setSelectedItem(item);
 			},
-			isHovered: hovered
+			isHovered: state.hovered,
+			iconProvider: this.props.iconProvider,
+			ref: item.uuid,
+			visible: state.visible
 		});
 	}
 
@@ -697,6 +795,11 @@ class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> 
 
 	componentDidMount() {
 		this.updateMatchingItems(this.props);
+		this.updateVisibleItems();
+	}
+
+	componentDidUpdate() {
+		this.updateVisibleItems();
 	}
 
 	componentWillReceiveProps(nextProps: ItemListProps) {
@@ -705,12 +808,64 @@ class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> 
 
 	render() {
 		var listItems = this.state.matchingItems.map((item, index) => {
-			return this.createListItem(item, index == this.state.hoveredIndex);
+			var isVisible = false;
+			if (this.state.visibleIndexes) {
+				isVisible = index >= this.state.visibleIndexes.first &&
+				            index <= this.state.visibleIndexes.last;
+			}
+			return this.createListItem(item, {
+				hovered: index == this.state.hoveredIndex,
+				visible: isVisible
+			});
 		});
 		
-		return react.DOM.div({className: 'itemList'},
+		return react.DOM.div({
+			className: 'itemList',
+			ref: 'itemList',
+			onScroll: (e) => {
+				this.updateVisibleItems()
+			}
+		},
 			listItems
 		);
+	}
+
+	private updateVisibleItems() {
+		var itemList = <HTMLElement>this.refs['itemList'].getDOMNode();
+		if (this.state.matchingItems.length > 0) {
+			var topIndex: number = -1;
+			var bottomIndex: number = -1;
+
+			var itemListRect = itemList.getBoundingClientRect();
+
+			for (var i=0; i < this.state.matchingItems.length; i++) {
+				var item = <HTMLElement>this.refs[this.state.matchingItems[i].uuid].getDOMNode();
+				var itemRect = item.getBoundingClientRect();
+
+				if (topIndex == -1 && itemRect.bottom >= itemListRect.top) {
+					topIndex = i;
+				}
+				if (topIndex != -1) {
+					bottomIndex = i;
+				}
+					
+				if (itemRect.bottom > itemListRect.bottom) {
+					break;
+				}
+			}
+
+			if (!this.state.visibleIndexes ||
+			     topIndex != this.state.visibleIndexes.first ||
+				 bottomIndex != this.state.visibleIndexes.last) {
+
+				this.setState({
+					visibleIndexes: {
+						first: topIndex,
+						last: bottomIndex
+					}
+				});
+			}
+		}
 	}
 
 	private updateMatchingItems(props: ItemListProps) {
@@ -763,16 +918,6 @@ function itemDomain(item: onepass.Item) : string {
 	return parsedUrl.host;
 }
 
-function itemIconURL(item: onepass.Item) : string {
-	// TODO - Setup a service to get much prettier icons for URLs
-	var domain = itemDomain(item);
-	if (domain) {
-		return 'http://' + itemDomain(item) + '/favicon.ico';
-	} else {
-		return null;
-	}
-}
-
 declare var firefoxAddOn: page_access.ExtensionConnector;
 
 export class App {
@@ -812,7 +957,13 @@ export class App {
 			pageAccess = new page_access.ExtensionPageAccess(new page_access.FakeExtensionConnector());
 		}
 
-		this.appView = new AppView(new autofill.AutoFiller(pageAccess));
+		var iconDiskCache = new key_value_store.IndexedDBStore('passcards', 'icon-cache');
+		var services = {
+			iconProvider: new item_icons.ItemIconProvider(iconDiskCache, pageAccess.siteInfoProvider(), 48),
+			autofiller: new autofill.AutoFiller(pageAccess)
+		};
+
+		this.appView = new AppView({services: services});
 		onepass_crypto.CryptoJsCrypto.initWorkers();
 
 		pageAccess.showEvents.listen(() => {
