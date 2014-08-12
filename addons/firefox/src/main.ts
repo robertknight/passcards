@@ -64,7 +64,7 @@ function main() {
 
 	var showPanel = (state: ButtonState) => {
 		if (!mainPanel) {
-			mainPanel = panel.Panel({
+			mainPanel = new panel.Panel({
 				width: 400,
 				height: 400,
 				contentURL : self_.data.url('index.html'),
@@ -136,9 +136,9 @@ function main() {
 		}
 	};
 
-	toolbarButton = buttons.ToggleButton({
-		id: 'onepassweb-icon',
-		label: 'Password Manager',
+	toolbarButton = new buttons.ToggleButton({
+		id: 'passcards-icon',
+		label: 'passcards Password Manager',
 		icon: {
 			'32' : './icon-32.png',
 			'64' : './icon-64.png'
@@ -146,7 +146,7 @@ function main() {
 		onChange: showPanel
 	});
 
-	var hotkey = hotkeys.Hotkey({
+	var hotkey = new hotkeys.Hotkey({
 		combo: 'alt-shift-p',
 		onPress: () => {
 			toolbarButton.click();

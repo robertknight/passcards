@@ -83,10 +83,15 @@ interface ButtonState {
 	checked?: boolean;
 }
 
+interface IconOptions {
+	// map of icon size -> path
+	[size: string]: string;
+}
+
 interface ButtonOptions {
 	id: string;
 	label: string;
-	icon: string;
+	icon: IconOptions;
 	onClick?: (state?: ButtonState) => void;
 	onChange?: (state?: ButtonState) => void;
 }
