@@ -130,7 +130,12 @@ export function compare(first: AbstractBuffer, second: AbstractBuffer, length: n
   * for the (get|set)(U)int(16|32)() functions.
   */
 export class LittleEndianDataView {
+	byteLength: number;
+	buffer: ArrayBuffer;
+
 	constructor(private view: DataView) {
+		this.byteLength = view.byteLength;
+		this.buffer = view.buffer;
 	}
 
 	getUint8(offset: number) {

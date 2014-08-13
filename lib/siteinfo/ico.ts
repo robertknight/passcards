@@ -1,8 +1,12 @@
+/// <reference path="../../typings/sprintf.d.ts" />
+
 // Functions for extracting the size and data of individual icons in a .ico
 // file
 
 // .ico file format reference: http://msdn.microsoft.com/en-us/library/ms997538.aspx
 // and http://en.wikipedia.org/wiki/ICO_(file_format)
+
+import sprintf = require('sprintf');
 
 import collectionutil = require('../base/collectionutil');
 
@@ -64,13 +68,82 @@ export function isIco(data: Uint8Array) : boolean {
 	       data[2] === 1 && data[3] === 0;
 }
 
+var ICON_DIR_SIZE = 6;
+var ICON_DIR_ENTRY_SIZE = 16;
+
+function readNthIcon(leData: collectionutil.LittleEndianDataView, index: number) : Icon {
+	// read icon entry header
+	var offset = ICON_DIR_SIZE + index * ICON_DIR_ENTRY_SIZE;
+
+	var width = leData.getUint8(offset);
+	var height = leData.getUint8(offset+1);
+	var imageDataLength = leData.getUint32(offset + 8);
+	var imageDataOffset = leData.getUint32(offset + 12);
+
+	if (width == 0 || height == 0) {
+		throw new Error(sprintf('Invalid bitmap size (%dx%d)', width, height));
+	}
+	if (imageDataOffset + imageDataLength > leData.byteLength) {
+		throw new Error(sprintf('Invalid bitmap data offset (%d..%d of %d)', imageDataOffset,
+		  (imageDataOffset + imageDataLength), leData.byteLength));
+	}
+
+	// read bitmap data -
+	// the bitmap data format is the same as a .bmp file except:
+	//
+	// 1) The BITMAPFILEHEADER struct is not present
+	// 2) Following the normal bitmap data is a 1bpp mask image
+	//    to be AND-ed with the destination before XOR-ing
+	//    the bitmap color data
+	// 3) The image height is given as the combined height of the
+	//    color data and the mask - so 2x the height of the bitmap
+	var sourceData = new Uint8Array(leData.buffer, imageDataOffset, imageDataLength);
+	var bmpFileHeader = bitmapFileHeader(sourceData);
+	
+	// check BITMAPFILEINFO header for the bitmap
+	// see http://msdn.microsoft.com/en-gb/library/windows/desktop/dd183376%28v=vs.85%29.aspx
+	var biSize = leData.getUint32(imageDataOffset);
+	if (biSize != 40 /* sizeof(BITMAPINFOHEADER) */) {
+		throw new Error(sprintf('Unsupported bitmap format. Header size %d', biSize));
+	}
+
+	var biHeight = leData.getInt32(imageDataOffset + 8);
+	if (biHeight != height * 2) {
+		throw new Error(sprintf('Unexpected bitmap height (%dpx)', biHeight));
+	}
+
+	var BI_RGB = 0;
+	var biCompression = leData.getUint32(imageDataOffset + 16);
+	if (biCompression != BI_RGB) {
+		throw new Error(sprintf('Unsupported bitmap compression type %d', biCompression));
+	}
+
+	var imageData = new Uint8Array(bmpFileHeader.byteLength + imageDataLength);
+	imageData.set(bmpFileHeader);
+	imageData.set(sourceData, bmpFileHeader.byteLength);
+
+	var leImageData = new collectionutil.LittleEndianDataView(new DataView(imageData.buffer));
+
+	// adjust the image height. In the original header it is the combined
+	// height of the mask and the color data. In the exported BMP-format
+	// data, the mask is not present
+	leImageData.setInt32(bmpFileHeader.byteLength + 8, height);
+
+	// set image data size to 0, it is inferred from the image size
+	// and color depth
+	leImageData.setUint32(bmpFileHeader.byteLength + 34, 0);
+
+	return {
+		width: width,
+		height: height,
+		data: imageData
+	};
+}
+
 /** Reads a .ico file containing one or more icons and returns
   * an array of the icons found.
   */
 export function read(data: DataView) : Icon[] {
-	var ICON_DIR_SIZE = 6;
-	var ICON_DIR_ENTRY_SIZE = 16;
-
 	var leData = new collectionutil.LittleEndianDataView(data);
 
 	if (leData.getUint16(0) !== 0 || leData.getUint16(2) !== 1) {
@@ -81,71 +154,11 @@ export function read(data: DataView) : Icon[] {
 	var imageCount = leData.getUint16(4);
 
 	for (var i=0; i < imageCount; i++) {
-		// read icon entry header
-		var offset = ICON_DIR_SIZE + i * ICON_DIR_ENTRY_SIZE;
-
-		var width = leData.getUint8(offset);
-		var height = leData.getUint8(offset+1);
-		var imageDataLength = leData.getUint32(offset + 8);
-		var imageDataOffset = leData.getUint32(offset + 12);
-
-		if (width == 0 || height == 0) {
-			throw new Error('Invalid bitmap size');
+		try {
+			icons.push(readNthIcon(leData, i));
+		} catch (ex) {
+			console.log('Skipping invalid icon: ', ex.message);
 		}
-		if (imageDataOffset + imageDataLength > data.byteLength) {
-			throw new Error('Invalid bitmap leData');
-		}
-
-		// read bitmap data -
-		// the bitmap data format is the same as a .bmp file except:
-		//
-		// 1) The BITMAPFILEHEADER struct is not present
-		// 2) Following the normal bitmap data is a 1bpp mask image
-		//    to be AND-ed with the destination before XOR-ing
-		//    the bitmap color data
-		// 3) The image height is given as the combined height of the
-		//    color data and the mask - so 2x the height of the bitmap
-		var sourceData = new Uint8Array(data.buffer, imageDataOffset, imageDataLength);
-		var bmpFileHeader = bitmapFileHeader(sourceData);
-		
-		// check BITMAPFILEINFO header for the bitmap
-		// see http://msdn.microsoft.com/en-gb/library/windows/desktop/dd183376%28v=vs.85%29.aspx
-		var biSize = leData.getUint32(imageDataOffset);
-		if (biSize != 40 /* sizeof(BITMAPINFOHEADER) */) {
-			throw new Error('Unsupported bitmap format');
-		}
-
-		var biHeight = leData.getInt32(imageDataOffset + 8);
-		if (biHeight != height * 2) {
-			throw new Error('Unexpected bitmap height');
-		}
-
-		var BI_RGB = 0;
-		var biCompression = leData.getUint32(imageDataOffset + 30);
-		if (biCompression != BI_RGB) {
-			throw new Error('Unsupported bitmap compression type');
-		}
-
-		var imageData = new Uint8Array(bmpFileHeader.byteLength + imageDataLength);
-		imageData.set(bmpFileHeader);
-		imageData.set(sourceData, bmpFileHeader.byteLength);
-
-		var leImageData = new collectionutil.LittleEndianDataView(new DataView(imageData.buffer));
-
-		// adjust the image height. In the original header it is the combined
-		// height of the mask and the color data. In the exported BMP-format
-		// data, the mask is not present
-		leImageData.setInt32(bmpFileHeader.byteLength + 8, height);
-
-		// set image data size to 0, it is inferred from the image size
-		// and color depth
-		leImageData.setUint32(bmpFileHeader.byteLength + 34, 0);
-
-		icons.push({
-			width: width,
-			height: height,
-			data: imageData
-		});
 	}
 
 	return icons;
