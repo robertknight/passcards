@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/robertknight/1pass-web.png?branch=master)](https://travis-ci.org/robertknight/1pass-web)
+[![Build Status](https://travis-ci.org/robertknight/passcards.png?branch=master)](https://travis-ci.org/robertknight/passcards)
 
 *passcards* is a web, browser extension and command-line based password manager under development.
 
@@ -21,7 +21,7 @@ See `passcards --help` for a list of supported commands.
 ## Web App
 
 The web client is currently in the very early stages of development.
-You can access the [current alpha version here](https://robertknight.github.io/1pass-web/app/index.html)
+You can access the [current alpha version here](https://robertknight.github.io/passcards/app/index.html)
 
 ## Browser Extensions
 

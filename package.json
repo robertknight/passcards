@@ -46,9 +46,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "http://github.com/robertknight/1pass-web.git"
+    "url": "http://github.com/robertknight/passcards.git"
   },
-  "homepage": "http://github.com/robertknight/1pass-web",
+  "homepage": "http://github.com/robertknight/passcards",
   "author": {
     "name": "Robert Knight",
     "email": "robertknight@gmail.com"
