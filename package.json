@@ -4,9 +4,11 @@
   "version": "0.7.0",
   "devDependencies": {
     "browserify": ">=3.46.0",
-    "typescript": ">=1.0",
-    "tslint": ">=0.4.8",
+    "jpm": "0.0.13",
+    "less": "^1.7.4",
     "qunitjs": ">=1.14",
+    "tslint": ">=0.4.8",
+    "typescript": ">=1.0",
     "xdiff": ">=0.2.11"
   },
   "dependencies": {
