@@ -1,5 +1,6 @@
 BROWSERIFY=browserify
 FOREACH_FILE=tr ' ' '\n' | xargs -n 1
+JPM=jpm
 NODE=node
 ROOT_DIR=$(dir $(abspath package.json))
 SILENCE_CMD=1>/dev/null 2>/dev/null

@@ -1,12 +1,14 @@
 include ../../common.mk
 
-all: passcards.xpi
+XPI_PACKAGE=passcards@robertknight.github.io.xpi
 
-passcards.xpi: build/xpi_content
-	$(CFX) xpi
+all: $(XPI_PACKAGE)
+
+$(XPI_PACKAGE): build/xpi_content
+	$(JPM) xpi
 
 run: build/xpi_content
-	$(CFX) run
+	$(JPM) run
 
 build/xpi_content: lib/main.js data/index.html data/scripts/webui_bundle.js data/scripts/crypto_worker.js data/style/app.css data/panel.html data/scripts/panel_content.js data/scripts/page.js data/icon-32.png data/icon-64.png data/loading.png data/default.png
 	@mkdir -p build/xpi_content

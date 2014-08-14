@@ -14,6 +14,7 @@ webui_css_dir=webui/style
 submodule_marker=build/submodule_marker
 nodemodule_marker=build/nodemodule_marker
 dropboxjs_lib=node_modules/dropbox/lib/dropbox.js
+xpi_file=addons/firefox/passcards@robertknight.github.io.xpi
 
 deps=$(submodule_marker) $(nodemodule_marker) $(dropboxjs_lib)
 
@@ -97,3 +98,6 @@ publish-app: webui-build
 
 publish-app-s3: webui-build
 	 s3cmd --acl-public -c $(S3_CONFIG_FILE) sync webui/ s3://$(S3_PATH)
+
+xpi:
+	cd addons/firefox && make
