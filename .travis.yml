@@ -1,8 +1,12 @@
 language: node_js
 notifications:
-    email: false
+  email: false
 node_js:
- # - "0.11" // FIXME - Support node.js v0.11
- - "0.10"
+  - '0.10'
 after_script:
- - make test-package
+  - make test-package
+deploy:
+  provider: npm
+  email: robertknight@gmail.com
+  api_key:
+    secure: RhRzH7umr4QyFjScdoR1nsWn/BHjQGrqwpFiavQzMgd1cEEnuWtTju8puGFct8++SJXH3bfcLp9kqtg3S2BB2qQM8ZqHlU1WGh8rKvgaFtmZCMdITPWqGmL/AuKQi+JL272jnReqwxi/leTNI1OQXL3TJXRv33JHDJphKJ+vGtE=
