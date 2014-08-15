@@ -17,7 +17,7 @@ app.
 See [the passcards site](http://robertknight.github.io/passcards/) for links to
 current releases.
 
-### Local Development
+## Development
 
 Local development requires Node.js 0.10 and make. To build the CLI and web clients, clone the source and run `make`.
 
