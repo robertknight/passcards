@@ -1,4 +1,5 @@
 SRC_ROOT=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+PKG_DIR=$(SRC_ROOT)/pkg
 
 BROWSERIFY=browserify
 FOREACH_FILE=tr ' ' '\n' | xargs -n 1

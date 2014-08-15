@@ -3,6 +3,7 @@
 
 tags
 build
+pkg
 node_modules
 webui/scripts
 webui/style

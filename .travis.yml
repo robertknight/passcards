@@ -3,10 +3,24 @@ notifications:
   email: false
 node_js:
   - '0.10'
-after_script:
+before_deploy:
   - make test-package
+  - export PATH=$PWD/node_modules/.bin:$PATH
+  - make xpi
 deploy:
-  provider: npm
-  email: robertknight@gmail.com
-  api_key:
-    secure: RhRzH7umr4QyFjScdoR1nsWn/BHjQGrqwpFiavQzMgd1cEEnuWtTju8puGFct8++SJXH3bfcLp9kqtg3S2BB2qQM8ZqHlU1WGh8rKvgaFtmZCMdITPWqGmL/AuKQi+JL272jnReqwxi/leTNI1OQXL3TJXRv33JHDJphKJ+vGtE=
+  - provider: npm
+    email: robertknight@gmail.com
+    api_key:
+      secure: RhRzH7umr4QyFjScdoR1nsWn/BHjQGrqwpFiavQzMgd1cEEnuWtTju8puGFct8++SJXH3bfcLp9kqtg3S2BB2qQM8ZqHlU1WGh8rKvgaFtmZCMdITPWqGmL/AuKQi+JL272jnReqwxi/leTNI1OQXL3TJXRv33JHDJphKJ+vGtE=
+    skip_cleanup: true
+  - provider: s3
+    access_key_id: AKIAJLAC2I2QPV6E33GA
+    secret_access_key:
+      secure: YyxwCqc8aPvsX432y3YhnRye2c/hyYylu6EBSGxgDG0Jg7IXtHKkcslGPvTdjbX8fw5wDliM8a/4J+qGNlbxz7hzXSf5n4Hf7jsTTmTMl/QGqtfwRRElqO2zihEpMaLwU/r9p36G9gOu41emIAsXX7jsrEwCHySm500k60nj6V0=
+    bucket: "io.github.robertknight"
+    skip_cleanup: true
+    local-dir: pkg
+    upload-dir: passcards/builds/latest
+    on:
+      branch: master
+    acl: public_read

@@ -1,10 +1,11 @@
 include ../../common.mk
 
-XPI_PACKAGE=passcards@robertknight.github.io.xpi
+XPI_PACKAGE=$(PKG_DIR)/passcards@robertknight.github.io.xpi
 
 all: $(XPI_PACKAGE)
 
 $(XPI_PACKAGE): build/xpi_content
+	mkdir -p $(PKG_DIR)
 	$(CFX) xpi --output-file=$(XPI_PACKAGE)
 
 run: build/xpi_content
