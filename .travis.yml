@@ -33,5 +33,5 @@ deploy:
     local-dir: webui
     upload-dir: passcards/web/latest
     on:
-      branch: release
+      branch: master
     acl: public_read
