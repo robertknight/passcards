@@ -4,24 +4,24 @@
 // to collect details of fill-able fields and auto-fill
 // fields
 
-import page_access = require('../../../webui/page_access');
+import forms = require('../../../webui/forms');
 import rpc = require('./rpc');
 
 var selfWorker: ContentWorker = <any>self;
 var portRpc = new rpc.RpcHandler(selfWorker.port);
 
-function inputFieldType(typeStr: string) : page_access.FieldType {
+function inputFieldType(typeStr: string) : forms.FieldType {
 	switch (typeStr.toLowerCase()) {
 		case 'email':
-			return page_access.FieldType.Email;
+			return forms.FieldType.Email;
 		case 'password':
-			return page_access.FieldType.Password;
+			return forms.FieldType.Password;
 		case 'checkbox':
 		case 'button':
 		case 'radio':
-			return page_access.FieldType.Other;
+			return forms.FieldType.Other;
 		default:
-			return page_access.FieldType.Text;
+			return forms.FieldType.Text;
 	}
 }
 
@@ -31,12 +31,12 @@ portRpc.on('find-fields', () => {
 	lastFields = [];
 
 	var fieldElements = document.getElementsByTagName('input');
-	var fields: page_access.InputField[] = [];
+	var fields: forms.InputField[] = [];
 	for (var i=0; i < fieldElements.length; i++) {
 		var elt = fieldElements.item(i);
 		lastFields.push(elt);
 
-		var field : page_access.InputField = {
+		var field : forms.InputField = {
 			key: fields.length,
 			id: elt.id,
 			name: elt.name,
@@ -54,7 +54,7 @@ portRpc.on('find-fields', () => {
 	return fields;
 });
 
-portRpc.on('autofill', (entries: page_access.AutoFillEntry[]) => {
+portRpc.on('autofill', (entries: forms.AutoFillEntry[]) => {
 	var filled = 0;
 
 	entries.forEach((entry) => {

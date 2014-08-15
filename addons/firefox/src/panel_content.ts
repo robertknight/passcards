@@ -7,6 +7,7 @@
 // for use by the app when it loads.
 
 import collectionutil = require('../../../lib/base/collectionutil');
+import forms = require('../../../webui/forms');
 import stringutil = require('../../../lib/base/stringutil');
 import page_access = require('../../../webui/page_access');
 import rpc = require('../../../lib/net/rpc');
@@ -31,12 +32,12 @@ pageAccess.syncService = selfWorker.options.syncService;
 pageAccess.oauthRedirectUrl = OAUTH_REDIRECT_URL;
 
 appRpc.onAsync('find-fields', (done) => {
-	addonRpc.call('find-fields', [], (err: any, fields: page_access.InputField[]) => {
+	addonRpc.call('find-fields', [], (err: any, fields: forms.InputField[]) => {
 		done(err, fields);
 	});
 });
 
-appRpc.onAsync('autofill', (done: (err: any, count: number) => void, fields: page_access.AutoFillEntry[]) => {
+appRpc.onAsync('autofill', (done: (err: any, count: number) => void, fields: forms.AutoFillEntry[]) => {
 	addonRpc.call('autofill', [fields], (err: any, count: number) => {
 		done(err, count);
 	});

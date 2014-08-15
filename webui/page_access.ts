@@ -4,31 +4,10 @@
 import Q = require('q');
 
 import event_stream = require('../lib/base/event_stream');
+import forms = require('./forms');
 import rpc = require('../lib/net/rpc');
 import site_info = require('../lib/siteinfo/site_info');
 import site_info_service = require('../lib/siteinfo/service');
-
-export enum FieldType {
-	Text,
-	Password,
-	Email,
-	Other
-}
-
-export interface InputField {
-	key: any;
-	type: FieldType;
-
-	id?: string;
-	name?: string;
-	ariaLabel?: string;
-	placeholder?: string;
-}
-
-export interface AutoFillEntry {
-	key: any;
-	value: string;
-}
 
 class ExtensionUrlFetcher {
 	private rpc: rpc.RpcHandler;
@@ -65,10 +44,10 @@ export interface PageAccess {
 	oauthRedirectUrl() : string;
 
 	/** Fetch a list of auto-fillable fields on the current page. */
-	findForms(callback: (formList: InputField[]) => void) : void;
+	findForms(callback: (formList: forms.InputField[]) => void) : void;
 
 	/** Auto-fill fields on the current page */
-	autofill(fields: AutoFillEntry[]) : void;
+	autofill(fields: forms.AutoFillEntry[]) : void;
 	
 	/** Emits events when the extension's UI is shown. */
 	showEvents: event_stream.EventStream<void>;
@@ -144,13 +123,13 @@ export class ExtensionPageAccess implements PageAccess {
 		});
 	}
 
-	findForms(callback: (formList: InputField[]) => void) {
-		this.rpc.call('find-fields', [], (err: any, forms: InputField[]) => {
+	findForms(callback: (fieldList: forms.InputField[]) => void) {
+		this.rpc.call('find-fields', [], (err: any, fieldList: forms.InputField[]) => {
 			if (err) {
 				callback([]);
 				return;
 			}
-			callback(forms);
+			callback(fieldList);
 		});
 	}
 
@@ -158,7 +137,7 @@ export class ExtensionPageAccess implements PageAccess {
 		return this.connector.oauthRedirectUrl;
 	}
 
-	autofill(fields: AutoFillEntry[]) {
+	autofill(fields: forms.AutoFillEntry[]) {
 		this.rpc.call('autofill', [fields], (err: any, count: number) => {
 			if (err) {
 				// TODO - Show user an indicator that autofill failed
