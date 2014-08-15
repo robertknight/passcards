@@ -1,6 +1,7 @@
+SRC_ROOT=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+
 BROWSERIFY=browserify
 FOREACH_FILE=tr ' ' '\n' | xargs -n 1
-JPM=jpm
 NODE=node
 ROOT_DIR=$(dir $(abspath package.json))
 SILENCE_CMD=1>/dev/null 2>/dev/null
@@ -10,4 +11,10 @@ TSC=tsc -m commonjs --noImplicitAny --sourcemap
 TSLINT=tslint
 
 # CFX tool for building and testing Firefox addons
-CFX=cfx
+CFX=$(SRC_ROOT)/vendor/firefox-addon-sdk/bin/cfx
+
+# JPM (Node.js-based successor to CFX) for building
+# and testing Firefox addons.
+#
+# Requires Firefox >= 33
+JPM=jpm

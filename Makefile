@@ -99,5 +99,5 @@ publish-app: webui-build
 publish-app-s3: webui-build
 	 s3cmd --acl-public -c $(S3_CONFIG_FILE) sync webui/ s3://$(S3_PATH)
 
-xpi:
+xpi: webui-build
 	cd addons/firefox && make
