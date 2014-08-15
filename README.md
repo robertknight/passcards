@@ -9,29 +9,24 @@ Both the command-line client and the web client are designed
 for use with Dropbox. To use them with an existing 1Password vault,
 you'll need to enable Dropbox syncing within the official 1Password apps.
 
-## Command-line Client Installation
+## Installation
 
-```
-npm install -g passcards
-```
+passcards is available as a browser add-on for Firefox, a web app and a command-line
+app.
 
-After installing the command-line app, it can be run using `passcards <command>`.
-See `passcards --help` for a list of supported commands.
-
-## Web App
-
-The web client is currently in the very early stages of development.
-You can access the [current alpha version here](https://robertknight.github.io/passcards/app/index.html)
-
-## Browser Extensions
-
-A browser extension for Firefox is also in the early stages of development. It requires Firefox 30 or later.
+See [the passcards site](http://robertknight.github.io/passcards/) for links to
+current releases.
 
 ### Local Development
 
-### CLI and Web UI
-
 Local development requires Node.js 0.10 and make. To build the CLI and web clients, clone the source and run `make`.
+
+```
+git clone https://github.com/robertknight/passcards
+make all
+```
+
+### Running the Web App Locally
 
 The web client is a single page application. The Dropbox client keys in the source are configured to allow
 the app to be served from [http://localhost:8000/webui/index.html](http://localhost:8000/webui/index.html) . You can set up a server for this locally
