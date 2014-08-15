@@ -24,3 +24,14 @@ deploy:
     on:
       branch: master
     acl: public_read
+  - provider: s3
+    access_key_id: AKIAJLAC2I2QPV6E33GA
+    secret_access_key:
+      secure: YyxwCqc8aPvsX432y3YhnRye2c/hyYylu6EBSGxgDG0Jg7IXtHKkcslGPvTdjbX8fw5wDliM8a/4J+qGNlbxz7hzXSf5n4Hf7jsTTmTMl/QGqtfwRRElqO2zihEpMaLwU/r9p36G9gOu41emIAsXX7jsrEwCHySm500k60nj6V0=
+    bucket: "io.github.robertknight"
+    skip_cleanup: true
+    local-dir: webui
+    upload-dir: passcards/web/latest
+    on:
+      branch: release
+    acl: public_read
