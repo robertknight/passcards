@@ -29,3 +29,10 @@ export function isFirefoxAddon() {
 	return isBrowser() && window.location.protocol == 'resource:';
 }
 
+/** Returns true if running as a content script
+  * in a Google Chrome extension
+  */
+export function isChromeExtension() {
+	return isBrowser() && window.location.protocol == 'chrome-extension:';
+}
+
