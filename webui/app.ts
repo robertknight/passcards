@@ -935,12 +935,21 @@ export class App {
 		if (env.isFirefoxAddon()) {
 			if (firefoxAddOn.syncService === 'dropbox') {
 				fs = new dropboxvfs.DropboxVFS({
+					authMode: dropboxvfs.AuthMode.Redirect,
 					authRedirectUrl: firefoxAddOn.oauthRedirectUrl,
-					disableLocationCleanup: true
+					disableLocationCleanup: true,
+					receiverPage: ''
 				});
 			} else if (firefoxAddOn.syncService === 'httpfs') {
 				fs = new http_vfs.Client('http://localhost:3030');
 			}
+		} else if (env.isChromeExtension()) {
+			fs = new dropboxvfs.DropboxVFS({
+				authMode: dropboxvfs.AuthMode.ChromeExtension,
+				authRedirectUrl: '',
+				disableLocationCleanup: true,
+				receiverPage: 'chrome_dropbox_oauth_receiver.html'
+			});
 		}
 
 		if (!fs) {

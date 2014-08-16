@@ -6,7 +6,14 @@ import Q = require('q');
 
 import vfs = require('./vfs');
 
+export enum AuthMode {
+	Redirect,
+	ChromeExtension
+}
+
 export interface Options {
+	authMode: AuthMode;
+
 	/** The URL which the browser should be redirected back to
 	  * after completing OAuth login.
 	  *
@@ -17,6 +24,11 @@ export interface Options {
 	  */
 	authRedirectUrl: string;
 	disableLocationCleanup: boolean;
+	
+	/** Specifies the URL to the post-authentication receiver
+	  * page when using the Chrome auth driver.
+	  */
+	receiverPage: string;
 }
 
 export class DropboxVFS implements vfs.VFS {
@@ -26,11 +38,18 @@ export class DropboxVFS implements vfs.VFS {
 		var apiKeys = { "key" : "3lq6pyowxfvad8z" }
 		this.client = new dropbox.Client(apiKeys);
 
-		var redirectOpts: dropbox.AuthDriver.RedirectDriverOpts = {};
-		if (options) {
-			redirectOpts.redirectUrl = options.authRedirectUrl;
+		if (!options || options.authMode == AuthMode.Redirect) {
+			var redirectOpts: dropbox.AuthDriver.RedirectDriverOpts = {};
+			if (options) {
+				redirectOpts.redirectUrl = options.authRedirectUrl;
+			}
+			this.client.authDriver(new dropbox.AuthDriver.Redirect(redirectOpts));
+		} else if (options.authMode == AuthMode.ChromeExtension) {
+			this.client.authDriver(new dropbox.AuthDriver.ChromeExtension({
+				receiverPath: options.receiverPage
+			}));
 		}
-		this.client.authDriver(new dropbox.AuthDriver.Redirect(redirectOpts));
+
 		this.client.onError.addListener((error) => {
 			console.log(error);
 		});
@@ -58,7 +77,7 @@ export class DropboxVFS implements vfs.VFS {
 		console.log('Logging into Dropbox...');
 		this.client.authenticate((err, accountID) => {
 			if (err) {
-				console.log('Dropbox login failed');
+				console.log('Dropbox login failed:', err);
 				account.reject(err);
 				return;
 			}

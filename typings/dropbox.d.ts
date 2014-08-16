@@ -61,6 +61,14 @@ declare module "dropbox" {
 		export var Redirect : {
 			new(options: RedirectDriverOpts) : AuthDriver;
 		}
+
+		interface ChromeDriverOpts {
+			receiverPath: string;
+		}
+
+		export var ChromeExtension : {
+			new(options: ChromeDriverOpts) : AuthDriver;
+		}
 	}
 
 	export module File {
