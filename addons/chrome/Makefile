@@ -1,8 +1,17 @@
 include ../../common.mk
 
 CRX_PACKAGE=$(PKG_DIR)/passcards.crx
+ZIP_PACKAGE=$(PKG_DIR)/passcards.zip
 
 all: $(CRX_PACKAGE)
+
+zip: $(ZIP_PACKAGE)
+
+$(ZIP_PACKAGE): scripts style icons
+	rm $(ZIP_PACKAGE)
+	zip --exclude '.*' -r $(ZIP_PACKAGE) .
+
+crx: $(CRX_PACKAGE)
 
 $(CRX_PACKAGE): scripts style icons
 	$(CRX) . -f $(CRX_PACKAGE)
