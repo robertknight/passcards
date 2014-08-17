@@ -1,6 +1,11 @@
-NODE_MODULE_DIR=../../node_modules
+include ../../common.mk
 
-all: scripts style icons
+CRX_PACKAGE=$(PKG_DIR)/passcards.crx
+
+all: $(CRX_PACKAGE)
+
+$(CRX_PACKAGE): scripts style icons
+	$(CRX) . -f $(CRX_PACKAGE)
 
 scripts: ../../webui/scripts/*.js src/*.js
 	mkdir -p data/scripts
