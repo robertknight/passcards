@@ -1,7 +1,13 @@
 /// <reference path="../typings/DefinitelyTyped/jquery/jquery.d.ts" />
 
 import $ = require('jquery');
+
 import app = require('./app');
+import env = require('../lib/base/env');
+
+interface AppWindow extends Window {
+	renderApp(element: HTMLElement) : void;
+}
 
 $(document).ready(() => {
 	// redirect to a secure connection unless this copy of the app
@@ -12,7 +18,14 @@ $(document).ready(() => {
 		return;
 	}
 
-	var unused = new app.App();
-	unused = unused; // suppress tslint error about expecting assignment or func call
+	var theApp = new app.App();
+	if (!env.isChromeExtension()) {
+		theApp.renderInto(document.getElementById('app-view'));
+	}
+
+	var appWindow = <AppWindow>window;
+	appWindow.renderApp = (element) => {
+		theApp.renderInto(element);
+	};
 });
 

@@ -16,6 +16,14 @@
 	"icons" : {
 		"32" : "data/icons/icon-32.png",
 		"64" : "data/icons/icon-64.png"
+	},
+
+	"web_accessible_resources" : [
+		"data/chrome_dropbox_oauth_receiver.html"
+	],
+
+	"background" : {
+		"page" : "data/background.html"
 	}
 }
 

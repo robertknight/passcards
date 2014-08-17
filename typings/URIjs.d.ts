@@ -8,6 +8,7 @@ interface ParsedURI {
 	hostname() : string;
 	path() : string;
 	port() : string;
+	query() : string;
 	scheme() : string;
 	subdomain() : string;
 
@@ -15,6 +16,8 @@ interface ParsedURI {
 	relativeTo(url: string): ParsedURI;
 
 	toString() : string;
+
+	addQuery(key: string, value: string) : void;
 }
 
 interface URIParts {
@@ -28,12 +31,17 @@ interface URIParts {
 	fragment?: string;
 }
 
+interface ParsedQuery {
+	[key: string] : string;
+}
+
 interface URIjs {
 	(url: string) : ParsedURI;
 	(url: URIParts) : ParsedURI;
 
 	parse(uri: string) : URIParts;
 	build(parts: URIParts) : string;
+	parseQuery(query: string) : ParsedQuery;
 }
 
 declare module "URIjs" {

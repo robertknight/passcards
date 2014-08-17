@@ -35,8 +35,10 @@ export class DropboxVFS implements vfs.VFS {
 	private client : dropbox.Client;
 
 	constructor(options?: Options) {
-		var apiKeys = { "key" : "3lq6pyowxfvad8z" }
-		this.client = new dropbox.Client(apiKeys);
+		var clientOpts = {
+			key : "3lq6pyowxfvad8z"
+		};
+		this.client = new dropbox.Client(clientOpts);
 
 		if (!options || options.authMode == AuthMode.Redirect) {
 			var redirectOpts: dropbox.AuthDriver.RedirectDriverOpts = {};
@@ -74,7 +76,6 @@ export class DropboxVFS implements vfs.VFS {
 
 	login() : Q.Promise<string> {
 		var account = Q.defer<string>();
-		console.log('Logging into Dropbox...');
 		this.client.authenticate((err, accountID) => {
 			if (err) {
 				console.log('Dropbox login failed:', err);
