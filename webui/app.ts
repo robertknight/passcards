@@ -969,6 +969,8 @@ export class App {
 		var pageAccess: page_access.PageAccess;
 		if (typeof firefoxAddOn != 'undefined') {
 			pageAccess = new page_access.ExtensionPageAccess(firefoxAddOn);
+		} else if (env.isChromeExtension()) {
+			pageAccess = new page_access.ChromeExtensionPageAccess();
 		} else {
 			pageAccess = new page_access.ExtensionPageAccess(new page_access.FakeExtensionConnector());
 		}

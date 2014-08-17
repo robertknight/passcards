@@ -1,3 +1,4 @@
+/// <reference path="../typings/DefinitelyTyped/chrome/chrome.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
 
@@ -151,3 +152,63 @@ export class ExtensionPageAccess implements PageAccess {
 	}
 };
 
+/** Methods added to the `window` object for notifications
+  * from the popup
+  */
+interface ChromeExtBackgroundWindow extends Window {
+	notifyPageChanged(tab: chrome.tabs.Tab) : void;
+}
+
+/** Connector between the main app and the active tab in the Chrome
+  * extension.
+  */
+export class ChromeExtensionPageAccess implements PageAccess {
+	private siteInfoService: site_info_service.SiteInfoService;
+
+	showEvents: event_stream.EventStream<void>;
+	pageChanged: event_stream.EventStream<string>;
+	currentUrl: string;
+	
+	constructor() {
+		this.currentUrl = '';
+		this.showEvents = new event_stream.EventStream<void>();
+		this.pageChanged = new event_stream.EventStream<string>();
+		this.siteInfoService = new site_info_service.SiteInfoService({
+			fetch: (url) => {
+				return Q.reject(new Error('URL fetching not implemented in Chrome extension'));
+			}
+		});
+
+		// expose a function to allow the passcards browser action
+		// to notify the extension when the URL for the active tab changes
+		var chromeExtBackgroundWindow = <ChromeExtBackgroundWindow>window;
+		chromeExtBackgroundWindow.notifyPageChanged = (tab: chrome.tabs.Tab) => {
+			this.currentUrl = tab.url;
+			this.pageChanged.publish(tab.url);
+
+			chrome.tabs.executeScript(null, {
+				file: 'data/scripts/page.js'
+			});
+			
+			this.showEvents.publish(null);
+		};
+	}
+
+	oauthRedirectUrl() : string {
+		// Chrome extension uses a custom driver
+		// instead of the standard redirect flow
+		return null;
+	}
+
+	findForms(callback: (formList: InputField[]) => void) : void {
+		console.log('ChromePageAccess.findForms() not implemented');
+	}
+
+	autofill(fields: AutoFillEntry[]) : void {
+		console.log('ChromePageAccess.autofill() not implemented');
+	}
+	
+	siteInfoProvider() : site_info.SiteInfoProvider {
+		return this.siteInfoService;
+	}
+}
