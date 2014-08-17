@@ -3,7 +3,7 @@
 
 	"name" : "passcards",
 	"description" : "A Simple Password Manager",
-	"version" : "0.1",
+	"version" : "0.1.1",
 	"homepage_url" : "https://robertknight.github.io/passcards",
 
 	"permissions" : ["storage", "https://*.dropbox.com/"],
