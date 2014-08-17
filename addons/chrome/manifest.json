@@ -24,6 +24,8 @@
 
 	"background" : {
 		"page" : "data/background.html"
-	}
+	},
+
+	"key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAycUdcf9EE2q41p4wbf6T1EWqs7XJLprlwAmDWMXbIyuc6HA9zkrxZIAteEcmDMZVtaINRxtMrBSFDM03NMIIhc2UwYlzl1juQUokQFcApEAnRlmTTGHvJjxaNHkQBbzPgsIRDsSOwaX9dX7qEJufiPLSwL0ykWCYHdOiq2RtOsThx/i+0xwq2QRBywokCL9DcHEU4fw4/0jKPFYSG7FCdTGpcxQsNA/hltOA5PlmKvvo4UKfkdFATDdIqclAPL8ZNmBN8oTt7gCDEQZF2WYbM6Lt+69309zvwcqsa5Xg1ALMEE6lg7kiADoayeVFoF/eghMdLgbaR0+neN7xTqMHawIDAQAB"
 }
 
