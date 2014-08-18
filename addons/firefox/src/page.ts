@@ -5,7 +5,7 @@
 // fields
 
 import forms = require('../../../webui/forms');
-import rpc = require('./rpc');
+import rpc = require('../../../lib/net/rpc');
 
 var selfWorker: ContentWorker = <any>self;
 var portRpc = new rpc.RpcHandler(selfWorker.port);

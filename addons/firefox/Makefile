@@ -15,11 +15,15 @@ build/xpi_content: lib/main.js data/index.html data/scripts/webui_bundle.js data
 	@mkdir -p build/xpi_content
 	@touch build/xpi_content
 
-lib/main.js: src/main.ts src/rpc.ts
-	$(TSC) src/main.ts --outDir lib/
-
-src/rpc.ts: ../../lib/net/rpc.ts
-	cp ../../lib/net/rpc.ts src/rpc.ts
+lib/main.js: src/main.ts
+	$(TSC) src/main.ts --outDir build/
+	mkdir -p lib
+	# Re-write 'rpc' require() to avoid error with 'cfx'
+	# when trying to require() a dependency outside of the current
+	# dir tree
+	cp build/lib/net/rpc.js lib/
+	cp build/addons/firefox/src/main.js lib/
+	sed -i 's/..\/..\/..\/lib\/net\/rpc/.\/rpc/' lib/main.js
 
 data/scripts:
 	mkdir -p data/scripts

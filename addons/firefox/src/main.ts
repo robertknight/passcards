@@ -8,7 +8,7 @@ import self_ = require('sdk/self');
 import tabs = require('sdk/tabs');
 import xhr = require('sdk/net/xhr');
 
-import rpc = require('./rpc');
+import rpc = require('../../../lib/net/rpc');
 
 interface PageWorker extends ContentWorker {
 	rpc?: rpc.RpcHandler;
