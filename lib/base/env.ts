@@ -1,5 +1,10 @@
+/// <reference path="../../typings/DefinitelyTyped/node/node.d.ts" />
+
 // env.ts provides functions to query the host Javascript
 // environment
+
+// This module has no dependencies to facilitate easier re-use across
+// different JS environments
 
 /** Returns true if running in the main browser
   * environment with DOM access.
@@ -29,10 +34,10 @@ export function isFirefoxAddon() {
 	return isBrowser() && window.location.protocol == 'resource:';
 }
 
-/** Returns true if running as a content script
-  * in a Google Chrome extension
+/** Returns true if running as a content or
+  * background script in a Google Chrome extension
   */
 export function isChromeExtension() {
-	return isBrowser() && window.location.protocol == 'chrome-extension:';
+	return isBrowser() && typeof chrome != 'undefined';
 }
 

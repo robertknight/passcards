@@ -56,9 +56,8 @@ data/scripts/panel_content.js: data/scripts src/panel_content.ts
 	$(TSC) --outDir build/ src/panel_content.ts 
 	$(BROWSERIFY) --no-builtins build/addons/firefox/src/panel_content.js > data/scripts/panel_content.js
 
-data/scripts/page.js: data/scripts src/page.ts
-	$(TSC) --outDir build/ src/page.ts
-	$(BROWSERIFY) --no-builtins build/addons/firefox/src/page.js > data/scripts/page.js
+data/scripts/page.js: data/scripts ../../webui/scripts/page_bundle.js
+	cp ../../webui/scripts/page_bundle.js data/scripts/
 
 data/style/app.css: data/style ../../webui/style/app.css
 	cp ../../webui/style/app.css data/style/

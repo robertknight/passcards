@@ -1,14 +1,21 @@
-/// <reference path="../typings/firefox-content-script.d.ts" />
+/// <reference path="../addons/firefox/typings/firefox-content-script.d.ts" />
 
 // the page script which is injected into browser tabs
 // to collect details of fill-able fields and auto-fill
 // fields
 
-import forms = require('../../../webui/forms');
-import rpc = require('../../../lib/net/rpc');
+import env = require('../lib/base/env');
+import forms = require('../webui/forms');
+import rpc = require('../lib/net/rpc');
 
-var selfWorker: ContentWorker = <any>self;
-var portRpc = new rpc.RpcHandler(selfWorker.port);
+var portRpc: rpc.RpcHandler;
+
+if (env.isChromeExtension()) {
+	portRpc = new rpc.RpcHandler(new rpc.ChromeMessagePort());
+} else {
+	var selfWorker: ContentWorker = <any>self;
+	portRpc = new rpc.RpcHandler(selfWorker.port);
+}
 
 function inputFieldType(typeStr: string) : forms.FieldType {
 	switch (typeStr.toLowerCase()) {

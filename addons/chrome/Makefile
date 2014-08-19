@@ -20,7 +20,6 @@ scripts: ../../webui/scripts/*.js src/*.js
 	mkdir -p data/scripts
 	cp ../../webui/scripts/*.js data/scripts
 	cp $(NODE_MODULE_DIR)/dropbox/lib/dropbox.js data/scripts
-	cp src/*.js data/scripts
 
 style: ../../webui/style/*.css
 	mkdir -p data/style
