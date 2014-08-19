@@ -5,8 +5,7 @@
 It uses the [1Password](https://agilebits.com/onepassword) password vault format and is designed
 to be usable alongside the official 1Password apps.
 
-Both the command-line client and the web client are designed
-for use with Dropbox. To use them with an existing 1Password vault,
+The passcards apps are designed for use with Dropbox. To use them with an existing 1Password vault,
 you'll need to enable Dropbox syncing within the official 1Password apps.
 
 ## Installation
@@ -28,7 +27,7 @@ make all
 
 ### Running the Web App Locally
 
-The web client is a single page application. The Dropbox client keys in the source are configured to allowG
+The web client is a single page application. The Dropbox client keys in the source are configured to allow
 the app to be served from [http://localhost:8000/webui/index.html](http://localhost:8000/webui/index.html) . You can set up a server for this locally
 by running, from the root of a source checkout, `python -m SimpleHTTPServer`.
 
