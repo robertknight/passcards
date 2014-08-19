@@ -1,3 +1,5 @@
+/// <reference path="../../typings/DefinitelyTyped/chrome/chrome.d.ts" />
+
 /** `rpc` provides an interface for making RPC calls between
   * isolated objects such as two Windows in different domains,
   * workers or browser extension scripts and web front-ends etc.
@@ -107,6 +109,43 @@ export class WindowMessagePort {
 			data: data,
 			tag: this.sendTag
 		}, this.targetOrigin);
+	}
+}
+
+interface ChromeEvent extends chrome.events.Event {
+	addListener(callback: (message: any, sender: any, reply: any) => void): void;
+}
+
+export class ChromeMessagePort {
+	constructor(public targetTab?: number) {
+	}
+
+	on(method: string, handler: Function) : void {
+		var onMessage = <ChromeEvent>chrome.runtime.onMessage;
+		onMessage.addListener((msg, sender) => {
+			if (typeof msg.rpcMethod !== 'string' ||
+			    msg.rpcMethod != method) {
+				return;
+			}
+			if (this.targetTab) {
+				if (!sender.tab || sender.tab.id != this.targetTab) {
+					return;
+				}
+			}
+			handler(msg.data);
+		});
+	}
+
+	emit(method: string, data: Object) : void {
+		var payload = {
+			rpcMethod: method,
+			data: data
+		};
+		if (this.targetTab) {
+			chrome.tabs.sendMessage(this.targetTab, payload);
+		} else {
+			chrome.runtime.sendMessage(payload);
+		}
 	}
 }
 

@@ -164,6 +164,9 @@ interface ChromeExtBackgroundWindow extends Window {
   */
 export class ChromeExtensionPageAccess implements PageAccess {
 	private siteInfoService: site_info_service.SiteInfoService;
+	private tabPorts: {
+		[index: number] : rpc.RpcHandler;
+	};
 
 	showEvents: event_stream.EventStream<void>;
 	pageChanged: event_stream.EventStream<string>;
@@ -178,6 +181,7 @@ export class ChromeExtensionPageAccess implements PageAccess {
 				return Q.reject(new Error('URL fetching not implemented in Chrome extension'));
 			}
 		});
+		this.tabPorts = {};
 
 		// expose a function to allow the passcards browser action
 		// to notify the extension when the URL for the active tab changes
@@ -200,15 +204,47 @@ export class ChromeExtensionPageAccess implements PageAccess {
 		return null;
 	}
 
-	findForms(callback: (formList: InputField[]) => void) : void {
-		console.log('ChromePageAccess.findForms() not implemented');
+	findForms(callback: (formList: forms.InputField[]) => void) : void {
+		this.connectToCurrentTab().then((rpc) => {
+			rpc.call('find-fields', [], (err: any, forms: forms.InputField[]) => {
+				if (err) {
+					callback([]);
+					return;
+				}
+				callback(forms);
+			});
+		});
 	}
 
-	autofill(fields: AutoFillEntry[]) : void {
-		console.log('ChromePageAccess.autofill() not implemented');
+	autofill(fields: forms.AutoFillEntry[]) : void {
+		this.connectToCurrentTab().then((rpc) => {
+			rpc.call('autofill', [fields], (err: any, count: number) => {
+				/* no-op */
+			});
+		});
 	}
 	
 	siteInfoProvider() : site_info.SiteInfoProvider {
 		return this.siteInfoService;
+	}
+
+	private connectToCurrentTab() : Q.Promise<rpc.RpcHandler> {
+		var tabRpc = Q.defer<rpc.RpcHandler>();
+		chrome.tabs.query({active:true}, (tabs) => {
+			if (tabs.length == 0) {
+				tabRpc.reject(new Error('No tabs active'));
+				return;
+			}
+			var activeTab = tabs[0];
+			if (this.tabPorts.hasOwnProperty(activeTab.id.toString())) {
+				tabRpc.resolve(this.tabPorts[activeTab.id]);
+			} else {
+				var tabPort = new rpc.ChromeMessagePort(activeTab.id);
+				var newTabRpc = new rpc.RpcHandler(tabPort);
+				this.tabPorts[activeTab.id] = newTabRpc;
+				tabRpc.resolve(newTabRpc);
+			}
+		});
+		return tabRpc.promise;
 	}
 }
