@@ -191,7 +191,7 @@ export class ChromeExtensionPageAccess implements PageAccess {
 			this.pageChanged.publish(tab.url);
 
 			chrome.tabs.executeScript(null, {
-				file: 'data/scripts/page.js'
+				file: 'data/scripts/page_bundle.js'
 			});
 			
 			this.showEvents.publish(null);

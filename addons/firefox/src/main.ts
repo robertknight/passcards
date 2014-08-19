@@ -22,7 +22,7 @@ var panelRpc: rpc.RpcHandler;
 function getTabWorker(tab: Tab) {
 	if (!tabWorkers[tab.id]) {
 		var worker : PageWorker = tab.attach({
-			contentScriptFile: self_.data.url('scripts/page.js')
+			contentScriptFile: self_.data.url('scripts/page_bundle.js')
 		});
 		worker.rpc = new rpc.RpcHandler(worker.port);
 		worker.on('detach', () => {
