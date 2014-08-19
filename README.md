@@ -11,7 +11,7 @@ you'll need to enable Dropbox syncing within the official 1Password apps.
 
 ## Installation
 
-passcards is available as a browser add-on for Firefox, a web app and a command-line
+passcards is available as a browser add-on for Firefox and Chrome, a web app and a command-line
 app.
 
 See [the passcards site](http://robertknight.github.io/passcards/) for links to
@@ -28,7 +28,7 @@ make all
 
 ### Running the Web App Locally
 
-The web client is a single page application. The Dropbox client keys in the source are configured to allow
+The web client is a single page application. The Dropbox client keys in the source are configured to allowG
 the app to be served from [http://localhost:8000/webui/index.html](http://localhost:8000/webui/index.html) . You can set up a server for this locally
 by running, from the root of a source checkout, `python -m SimpleHTTPServer`.
 
@@ -39,4 +39,9 @@ if necessary) and enable the 'implicit' authorization flow.
 
 ### Firefox Extension
 
-The Firefox extension is built using the [add-on SDK](https://developer.mozilla.org/en-US/Add-ons/SDK). You'll need the _cfx_ tool from the SDK to run the extension locally for development or build an XPI for distribution.
+The Firefox extension is built using the [add-on SDK](https://developer.mozilla.org/en-US/Add-ons/SDK). A version of the SDK which produces
+addons compatible with Firefox 30 or later is included as a git submodule.
+
+### Chrome Extension
+
+The Chrome extension is tested against Chrome 36 or later, though earlier versions should work.
