@@ -1,12 +1,18 @@
 include ../../common.mk
 
-XPI_PACKAGE=$(PKG_DIR)/passcards@robertknight.github.io.xpi
+S3_PACKAGE_URL=https://s3.amazonaws.com/io.github.robertknight/passcards/builds/latest
+
+XPI_PACKAGE_NAME=passcards@robertknight.github.io.xpi
+XPI_PACKAGE=$(PKG_DIR)/$(XPI_PACKAGE_NAME)
+XPI_UPDATE_LINK=$(S3_PACKAGE_URL)/$(XPI_PACKAGE_NAME)
+XPI_UPDATE_RDF_URL=$(S3_PACKAGE_URL)/passcards.update.rdf
 
 all: $(XPI_PACKAGE)
 
 $(XPI_PACKAGE): build/xpi_content
 	mkdir -p $(PKG_DIR)
-	$(CFX) xpi --output-file=$(XPI_PACKAGE)
+	$(CFX) xpi --update-link=$(XPI_UPDATE_LINK) --update-url=$(XPI_UPDATE_RDF_URL) --output-file=$(XPI_PACKAGE)
+	mv passcards.update.rdf $(PKG_DIR)
 
 run: build/xpi_content
 	$(CFX) run
