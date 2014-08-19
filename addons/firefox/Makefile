@@ -23,7 +23,7 @@ lib/main.js: src/main.ts
 	# dir tree
 	cp build/lib/net/rpc.js lib/
 	cp build/addons/firefox/src/main.js lib/
-	sed -i 's/..\/..\/..\/lib\/net\/rpc/.\/rpc/' lib/main.js
+	sed -i '' 's/..\/..\/..\/lib\/net\/rpc/.\/rpc/' lib/main.js
 
 data/scripts:
 	mkdir -p data/scripts
