@@ -86,22 +86,5 @@ clean:
 	rm -rf build/*
 	rm -rf webui/scripts/*
 
-PUBLISH_TMP_DIR=/tmp/publish
-GIT_HEAD=$(shell git log --oneline -n1)
-
-publish-app: webui-build
-	rm -rf $(PUBLISH_TMP_DIR)
-	git clone --no-checkout http://github.com/robertknight/passcards $(PUBLISH_TMP_DIR)
-	cd $(PUBLISH_TMP_DIR) && git checkout gh-pages && git rm -rf app
-	cd $(PUBLISH_TMP_DIR) && mkdir -p app/scripts && mkdir -p app/style
-	cp webui/*.html $(PUBLISH_TMP_DIR)/app/
-	cp webui/scripts/*.js $(PUBLISH_TMP_DIR)/app/scripts/
-	cp webui/style/*.css $(PUBLISH_TMP_DIR)/app/style/
-	cd $(PUBLISH_TMP_DIR) && git add . && git commit -m "Update build to '$(GIT_HEAD)'"
-	cd $(PUBLISH_TMP_DIR) && git push
-
-publish-app-s3: webui-build
-	 s3cmd --acl-public -c $(S3_CONFIG_FILE) sync webui/ s3://$(S3_PATH)
-
 xpi: webui-build
 	cd addons/firefox && make
