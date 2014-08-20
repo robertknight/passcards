@@ -268,6 +268,17 @@ testLib.addAsyncTest('show overview', (assert) => {
 	.done();
 });
 
+testLib.addAsyncTest('show JSON', (assert) => {
+	var env = new CLITest(assert);
+	env.run('show', '--format=json', 'facebook')
+	.then(() => {
+		assert.ok(env.fakeTerm.didPrint(/URLs/));
+		assert.ok(env.fakeTerm.didPrint(/"type": "T"/));
+		testLib.continueTests();
+	})
+	.done();
+});
+
 testLib.addAsyncTest('lock', (assert) => {
 	var env = new CLITest(assert);
 	env.fakeTerm.passRequestCount = 0;

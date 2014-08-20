@@ -520,7 +520,10 @@ export class CLI {
 				this.printDetails(content);
 			}
 			if (format == ShowItemFormat.ShowJSON) {
-				this.printf('%s', collectionutil.prettyJSON(content));
+				return item.getRawDecryptedData().then((json) => {
+					var data = JSON.parse(json);
+					this.printf('%s', collectionutil.prettyJSON(data));
+				});
 			}
 		});
 	}

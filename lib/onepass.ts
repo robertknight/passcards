@@ -253,7 +253,7 @@ export class Item {
 			return Q.resolve(this.content);
 		}
 		if (this.encrypted) {
-			return this.vault.decryptItemData(this.securityLevel, this.encrypted).then((content) => {
+			return this.getRawDecryptedData().then((content) => {
 				return ItemContent.fromAgileKeychainObject(JSON.parse(content));
 			});
 		}
@@ -268,6 +268,13 @@ export class Item {
 
 	setContent(content: ItemContent) {
 		this.content = content;
+	}
+
+	/** Return the raw decrypted JSON data for an item.
+	  * This is only available for saved items.
+	  */
+	getRawDecryptedData() : Q.Promise<string> {
+		return this.vault.decryptItemData(this.securityLevel, this.encrypted);
 	}
 
 	/** Save this item to its associated vault */
