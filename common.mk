@@ -24,3 +24,6 @@ JPM=jpm
 # crx tool for creating Chrome add-on packages
 CRX=$(NODE_MODULE_DIR)/.bin/crx
 
+# Utility script for updating the version in
+# a manifest file
+UPDATE_MANIFEST=$(SRC_ROOT)/utils/update-manifest-version.js

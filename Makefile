@@ -88,3 +88,8 @@ clean:
 
 xpi: webui-build
 	cd addons/firefox && make
+
+update-manifest-versions:
+	$(UPDATE_MANIFEST) package.json
+	$(UPDATE_MANIFEST) addons/chrome/manifest.json
+	$(UPDATE_MANIFEST) addons/firefox/package.json
