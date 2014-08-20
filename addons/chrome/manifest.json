@@ -1,31 +1,27 @@
 {
-	"manifest_version" : 2,
-
-	"name" : "passcards",
-	"description" : "A Simple Password Manager",
-	"version" : "0.1.1",
-	"homepage_url" : "https://robertknight.github.io/passcards",
-
-	"permissions" : ["activeTab", "storage", "https://*.dropbox.com/"],
-
-	"browser_action" : {
-		"default_icon" : "data/icons/icon-32.png",
-		"default_popup" : "data/panel.html"
-	},
-
-	"icons" : {
-		"32" : "data/icons/icon-32.png",
-		"64" : "data/icons/icon-64.png"
-	},
-
-	"web_accessible_resources" : [
-		"data/chrome_dropbox_oauth_receiver.html"
-	],
-
-	"background" : {
-		"page" : "data/background.html"
-	},
-
-	"key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAycUdcf9EE2q41p4wbf6T1EWqs7XJLprlwAmDWMXbIyuc6HA9zkrxZIAteEcmDMZVtaINRxtMrBSFDM03NMIIhc2UwYlzl1juQUokQFcApEAnRlmTTGHvJjxaNHkQBbzPgsIRDsSOwaX9dX7qEJufiPLSwL0ykWCYHdOiq2RtOsThx/i+0xwq2QRBywokCL9DcHEU4fw4/0jKPFYSG7FCdTGpcxQsNA/hltOA5PlmKvvo4UKfkdFATDdIqclAPL8ZNmBN8oTt7gCDEQZF2WYbM6Lt+69309zvwcqsa5Xg1ALMEE6lg7kiADoayeVFoF/eghMdLgbaR0+neN7xTqMHawIDAQAB"
+  "manifest_version": 2,
+  "name": "passcards",
+  "description": "A Simple Password Manager",
+  "version": "0.1.1",
+  "homepage_url": "https://robertknight.github.io/passcards",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "https://*.dropbox.com/"
+  ],
+  "browser_action": {
+    "default_icon": "data/icons/icon-32.png",
+    "default_popup": "data/panel.html"
+  },
+  "icons": {
+    "32": "data/icons/icon-32.png",
+    "64": "data/icons/icon-64.png"
+  },
+  "web_accessible_resources": [
+    "data/chrome_dropbox_oauth_receiver.html"
+  ],
+  "background": {
+    "page": "data/background.html"
+  },
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAycUdcf9EE2q41p4wbf6T1EWqs7XJLprlwAmDWMXbIyuc6HA9zkrxZIAteEcmDMZVtaINRxtMrBSFDM03NMIIhc2UwYlzl1juQUokQFcApEAnRlmTTGHvJjxaNHkQBbzPgsIRDsSOwaX9dX7qEJufiPLSwL0ykWCYHdOiq2RtOsThx/i+0xwq2QRBywokCL9DcHEU4fw4/0jKPFYSG7FCdTGpcxQsNA/hltOA5PlmKvvo4UKfkdFATDdIqclAPL8ZNmBN8oTt7gCDEQZF2WYbM6Lt+69309zvwcqsa5Xg1ALMEE6lg7kiADoayeVFoF/eghMdLgbaR0+neN7xTqMHawIDAQAB"
 }
-
