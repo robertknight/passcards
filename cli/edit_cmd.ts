@@ -152,7 +152,7 @@ export class EditCommand {
 		if (match) {
 			if (newValue) {
 				match.setValue(newValue);
-				return Q.resolve<void>(null);
+				return Q<void>(null);
 			} else {
 				var newValPromise : Q.Promise<string>;
 				if (match.isPassword()) {
@@ -162,7 +162,7 @@ export class EditCommand {
 				}
 				return newValPromise.then((newValue) => {
 					match.setValue(newValue);
-					return Q.resolve<void>(null);
+					return Q<void>(null);
 				});
 			}
 		} else {

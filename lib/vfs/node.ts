@@ -131,7 +131,7 @@ export class FileVFS implements vfs.VFS {
 	}
 
 	login() : Q.Promise<string> {
-		return Q.resolve<string>(process.env.USER);
+		return Q<string>(process.env.USER);
 	}
 
 	isLoggedIn() : boolean {

@@ -9,7 +9,7 @@ export function resolveWith<T>(a: Q.Deferred<T>, b: Q.Promise<T>) : Q.Promise<T>
 	b.then((result) => {
 		a.resolve(result);
 	})
-	.fail((err) => {
+	.catch((err) => {
 		a.reject(err);
 	});
 	return a.promise;
@@ -24,7 +24,7 @@ export function resolveWithValue<T, U>(a: Q.Deferred<T>, b: Q.Promise<U>, value:
 	b.then(() => {
 		a.resolve(value);
 	})
-	.fail((err) => {
+	.catch((err) => {
 		a.reject(err);
 	});
 	return a.promise;
@@ -46,7 +46,7 @@ export function eraseResult<T>(p: Q.Promise<T>) : Q.Promise<void> {
 export function series(funcs: Array<() => Q.Promise<any>>, results?: any[]) : Q.Promise<any[]> {
 	results = results || [];
 	if (funcs.length == 0) {
-		return Q.resolve(results);
+		return Q(results);
 	}
 	return funcs[0]().then((result) => {
 		results.push(result);
@@ -66,7 +66,7 @@ export function series(funcs: Array<() => Q.Promise<any>>, results?: any[]) : Q.
 export function until(func: () => Q.Promise<boolean>) : Q.Promise<boolean> {
 	return func().then((done) => {
 		if (done) {
-			return Q.resolve(true);
+			return Q(true);
 		} else {
 			return until(func);
 		}

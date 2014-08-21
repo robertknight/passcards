@@ -38,7 +38,7 @@ export class FS implements vfs.VFS {
 	}
 
 	login() : Q.Promise<string> {
-		return Q.resolve('');
+		return Q('');
 	}
 
 	isLoggedIn() : boolean {
@@ -58,7 +58,7 @@ export class FS implements vfs.VFS {
 		if (!entry) {
 			return Q.reject('No such path');
 		} else {
-			return Q.resolve(FS.fsEntryToFileInfo(entry));
+			return Q(FS.fsEntryToFileInfo(entry));
 		}
 	}
 
@@ -77,7 +77,7 @@ export class FS implements vfs.VFS {
 		if (!entry.key) {
 			return Q.reject('Entry has no content');
 		}
-		return Q.resolve(this.storage.getItem(entry.key));
+		return Q(this.storage.getItem(entry.key));
 	}
 
 	write(path: string, content: string) : Q.Promise<void> {
@@ -99,7 +99,7 @@ export class FS implements vfs.VFS {
 			this.writeDirIndex(parentDirEntry);
 		}
 		this.storage.setItem(entry.key, content);
-		return Q.resolve<void>(null);
+		return Q<void>(null);
 	}
 
 	list(path: string) : Q.Promise<vfs.FileInfo[]> {
@@ -110,7 +110,7 @@ export class FS implements vfs.VFS {
 		if (!entry.isDir) {
 			return Q.reject('Entry is not a directory');
 		}
-		return Q.resolve(underscore.map(entry.entries, (entry) => {
+		return Q(underscore.map(entry.entries, (entry) => {
 			return FS.fsEntryToFileInfo(entry);
 		}));
 	}
@@ -118,7 +118,7 @@ export class FS implements vfs.VFS {
 	rm(path: string) : Q.Promise<void> {
 		var entry = this.entryForPath(path);
 		if (!entry) {
-			return Q.resolve<void>(null);
+			return Q<void>(null);
 		}
 
 		var removeEntry = (entry: FSEntry) => {
@@ -163,7 +163,7 @@ export class FS implements vfs.VFS {
 
 			prevDirEntry = dirEntry;
 		});
-		return Q.resolve<void>(null);
+		return Q<void>(null);
 	}
 
 	private updateParent(entries: FSEntry[], parent: FSEntry) {

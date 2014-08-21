@@ -79,7 +79,7 @@ export class ItemIconProvider {
 				// cache icons for future use
 				this.diskCache.insert(url, {
 					icons: entry.info.icons
-				}).fail((err) => {
+				}).catch((err) => {
 					console.log('Caching icons for URL', url, 'failed', err.message);
 				});
 
@@ -135,7 +135,7 @@ export class ItemIconProvider {
 				} else {
 					this.provider.lookup(url);
 				}
-			}).fail((err) => {
+			}).catch((err) => {
 				console.log('Disk cache lookup for', url, 'failed:', err, err.message, err.fileName, err.lineNumber);
 				this.provider.lookup(url);
 			});

@@ -42,7 +42,7 @@ class FakeIO implements consoleio.TermIO {
 			return prompt.match(reply.match) != null;
 		});
 		if (reply) {
-			return Q.resolve(reply.response);
+			return Q(reply.response);
 		} else {
 			return Q.reject('No pattern matched the prompt: "' + prompt + '"');
 		}
@@ -51,7 +51,7 @@ class FakeIO implements consoleio.TermIO {
 	readPassword(prompt: string) : Q.Promise<string> {
 		if (prompt.match('Master password')) {
 			++this.passRequestCount;
-			return Q.resolve(this.password);
+			return Q(this.password);
 		} else {
 			return this.readLine(prompt);
 		}

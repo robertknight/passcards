@@ -280,7 +280,7 @@ class UnlockPane extends reactts.ReactComponentBase<UnlockPaneProps, UnlockPaneS
 				this.setUnlockState(UnlockState.Success);
 				this.props.onUnlock();
 			})
-			.fail((err) => {
+			.catch((err) => {
 				this.setUnlockState(UnlockState.Failed);
 				this.props.onUnlockErr(err);
 			});
@@ -1011,7 +1011,7 @@ export class App {
 			} catch (err) {
 				console.log('vault setup failed', err, err.stack);
 			}
-		}).fail((err) => {
+		}).catch((err) => {
 			this.appView.showError(err.toString());
 			console.log('Failed to setup vault', err.toString());
 		});

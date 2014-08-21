@@ -82,7 +82,7 @@ var createNodeFs = () => {
 }
 
 var createLocalStorageFs = () => {
-	return Q.resolve(new localstoragefs.FS('/1pass-web-test', new FakeLocalStorage));
+	return Q(new localstoragefs.FS('/1pass-web-test', new FakeLocalStorage));
 }
 
 function addTests(fsName: string, createFs: () => Q.Promise<vfs.VFS>) {

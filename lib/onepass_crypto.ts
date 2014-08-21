@@ -298,7 +298,7 @@ export class CryptoJsCrypto implements CryptoImpl {
 			return result.promise;
 		} else {
 			// fall back to sync calculation
-			return Q.resolve(this.pbkdf2Sync(pass, salt, iterCount, keyLen));
+			return Q(this.pbkdf2Sync(pass, salt, iterCount, keyLen));
 		}
 	}
 	

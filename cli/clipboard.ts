@@ -21,16 +21,16 @@ export class FakeClipboard implements Clipboard {
 
 	setData(content: string) : Q.Promise<void> {
 		this.data = content;
-		return Q.resolve<void>(null);
+		return Q<void>(null);
 	}
 
 	getData() : Q.Promise<string> {
-		return Q.resolve(this.data);
+		return Q(this.data);
 	}
 
 	clear() : Q.Promise<void> {
 		this.data = '';
-		return Q.resolve<void>(null);
+		return Q<void>(null);
 	}
 }
 

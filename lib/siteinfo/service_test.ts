@@ -207,7 +207,7 @@ function serveAndFetchIcons(port: number, siteRoot: string, queryPath: string) :
 			var next = Q.defer<boolean>();
 			result = provider.lookup(queryUrl);
 			if (result.state == site_info.QueryState.Ready) {
-				return Q.resolve(true);
+				return Q(true);
 			} else {
 				setTimeout(() => {
 					next.resolve(false);
@@ -280,7 +280,7 @@ testLib.addAsyncTest('forget site info', (assert) => {
 testLib.addAsyncTest('fetch site icon with DuckDuckGo', (assert) => {
 	var urlFetcher: site_info_service.UrlFetcher = {
 		fetch: (url: string) => {
-			return Q.resolve({
+			return Q({
 				status: 200,
 				body: JSON.stringify({
 					Image: 'https://duckduckgo.com/i/img.png',

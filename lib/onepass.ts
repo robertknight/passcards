@@ -250,7 +250,7 @@ export class Item {
 	  */
 	getContent() : Q.Promise<ItemContent> {
 		if (this.content) {
-			return Q.resolve(this.content);
+			return Q(this.content);
 		}
 		if (this.encrypted) {
 			return this.getRawDecryptedData().then((content) => {

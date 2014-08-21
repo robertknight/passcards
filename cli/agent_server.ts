@@ -49,7 +49,7 @@ function logf(format: string, ...args: any[]) {
 function parseJSONRequest(req: http.ServerRequest, rsp: http.ServerResponse, cb: (content: any) => void) {
 	streamutil.readJSON(req)
 	.then(cb)
-	.fail((err) => {
+	.catch((err) => {
 		console.log(err);
 		rsp.statusCode = 400;
 		rsp.end('Failed to parse request: ' + err);
@@ -241,18 +241,18 @@ export function startAgent() : Q.Promise<number> {
 export function stopAgent() : Q.Promise<void> {
 	var pid = agentPID();
 	if (!pid) {
-		return Q.resolve<void>(null);
+		return Q<void>(null);
 	}
 	try {
 		process.kill(pid);
 	} catch (ex) {
 		if (ex.code == 'ESRCH') {
 			// no such process
-			return Q.resolve<void>(null);
+			return Q<void>(null);
 		}
 		return Q.reject('Failed to stop agent:' + ex);
 	}
-	return Q.resolve<void>(null);
+	return Q<void>(null);
 }
 
 if (require.main === module) {

@@ -167,7 +167,7 @@ class IconFetcher {
 					console.log('Failed to decode icon', url, 'from data of length', buffer.length, start);
 				}
 			}
-		}).fail((e) => {
+		}).catch((e) => {
 			queueItem.status = 0;
 		}).finally(() => {
 			this.queue.splice(this.queue.indexOf(queueItem, 1));
@@ -519,7 +519,7 @@ export class DuckDuckGoClient {
 				if (result.status == 200) {
 					var queryResult = JSON.parse(result.body);
 					if (queryResult.Image && queryResult.ImageIsLogo) {
-						return Q.resolve(queryResult.Image);
+						return Q(queryResult.Image);
 					} else {
 						return Q.reject(new err_util.ApiError(url, result.status, 'DDG query did not return an icon'));
 					}

@@ -26,7 +26,7 @@ testLib.addAsyncTest('fix location field', (assert) => {
 		reports.push(err);
 	}, () => {
 		// don't save repaired item
-		return Q.resolve(false);
+		return Q(false);
 	});
 
 	repaired.then(() => {

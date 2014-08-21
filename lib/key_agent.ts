@@ -100,11 +100,11 @@ export class SimpleKeyAgent {
 	addKey(id: string, key: string) : Q.Promise<void> {
 		this.keys[id] = key;
 		this.scheduleAutoLock();
-		return Q.resolve<void>(null);
+		return Q<void>(null);
 	}
 
 	listKeys() : Q.Promise<string[]> {
-		return Q.resolve(Object.keys(this.keys));
+		return Q(Object.keys(this.keys));
 	}
 
 	forgetKeys() : Q.Promise<void> {
@@ -113,7 +113,7 @@ export class SimpleKeyAgent {
 		}
 		this.keys = {};
 		this.lockEvents.publish(null);
-		return Q.resolve<void>(null);
+		return Q<void>(null);
 	}
 
 	decrypt(id: string, cipherText: string, params: CryptoParams) : Q.Promise<string> {
@@ -122,7 +122,7 @@ export class SimpleKeyAgent {
 		}
 		switch (params.algo) {
 			case CryptoAlgorithm.AES128_OpenSSLKey:
-				return Q.resolve(crypto.decryptAgileKeychainItemData(this.crypto,
+				return Q(crypto.decryptAgileKeychainItemData(this.crypto,
 					  this.keys[id], cipherText));
 			default:
 				return Q.reject('Unknown encryption algorithm');
@@ -135,7 +135,7 @@ export class SimpleKeyAgent {
 		}
 		switch (params.algo) {
 			case CryptoAlgorithm.AES128_OpenSSLKey:
-				return Q.resolve(crypto.encryptAgileKeychainItemData(this.crypto,
+				return Q(crypto.encryptAgileKeychainItemData(this.crypto,
 					this.keys[id], plainText));
 			default:
 				return Q.reject('Unknown encryption algorithm');

@@ -11,7 +11,7 @@ testLib.addAsyncTest('test run sequence', (assert) => {
 	values.forEach((value, index) => {
 		funcs.push(() => {
 			runOrder.push(index+1);
-			return Q.resolve(value);
+			return Q(value);
 		});
 	});
 
@@ -27,10 +27,10 @@ testLib.addAsyncTest('async while loop', (assert) => {
 
 	asyncutil.until(() => {
 		if (counter == 5) {
-			return Q.resolve(true);
+			return Q(true);
 		} else {
 			++counter;
-			return Q.resolve(false);
+			return Q(false);
 		}
 	}).then((done) => {
 		testLib.assertEqual(assert, done, true);

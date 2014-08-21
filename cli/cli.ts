@@ -205,7 +205,7 @@ export class CLI {
 	private unlockVault(vault: onepass.Vault) : Q.Promise<void> {
 		return vault.isLocked().then((isLocked) => {
 			if (!isLocked) {
-				return Q.resolve<void>(null);
+				return Q<void>(null);
 			}
 			var password = this.io.readPassword('Master password: ');
 			return password.then((password) => {
@@ -273,13 +273,13 @@ export class CLI {
 			customVaultPath = Path.resolve(customVaultPath);
 		}
 
-		var authenticated = Q.resolve<void>(null);
+		var authenticated = Q<void>(null);
 		var vault = Q.defer<onepass.Vault>();
 
 		authenticated.then(() => {
 			var vaultPath : Q.Promise<string>;
 			if (customVaultPath) {
-				vaultPath = Q.resolve(customVaultPath);
+				vaultPath = Q(customVaultPath);
 			} else {
 				vaultPath = this.findExistingVaultInDropbox(storage, dropboxRoot);
 			}
@@ -315,7 +315,7 @@ export class CLI {
 			return Q.reject(NO_SUCH_ITEM_ERR);
 		}
 		else if (items.length == 1) {
-			return Q.resolve(items[0]);
+			return Q(items[0]);
 		}
 
 		this.printf('Multiple %s match "%s":\n', plural, pattern);
@@ -381,7 +381,7 @@ export class CLI {
 			} else {
 				// add a default section with a blank title
 				content.sections.push(new onepass.ItemSection());
-				contentReady = Q.resolve(content);
+				contentReady = Q(content);
 			}
 			
 			return contentReady.then(() => {
@@ -389,7 +389,7 @@ export class CLI {
 				return item.save();
 			}).then(() => {
 				this.printf("Added new item '%s'", item.title);
-				return Q.resolve<void>(null);
+				return Q<void>(null);
 			});
 		});
 	}
@@ -447,7 +447,7 @@ export class CLI {
 'If you are using other 1Password apps, please note that they may still ' +
 'require the previous password when they are next unlocked');
 			result.resolve(0);
-		}).fail((err) => {
+		}).catch((err) => {
 			this.printf('Unable to update the vault password: %s', err);
 		});
 
@@ -486,7 +486,7 @@ export class CLI {
 
 	private genPasswordCommand() : Q.Promise<void> {
 		this.printf(crypto.generatePassword(12));
-		return Q.resolve<void>(null);
+		return Q<void>(null);
 	}
 
 	private listCommand(vault: onepass.Vault, pattern: string) : Q.Promise<void> {
@@ -607,7 +607,7 @@ export class CLI {
 				return this.unlockVault(vault);
 			});
 		} else {
-			vaultReady = Q.resolve<void>(null);
+			vaultReady = Q<void>(null);
 		}
 		
 		var handlers : HandlerMap = {};
@@ -693,7 +693,7 @@ export class CLI {
 						// otherwise assume success
 						exitStatus.resolve(0);
 					}
-				}).fail((err) => {
+				}).catch((err) => {
 					this.printf('%s', err);
 					exitStatus.resolve(1);
 				});

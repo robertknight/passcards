@@ -17,7 +17,7 @@ export function readAll(readable: NodeJS.ReadableStream) : Q.Promise<string> {
 
 export function readJSON(readable: NodeJS.ReadableStream) : Q.Promise<any> {
 	return readAll(readable).then((content) => {
-		return Q.resolve(JSON.parse(content));
+		return Q(JSON.parse(content));
 	});
 }
 

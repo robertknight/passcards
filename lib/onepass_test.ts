@@ -481,7 +481,7 @@ testLib.addAsyncTest('Change vault password', (assert) => {
 	createTestVault().then((vault_) => {
 		vault = vault_;
 		return vault.changePassword('wrong-pass', 'new-pass', 'new-hint');
-	}).fail((err) => {
+	}).catch((err) => {
 		assert.ok(err instanceof onepass.DecryptionError);
 		vault.changePassword('logMEin', 'new-pass', 'new-hint')
 		.then(() => {

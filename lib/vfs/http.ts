@@ -36,7 +36,7 @@ export class Client implements vfs.VFS {
 	}
 
 	login() : Q.Promise<string> {
-		return Q.resolve('');
+		return Q('');
 	}
 
 	isLoggedIn() : boolean {
@@ -75,7 +75,7 @@ export class Client implements vfs.VFS {
 			if (matches.length == 0) {
 				return Q.reject(sprintf('No file %s found in %s', name, path));
 			} else {
-				return Q.resolve(matches[0]);
+				return Q(matches[0]);
 			}
 		});
 	}
@@ -160,31 +160,31 @@ export class Server {
 					if (fileInfo.isDir) {
 						this.fs.list(path).then((files) => {
 							done(JSON.stringify(files));
-						}).fail((err) => {
+						}).catch((err) => {
 							fail(err);
 						});
 					} else {
 						this.fs.read(path).then((content) => {
 							done(content);
-						}).fail((err) => {
+						}).catch((err) => {
 							fail(err);
 						});
 					}
-				}).fail((err) => {
+				}).catch((err) => {
 					fail(err);
 				});
 			} else if (req.method == 'PUT') {
 				if (stringutil.endsWith(path, '/')) {
 					this.fs.mkpath(path).then(() => {
 						done();
-					}).fail((err) => {
+					}).catch((err) => {
 						fail(err);
 					});
 				} else {
 					streamutil.readAll(req).then((content) => {
 						this.fs.write(path, content).then(() => {
 							done();
-						}).fail((err) => {
+						}).catch((err) => {
 							fail(err);
 						});
 					});
@@ -192,7 +192,7 @@ export class Server {
 			} else if (req.method == 'DELETE') {
 				this.fs.rm(path).then(() => {
 					done();
-				}).fail((err) => {
+				}).catch((err) => {
 					fail(err);
 				});
 			} else if (req.method == 'OPTIONS') {

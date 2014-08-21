@@ -56,7 +56,7 @@ export function passwordFieldPrompt(io: TermIO, randomPassFunc : () => string) :
 		return io.readPassword("Password (or '-' to generate a random password): ").then((passOne) => {
 			if (passOne == '-') {
 				password = randomPassFunc();
-				return Q.resolve(true);
+				return Q(true);
 			} else {
 				return io.readPassword('Re-enter password: ').then((passTwo) => {
 					if (passTwo == passOne) {
