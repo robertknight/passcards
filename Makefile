@@ -31,7 +31,7 @@ $(webui_script_dir)/webui_bundle.js: build/current
 
 $(webui_script_dir)/page_bundle.js: build/current
 	mkdir -p $(webui_script_dir)
-	$(BROWSERIFY) --no-builtins build/webui/page.js --outfile $(webui_script_dir)/page_bundle.js
+	$(BROWSERIFY) build/webui/page.js --outfile $(webui_script_dir)/page_bundle.js
 
 $(webui_script_dir)/crypto_worker.js: build/current
 	mkdir -p $(webui_script_dir)
