@@ -79,8 +79,9 @@ export class SimpleKeyAgent {
 		}
 		if (this.lockTimeout) {
 			clearTimeout(this.lockTimeout);
+			this.lockTimeout = null;
 		}
-		setTimeout(() => {
+		this.lockTimeout = setTimeout(() => {
 			this.forgetKeys();
 		}, this.autoLockTimeout);
 	}
@@ -111,6 +112,7 @@ export class SimpleKeyAgent {
 	forgetKeys() : Q.Promise<void> {
 		if (this.lockTimeout) {
 			clearTimeout(this.lockTimeout);
+			this.lockTimeout = null;
 		}
 		this.keys = {};
 		this.lockEvents.publish(null);
