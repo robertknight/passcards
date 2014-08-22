@@ -525,13 +525,6 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 	}
 
 	componentDidMount() {
-		$(this.refs['backLink'].getDOMNode()).click(() => {
-			this.props.onGoBack();
-		});
-		$(this.refs['autofillBtn'].getDOMNode()).click(() => {
-			this.props.autofill();
-		});
-
 		var componentDoc = this.getDOMNode().ownerDocument;
 
 		this.shortcuts = [
@@ -630,9 +623,21 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 			tabIndex: 0
 			},
 			react.DOM.div({className: stringutil.truthyKeys({toolbar: true, detailsToolbar: true})},
-				react.DOM.a({className: 'toolbarLink', href:'#', ref:'backLink'}, 'Back')),
+				react.DOM.a({
+					className: 'toolbarLink',
+					href:'#',
+					ref:'backLink',
+					onClick: () => this.props.onGoBack()
+				}, 'Back')),
 				react.DOM.div({className: 'itemActionBar'},
-						react.DOM.input({className: 'itemActionButton', accessKey:'a', type: 'button', value: 'Autofill', ref: 'autofillBtn'})
+					react.DOM.input({
+						className: 'itemActionButton',
+						accessKey:'a',
+						type: 'button',
+						value: 'Autofill',
+						ref: 'autofillBtn',
+						onClick: () => this.props.autofill()
+					})
 				),
 			detailsContent ? detailsContent : []
 		);
@@ -677,9 +682,6 @@ class Item extends reactts.ReactComponentBase<ItemProps, ItemState> {
 	}
 
 	componentDidMount() {
-		$(this.refs['itemOverview'].getDOMNode()).click(() => {
-			this.props.onSelected();
-		});
 		if (!this.iconUpdateListener) {
 			this.setupIconUpdateListener(this.props.iconProvider);
 		}
@@ -697,9 +699,15 @@ class Item extends reactts.ReactComponentBase<ItemProps, ItemState> {
 			iconUrl = '';
 		}
 
-		return react.DOM.div({className: stringutil.truthyKeys({itemOverview: true,
-				itemHovered: this.props.isHovered,
-				itemVisible: this.props.visible}), ref: 'itemOverview'},
+		return react.DOM.div({
+				className: stringutil.truthyKeys({
+					itemOverview: true,
+					itemHovered: this.props.isHovered,
+					itemVisible: this.props.visible
+				}),
+				ref: 'itemOverview',
+				onClick: () => this.props.onSelected()
+			},
 			react.DOM.div({className: 'itemIconContainer'},
 				react.DOM.img({className: 'itemIcon', src: iconUrl})
 			),
