@@ -72,7 +72,8 @@ export class SimpleKeyAgent {
 		this.autoLockTimeout = 0;
 	}
 
-	private scheduleAutoLock() {
+	/** Reset the auto-lock timer. */
+	public resetAutoLock() {
 		if (!this.autoLockTimeout) {
 			return;
 		}
@@ -93,13 +94,13 @@ export class SimpleKeyAgent {
 	setAutoLockTimeout(timeout: number) {
 		this.autoLockTimeout = timeout;
 		if (this.lockTimeout) {
-			this.scheduleAutoLock();
+			this.resetAutoLock();
 		}
 	}
 
 	addKey(id: string, key: string) : Q.Promise<void> {
 		this.keys[id] = key;
-		this.scheduleAutoLock();
+		this.resetAutoLock();
 		return Q<void>(null);
 	}
 

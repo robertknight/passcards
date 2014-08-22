@@ -928,6 +928,7 @@ function itemDomain(item: onepass.Item) : string {
 declare var firefoxAddOn: page_access.ExtensionConnector;
 
 export class App {
+	private keyAgent: key_agent.SimpleKeyAgent;
 	private appView: AppView;
 	private savedState: AppViewState;
 	private services: AppServices;
@@ -993,15 +994,15 @@ export class App {
 			}
 		});
 
+		this.keyAgent = new key_agent.SimpleKeyAgent();
+		this.keyAgent.setAutoLockTimeout(2 * 60 * 1000);
+
 		fs.login().then(() => {
 			try {
-				var keyAgent = new key_agent.SimpleKeyAgent();
-				keyAgent.setAutoLockTimeout(2 * 60 * 1000);
-
-				var vault = new onepass.Vault(fs, '/1Password/1Password.agilekeychain', keyAgent);
+				var vault = new onepass.Vault(fs, '/1Password/1Password.agilekeychain', this.keyAgent);
 				this.updateState({vault: vault});
 
-				keyAgent.onLock().listen(() => {
+				this.keyAgent.onLock().listen(() => {
 					this.updateState({isLocked: true});
 				});
 
@@ -1018,8 +1019,20 @@ export class App {
 	}
 
 	renderInto(element: HTMLElement) {
-		fastclick.FastClick.attach(element.ownerDocument.body);
+		var rootInputElement = element.ownerDocument.body;
 
+		// setup touch input
+		fastclick.FastClick.attach(rootInputElement);
+
+		// setup auto-lock
+		$(rootInputElement).keydown((e) => {
+			this.keyAgent.resetAutoLock();
+		});
+		$(rootInputElement).mousedown((e) => {
+			this.keyAgent.resetAutoLock();
+		});
+
+		// create main app view
 		this.appView = new AppView({services: this.services});
 		this.appView.stateChanged.listen((state) => {
 			// save app state for when the app's view is mounted
