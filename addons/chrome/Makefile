@@ -18,6 +18,7 @@ $(CRX_PACKAGE): scripts style icons
 
 scripts: ../../webui/scripts/*.js src/*.js
 	mkdir -p data/scripts
+	cp src/*.js data/scripts
 	cp ../../webui/scripts/*.js data/scripts
 	cp $(NODE_MODULE_DIR)/dropbox/lib/dropbox.js data/scripts
 
