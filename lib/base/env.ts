@@ -38,6 +38,8 @@ export function isFirefoxAddon() {
   * background script in a Google Chrome extension
   */
 export function isChromeExtension() {
-	return isBrowser() && typeof chrome != 'undefined';
+	return isBrowser() &&
+	       typeof chrome !== 'undefined' &&
+	       typeof chrome.extension !== 'undefined';
 }
 
