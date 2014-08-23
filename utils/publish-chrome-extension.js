@@ -1,13 +1,22 @@
 #!/usr/bin/env node
 
-var APP_ID = 'olcdnhbhbfgncnocdfojpdjbododkimk';
-var PKG_UPLOAD_ENDPOINT = 'https://www.googleapis.com/upload/chromewebstore/v1.1/items/' + APP_ID;
-var PKG_PUBLISH_ENDPOINT = 'https://www.googleapis.com/chromewebstore/v1.1/items/' + APP_ID + '/publish';
-var PKG_PATH = 'pkg/passcards.zip';
-
-var fs = require('fs');
-var request = require('request');
-var sprintf = require('sprintf');
+// Utility script to publish a build of the Google Chrome extension
+// from pkg/passcards.zip to the Chrome Web Store
+//
+// This uses the APIs described at https://developer.chrome.com/webstore/using_webstore_api
+// to upload a new .zip archive containing the extension's files to the Chrome Web Store
+// and then publish the new version.
+//
+// This script is intended for use from within a Travis CI environment and by default
+// exits if not building a non-pull request on the master branch.
+//
+// Access to the web store APIs requires an access token as described at
+// https://developer.chrome.com/webstore/using_webstore_api . To obtain an access
+// token this script needs:
+//
+//  - A client ID, currently hardcoded
+//  - A client secret, exposed via the CHROME_EXT_CLIENT_SECRET env var
+//  - A client refresh token, exposed via the CHROME_EXT_REFRESH_TOKEN env var
 
 function requireEnvVar(name) {
 	var val = process.env[name];
@@ -17,23 +26,36 @@ function requireEnvVar(name) {
 	return val;
 }
 
-function main() {
+var fs = require('fs');
+var request = require('request');
+var sprintf = require('sprintf');
+
+function main(args) {
 	var travisBranch = requireEnvVar('TRAVIS_BRANCH');
 	var travisPullRequest = requireEnvVar('TRAVIS_PULL_REQUEST');
+
+	var appId = requireEnvVar('CHROME_EXT_APP_ID');
+	var packageUploadEndpoint = 'https://www.googleapis.com/upload/chromewebstore/v1.1/items/' + appId;
+	var packagePublishEndpoint = 'https://www.googleapis.com/chromewebstore/v1.1/items/' + appId + '/publish';
+	var packagePath = args[0];
+	if (!packagePath) {
+		throw new Error('Package path not specified');
+	}
+
+	var clientId = requireEnvVar('CHROME_EXT_CLIENT_ID');
+	var clientSecret = requireEnvVar('CHROME_EXT_CLIENT_SECRET');
+	var refreshToken = requireEnvVar('CHROME_EXT_REFRESH_TOKEN');
 
 	if (travisBranch !== 'master' || travisPullRequest !== 'false') {
 		console.log('Skipping publication from pull request or non-master branch');
 		return;
 	}
 
-	var client_secret = requireEnvVar('CHROME_EXT_CLIENT_SECRET');
-	var refresh_token = requireEnvVar('CHROME_EXT_REFRESH_TOKEN');
-
 	var accessTokenParams = {
-		client_id: '663008561130-bgbo9tvbnr7j1ufrfuf52r4k3g8t9j9n.apps.googleusercontent.com',
-		client_secret: client_secret,
+		client_id: clientId,
+		client_secret: clientSecret,
 		grant_type: 'refresh_token',
-		refresh_token: refresh_token
+		refresh_token: refreshToken
 	};
 
 	console.log('Refreshing Chrome Web Store access token...');
@@ -44,17 +66,17 @@ function main() {
 			throw new Error(sprintf('Fetching Chrome Web Store access token failed: %d %s', response.statusCode, body));
 		}
 
-		console.log('Uploading updated package', PKG_PATH);
+		console.log('Uploading updated package', packagePath);
 		var accessTokenParams = JSON.parse(body);
-		fs.createReadStream(PKG_PATH).pipe(request.put(PKG_UPLOAD_ENDPOINT, {
+		fs.createReadStream(packagePath).pipe(request.put(packageUploadEndpoint, {
 			auth: { bearer: accessTokenParams.access_token }
 		}, function(err, response, body) {
 			if (err || response.statusCode !== 200) {
 				throw new Error(sprintf('Package upload failed: %d %s', response.statusCode, body));
 			}
 
-			console.log('Publishing updated package', APP_ID);
-			request.post(PKG_PUBLISH_ENDPOINT,{
+			console.log('Publishing updated package', appId);
+			request.post(packagePublishEndpoint,{
 				auth: { bearer: accessTokenParams.access_token },
 				form: {}
 			}, function(err, response, body) {
@@ -74,7 +96,7 @@ var onErr = function(err) {
 process.on('uncaughtException', onErr);
 
 try {
-	main()
+	main(process.argv.slice(2));
 } catch (err) {
 	onErr(err);
 }

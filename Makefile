@@ -93,7 +93,7 @@ chrome-extension-zip: webui-build
 	cd addons/chrome && make zip
 
 publish-chrome-extension: chrome-extension-zip
-	./utils/publish-chrome-extension.js
+	./utils/publish-chrome-extension.js pkg/passcards.zip
 
 update-manifest-versions:
 	$(UPDATE_MANIFEST) package.json

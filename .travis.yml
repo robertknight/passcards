@@ -41,6 +41,8 @@ deploy:
   acl: public_read
 env:
   global:
+  - CHROME_EXT_CLIENT_ID=663008561130-bgbo9tvbnr7j1ufrfuf52r4k3g8t9j9n.apps.googleusercontent.com
+  - CHROME_EXT_APP_ID=olcdnhbhbfgncnocdfojpdjbododkimk
   # Chrome Extension client secret and refresh token
   - secure: IPKY7PDK0u9FnoaykUVC30qExvr6yFReyvJfXxssEfJ9jgPb84grUzsBcZiNnUG4az3N5wr40wbfHc60MhQOE/5d51loKgPGrlqPbxsT07hzI8XaovkJrn1hiv2aKwVf8VCPhpp+wlhfsmdiZ9c3u9mUdYehQINilHnMjYmzBO4=
   - secure: WIUMAwG+EJFtS+w6y6zz7M1SvvVVB1hY//pZIAbUG1uFfYEUZWnjonuhJR09vN8V+mNjCFA4GZ8dlsOMkc0Edf+blaBeEPkmUWp5yFygoJbRFxu09ioXfFL2cUzyWcMkEJnwhJhk/GEh7ytNcPkHgyEeKDy1W5MXBkl6wKv1ApY=
