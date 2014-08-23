@@ -2,37 +2,45 @@ language: node_js
 notifications:
   email: false
 node_js:
-  - '0.10'
+- '0.10'
+before_script:
+- export PATH=$PWD/node_modules/.bin:$PATH
+after_success:
+- make update-manifest-versions
+- make firefox-addon
+- make publish-chrome-extension
 before_deploy:
-  - make test-package
-  - export PATH=$PWD/node_modules/.bin:$PATH
-  - make xpi
-  - make update-manifest-versions
+- make test-package
 deploy:
-  - provider: npm
-    email: robertknight@gmail.com
-    api_key:
-      secure: RhRzH7umr4QyFjScdoR1nsWn/BHjQGrqwpFiavQzMgd1cEEnuWtTju8puGFct8++SJXH3bfcLp9kqtg3S2BB2qQM8ZqHlU1WGh8rKvgaFtmZCMdITPWqGmL/AuKQi+JL272jnReqwxi/leTNI1OQXL3TJXRv33JHDJphKJ+vGtE=
-    skip_cleanup: true
-  - provider: s3
-    access_key_id: AKIAJLAC2I2QPV6E33GA
-    secret_access_key:
-      secure: YyxwCqc8aPvsX432y3YhnRye2c/hyYylu6EBSGxgDG0Jg7IXtHKkcslGPvTdjbX8fw5wDliM8a/4J+qGNlbxz7hzXSf5n4Hf7jsTTmTMl/QGqtfwRRElqO2zihEpMaLwU/r9p36G9gOu41emIAsXX7jsrEwCHySm500k60nj6V0=
-    bucket: "io.github.robertknight"
-    skip_cleanup: true
-    local-dir: pkg
-    upload-dir: passcards/builds/latest
-    on:
-      branch: master
-    acl: public_read
-  - provider: s3
-    access_key_id: AKIAJLAC2I2QPV6E33GA
-    secret_access_key:
-      secure: YyxwCqc8aPvsX432y3YhnRye2c/hyYylu6EBSGxgDG0Jg7IXtHKkcslGPvTdjbX8fw5wDliM8a/4J+qGNlbxz7hzXSf5n4Hf7jsTTmTMl/QGqtfwRRElqO2zihEpMaLwU/r9p36G9gOu41emIAsXX7jsrEwCHySm500k60nj6V0=
-    bucket: "io.github.robertknight"
-    skip_cleanup: true
-    local-dir: webui
-    upload-dir: passcards/web/latest
-    on:
-      branch: master
-    acl: public_read
+- provider: npm
+  email: robertknight@gmail.com
+  api_key:
+    secure: RhRzH7umr4QyFjScdoR1nsWn/BHjQGrqwpFiavQzMgd1cEEnuWtTju8puGFct8++SJXH3bfcLp9kqtg3S2BB2qQM8ZqHlU1WGh8rKvgaFtmZCMdITPWqGmL/AuKQi+JL272jnReqwxi/leTNI1OQXL3TJXRv33JHDJphKJ+vGtE=
+  skip_cleanup: true
+- provider: s3
+  access_key_id: AKIAJLAC2I2QPV6E33GA
+  secret_access_key:
+    secure: YyxwCqc8aPvsX432y3YhnRye2c/hyYylu6EBSGxgDG0Jg7IXtHKkcslGPvTdjbX8fw5wDliM8a/4J+qGNlbxz7hzXSf5n4Hf7jsTTmTMl/QGqtfwRRElqO2zihEpMaLwU/r9p36G9gOu41emIAsXX7jsrEwCHySm500k60nj6V0=
+  bucket: io.github.robertknight
+  skip_cleanup: true
+  local-dir: pkg
+  upload-dir: passcards/builds/latest
+  on:
+    branch: master
+  acl: public_read
+- provider: s3
+  access_key_id: AKIAJLAC2I2QPV6E33GA
+  secret_access_key:
+    secure: YyxwCqc8aPvsX432y3YhnRye2c/hyYylu6EBSGxgDG0Jg7IXtHKkcslGPvTdjbX8fw5wDliM8a/4J+qGNlbxz7hzXSf5n4Hf7jsTTmTMl/QGqtfwRRElqO2zihEpMaLwU/r9p36G9gOu41emIAsXX7jsrEwCHySm500k60nj6V0=
+  bucket: io.github.robertknight
+  skip_cleanup: true
+  local-dir: webui
+  upload-dir: passcards/web/latest
+  on:
+    branch: master
+  acl: public_read
+env:
+  global:
+  # Chrome Extension client secret and refresh token
+  - secure: IPKY7PDK0u9FnoaykUVC30qExvr6yFReyvJfXxssEfJ9jgPb84grUzsBcZiNnUG4az3N5wr40wbfHc60MhQOE/5d51loKgPGrlqPbxsT07hzI8XaovkJrn1hiv2aKwVf8VCPhpp+wlhfsmdiZ9c3u9mUdYehQINilHnMjYmzBO4=
+  - secure: WIUMAwG+EJFtS+w6y6zz7M1SvvVVB1hY//pZIAbUG1uFfYEUZWnjonuhJR09vN8V+mNjCFA4GZ8dlsOMkc0Edf+blaBeEPkmUWp5yFygoJbRFxu09ioXfFL2cUzyWcMkEJnwhJhk/GEh7ytNcPkHgyEeKDy1W5MXBkl6wKv1ApY=

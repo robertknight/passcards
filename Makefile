@@ -86,8 +86,14 @@ clean:
 	rm -rf build/*
 	rm -rf webui/scripts/*
 
-xpi: webui-build
+firefox-addon: webui-build
 	cd addons/firefox && make
+
+chrome-extension-zip: webui-build
+	cd addons/chrome && make zip
+
+publish-chrome-extension: chrome-extension-zip
+	./utils/publish-chrome-extension.js
 
 update-manifest-versions:
 	$(UPDATE_MANIFEST) package.json
