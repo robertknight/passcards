@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "passcards",
   "description": "A Simple Password Manager",
-  "version": "0.1.1",
+  "version": "0.3",
   "homepage_url": "https://robertknight.github.io/passcards",
   "permissions": [
     "activeTab",
