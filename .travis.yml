@@ -43,6 +43,7 @@ env:
   global:
   - CHROME_EXT_CLIENT_ID=663008561130-bgbo9tvbnr7j1ufrfuf52r4k3g8t9j9n.apps.googleusercontent.com
   - CHROME_EXT_APP_ID=olcdnhbhbfgncnocdfojpdjbododkimk
-  # Chrome Extension client secret and refresh token
-  - secure: IPKY7PDK0u9FnoaykUVC30qExvr6yFReyvJfXxssEfJ9jgPb84grUzsBcZiNnUG4az3N5wr40wbfHc60MhQOE/5d51loKgPGrlqPbxsT07hzI8XaovkJrn1hiv2aKwVf8VCPhpp+wlhfsmdiZ9c3u9mUdYehQINilHnMjYmzBO4=
-  - secure: WIUMAwG+EJFtS+w6y6zz7M1SvvVVB1hY//pZIAbUG1uFfYEUZWnjonuhJR09vN8V+mNjCFA4GZ8dlsOMkc0Edf+blaBeEPkmUWp5yFygoJbRFxu09ioXfFL2cUzyWcMkEJnwhJhk/GEh7ytNcPkHgyEeKDy1W5MXBkl6wKv1ApY=
+  # CHROME_EXT_REFRESH_TOKEN
+  - secure: QgqHYQ8eg9sJLJcELRuC47B7R56/t8Y7fxi+dToZGeD82UHfJX2lZcKfn9coAVxRc8VvYSdOw0PCHxzeq61xCXRK/Rw4H/zrbyEyqwIPu6t82vyTP8S0/2qQa43suUPPL9vCw7/uohzeUd7MuZeAUofQdJPxCYF8RvNK7uBOYfk=
+  # CHROME_EXT_CLIENT_SECRET
+  - secure: NyDSq2y6xkHzFTTnoZuLrLfIdEmSzNTEQX9vQQCNyGfCWDbN4AYQd2whYAYV0IUaKdOh5/p+ixYvIaodjVol5ixRZ0p1R3IiqRfwV7YPum10goPiAb9e8D+tNgryz0SUMBNtJBT07yc3NsrTZAAsZfEb0ME4Emdp7O9C8q4d9pk=
