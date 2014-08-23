@@ -84,22 +84,31 @@ export class FieldMatch {
   * Looks for matches in the title, ID and location of the item.
   */
 export function matchItem(item: onepass.Item, pattern: string) : boolean {
-	pattern = pattern.toLowerCase();
-	var titleLower = item.title.toLowerCase();
-	
-	if (titleLower.indexOf(pattern) != -1) {
-		return true;
-	}
+	var tokens = stringutil.parseCommandLine(pattern).map((token) => {
+		return token.toLowerCase();
+	});
 
-	if (stringutil.startsWith(item.uuid.toLowerCase(), pattern)) {
-		return true;
-	}
+	var matchToken = (item: onepass.Item, token: string) => {
+		var titleLower = item.title.toLowerCase();
+		
+		if (titleLower.indexOf(token) != -1) {
+			return true;
+		}
 
-	if (item.location && item.location.toLowerCase().indexOf(pattern) != -1) {
-		return true;
-	}
+		if (stringutil.startsWith(item.uuid.toLowerCase(), token)) {
+			return true;
+		}
 
-	return false;
+		if (item.location && item.location.toLowerCase().indexOf(token) != -1) {
+			return true;
+		}
+
+		return false;
+	};
+
+	return underscore.every<string>(tokens, (token) => {
+		return matchToken(item, token);
+	});
 }
 
 /** Returns a list of items in @p vault which match a given pattern. */

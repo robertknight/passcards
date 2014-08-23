@@ -35,9 +35,23 @@ testLib.addTest('match item', (assert) => {
 	
 	assert.ok(item_search.matchItem(item, 'goog'));
 	assert.ok(item_search.matchItem(item, 'GOOGLE'));
+	assert.ok(item_search.matchItem(item, 'google.com'));
 
 	assert.equal(item_search.matchField(content, 'user').length, 1);
 	assert.equal(item_search.matchField(content, 'pass').length, 1);
+});
+
+testLib.addTest('match item - multiword query', (assert) => {
+	var item = itemWithTitleAndUrl('ACME Ltd. - Google', 'mail.acme.com');
+	assert.ok(item_search.matchItem(item, 'acme google'));
+	assert.ok(item_search.matchItem(item, 'google acme'));
+	assert.ok(!item_search.matchItem(item, 'acme google anotherword'));
+});
+
+testLib.addTest('match item - phrase query', (assert) => {
+	var item = itemWithTitleAndUrl('ACME Ltd. - Payroll', 'payments.enterprisesoft.com/acme');
+	assert.ok(item_search.matchItem(item, '"ACME Ltd"'));
+	assert.ok(!item_search.matchItem(item, '"ACME Payroll"'));
 });
 
 testLib.addTest('URL match score', (assert) => {

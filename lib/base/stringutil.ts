@@ -36,9 +36,11 @@ export function replaceLast(subject: string, pattern: string, replacement: strin
 	return subject.slice(0, index) + replacement + subject.slice(index + pattern.length);
 }
 
-/** Splits a shell/REPL command-line into tokens. Tokens are delimited by spaces
-  * except where they are escaped by a backslash or enclosed within single
-  * or double quotes.
+/** Splits a space-separated list into tokens in a manner similar to
+  * shell/REPL command parsing.
+  *
+  * Tokens are delimited by spaces except where they are escaped by a backslash
+  * or enclosed within single or double quotes.
   *
   * eg. parseCommandLine('one "two three" four\ five six') => ['one', 'two three', 'four five', 'six]
   */
