@@ -46,6 +46,11 @@ function main(args) {
 	var clientSecret = requireEnvVar('CHROME_EXT_CLIENT_SECRET');
 	var refreshToken = requireEnvVar('CHROME_EXT_REFRESH_TOKEN');
 
+	console.log('app ID', appId);
+	console.log('client ID', clientId);
+	console.log('client Secret', clientSecret.length);
+	console.log('refresh token', refreshToken.length);
+
 	if (travisBranch !== 'master' || travisPullRequest !== 'false') {
 		console.log('Skipping publication from pull request or non-master branch');
 		return;
