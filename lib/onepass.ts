@@ -334,6 +334,13 @@ export class Item {
 		return this.typeName == ItemTypes.TOMBSTONE;
 	}
 
+	/** Returns true if this is a regular item - ie. not a folder,
+	  * tombstone or saved search.
+	  */
+	isRegularItem() : boolean {
+		return !stringutil.startsWith(<string>this.typeName, 'system.');
+	}
+
 	/** Returns a shortened version of the item's UUID, suitable for disambiguation
 	  * between different items with the same type and title.
 	  */

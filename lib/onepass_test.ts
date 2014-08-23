@@ -356,6 +356,7 @@ testLib.addAsyncTest('Remove item', (assert) => {
 			item = item_;
 			assert.equal(item.title, 'Facebook');
 			assert.equal(item.typeName, onepass.ItemTypes.LOGIN);
+			assert.ok(item.isRegularItem());
 			return item.getContent();
 		}).then((content) => {
 			testLib.assertEqual(assert, content.urls, [ { label: 'website', 'url' : 'facebook.com' } ]);
@@ -369,6 +370,7 @@ testLib.addAsyncTest('Remove item', (assert) => {
 			// check that all item-specific data has been erased.
 			// Only a tombstone should be left behind
 			assert.ok(item.isTombstone());
+			assert.ok(!item.isRegularItem());
 			assert.equal(item.title, 'Unnamed');
 			assert.equal(item.typeName, onepass.ItemTypes.TOMBSTONE);
 			return vault.loadItem(item.uuid);
