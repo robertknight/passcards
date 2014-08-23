@@ -92,6 +92,7 @@ function main(args) {
 
 var onErr = function(err) {
 	console.log('Publishing to Chrome Web Store failed:', err.message);
+	process.exit(1);
 };
 process.on('uncaughtException', onErr);
 
