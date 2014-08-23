@@ -1,7 +1,15 @@
 #!/usr/bin/env node
 
-// Utility script to publish a build of the Google Chrome extension
-// from pkg/passcards.zip to the Chrome Web Store
+// Utility script to publish a Google Chrome extension to the Chrome Web Store
+// following a successful Travis CI build.
+//
+// Usage:
+//   export CHROME_EXT_CLIENT_ID=<ID>
+//   export CHROME_EXT_CLIENT_SECRET=<secret>
+//   export CHROME_EXT_REFRESH_TOKEN=<token>
+//   export CHROME_EXT_APP_ID=<ID>
+//
+//   publish-chrome-extension.js <path/to/package.zip>
 //
 // This uses the APIs described at https://developer.chrome.com/webstore/using_webstore_api
 // to upload a new .zip archive containing the extension's files to the Chrome Web Store
@@ -14,9 +22,11 @@
 // https://developer.chrome.com/webstore/using_webstore_api . To obtain an access
 // token this script needs:
 //
-//  - A client ID, currently hardcoded
-//  - A client secret, exposed via the CHROME_EXT_CLIENT_SECRET env var
-//  - A client refresh token, exposed via the CHROME_EXT_REFRESH_TOKEN env var
+//  - A client ID and secret, exposed via CHROME_EXT_CLIENT_ID and CHROME_EXT_CLIENT_SECRET
+//  - A client refresh token, exposed via CHROME_EXT_REFRESH_TOKEN
+//
+// Additionally the script needs the app ID of the Chrome extension, which it gets
+// from the CHROME_EXT_APP_ID env var
 
 function requireEnvVar(name) {
 	var val = process.env[name];
@@ -45,11 +55,6 @@ function main(args) {
 	var clientId = requireEnvVar('CHROME_EXT_CLIENT_ID');
 	var clientSecret = requireEnvVar('CHROME_EXT_CLIENT_SECRET');
 	var refreshToken = requireEnvVar('CHROME_EXT_REFRESH_TOKEN');
-
-	console.log('app ID', appId);
-	console.log('client ID', clientId);
-	console.log('client Secret', clientSecret.length);
-	console.log('refresh token', refreshToken.length);
 
 	if (travisBranch !== 'master' || travisPullRequest !== 'false') {
 		console.log('Skipping publication from pull request or non-master branch');
