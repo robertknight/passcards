@@ -13,6 +13,13 @@
     "default_icon": "data/icons/icon-32.png",
     "default_popup": "data/panel.html"
   },
+  "commands" : {
+	"_execute_browser_action" : {
+	  "suggested_key" : {
+	    "default" : "Alt+Shift+P"
+	  }
+	}
+  },
   "icons": {
     "32": "data/icons/icon-32.png",
     "64": "data/icons/icon-64.png"
