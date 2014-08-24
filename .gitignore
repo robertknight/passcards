@@ -5,5 +5,6 @@ tags
 build
 pkg
 node_modules
+webui/icons
 webui/scripts
 webui/style

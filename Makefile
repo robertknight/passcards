@@ -8,6 +8,7 @@ all_srcs=$(lib_srcs) $(cli_srcs) $(webui_srcs) $(addon_srcs)
 test_files=$(shell find build/ -name '*_test.js')
 webui_script_dir=webui/scripts
 webui_css_dir=webui/style
+webui_icon_dir=webui/icons
 
 # marker files used to trigger npm / Git submodule
 # updates prior to build
@@ -26,7 +27,8 @@ build/current: $(lib_srcs) $(cli_srcs) $(webui_srcs) $(deps)
 webui-build: $(webui_script_dir)/webui_bundle.js \
              $(webui_script_dir)/page_bundle.js \
              $(webui_script_dir)/crypto_worker.js \
-             $(webui_css_dir)/app.css
+             $(webui_css_dir)/app.css \
+             webui-icons
 
 $(webui_script_dir)/webui_bundle.js: build/current
 	mkdir -p $(webui_script_dir)
@@ -43,6 +45,10 @@ $(webui_script_dir)/crypto_worker.js: build/current
 $(webui_css_dir)/app.css: webui/app.less
 	mkdir -p $(webui_css_dir)
 	lessc webui/app.less > $(webui_css_dir)/app.css
+
+webui-icons:
+	@mkdir -p ${webui_icon_dir}
+	@cp icons/* ${webui_icon_dir}
 
 # pbkdf2_bundle.js is a require()-able bundle
 # of the PBKDF2 implementation for use in Web Workers

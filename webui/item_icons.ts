@@ -43,8 +43,8 @@ export class ItemIconProvider {
 	private provider: site_info.SiteInfoProvider;
 	private iconSize: number;
 
-	private static LOADING_ICON = 'loading.png';
-	private static DEFAULT_ICON = 'default.png';
+	private static LOADING_ICON = 'icons/loading.png';
+	private static DEFAULT_ICON = 'icons/default.png';
 
 	/** Stream of icon update events.
 	  * Emits the normalized URL (using url_util.normalize) of the location

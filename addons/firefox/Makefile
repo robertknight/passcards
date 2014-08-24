@@ -17,7 +17,7 @@ $(XPI_PACKAGE): build/xpi_content
 run: build/xpi_content
 	$(CFX) run
 
-build/xpi_content: lib/main.js data/index.html data/scripts/webui_bundle.js data/scripts/crypto_worker.js data/style/app.css data/panel.html data/scripts/panel_content.js data/scripts/page.js data/icon-32.png data/icon-64.png data/loading.png data/default.png
+build/xpi_content: lib/main.js data/index.html data/scripts/webui_bundle.js data/scripts/crypto_worker.js data/style/app.css data/panel.html data/scripts/panel_content.js data/scripts/page.js icons
 	@mkdir -p build/xpi_content
 	@touch build/xpi_content
 
@@ -31,23 +31,15 @@ lib/main.js: src/main.ts
 	cp build/addons/firefox/src/main.js lib/
 	sed -i='' 's/..\/..\/..\/lib\/net\/rpc/.\/rpc/' lib/main.js
 
+icons:
+	mkdir -p data/icons
+	cp ../../icons/*.png data/icons
+
 data/scripts:
 	mkdir -p data/scripts
 
 data/style:
 	mkdir -p data/style
-
-data/icon-32.png: ../../icons/icon-32.png
-	cp ../../icons/icon-32.png data/
-
-data/icon-64.png: ../../icons/icon-64.png
-	cp ../../icons/icon-64.png data/
-
-data/loading.png: ../../icons/loading.png
-	cp ../../icons/loading.png data/
-
-data/default.png: ../../icons/default.png
-	cp ../../icons/default.png data/
 
 data/index.html: ../../webui/index.html
 	cp ../../webui/index.html data/

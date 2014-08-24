@@ -144,8 +144,8 @@ function main() {
 		id: 'passcards-icon',
 		label: 'passcards Password Manager',
 		icon: {
-			'32' : './icon-32.png',
-			'64' : './icon-64.png'
+			'32' : './icons/icon-32.png',
+			'64' : './icons/icon-64.png'
 		},
 		onChange: showPanel
 	});
