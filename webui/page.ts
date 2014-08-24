@@ -32,6 +32,11 @@ function inputFieldType(typeStr: string) : forms.FieldType {
 	}
 }
 
+function isElementVisible(elt: Element) {
+	var rect = elt.getBoundingClientRect();
+	return rect.width > 0 && rect.height > 0;
+}
+
 var lastFields : HTMLInputElement[] = [];
 
 portRpc.on('find-fields', () => {
@@ -48,7 +53,8 @@ portRpc.on('find-fields', () => {
 			id: elt.id,
 			name: elt.name,
 			type: inputFieldType(elt.type),
-			placeholder: elt.placeholder
+			placeholder: elt.placeholder,
+			visible: isElementVisible(elt)
 		};
 		var ariaAttr = elt.attributes.getNamedItem('aria-label');
 		if (ariaAttr) {

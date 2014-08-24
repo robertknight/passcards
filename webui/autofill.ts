@@ -43,6 +43,10 @@ export class AutoFiller {
 				var autofillEntries: forms.AutoFillEntry[] = [];
 
 				fields.forEach((field) => {
+					if (!field.visible) {
+						return;
+					}
+
 					var isUsernameField = false;
 					var isPasswordField = false;
 

@@ -68,14 +68,16 @@ testLib.addAsyncTest('simple user/password autofill', (assert) => {
 		key: 'f1',
 		id: 'username',
 		name: 'username',
-		type: forms.FieldType.Text
+		type: forms.FieldType.Text,
+		visible: true
 	});
 
 	fakePage.formList.push({
 		key: 'f2',
 		id: '',
 		name: 'password',
-		type: forms.FieldType.Password
+		type: forms.FieldType.Password,
+		visible: true
 	});
 
 	var autofiller = new autofill.AutoFiller(fakePage);
@@ -93,6 +95,31 @@ testLib.addAsyncTest('simple user/password autofill', (assert) => {
 
 		testLib.continueTests();
 	}).done();
+});
+
+testLib.addAsyncTest('ignore hidden fields', (assert) => {
+	var item = itemWithUsernameAndPassword('testuser@gmail.com', 'testpass');
+	var fakePage = new FakePageAccess();
+
+	fakePage.formList.push({
+		key: 'f1',
+		type: forms.FieldType.Password,
+		visible: true
+	});
+	fakePage.formList.push({
+		key: 'f2',
+		type: forms.FieldType.Password,
+		visible: false
+	});
+
+	var autofiller = new autofill.AutoFiller(fakePage);
+	autofiller.autofill(item).then((result) => {
+		assert.equal(result.count, 1);
+		assert.deepEqual(fakePage.autofillEntries, [
+			{ key: 'f1', value: 'testpass' }
+		]);
+		testLib.continueTests();
+	});
 });
 
 testLib.start();

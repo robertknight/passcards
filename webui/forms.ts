@@ -16,6 +16,7 @@ export enum FieldType {
 export interface InputField {
 	key: any;
 	type: FieldType;
+	visible: boolean;
 
 	id?: string;
 	name?: string;
