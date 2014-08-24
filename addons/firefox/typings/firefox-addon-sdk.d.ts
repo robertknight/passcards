@@ -68,6 +68,7 @@ declare module 'sdk/panel' {
 		contentURL: string;
 
 		show(opts: PanelShowOptions) : void;
+		hide() : void;
 	}
 
 	export var Panel: Panel

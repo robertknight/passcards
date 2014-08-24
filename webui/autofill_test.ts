@@ -1,3 +1,7 @@
+/// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
+
+import Q = require('q');
+
 import autofill = require('./autofill');
 import event_stream = require('../lib/base/event_stream');
 import forms = require('./forms');
@@ -33,12 +37,17 @@ class FakePageAccess implements page_access.PageAccess {
 		}, 0);
 	}
 
-	autofill(fields: forms.AutoFillEntry[]) {
+	autofill(fields: forms.AutoFillEntry[]) : Q.Promise<number> {
 		this.autofillEntries = fields;
+		return Q(fields.length);
 	}
 
 	siteInfoProvider() : site_info.SiteInfoProvider {
 		return null;
+	}
+
+	hidePanel() : void {
+		/* no-op */
 	}
 }
 
@@ -70,7 +79,8 @@ testLib.addAsyncTest('simple user/password autofill', (assert) => {
 	});
 
 	var autofiller = new autofill.AutoFiller(fakePage);
-	autofiller.autofill(item).then(() => {
+	autofiller.autofill(item).then((result) => {
+		assert.equal(result.count, 2);
 
 		fakePage.autofillEntries.sort((a,b) => {
 			return a.key.localeCompare(b.key);

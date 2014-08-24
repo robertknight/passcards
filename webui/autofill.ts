@@ -5,6 +5,10 @@ import onepass = require('../lib/onepass');
 import page_access = require('./page_access');
 import stringutil = require('../lib/base/stringutil');
 
+export interface AutoFillResult {
+	count: number;
+}
+
 /** Interface for initiating auto-fill of items in
  * the active tab/page with values from a given @p item.
  */
@@ -12,7 +16,7 @@ export interface AutoFillHandler {
 	/** Autofill fields on the current page with values from a given @p item.
 	  * Returns a promise for the auto-filled entries.
 	  */
-	autofill(item: onepass.Item) : Q.Promise<forms.AutoFillEntry[]>;
+	autofill(item: onepass.Item) : Q.Promise<AutoFillResult>
 }
 
 export class AutoFiller {
@@ -30,8 +34,8 @@ export class AutoFiller {
 		return keyMatch(field.id) || keyMatch(field.name) || keyMatch(field.ariaLabel) || keyMatch(field.placeholder);
 	}
 
-	autofill(item: onepass.Item) : Q.Promise<forms.AutoFillEntry[]> {
-		var result = Q.defer<forms.AutoFillEntry[]>();
+	autofill(item: onepass.Item) : Q.Promise<AutoFillResult> {
+		var result = Q.defer<AutoFillResult>();
 		var usernameKeys = ['email', 'user', 'account'];
 
 		item.getContent().then((content) => {
@@ -72,10 +76,17 @@ export class AutoFiller {
 					}
 				});
 
-				this.page.autofill(autofillEntries);
-				result.resolve(autofillEntries);
+				this.page.autofill(autofillEntries).then((count) => {
+					result.resolve({
+						count: count
+					});
+				}).catch((err) => {
+					result.reject(err);
+				});
 			});
-		}).done();
+		}).catch((err) => {
+			result.reject(err);
+		});
 
 		return result.promise;
 	}

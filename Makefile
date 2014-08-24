@@ -23,7 +23,10 @@ all: build/current webui-build
 build/current: $(lib_srcs) $(cli_srcs) $(webui_srcs) $(deps)
 	@$(TSC) --outDir build $(lib_srcs) $(cli_srcs) $(webui_srcs) && touch build/current
 
-webui-build: $(webui_script_dir)/webui_bundle.js $(webui_script_dir)/page_bundle.js $(webui_script_dir)/crypto_worker.js $(webui_css_dir)/app.css
+webui-build: $(webui_script_dir)/webui_bundle.js \
+             $(webui_script_dir)/page_bundle.js \
+             $(webui_script_dir)/crypto_worker.js \
+             $(webui_css_dir)/app.css
 
 $(webui_script_dir)/webui_bundle.js: build/current
 	mkdir -p $(webui_script_dir)

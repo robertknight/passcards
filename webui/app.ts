@@ -101,6 +101,7 @@ interface AppViewState {
 }
 
 interface AppServices {
+	pageAccess: page_access.PageAccess;
 	autofiller: autofill.AutoFillHandler;
 	iconProvider: item_icons.ItemIconProvider;
 }
@@ -188,7 +189,13 @@ class AppView extends reactts.ReactComponentBase<AppViewProps, AppViewState> {
 	}
 
 	autofill(item: onepass.Item) {
-		this.props.services.autofiller.autofill(item);
+		this.props.services.autofiller.autofill(item).then((result) => {
+			if (result.count > 0) {
+				this.props.services.pageAccess.hidePanel();
+			}
+		}).catch((err) => {
+			this.showError(err.message);
+		});
 	}
 
 	render() : react.ReactComponent<any,any> {
@@ -989,7 +996,8 @@ export class App {
 		var iconDiskCache = new key_value_store.IndexedDBStore('passcards', 'icon-cache');
 		this.services = {
 			iconProvider: new item_icons.ItemIconProvider(iconDiskCache, pageAccess.siteInfoProvider(), 48),
-			autofiller: new autofill.AutoFiller(pageAccess)
+			autofiller: new autofill.AutoFiller(pageAccess),
+			pageAccess: pageAccess
 		};
 
 		onepass_crypto.CryptoJsCrypto.initWorkers();

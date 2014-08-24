@@ -49,6 +49,10 @@ appRpc.onAsync('fetch-url', (done: (err:any, info: site_info_service.UrlResponse
 	});
 });
 
+appRpc.on('hide-panel', () => {
+	addonRpc.call('hide-panel', []);
+});
+
 addonRpc.on<void>('pagechanged', (url: string) => {
 	pageAccess.currentUrl = url;
 	appRpc.call('pagechanged', [url]);

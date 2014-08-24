@@ -47,8 +47,10 @@ export interface PageAccess {
 	/** Fetch a list of auto-fillable fields on the current page. */
 	findForms(callback: (formList: forms.InputField[]) => void) : void;
 
-	/** Auto-fill fields on the current page */
-	autofill(fields: forms.AutoFillEntry[]) : void;
+	/** Auto-fill fields on the current page.
+	  * Returns a promise for the number of fields that were auto-filled.
+	  */
+	autofill(fields: forms.AutoFillEntry[]) : Q.Promise<number>;
 	
 	/** Emits events when the extension's UI is shown. */
 	showEvents: event_stream.EventStream<void>;
@@ -58,13 +60,16 @@ export interface PageAccess {
 	  */
 	pageChanged: event_stream.EventStream<string>;
 
-	/** URL of the acitve page or tab. */
+	/** URL of the active page or tab. */
 	currentUrl: string;
 
 	/** Interface to retrieve info about URLs associated
 	  * with items.
 	  */
 	siteInfoProvider() : site_info.SiteInfoProvider;
+
+	/** Hide the passcards item list panel. */
+	hidePanel(): void;
 }
 
 /** Interface exposed by priviledged browser extension code for triggering input field
@@ -138,17 +143,26 @@ export class ExtensionPageAccess implements PageAccess {
 		return this.connector.oauthRedirectUrl;
 	}
 
-	autofill(fields: forms.AutoFillEntry[]) {
+	autofill(fields: forms.AutoFillEntry[]) : Q.Promise<number> {
+		var filled = Q.defer<number>();
 		this.rpc.call('autofill', [fields], (err: any, count: number) => {
 			if (err) {
-				// TODO - Show user an indicator that autofill failed
-				return;
+				filled.reject(err);
+			} else {
+				filled.resolve(count);
 			}
 		});
+		return filled.promise;
 	}
 
 	siteInfoProvider() : site_info.SiteInfoProvider {
 		return this.siteInfoService;
+	}
+
+	hidePanel() {
+		this.rpc.call('hide-panel', [], () => {
+			/* no-op */
+		});
 	}
 };
 
@@ -216,16 +230,29 @@ export class ChromeExtensionPageAccess implements PageAccess {
 		});
 	}
 
-	autofill(fields: forms.AutoFillEntry[]) : void {
+	autofill(fields: forms.AutoFillEntry[]) : Q.Promise<number> {
+		var filled = Q.defer<number>();
 		this.connectToCurrentTab().then((rpc) => {
 			rpc.call('autofill', [fields], (err: any, count: number) => {
-				/* no-op */
+				if (err) {
+					filled.reject(err);
+				} else {
+					filled.resolve(count);
+				}
 			});
 		});
+		return filled.promise;
 	}
 	
 	siteInfoProvider() : site_info.SiteInfoProvider {
 		return this.siteInfoService;
+	}
+
+	hidePanel() : void {
+		chrome.browserAction.getPopup({}, (doc) => {
+			var appWindow = <any>window;
+			appWindow.hidePanel();
+		});
 	}
 
 	private connectToCurrentTab() : Q.Promise<rpc.RpcHandler> {

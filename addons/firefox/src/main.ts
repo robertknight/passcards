@@ -98,6 +98,10 @@ function main() {
 				notifyPageChanged(tabs.activeTab);
 				panelRpc.call('show', []);
 			});
+
+			panelRpc.on('hide-panel', () => {
+				mainPanel.hide();
+			});
 			
 			panelRpc.onAsync('fetch-url', (done: (err: any, result: any) => void, url: string) => {
 				// copied from collectionutil.ts
