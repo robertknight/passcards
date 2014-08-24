@@ -42,6 +42,7 @@ data/style:
 	mkdir -p data/style
 
 data/index.html: ../../webui/index.html
+	mkdir -p data
 	cp ../../webui/index.html data/
 
 data/scripts/crypto_worker.js: data/scripts ../../webui/scripts/crypto_worker.js
@@ -64,5 +65,5 @@ data/panel.html: src/panel.html
 	cp src/panel.html data/
 
 clean:
-	rm -rf build/* data/* lib/*
+	rm -rf build data lib
 
