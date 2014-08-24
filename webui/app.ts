@@ -493,22 +493,6 @@ class ItemSectionProps {
 class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 	private itemContent : onepass.ItemContent;
 	private shortcuts: shortcut.Shortcut[];
-	private iconUpdateListener: (url: string) => void;
-
-	// FIXME - This is duplicated for the Item component
-	private setupIconUpdateListener(iconProvider: item_icons.ItemIconProvider) {
-		if (!this.iconUpdateListener) {
-			this.iconUpdateListener = (url) => {
-				if (this.props.item && this.props.iconProvider.updateMatches(url, this.props.item.location)) {
-					this.forceUpdate();
-				}
-			};
-		}
-		if (this.props.iconProvider) {
-			this.props.iconProvider.updated.ignore(this.iconUpdateListener);
-		}
-		iconProvider.updated.listen(this.iconUpdateListener);
-	}
 
 	componentWillReceiveProps(nextProps: DetailsViewProps) {
 		if (!nextProps.item) {
@@ -525,8 +509,6 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 			this.itemContent = content;
 			this.forceUpdate();
 		}).done();
-
-		this.setupIconUpdateListener(nextProps.iconProvider);
 	}
 
 	componentDidUpdate() {
@@ -545,7 +527,6 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 			})
 		];
 		this.updateShortcutState();
-		this.setupIconUpdateListener(this.props.iconProvider);
 	}
 
 	componentDidUnmount() {
@@ -606,11 +587,14 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 				);
 			}
 
-			var iconUrl = this.props.iconProvider.query(this.props.item.location).iconUrl;
 			detailsContent = react.DOM.div({className: 'detailsContent'},
 				react.DOM.div({className: 'detailsHeader'},
-					react.DOM.img({className: 'detailsHeaderIcon itemIcon', src: iconUrl}),
-					react.DOM.div({},
+					new ItemIcon({
+						item: this.props.item,
+						iconProvider: this.props.iconProvider,
+						visible: true
+					}),
+					react.DOM.div({className: 'detailsOverview'},
 						react.DOM.div({className: 'detailsTitle'}, this.props.item.title),
 						react.DOM.div({className: 'detailsLocation'}, this.props.item.location))
 				),
@@ -653,29 +637,19 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 	}
 }
 
-// Item in the overall view
-interface ItemState {
-}
-
-class ItemProps {
-	key: string;
-	title: string;
-	accountName: string;
-	location: string;
-	domain: string;
-	onSelected: () => void;
-	isHovered: boolean;
+class ItemIconProps {
+	item: onepass.Item;
 	iconProvider: item_icons.ItemIconProvider;
 	visible: boolean;
 }
 
-class Item extends reactts.ReactComponentBase<ItemProps, ItemState> {
+class ItemIcon extends reactts.ReactComponentBase<ItemIconProps, {}> {
 	private iconUpdateListener: (url: string) => void;
 
 	private setupIconUpdateListener(iconProvider: item_icons.ItemIconProvider) {
 		if (!this.iconUpdateListener) {
 			this.iconUpdateListener = (url) => {
-				if (this.isMounted() && this.props.iconProvider.updateMatches(url, this.props.location)) {
+				if (this.props.item && this.props.iconProvider.updateMatches(url, this.props.item.location)) {
 					this.forceUpdate();
 				}
 			};
@@ -684,10 +658,6 @@ class Item extends reactts.ReactComponentBase<ItemProps, ItemState> {
 			this.props.iconProvider.updated.ignore(this.iconUpdateListener);
 		}
 		iconProvider.updated.listen(this.iconUpdateListener);
-	}
-
-	getInitialState() {
-		return {};
 	}
 
 	componentDidMount() {
@@ -703,11 +673,38 @@ class Item extends reactts.ReactComponentBase<ItemProps, ItemState> {
 	render() {
 		var iconUrl: string;
 		if (this.props.visible) {
-			iconUrl = this.props.iconProvider.query(this.props.location).iconUrl;
+			iconUrl = this.props.iconProvider.query(this.props.item.location).iconUrl;
 		} else {
 			iconUrl = '';
 		}
 
+		return react.DOM.div({className: 'itemIconContainer'},
+			react.DOM.img({className: 'itemIcon', src: iconUrl})
+		);
+	}
+}
+
+// Item in the overall view
+interface ItemState {
+}
+
+class ItemProps {
+	key: string;
+	item: onepass.Item;
+	accountName: string;
+	domain: string;
+	onSelected: () => void;
+	isHovered: boolean;
+	iconProvider: item_icons.ItemIconProvider;
+	visible: boolean;
+}
+
+class Item extends reactts.ReactComponentBase<ItemProps, ItemState> {
+	getInitialState() {
+		return {};
+	}
+
+	render() {
 		return react.DOM.div({
 				className: stringutil.truthyKeys({
 					itemOverview: true,
@@ -717,11 +714,13 @@ class Item extends reactts.ReactComponentBase<ItemProps, ItemState> {
 				ref: 'itemOverview',
 				onClick: () => this.props.onSelected()
 			},
-			react.DOM.div({className: 'itemIconContainer'},
-				react.DOM.img({className: 'itemIcon', src: iconUrl})
-			),
+			new ItemIcon({
+				item: this.props.item,
+				iconProvider: this.props.iconProvider,
+				visible: this.props.visible
+			}),
 			react.DOM.div({className: 'itemDetails'},
-				react.DOM.div({className: 'itemTitle'}, this.props.title),
+				react.DOM.div({className: 'itemTitle'}, this.props.item.title),
 				react.DOM.div({className: 'itemLocation'}, this.props.domain),
 				react.DOM.div({className: 'itemAccount'}, this.props.accountName)
 			)
@@ -782,9 +781,8 @@ class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> 
 	}) : Item {
 		return new Item({
 			key: item.uuid,
-			title: item.title,
+			item: item,
 			accountName: this.itemAccount(item),
-			location: item.location,
 			domain: itemDomain(item),
 			onSelected: () => {
 				this.setSelectedItem(item);
