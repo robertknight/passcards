@@ -33,8 +33,8 @@ export interface AddKeyRequest {
 
 export var AGENT_PORT = 4789;
 
-var AGENT_LOG = '/tmp/1pass-agent.log';
-var AGENT_PID_FILE = '/tmp/1pass-agent.pid';
+var AGENT_LOG = '/tmp/passcards-agent.log';
+var AGENT_PID_FILE = '/tmp/passcards-agent.pid';
 
 var KEY_TIMEOUT = 2 * 60 * 1000;
 
