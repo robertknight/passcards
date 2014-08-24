@@ -33,7 +33,7 @@ lib/main.js: src/main.ts
 
 icons:
 	mkdir -p data/icons
-	cp ../../icons/*.png data/icons
+	cp ../../icons/* data/icons
 
 data/scripts:
 	mkdir -p data/scripts

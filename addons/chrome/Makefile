@@ -26,9 +26,9 @@ style: ../../webui/style/*.css
 	@mkdir -p data/style
 	@cp ../../webui/style/*.css data/style
 
-icons: ../../icons/*.png
+icons: ../../icons/*
 	@mkdir -p data/icons
-	@cp ../../icons/*.png data/icons
+	@cp ../../icons/* data/icons
 
 clean:
 	@rm -rf data/icons

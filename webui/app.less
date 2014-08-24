@@ -1,3 +1,17 @@
+/* constants */
+
+/* see http://www.google.com/design/spec/style/typography.html */
+@material-text-alpha: 0.87;
+@material-caption-alpha: 0.54;
+@material-text-color: rgba(0,0,0,@material-text-alpha);
+@material-caption-color: rgba(0,0,0,@material-caption-alpha);
+
+@material-color-header: #fff;
+@material-color-primary: #e91e63;
+@material-color-accent1: #fce4ec;
+@material-color-accent2: #f48fb1;
+@material-color-accent3: #f06292;
+
 /* mixins */
 .flex {
 	display: flex;
@@ -35,11 +49,38 @@
 	-webkit-overflow-scrolling: touch;
 }
 
+/* mixins - material */
+.material-header {
+	background-color: @material-color-primary;
+	box-shadow: rgba(0, 0, 0, 0.26) 0px 2px 5px 0px;
+	color: #fff;
+	font-weight: 400;
+}
+
+.material-button-raised {
+	padding-top: 5px;
+	padding-bottom: 5px;
+	padding-left: 15px;
+	padding-right: 15px;
+
+	border:0px;
+	background-color: @material-color-primary;
+	box-shadow: rgba(0, 0, 0, 0.26) 0px 2px 5px 0px;
+	color: #fff;
+	font-weight: 400;
+}
+
+.material-input-placeholder {
+	color: #fff;
+	opacity: 0.8;
+}
+
 /* app style */
 html, body {
 	font-family: 'Helvetica Neue', 'Segoe UI', 'Helvetica', 'Arial';
 	margin:0px;
 	height: 100%;
+	color: @material-text-color;
 }
 
 .setupView {
@@ -64,7 +105,7 @@ html, body {
 }
 
 .unlockPane {
-	background-color: #0099CC;
+	background-color: @material-color-primary;
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -75,21 +116,21 @@ html, body {
 }
 
 .unlockPaneForm {
-	border: 1px solid rgba(255,255,255,0.7);
-	border-radius: 5px;
-	background-color: rgba(255,255,255,0.5);
+	background-color: @material-color-accent3;
 
 	margin-left: auto;
 	margin-right: auto;
 	margin-top: 50px;
-	width: 300px;
+	width: 100%;
 	height: 40px;
 
-	padding: 50px;
+	padding-top: 50px;
+	padding-bottom: 50px;
 }
 
 .unlockPaneInputs {
 	.flex;
+	.flex-axis-center;
 }
 
 .unlockLabel {
@@ -101,6 +142,17 @@ html, body {
 
 .masterPassField {
 	padding: 5px;
+	border:1px solid #fff;
+	border-radius: 5px;
+	font-size: 18px;
+	font-weight: 400;
+	color: @material-color-header;
+	background-color: @material-color-accent3;
+	outline: none;
+}
+
+.masterPassField::-webkit-input-placeholder {
+	.material-input-placeholder;
 }
 
 .itemListView {
@@ -111,25 +163,38 @@ html, body {
 }
 
 .toolbar {
+	.material-header;
+
 	padding-top: 7px;
 	padding-bottom: 7px;
 	border-bottom: 1px solid #bbbbbb;
 	height: 30px;
-	background-color: #ededed;
 }
 
 .searchField {
 	width: 100%;
 	position: fixed;
+	padding-left: 20px;
 
 	.flex;
 	.flex-row;
-	.flex-center;
+	.flex-cross-center;
 }
 
 .searchFieldInput {
 	padding-left: 5px;
+	margin-left: 20px;
+	width:90%;
 	height: 30px;
+	border: 0px;
+	color: @material-color-header;
+	background-color: @material-color-primary;
+	font-size: 22px;
+	outline: none;
+}
+
+.searchFieldInput::-webkit-input-placeholder {
+	.material-input-placeholder;
 }
 
 .itemList {
@@ -155,11 +220,11 @@ html, body {
 }
 
 .itemOverview:hover {
-	background-color: #eeeeee;
+	background-color: @material-color-accent1;
 }
 
 .itemHovered {
-	background-color: #eeeeee;
+	background-color: @material-color-accent1;
 }
 
 .itemIconContainer {
@@ -230,13 +295,35 @@ html, body {
 }
 
 .detailsToolbar {
-	margin-bottom: 10px;
+	.flex;
+	.flex-row;
+	.flex-cross-center;
+
+	.material-header;
+
 	height: 30px;
+	padding-left: 20px;
 }
 
 .detailsToolbar a {
 	text-decoration: none;
-	margin-bottom: 5px;
+}
+
+.itemActionBar {
+	padding-left:10px;
+	padding-right:10px;
+	padding-top:10px;
+	padding-bottom:5px;
+	margin-bottom:10px;
+}
+
+.itemActionButton {
+	.material-button-raised;
+}
+
+.itemActionButton:active {
+	.material-button-raised;
+	background-color:@material-color-accent2;
 }
 
 .detailsHeader {
@@ -269,8 +356,8 @@ html, body {
 }
 
 .detailsFieldLabel {
-	color:#333333;
 	margin-right: 10px;
+	color:@material-caption-color;
 }
 
 .detailsCore {

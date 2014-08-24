@@ -1,6 +1,7 @@
 /// <reference path="../typings/DefinitelyTyped/jquery/jquery.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
+/// <reference path="../typings/sprintf.d.ts" />
 /// <reference path="../node_modules/react-typescript/declarations/react.d.ts" />
 /// <reference path="../node_modules/react-typescript/declarations/react-typescript.d.ts" />
 /// <reference path="../typings/fastclick.d.ts" />
@@ -9,6 +10,7 @@ import $ = require('jquery');
 import fastclick = require('fastclick');
 import react = require('react');
 import reactts = require('react-typescript');
+import sprintf = require('sprintf');
 import url = require('url');
 import underscore = require('underscore');
 
@@ -162,7 +164,8 @@ class AppView extends reactts.ReactComponentBase<AppViewProps, AppViewState> {
 		// pick up changes without requiring the user
 		// to hide and re-show the view
 		componentDoc.addEventListener('blur', () => {
-			this.refreshItems();
+			// TESTING
+			//this.refreshItems();
 		});
 	}
 
@@ -326,12 +329,39 @@ class UnlockPane extends reactts.ReactComponentBase<UnlockPaneProps, UnlockPaneS
 						placeholder: 'Master Password...',
 						ref: 'masterPassField',
 						autoFocus: true
-					}),
-					react.DOM.input({type: 'submit', value: 'Unlock', ref: 'unlockBtn'})
+					})
 				),
 				react.DOM.div({className: 'unlockLabel'}, unlockMessage)
 			)
 		);
+	}
+}
+
+class SvgIconProps {
+	href: string;
+	fill: string;
+	viewBox: {
+		x: number;
+		y: number;
+		width: number;
+		height: number;
+	};
+	width: number;
+	height: number;
+}
+
+class SvgIcon extends reactts.ReactComponentBase<SvgIconProps, {}> {
+	render() {
+		return react.DOM.svg({
+			dangerouslySetInnerHTML: {
+				__html: sprintf('<use x="0" y="0" fill="%s" xlink:href="%s"></use>',
+				  underscore.escape(this.props.fill), underscore.escape(this.props.href))
+			},
+			viewBox: sprintf('%d %d %d %d', this.props.viewBox.x, this.props.viewBox.y,
+			  this.props.viewBox.width, this.props.viewBox.height),
+			width: this.props.width,
+			height: this.props.height
+		});
 	}
 }
 
@@ -377,10 +407,24 @@ class SearchField extends reactts.ReactComponentBase<SearchFieldProps, {}> {
 	}
 
 	render() {
+		var iconViewBox = {
+			x: 0,
+			y: 0,
+			width: 20,
+			height: 20
+		};
+
 		return react.DOM.div({className: stringutil.truthyKeys({searchField: true, toolbar: true})},
+				new SvgIcon({
+					href: 'icons/icons.svg#search',
+					width: 20,
+					height: 20,
+					viewBox: iconViewBox,
+					fill: 'white'
+				}),
 				react.DOM.input({className: 'searchFieldInput',
 					type: 'text',
-					placeholder: 'Search...',
+					placeholder: 'Search items...',
 					ref: 'searchField'
 				})
 			);
@@ -475,6 +519,21 @@ class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, ItemLis
 	}
 }
 
+class ItemFieldProps {
+	label: string;
+	value: string;
+	isPassword: boolean;
+}
+
+class ItemField extends reactts.ReactComponentBase<ItemFieldProps,{}> {
+	render() {
+		return react.DOM.div({className: 'detailsField'},
+			react.DOM.div({className: 'detailsFieldLabel'}, this.props.label),
+			react.DOM.div({}, this.props.value)
+		);
+	}
+}
+
 // Detail view for an individual item
 class DetailsViewProps {
 	item: onepass.Item;
@@ -555,10 +614,11 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 				var fields: react.ReactComponent<any,any>[] = [];
 				section.fields.forEach((field) => {
 					if (field.value) {
-						fields.push(react.DOM.div({className: 'detailsField'},
-							react.DOM.div({className: 'detailsFieldLabel'}, field.title),
-							react.DOM.div({className: 'detailsFieldValue'}, field.value)
-						));
+						fields.push(new ItemField({
+							label: field.title,
+							value: field.value,
+							isPassword: false
+						}));
 					}
 				});
 				sections.push(react.DOM.div({className: 'detailsSection'},
@@ -567,24 +627,27 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 			});
 
 			this.itemContent.urls.forEach((url) => {
-				websites.push(react.DOM.div({className: 'detailsField'},
-					react.DOM.div({className: 'detailsFieldLabel'}, url.label),
-					react.DOM.div({className: 'detailsFieldValue'}, url.url)
-				));
+				websites.push(new ItemField({
+					label: url.label,
+					value: url.url,
+					isPassword: false
+				}));
 			});
 
 			if (account) {
-				coreFields.push(react.DOM.div({className: 'detailsField detailsAccount'},
-					react.DOM.div({className: 'detailsFieldLabel'}, 'Account'),
-					react.DOM.div({}, account))
-				);
+				coreFields.push(new ItemField({
+					label: 'Account',
+					value: account,
+					isPassword: false
+				}));
 			}
 
 			if (password) {
-				coreFields.push(react.DOM.div({className: 'detailsField detailsPass'},
-					react.DOM.div({className: 'detailsFieldLabel'}, 'Password'),
-					react.DOM.div({}, password))
-				);
+				coreFields.push(new ItemField({
+					label: 'Password',
+					value: password,
+					isPassword: true
+				}));
 			}
 
 			detailsContent = react.DOM.div({className: 'detailsContent'},
@@ -621,7 +684,15 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 					href:'#',
 					ref:'backLink',
 					onClick: () => this.props.onGoBack()
-				}, 'Back')),
+				},
+				new SvgIcon({
+					href: 'icons/icons.svg#arrow-back',
+					width: 20,
+					height: 20,
+					fill: 'white',
+					viewBox: { x: 0, y: 0, width: 20, height: 20 }
+				})
+				)),
 				react.DOM.div({className: 'itemActionBar'},
 					react.DOM.input({
 						className: 'itemActionButton',
