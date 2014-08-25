@@ -33,22 +33,6 @@ import vfs = require('../lib/vfs/vfs');
 
 import onepass_crypto = require('../lib/onepass_crypto');
 
-/** Converts a map of (component name -> unmounted React component)
-  * into an array of components where the map key is set
-  * as the 'key' attribute of the component's props.
-  *
-  * The ordering of the components in the result array is arbitrary.
-  */
-function mapToComponentArray(map: Object) {
-	var ary: Array<react.ReactComponent<any,any>> = [];
-	Object.keys(map).forEach((k) => {
-		var child = (<any>map)[k];
-		child.props.key = k;
-		ary.push(child);
-	});
-	return ary;
-}
-
 enum ActiveView {
 	UnlockPane,
 	ItemList,
@@ -253,7 +237,7 @@ class AppView extends reactts.ReactComponentBase<AppViewProps, AppViewState> {
 		}
 
 		return react.DOM.div({className: 'appView', ref: 'app'},
-			mapToComponentArray(children)
+			reactutil.mapToComponentArray(children)
 		);
 	}
 }
