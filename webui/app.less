@@ -43,6 +43,11 @@
 	.flex-cross-center;
 }
 
+.flex-stretch {
+	flex-grow: 1;
+	-webkit-flex-grow: 1;
+}
+
 .touch-scrolling {
 	overflow: auto;
 	overflow-scrolling: auto;
@@ -86,7 +91,7 @@ html, body {
 .setupView {
 	width: 100%;
 	height: 100%;
-	background-color: #0099CC;
+	background-color: @material-color-primary;
 	color: white;
 	font-weight: bold;
 
@@ -118,8 +123,6 @@ html, body {
 .unlockPaneForm {
 	background-color: @material-color-accent3;
 
-	margin-left: auto;
-	margin-right: auto;
 	margin-top: 50px;
 	width: 100%;
 	height: 40px;
@@ -130,10 +133,18 @@ html, body {
 
 .unlockPaneInputs {
 	.flex;
+	.flex-column;
 	.flex-axis-center;
+	
+	width: 50%;
+	min-width: 200px;
+	max-width: 300px;
+	margin-left: auto;
+	margin-right: auto;
 }
 
 .unlockLabel {
+	width: 100%;
 	margin-top: 5px;
 	color: white;
 	font-size: 14px;
@@ -171,10 +182,9 @@ html, body {
 	height: 30px;
 }
 
-.searchField {
+.itemListToolbar {
 	width: 100%;
 	position: fixed;
-	padding-left: 20px;
 
 	.flex;
 	.flex-row;
@@ -182,9 +192,10 @@ html, body {
 }
 
 .searchFieldInput {
+	.flex-stretch;
+
 	padding-left: 5px;
 	margin-left: 20px;
-	width:90%;
 	height: 30px;
 	border: 0px;
 	color: @material-color-header;
@@ -195,6 +206,14 @@ html, body {
 
 .searchFieldInput::-webkit-input-placeholder {
 	.material-input-placeholder;
+}
+
+.toolbarSearchIcon {
+	margin-left: 20px;
+}
+
+.toolbarLockIcon {
+	margin-right: 20px;
 }
 
 .itemList {

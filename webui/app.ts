@@ -26,6 +26,7 @@ import item_icons = require('./item_icons');
 import item_search = require('../lib/item_search');
 import onepass = require('../lib/onepass');
 import page_access = require('./page_access');
+import reactutil = require('./reactutil');
 import shortcut = require('./base/shortcut');
 import stringutil = require('../lib/base/stringutil');
 import vfs = require('../lib/vfs/vfs');
@@ -106,6 +107,7 @@ interface AppServices {
 	pageAccess: page_access.PageAccess;
 	autofiller: autofill.AutoFillHandler;
 	iconProvider: item_icons.ItemIconProvider;
+	keyAgent: key_agent.SimpleKeyAgent;
 }
 
 interface AppViewProps {
@@ -230,7 +232,8 @@ class AppView extends reactts.ReactComponentBase<AppViewProps, AppViewState> {
 				selectedItem: this.state.selectedItem,
 				onSelectedItemChanged: (item) => { this.setState({selectedItem: item}); },
 				currentUrl: this.state.currentUrl,
-				iconProvider: this.props.services.iconProvider
+				iconProvider: this.props.services.iconProvider,
+				onLockClicked: () => this.props.services.keyAgent.forgetKeys()
 			});
 			children.itemDetails = new DetailsView({
 				item: this.state.selectedItem,
@@ -293,6 +296,7 @@ class UnlockPane extends reactts.ReactComponentBase<UnlockPaneProps, UnlockPaneS
 				this.props.onUnlock();
 			})
 			.catch((err) => {
+				console.log('Unlocking failed', err.message);
 				this.setUnlockState(UnlockState.Failed);
 				this.props.onUnlockErr(err);
 			});
@@ -329,11 +333,31 @@ class UnlockPane extends reactts.ReactComponentBase<UnlockPaneProps, UnlockPaneS
 						placeholder: 'Master Password...',
 						ref: 'masterPassField',
 						autoFocus: true
-					})
-				),
-				react.DOM.div({className: 'unlockLabel'}, unlockMessage)
+					}),
+					react.DOM.div({className: 'unlockLabel'}, unlockMessage)
+				)
 			)
 		);
+	}
+}
+
+class ToolbarButtonProps {
+	iconHref: string;
+}
+
+class ToolbarButton extends reactts.ReactComponentBase<ToolbarButtonProps,{}> {
+	render() {
+		return react.DOM.a(reactutil.mergeProps(this.props, {
+			className: 'toolbarLink',
+			href: '#',
+		}),
+		new SvgIcon({
+			href: this.props.iconHref,
+			width: 20,
+			height: 20,
+			fill: 'white',
+			viewBox: {x: 0, y: 0, width: 22, height: 22}
+		}));
 	}
 }
 
@@ -352,7 +376,7 @@ class SvgIconProps {
 
 class SvgIcon extends reactts.ReactComponentBase<SvgIconProps, {}> {
 	render() {
-		return react.DOM.svg({
+		return react.DOM.svg(reactutil.mergeProps(this.props, {
 			dangerouslySetInnerHTML: {
 				__html: sprintf('<use x="0" y="0" fill="%s" xlink:href="%s"></use>',
 				  underscore.escape(this.props.fill), underscore.escape(this.props.href))
@@ -361,19 +385,21 @@ class SvgIcon extends reactts.ReactComponentBase<SvgIconProps, {}> {
 			  this.props.viewBox.width, this.props.viewBox.height),
 			width: this.props.width,
 			height: this.props.height
-		});
+		}));
 	}
 }
 
 // Search box to search through items in the view
-class SearchFieldProps {
+class ItemListToolbarProps {
 	onQueryChanged: (query: string) => void;
 	onMoveUp: () => void;
 	onMoveDown: () => void;
 	onActivate: () => void;
+	
+	onLockClicked: () => void;
 }
 
-class SearchField extends reactts.ReactComponentBase<SearchFieldProps, {}> {
+class ItemListToolbar extends reactts.ReactComponentBase<ItemListToolbarProps, {}> {
 	componentDidMount() {
 		var searchField = this.fieldInput();
 		var updateQuery = underscore.debounce(() => {
@@ -414,8 +440,9 @@ class SearchField extends reactts.ReactComponentBase<SearchFieldProps, {}> {
 			height: 20
 		};
 
-		return react.DOM.div({className: stringutil.truthyKeys({searchField: true, toolbar: true})},
+		return react.DOM.div({className: stringutil.truthyKeys({itemListToolbar: true, toolbar: true})},
 				new SvgIcon({
+					className: 'toolbarSearchIcon',
 					href: 'icons/icons.svg#search',
 					width: 20,
 					height: 20,
@@ -426,6 +453,11 @@ class SearchField extends reactts.ReactComponentBase<SearchFieldProps, {}> {
 					type: 'text',
 					placeholder: 'Search items...',
 					ref: 'searchField'
+				}),
+				new ToolbarButton({
+					className: 'toolbarLockIcon',
+					iconHref: 'icons/icons.svg#lock-outline',
+					onClick: () => this.props.onLockClicked()
 				})
 			);
 	}
@@ -441,6 +473,8 @@ class ItemListViewProps {
 	onSelectedItemChanged: (item: onepass.Item) => void;
 	currentUrl: string;
 	iconProvider: item_icons.ItemIconProvider;
+
+	onLockClicked: () => void;
 }
 
 class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, ItemListViewState> {
@@ -481,7 +515,7 @@ class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, ItemLis
 		}
 		
 		return react.DOM.div({className: 'itemListView'},
-			new SearchField({
+			new ItemListToolbar({
 				onQueryChanged: this.updateFilter,
 				ref: 'searchField',
 				onMoveUp: () => {
@@ -492,7 +526,8 @@ class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, ItemLis
 				},
 				onActivate: () => {
 					this.props.onSelectedItemChanged((<ItemList>this.refs['itemList']).hoveredItem());
-				}
+				},
+				onLockClicked: () => this.props.onLockClicked()
 			}),
 			new ItemList({items: this.props.items, filter: this.state.filter,
 				filterUrl: filterUrl,
@@ -509,12 +544,12 @@ class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, ItemLis
 	}
 
 	private focusSearchField() {
-		var searchField: SearchField = <any>this.refs['searchField'];
+		var searchField: ItemListToolbar = <any>this.refs['searchField'];
 		searchField.focus();
 	}
 
 	private blurSearchField() {
-		var searchField: SearchField = <any>this.refs['searchField'];
+		var searchField: ItemListToolbar = <any>this.refs['searchField'];
 		searchField.blur();
 	}
 }
@@ -679,20 +714,11 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 			tabIndex: 0
 			},
 			react.DOM.div({className: stringutil.truthyKeys({toolbar: true, detailsToolbar: true})},
-				react.DOM.a({
-					className: 'toolbarLink',
-					href:'#',
-					ref:'backLink',
+				new ToolbarButton({
+					iconHref: 'icons/icons.svg#arrow-back',
+					ref: 'backLink',
 					onClick: () => this.props.onGoBack()
-				},
-				new SvgIcon({
-					href: 'icons/icons.svg#arrow-back',
-					width: 20,
-					height: 20,
-					fill: 'white',
-					viewBox: { x: 0, y: 0, width: 20, height: 20 }
-				})
-				)),
+				})),
 				react.DOM.div({className: 'itemActionBar'},
 					react.DOM.input({
 						className: 'itemActionButton',
@@ -1014,7 +1040,6 @@ function itemDomain(item: onepass.Item) : string {
 declare var firefoxAddOn: page_access.ExtensionConnector;
 
 export class App {
-	private keyAgent: key_agent.SimpleKeyAgent;
 	private appView: AppView;
 	private savedState: AppViewState;
 	private services: AppServices;
@@ -1062,11 +1087,15 @@ export class App {
 			pageAccess = new page_access.ExtensionPageAccess(new page_access.FakeExtensionConnector());
 		}
 
+		var keyAgent = new key_agent.SimpleKeyAgent();
+		keyAgent.setAutoLockTimeout(2 * 60 * 1000);
+
 		var iconDiskCache = new key_value_store.IndexedDBStore('passcards', 'icon-cache');
 		this.services = {
 			iconProvider: new item_icons.ItemIconProvider(iconDiskCache, pageAccess.siteInfoProvider(), 48),
 			autofiller: new autofill.AutoFiller(pageAccess),
-			pageAccess: pageAccess
+			pageAccess: pageAccess,
+			keyAgent: keyAgent
 		};
 
 		onepass_crypto.CryptoJsCrypto.initWorkers();
@@ -1081,15 +1110,12 @@ export class App {
 			}
 		});
 
-		this.keyAgent = new key_agent.SimpleKeyAgent();
-		this.keyAgent.setAutoLockTimeout(2 * 60 * 1000);
-
 		fs.login().then(() => {
 			try {
-				var vault = new onepass.Vault(fs, '/1Password/1Password.agilekeychain', this.keyAgent);
+				var vault = new onepass.Vault(fs, '/1Password/1Password.agilekeychain', this.services.keyAgent);
 				this.updateState({vault: vault});
 
-				this.keyAgent.onLock().listen(() => {
+				this.services.keyAgent.onLock().listen(() => {
 					this.updateState({isLocked: true});
 				});
 
@@ -1113,10 +1139,10 @@ export class App {
 
 		// setup auto-lock
 		$(rootInputElement).keydown((e) => {
-			this.keyAgent.resetAutoLock();
+			this.services.keyAgent.resetAutoLock();
 		});
 		$(rootInputElement).mousedown((e) => {
-			this.keyAgent.resetAutoLock();
+			this.services.keyAgent.resetAutoLock();
 		});
 
 		// create main app view
