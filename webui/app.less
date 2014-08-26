@@ -377,6 +377,23 @@ html, body {
 .detailsFieldLabel {
 	margin-right: 10px;
 	color:@material-caption-color;
+	width: 75px;
+}
+
+.detailsFieldValue {
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
+	border: 1px solid rgba(0,0,0,0);
+	padding: 2px;
+	padding-left: 4px;
+	padding-right: 4px;
+}
+
+.detailsFieldValue:hover {
+	background-color: @material-color-accent1;
+	border: 1px solid @material-color-accent2;
+	border-radius: 2px;
 }
 
 .detailsCore {

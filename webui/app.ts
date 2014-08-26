@@ -25,13 +25,12 @@ import http_vfs = require('../lib/vfs/http');
 import item_icons = require('./item_icons');
 import item_search = require('../lib/item_search');
 import onepass = require('../lib/onepass');
+import onepass_crypto = require('../lib/onepass_crypto');
 import page_access = require('./page_access');
 import reactutil = require('./reactutil');
 import shortcut = require('./base/shortcut');
 import stringutil = require('../lib/base/stringutil');
 import vfs = require('../lib/vfs/vfs');
-
-import onepass_crypto = require('../lib/onepass_crypto');
 
 enum ActiveView {
 	UnlockPane,
@@ -546,9 +545,15 @@ class ItemFieldProps {
 
 class ItemField extends reactts.ReactComponentBase<ItemFieldProps,{}> {
 	render() {
+		var displayValue = this.props.value;
+		if (this.props.isPassword) {
+			displayValue = stringutil.repeat('•', this.props.value.length);
+		}
 		return react.DOM.div({className: 'detailsField'},
 			react.DOM.div({className: 'detailsFieldLabel'}, this.props.label),
-			react.DOM.div({}, this.props.value)
+			react.DOM.div({
+				className: 'detailsFieldValue'
+			}, displayValue)
 		);
 	}
 }

@@ -82,3 +82,14 @@ export function parseCommandLine(str: string) : string[] {
 	return tokens;
 }
 
+/** Return a string consisting of @p count consecutive repetition of
+  * @p str.
+  */
+export function repeat(str: string, count: number) : string {
+	var result = '';
+	for (var i=0; i < count; i++) {
+		result += str;
+	}
+	return result;
+}
+

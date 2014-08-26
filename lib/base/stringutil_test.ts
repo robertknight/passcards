@@ -52,5 +52,11 @@ testLib.addTest('replace last', (assert) => {
 	assert.equal(stringutil.replaceLast('one two one', 'one', 'three'), 'one two three');
 });
 
+testLib.addTest('repeat string', (assert) => {
+	assert.equal(stringutil.repeat('foo', 0), '');
+	assert.equal(stringutil.repeat('foo', 1), 'foo');
+	assert.equal(stringutil.repeat('foo', 3), 'foofoofoo');
+});
+
 testLib.start();
 
