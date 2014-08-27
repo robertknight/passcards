@@ -683,7 +683,12 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 					}),
 					react.DOM.div({className: 'detailsOverview'},
 						react.DOM.div({className: 'detailsTitle'}, this.props.item.title),
-						react.DOM.div({className: 'detailsLocation'}, this.props.item.location))
+						react.DOM.div({className: 'detailsLocation'},
+							react.DOM.a({href: this.props.item.location},
+								itemDomain(this.props.item)
+							)
+						)
+					)
 				),
 				react.DOM.div({className: 'detailsCore'},
 					coreFields),

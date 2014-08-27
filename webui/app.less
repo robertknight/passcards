@@ -349,8 +349,8 @@ html, body {
 	.flex;
 	.flex-row;
 
-	border-bottom: 1px solid #dddddd;
 	padding-bottom: 5px;
+	margin-bottom: 15px;
 }
 
 .detailsOverview {
@@ -367,17 +367,27 @@ html, body {
 
 .detailsLocation {
 	color: #666666;
+	text-overflow: ellipsis;
+	overflow: hidden;
+}
+
+.detailsLocation a {
+	text-decoration: none;
 }
 
 .detailsField {
 	.flex;
-	.flex-row;
+	.flex-column;
+
+	padding-left: 20px;
+	padding-right: 20px; 
+	margin-bottom: 15px;
 }
 
 .detailsFieldLabel {
-	margin-right: 10px;
 	color:@material-caption-color;
-	width: 75px;
+	font-size: 14px;
+	order: 2;
 }
 
 .detailsFieldValue {
@@ -385,9 +395,7 @@ html, body {
 	text-overflow: ellipsis;
 	overflow: hidden;
 	border: 1px solid rgba(0,0,0,0);
-	padding: 2px;
-	padding-left: 4px;
-	padding-right: 4px;
+	order: 1;
 }
 
 .detailsFieldValue:hover {
@@ -399,7 +407,6 @@ html, body {
 .detailsCore {
 	padding-top: 5px;
 	padding-bottom: 5px;
-	border-bottom: 1px solid #dddddd;
 }
 
 .statusView {
