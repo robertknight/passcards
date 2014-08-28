@@ -10,3 +10,16 @@ declare var IDBKeyRange: {
     lowerBound(bound: any, open?: boolean): IDBKeyRange;
     upperBound(bound: any, open?: boolean): IDBKeyRange;
 }
+
+// [TS/1.0] ClipboardEvent is missing from lib.d.ts
+interface ClipboardEvent extends Event {
+	clipboardData: DataTransfer;
+}
+
+declare var ClipboardEvent: {
+	new(type: string, args: {
+		dataType: string;
+		data: string;
+	}) : ClipboardEvent;
+}
+

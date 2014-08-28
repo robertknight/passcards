@@ -136,4 +136,12 @@ declare module 'sdk/ui/button/toggle' {
 	export var ToggleButton: ToggleButton;
 }
 
+declare module 'sdk/clipboard' {
+	var clipboard: {
+		get() : string;
+		set(data: string, type?: string) : void;
+	};
+
+	export = clipboard;
+}
 

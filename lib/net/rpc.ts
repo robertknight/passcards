@@ -29,7 +29,7 @@ export interface Server {
 	  * arguments. Any exception thrown will be converted to an error returned
 	  * via the callback passed to Client.call()
 	  */
-	on<R>(method: string, handler: (args: any) => R) : void;
+	on<R>(method: string, handler: (...args: any[]) => R) : void;
 	/** Register an async RPC handler. This is similar to on() except that
 	  * instead of returning a value or throwing an exception, onAsync()
 	  * should call done() with the error or result when finished.

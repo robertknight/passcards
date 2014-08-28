@@ -53,6 +53,10 @@ appRpc.on('hide-panel', () => {
 	addonRpc.call('hide-panel', []);
 });
 
+appRpc.on<void>('copy', (mimeType: string, data: string) => {
+	addonRpc.call('copy', [mimeType, data]);
+});
+
 addonRpc.on<void>('pagechanged', (url: string) => {
 	pageAccess.currentUrl = url;
 	appRpc.call('pagechanged', [url]);

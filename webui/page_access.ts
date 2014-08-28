@@ -1,6 +1,7 @@
 /// <reference path="../typings/DefinitelyTyped/chrome/chrome.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
+/// <reference path="../typings/dom.d.ts" />
 
 import Q = require('q');
 
@@ -28,6 +29,11 @@ class ExtensionUrlFetcher {
 		});
 		return result.promise;
 	}
+}
+
+export interface ClipboardAccess {
+	clipboardAvailable() : boolean;
+	copy(type: string, data: string) : void;
 }
 
 /** Interface for interacting with forms in the current web page
@@ -103,7 +109,7 @@ export class FakeExtensionConnector implements ExtensionConnector {
   * priviledged extension code via an ExtensionConnector
   * which has access to browser tabs etc.
   */
-export class ExtensionPageAccess implements PageAccess {
+export class ExtensionPageAccess implements PageAccess, ClipboardAccess {
 	private rpc: rpc.RpcHandler;
 	private connector: ExtensionConnector;
 	private siteInfoService: site_info_service.SiteInfoService;
@@ -164,6 +170,16 @@ export class ExtensionPageAccess implements PageAccess {
 			/* no-op */
 		});
 	}
+
+	copy(mimeType: string, data: string) {
+		this.rpc.call('copy', [mimeType, data], () => {
+			/* no-op */
+		});
+	}
+
+	clipboardAvailable() {
+		return true;
+	}
 };
 
 /** Methods added to the `window` object for notifications
@@ -176,7 +192,7 @@ interface ChromeExtBackgroundWindow extends Window {
 /** Connector between the main app and the active tab in the Chrome
   * extension.
   */
-export class ChromeExtensionPageAccess implements PageAccess {
+export class ChromeExtensionPageAccess implements PageAccess, ClipboardAccess {
 	private siteInfoService: site_info_service.SiteInfoService;
 	private tabPorts: {
 		[index: number] : rpc.RpcHandler;
@@ -253,6 +269,19 @@ export class ChromeExtensionPageAccess implements PageAccess {
 			var appWindow = <any>window;
 			appWindow.hidePanel();
 		});
+	}
+
+	copy(mimeType: string, data: string) {
+		var tempTextElement = document.createElement('textarea');
+		document.body.appendChild(tempTextElement);
+		tempTextElement.value = data;
+		tempTextElement.setSelectionRange(0, data.length);
+		document.execCommand('copy');
+		document.body.removeChild(tempTextElement);
+	}
+
+	clipboardAvailable() {
+		return true;
 	}
 
 	private connectToCurrentTab() : Q.Promise<rpc.RpcHandler> {

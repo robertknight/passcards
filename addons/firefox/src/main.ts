@@ -1,6 +1,7 @@
 /// <reference path="../typings/firefox-addon-sdk.d.ts" />
 
 import buttons = require('sdk/ui/button/toggle');
+import clipboard = require('sdk/clipboard');
 import hotkeys = require('sdk/hotkeys');
 import panel = require('sdk/panel');
 import preferences_service = require('sdk/preferences/service');
@@ -129,6 +130,10 @@ function main() {
 					console.log('sending XHR failed', err.toString());
 					done(err, null);
 				}
+			});
+
+			panelRpc.on<void>('copy', (mimeType: string, data: string) => {
+				clipboard.set(data);
 			});
 		}
 

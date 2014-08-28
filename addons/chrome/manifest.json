@@ -6,6 +6,7 @@
   "homepage_url": "https://robertknight.github.io/passcards",
   "permissions": [
     "activeTab",
+    "clipboardWrite",
     "storage",
     "https://*.dropbox.com/"
   ],

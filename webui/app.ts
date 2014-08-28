@@ -91,6 +91,7 @@ interface AppServices {
 	autofiller: autofill.AutoFillHandler;
 	iconProvider: item_icons.ItemIconProvider;
 	keyAgent: key_agent.SimpleKeyAgent;
+	clipboard: page_access.ClipboardAccess;
 }
 
 interface AppViewProps {
@@ -226,7 +227,8 @@ class AppView extends reactts.ReactComponentBase<AppViewProps, AppViewState> {
 				},
 				autofill: () => {
 					this.autofill(this.state.selectedItem);
-				}
+				},
+				clipboard: this.props.services.clipboard
 			});
 		}
 		if (this.state.status) {
@@ -537,23 +539,89 @@ class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, ItemLis
 	}
 }
 
+interface ActionButtonProps {
+	value: string;
+	onClick: (e: MouseEvent) => void;
+}
+
+class ActionButton extends reactts.ReactComponentBase<ActionButtonProps,{}> {
+	render() {
+		return react.DOM.input(reactutil.mergeProps(this.props, {
+			className: 'itemActionButton',
+			type: 'button'
+		}));
+	}
+}
+
+interface ItemFieldState {
+	selected?: boolean;
+	revealed?: boolean;
+}
+
 class ItemFieldProps {
 	label: string;
 	value: string;
 	isPassword: boolean;
+	clipboard: page_access.ClipboardAccess;
 }
 
-class ItemField extends reactts.ReactComponentBase<ItemFieldProps,{}> {
+class ItemField extends reactts.ReactComponentBase<ItemFieldProps, ItemFieldState> {
+	getInitialState() {
+		return {
+			selected: false,
+			revealed: false
+		};
+	}
+
 	render() {
 		var displayValue = this.props.value;
-		if (this.props.isPassword) {
+		if (this.props.isPassword && !this.state.revealed) {
 			displayValue = stringutil.repeat('•', this.props.value.length);
 		}
+
+		var fieldActions: react.ReactComponent<any,any>;
+
+		var revealButton: ActionButton;
+		if (this.props.isPassword) {
+			revealButton = new ActionButton({
+				value: this.state.revealed ? 'Hide' : 'Reveal',
+				onClick: (e) => {
+					e.preventDefault();
+					this.setState({revealed: !this.state.revealed});
+				}
+			})
+		}
+
+		if (this.state.selected) {
+			var copyButton: ActionButton;
+			if (this.props.clipboard.clipboardAvailable()) {
+				copyButton = new ActionButton({
+					value: 'Copy',
+					onClick: (e) => {
+						this.props.clipboard.copy('text/plain', this.props.value)	
+					}
+				});
+			}
+
+			fieldActions = react.DOM.div({className: 'detailsFieldActions'},
+				copyButton,
+				revealButton
+			);
+		}
+
 		return react.DOM.div({className: 'detailsField'},
 			react.DOM.div({className: 'detailsFieldLabel'}, this.props.label),
 			react.DOM.div({
-				className: 'detailsFieldValue'
-			}, displayValue)
+				className: stringutil.truthyKeys({
+					detailsFieldValue: true,
+					concealedFieldValue: this.props.isPassword
+				}),
+				onClick: (e) => {
+					e.preventDefault();
+					this.setState({selected: !this.state.selected})
+				}
+			}, displayValue),
+			fieldActions
 		);
 	}
 }
@@ -562,6 +630,7 @@ class ItemField extends reactts.ReactComponentBase<ItemFieldProps,{}> {
 class DetailsViewProps {
 	item: onepass.Item;
 	iconProvider: item_icons.ItemIconProvider;
+	clipboard: page_access.ClipboardAccess;
 
 	onGoBack: () => any;
 	autofill: () => void;
@@ -641,7 +710,8 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 						fields.push(new ItemField({
 							label: field.title,
 							value: field.value,
-							isPassword: false
+							isPassword: false,
+							clipboard: this.props.clipboard
 						}));
 					}
 				});
@@ -654,7 +724,8 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 				websites.push(new ItemField({
 					label: url.label,
 					value: url.url,
-					isPassword: false
+					isPassword: false,
+					clipboard: this.props.clipboard
 				}));
 			});
 
@@ -662,7 +733,8 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 				coreFields.push(new ItemField({
 					label: 'Account',
 					value: account,
-					isPassword: false
+					isPassword: false,
+					clipboard: this.props.clipboard
 				}));
 			}
 
@@ -670,7 +742,8 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 				coreFields.push(new ItemField({
 					label: 'Password',
 					value: password,
-					isPassword: true
+					isPassword: true,
+					clipboard: this.props.clipboard
 				}));
 			}
 
@@ -710,16 +783,12 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 			react.DOM.div({className: stringutil.truthyKeys({toolbar: true, detailsToolbar: true})},
 				new ToolbarButton({
 					iconHref: 'icons/icons.svg#arrow-back',
-					ref: 'backLink',
 					onClick: () => this.props.onGoBack()
 				})),
 				react.DOM.div({className: 'itemActionBar'},
-					react.DOM.input({
-						className: 'itemActionButton',
+					new ActionButton({
 						accessKey:'a',
-						type: 'button',
 						value: 'Autofill',
-						ref: 'autofillBtn',
 						onClick: () => this.props.autofill()
 					})
 				),
@@ -1073,12 +1142,26 @@ export class App {
 		}
 
 		var pageAccess: page_access.PageAccess;
+		var clipboard: page_access.ClipboardAccess;
+
 		if (typeof firefoxAddOn != 'undefined') {
-			pageAccess = new page_access.ExtensionPageAccess(firefoxAddOn);
+			var extensionPageAccess = new page_access.ExtensionPageAccess(firefoxAddOn);
+			pageAccess = extensionPageAccess;
+			clipboard = extensionPageAccess;
 		} else if (env.isChromeExtension()) {
-			pageAccess = new page_access.ChromeExtensionPageAccess();
+			var chromePageAccess = new page_access.ChromeExtensionPageAccess();
+			pageAccess = chromePageAccess;
+			clipboard = chromePageAccess;
 		} else {
 			pageAccess = new page_access.ExtensionPageAccess(new page_access.FakeExtensionConnector());
+			clipboard = {
+				copy: (mimeType: string, data: string) => {
+					/* no-op */
+				},
+				clipboardAvailable : () => {
+					return false;
+				}
+			};
 		}
 
 		var keyAgent = new key_agent.SimpleKeyAgent();
@@ -1089,7 +1172,8 @@ export class App {
 			iconProvider: new item_icons.ItemIconProvider(iconDiskCache, pageAccess.siteInfoProvider(), 48),
 			autofiller: new autofill.AutoFiller(pageAccess),
 			pageAccess: pageAccess,
-			keyAgent: keyAgent
+			keyAgent: keyAgent,
+			clipboard: clipboard
 		};
 
 		onepass_crypto.CryptoJsCrypto.initWorkers();
