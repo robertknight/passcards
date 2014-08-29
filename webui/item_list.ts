@@ -114,7 +114,8 @@ class ItemProps {
 	onSelected: () => void;
 	isHovered: boolean;
 	iconProvider: item_icons.ItemIconProvider;
-	visible: boolean;
+	index: number;
+	offsetTop: number;
 }
 
 class Item extends reactts.ReactComponentBase<ItemProps, {}> {
@@ -127,15 +128,16 @@ class Item extends reactts.ReactComponentBase<ItemProps, {}> {
 				className: stringutil.truthyKeys({
 					itemOverview: true,
 					itemHovered: this.props.isHovered,
-					itemVisible: this.props.visible
 				}),
 				ref: 'itemOverview',
-				onClick: () => this.props.onSelected()
+				onClick: () => this.props.onSelected(),
+				style: {
+					top: (this.props.offsetTop).toString() + 'px'
+				}
 			},
 			new item_icons.IconControl({
 				location: this.props.item.location,
 				iconProvider: this.props.iconProvider,
-				visible: this.props.visible
 			}),
 			react.DOM.div({className: 'itemDetails'},
 				react.DOM.div({className: 'itemTitle'}, this.props.item.title),
@@ -157,6 +159,8 @@ interface ItemListState {
 		first: number;
 		last: number;
 	};
+
+	itemHeight?: number;
 }
 
 class ItemListProps {
@@ -190,12 +194,14 @@ class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> 
 			selectedItem: <onepass.Item>null,
 			hoveredIndex: 0,
 			matchingItems: <onepass.Item[]>[],
+			itemHeight: 60
 		};
 	}
 
 	createListItem(item: onepass.Item, state: {
 		hovered: boolean;
-		visible: boolean
+		index: number;
+		offsetTop: number;
 	}) : Item {
 		return new Item({
 			key: item.uuid,
@@ -208,7 +214,8 @@ class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> 
 			isHovered: state.hovered,
 			iconProvider: this.props.iconProvider,
 			ref: item.uuid,
-			visible: state.visible
+			index: state.index,
+			offsetTop: state.offsetTop
 		});
 	}
 
@@ -253,12 +260,18 @@ class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> 
 				isVisible = index >= this.state.visibleIndexes.first &&
 				            index <= this.state.visibleIndexes.last;
 			}
-			return this.createListItem(item, {
-				hovered: index == this.state.hoveredIndex,
-				visible: isVisible
-			});
+			if (isVisible) {
+				return this.createListItem(item, {
+					hovered: index == this.state.hoveredIndex,
+					index: index,
+					offsetTop: index * this.state.itemHeight
+				});
+			} else {
+				return null;
+			}
 		});
 		
+		var listHeight = this.state.matchingItems.length * this.state.itemHeight;
 		return react.DOM.div({
 			className: 'itemList',
 			ref: 'itemList',
@@ -266,7 +279,17 @@ class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> 
 				this.updateVisibleItems()
 			}
 		},
-			listItems
+			listItems,
+
+			// add placeholder item at the bottom of the list to ensure
+			// that the scrollbar has a suitable range to allow the user
+			// to scroll the whole list
+			react.DOM.div({
+				className: 'itemListFooter',
+				style: {
+					top: listHeight.toString() + 'px'
+				}
+			}, 'placeholder')
 		);
 	}
 
@@ -276,11 +299,16 @@ class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> 
 			var topIndex: number = -1;
 			var bottomIndex: number = -1;
 
-			var itemListRect = itemList.getBoundingClientRect();
+			var itemListRect = {
+				top: itemList.scrollTop,
+				bottom: itemList.scrollTop + itemList.getBoundingClientRect().height
+			};
 
 			for (var i=0; i < this.state.matchingItems.length; i++) {
-				var item = <HTMLElement>this.refs[this.state.matchingItems[i].uuid].getDOMNode();
-				var itemRect = item.getBoundingClientRect();
+				var itemRect = {
+					top: i * this.state.itemHeight,
+					bottom: (i * this.state.itemHeight) + this.state.itemHeight
+				};
 
 				if (topIndex == -1 && itemRect.bottom >= itemListRect.top) {
 					topIndex = i;

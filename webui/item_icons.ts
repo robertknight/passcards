@@ -270,7 +270,6 @@ class Cache {
 export class IconControlProps {
 	location: string;
 	iconProvider: ItemIconProvider;
-	visible: boolean;
 }
 
 export class IconControl extends reactts.ReactComponentBase<IconControlProps, {}> {
@@ -301,12 +300,7 @@ export class IconControl extends reactts.ReactComponentBase<IconControlProps, {}
 	}
 
 	render() {
-		var iconUrl: string;
-		if (this.props.visible) {
-			iconUrl = this.props.iconProvider.query(this.props.location).iconUrl;
-		} else {
-			iconUrl = '';
-		}
+		var iconUrl = this.props.iconProvider.query(this.props.location).iconUrl;
 
 		return react.DOM.div({className: 'itemIconContainer'},
 			react.DOM.img({className: 'itemIcon', src: iconUrl})
