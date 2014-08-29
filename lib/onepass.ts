@@ -412,7 +412,6 @@ export class Item {
 		item.openContents = data.openContents;
 		return item;
 	}
-
 }
 
 /** Represents a 1Password vault. */

@@ -1,3 +1,5 @@
+import urlLib = require('url');
+
 import stringutil = require('./stringutil');
 
 // Returns the part of a URL before the query string
@@ -23,5 +25,16 @@ export function normalize(url: string) : string {
 		url = 'https://' + url;
 	}
 	return stripQuery(url);
+}
+
+/** Returns the domain from a URL or an empty string
+  * if @p url does not contain a host.
+  */
+export function domain(url: string) : string {
+	if (!url) {
+		return '';
+	}
+	var parsedUrl = urlLib.parse(url);
+	return parsedUrl.host;
 }
 

@@ -1,9 +1,13 @@
+/// <reference path="../node_modules/react-typescript/declarations/react-typescript.d.ts" />
+/// <reference path="../node_modules/react-typescript/declarations/react.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
 /// <reference path="../typings/URIjs.d.ts" />
 /// <reference path="../typings/dom.d.ts" />
 
 import Q = require('q');
+import react = require('react');
+import reactts = require('react-typescript');
 import underscore = require('underscore');
 import urijs = require('URIjs');
 
@@ -21,7 +25,7 @@ export enum IconFetchState {
 	Found ///< The fetch completed and found an icon
 }
 
-export interface ItemIcon {
+export interface Icon {
 	iconUrl: string;
 	state: IconFetchState;
 }
@@ -37,7 +41,7 @@ export interface ItemIcon {
   */
 export class ItemIconProvider {
 	private tempCache: {
-		[index: string] : ItemIcon;
+		[index: string] : Icon;
 	};
 	private diskCache : Cache;
 	private provider: site_info.SiteInfoProvider;
@@ -103,7 +107,7 @@ export class ItemIconProvider {
 	}
 
 	/** Fetch the icon for a given URL. */
-	query(url: string) : ItemIcon {
+	query(url: string) : Icon {
 		url = url_util.normalize(url);
 
 		if (url.length == 0) {
@@ -123,7 +127,7 @@ export class ItemIconProvider {
 			}
 			return cachedIcon;
 		} else {
-			var icon : ItemIcon = {
+			var icon : Icon = {
 				iconUrl: ItemIconProvider.LOADING_ICON,
 				state: IconFetchState.Fetching
 			};
@@ -260,6 +264,53 @@ class Cache {
 			return Q.reject(new err_util.BaseError('Invalid URL'));
 		}
 		return f(key);
+	}
+}
+
+export class IconControlProps {
+	location: string;
+	iconProvider: ItemIconProvider;
+	visible: boolean;
+}
+
+export class IconControl extends reactts.ReactComponentBase<IconControlProps, {}> {
+	private iconUpdateListener: (url: string) => void;
+
+	private setupIconUpdateListener(iconProvider: ItemIconProvider) {
+		if (!this.iconUpdateListener) {
+			this.iconUpdateListener = (url) => {
+				if (this.props.location && this.props.iconProvider.updateMatches(url, this.props.location)) {
+					this.forceUpdate();
+				}
+			};
+		}
+		if (this.props.iconProvider) {
+			this.props.iconProvider.updated.ignore(this.iconUpdateListener);
+		}
+		iconProvider.updated.listen(this.iconUpdateListener);
+	}
+
+	componentDidMount() {
+		if (!this.iconUpdateListener) {
+			this.setupIconUpdateListener(this.props.iconProvider);
+		}
+	}
+
+	componentWillReceiveProps(nextProps: IconControlProps) {
+		this.setupIconUpdateListener(nextProps.iconProvider);
+	}
+
+	render() {
+		var iconUrl: string;
+		if (this.props.visible) {
+			iconUrl = this.props.iconProvider.query(this.props.location).iconUrl;
+		} else {
+			iconUrl = '';
+		}
+
+		return react.DOM.div({className: 'itemIconContainer'},
+			react.DOM.img({className: 'itemIcon', src: iconUrl})
+		);
 	}
 }
 
