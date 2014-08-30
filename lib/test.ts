@@ -43,9 +43,9 @@ export interface Assert {
 }
 
 interface TestCase {
-	name: string
-	testFunc: (assert: Assert) => void
-	async: boolean
+	name: string;
+	testFunc: (assert: Assert) => void;
+	async: boolean;
 }
 
 var testList : TestCase[] = [];
@@ -58,16 +58,32 @@ export function addTest(name : string, testFunc : (assert: Assert) => void) {
 	testList.push({name: name, testFunc: testFunc, async: false});
 }
 
-/** Add a test which completes asynchronously. @p testFunc must call
-  * continueTests() once all async operations have completed to signal
-  * the end of the test.
+/** Add a test which completes asynchronously. @p testFunc must
+  * signal when completion of all async operations started by
+  * the test case. It can do this either by returning a promise
+  * which is resolved when the test completes or by calling
+  * continueTests() once all async operations have completed.
   *
   * Note that all asynchronous tests are executed concurrently.
   *
   * See qunit.asyncTest()
   */
-export function addAsyncTest(name : string, testFunc : (assert: Assert) => void) {
-	testList.push({name: name, testFunc: testFunc, async: true});
+export function addAsyncTest(name: string, testFunc: (assert: Assert) => any) {
+	testList.push({
+		name: name,
+		testFunc: (assert: Assert) => {
+			var result: any = testFunc(assert);
+
+			// if the test case returns a promise, continue the test once
+			// the promise resolves or rejects
+			if (typeof result == 'object' && typeof result.then == 'function') {
+				result.then(() => {
+					continueTests();
+				}).done();
+			}
+		},
+		async: true
+	});
 }
 
 /** Inform the test runner that an async test has finished. This must be called
