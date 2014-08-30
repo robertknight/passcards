@@ -483,7 +483,7 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 						fields.push(new ItemField({
 							label: field.title,
 							value: field.value,
-							isPassword: false,
+							isPassword: field.kind == onepass.FieldType.Password,
 							clipboard: this.props.clipboard
 						}));
 					}
