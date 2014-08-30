@@ -555,4 +555,26 @@ testLib.addAsyncTest('repair items', (assert) => {
 	}).done();
 });
 
+testLib.addAsyncTest('edit item - rename', (assert) => {
+	var env = new CLITest(assert);
+	
+	return env.newVault().then(() => {
+		return env.run('edit', 'facebook', 'rename', 'newtitle');
+	}).then(() => {
+		return env.run('show', 'newtitle');
+	}).then(() => {
+		assert.ok(env.fakeTerm.didPrint(/username.*john\.doe@gmail.com/));
+	});
+});
+
+testLib.addAsyncTest('edit item - rename with empty title', (assert) => {
+	var env = new CLITest(assert);
+
+	return env.newVault().then(() => {
+		return env.runExpectingStatus(1, 'edit', 'facebook', 'rename', ' ');
+	}).then(() => {
+		assert.ok(env.fakeTerm.didPrint(/New item name must not be empty/));
+	});
+});
+
 testLib.start();

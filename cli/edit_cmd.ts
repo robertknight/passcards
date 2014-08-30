@@ -30,6 +30,12 @@ export class EditCommand {
 		});
 		var editCmds = this.parser.addSubparsers({dest:'action'});
 
+		// commands for renaming items
+		var renameCmd = editCmds.addParser('rename');
+		renameCmd.addArgument(['new_name'], {
+			help: 'New name for the item'
+		});
+
 		// commands for adding sections and fields
 		var addSectionCmd = editCmds.addParser('add-section');
 		addSectionCmd.addArgument(['section'], {
@@ -79,7 +85,7 @@ export class EditCommand {
 
 		// TODO - Add commands for:
 		// - Renaming fields
-		// - Removing sections and fields
+		// - Removing sections
 	}
 
 	handle(args: any, item: onepass.Item) : Q.Promise<void> {
@@ -87,6 +93,8 @@ export class EditCommand {
 		return item.getContent().then((_content) => {
 			content = _content;
 			switch (args.action) {
+				case 'rename':
+					return this.rename(item, args.new_name);
 				case 'add-section':
 					return this.addSection(content, args.section);
 				case 'add-field':
@@ -107,6 +115,15 @@ export class EditCommand {
 	private selectField(content: onepass.ItemContent, field: string) : item_search.FieldMatch {
 		var matches = item_search.matchField(content, field);
 		return matches.length > 0 ? matches[0] : null;
+	}
+
+	private rename(item: onepass.Item, newTitle: string) : Q.Promise<void> {
+		var title = newTitle.trim();
+		if (title.length < 1) {
+			throw new Error('New item name must not be empty');
+		}
+		item.title = title;
+		return null;
 	}
 
 	private addSection(content: onepass.ItemContent, sectionTitle: string) : Q.Promise<void> {
