@@ -4,7 +4,7 @@ import testLib = require('../lib/test');
 var clip = clipboard.createPlatformClipboard();
 
 testLib.addAsyncTest('get/set/clear', (assert) => {
-	clip.setData('hello world').then(() => {
+	return clip.setData('hello world').then(() => {
 		return clip.getData();
 	})
 	.then((content) => {
@@ -16,9 +16,7 @@ testLib.addAsyncTest('get/set/clear', (assert) => {
 	})
 	.then((content) => {
 		assert.equal(content, '');
-		testLib.continueTests();
-	})
-	.done();
+	});
 });
 
 testLib.start();

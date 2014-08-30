@@ -6,7 +6,7 @@ import testLib = require('../lib/test');
 
 testLib.addAsyncTest('store keys', (assert) => {
 	var httpAgent = new agent.HttpKeyAgent();
-	httpAgent.forgetKeys().then(() => {
+	return httpAgent.forgetKeys().then(() => {
 		return httpAgent.addKey('key1', 'mykey')
 	}).then(() => {
 		return httpAgent.listKeys();
@@ -20,9 +20,7 @@ testLib.addAsyncTest('store keys', (assert) => {
 	})
 	.then((keys) => {
 		testLib.assertEqual(assert, keys, []);
-		testLib.continueTests();
-	})
-	.done();
+	});
 });
 
 testLib.addAsyncTest('decrypt data', (assert) => {
@@ -32,16 +30,14 @@ testLib.addAsyncTest('decrypt data', (assert) => {
 	var itemPass = 'the master key';
 	var encrypted = crypto.encryptAgileKeychainItemData(new crypto.CryptoJsCrypto, itemPass, itemData);
 
-	httpAgent.addKey('key1', itemPass)
+	return httpAgent.addKey('key1', itemPass)
 	.then(() => {
 		return httpAgent.decrypt('key1', encrypted, new key_agent.CryptoParams(
 			key_agent.CryptoAlgorithm.AES128_OpenSSLKey));
 	})
 	.then((decrypted) => {
 		assert.equal(decrypted, itemData);
-		testLib.continueTests();
-	})
-	.done();
+	});
 });
 
 testLib.addAsyncTest('encrypt data', (assert) => {
@@ -51,7 +47,7 @@ testLib.addAsyncTest('encrypt data', (assert) => {
 	var itemPass = 'the master key';
 	var params = new key_agent.CryptoParams(key_agent.CryptoAlgorithm.AES128_OpenSSLKey);
 
-	httpAgent.addKey('key2', itemPass).then(() => {
+	return httpAgent.addKey('key2', itemPass).then(() => {
 		return httpAgent.encrypt('key2', itemData, params);
 	}).then((encrypted) => {
 		assert.equal(encrypted.slice(0,8), 'Salted__');
@@ -59,8 +55,7 @@ testLib.addAsyncTest('encrypt data', (assert) => {
 		return httpAgent.decrypt('key2', encrypted, params);
 	}).then((decrypted) => {
 		assert.equal(decrypted, itemData);
-		testLib.continueTests();
-	}).done();
+	});
 });
 
 testLib.teardownSuite(() => {

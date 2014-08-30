@@ -212,17 +212,15 @@ class CLITest {
 
 testLib.addAsyncTest('list vault', (assert) => {
 	var env = new CLITest(assert);
-	env.run('list')
+	return env.run('list')
 	.then(() => {
 		assert.ok(env.fakeTerm.didPrint(/Facebook.*Login/));
-		testLib.continueTests();
-	})
-	.done();
+	});
 });
 
 testLib.addAsyncTest('list vault with pattern', (assert) => {
 	var env = new CLITest(assert);
-	env.run('list', '-p', 'nomatch')
+	return env.run('list', '-p', 'nomatch')
 	.then(() => {
 		assert.ok(env.fakeTerm.didPrint(/0 matching item/));
 		return env.run('list', '-p', 'face');
@@ -230,60 +228,50 @@ testLib.addAsyncTest('list vault with pattern', (assert) => {
 	.then(() => {
 		assert.ok(env.fakeTerm.didPrint(/1 matching item/));
 		assert.ok(env.fakeTerm.didPrint(/Facebook.*Login/));
-		testLib.continueTests();
-	})
-	.done();
+	});
 });
 
 testLib.addAsyncTest('wrong password', (assert) => {
 	var env = new CLITest(assert);
 	env.fakeTerm.password = 'wrong-password';
-	env.runExpectingStatus(2, 'list')
+	return env.runExpectingStatus(2, 'list')
 	.then(() => {
 		assert.ok(env.fakeTerm.didPrint(/Unlocking failed/));
-		testLib.continueTests();
-	})
-	.done();
+	});
 });
 
 testLib.addAsyncTest('show item', (assert) => {
 	var env = new CLITest(assert);
-	env.run('show', 'facebook')
+	return env.run('show', 'facebook')
 	.then(() => {
 		assert.ok(env.fakeTerm.didPrint(/username.*john\.doe@gmail.com/));
 		assert.ok(env.fakeTerm.didPrint(/password.*Wwk-ZWc-T9MO/));
-		testLib.continueTests();
-	})
-	.done();
+	});
 });
 
 testLib.addAsyncTest('show overview', (assert) => {
 	var env = new CLITest(assert);
-	env.run('show', '--format=overview', 'facebook')
+	return env.run('show', '--format=overview', 'facebook')
 	.then(() => {
 		assert.ok(env.fakeTerm.didPrint(/Facebook.*Login/));
 		assert.ok(env.fakeTerm.didPrint(/ID: CA20BB325873446966ED1F4E641B5A36/));
-		testLib.continueTests();
-	})
-	.done();
+	});
 });
 
 testLib.addAsyncTest('show JSON', (assert) => {
 	var env = new CLITest(assert);
-	env.run('show', '--format=json', 'facebook')
+	return env.run('show', '--format=json', 'facebook')
 	.then(() => {
 		assert.ok(env.fakeTerm.didPrint(/URLs/));
 		assert.ok(env.fakeTerm.didPrint(/"type": "T"/));
-		testLib.continueTests();
-	})
-	.done();
+	});
 });
 
 testLib.addAsyncTest('lock', (assert) => {
 	var env = new CLITest(assert);
 	env.fakeTerm.passRequestCount = 0;
 
-	env.keyAgent.forgetKeys().then(() => {
+	return env.keyAgent.forgetKeys().then(() => {
 		return env.run('show', 'facebook')
 	}).then(() => {
 		assert.equal(env.fakeTerm.passRequestCount, 1);
@@ -297,14 +285,12 @@ testLib.addAsyncTest('lock', (assert) => {
 	.then(() => {
 		assert.equal(env.keyAgent.keyCount(), 1);
 		assert.equal(env.fakeTerm.passRequestCount, 2);
-		testLib.continueTests();
-	})
-	.done();
+	});
 });
 
 testLib.addAsyncTest('copy', (assert) => {
 	var env = new CLITest(assert);
-	env.run('copy', 'facebook')
+	return env.run('copy', 'facebook')
 	.then(() => {
 		assert.equal(env.fakeClipboard.data, 'Wwk-ZWc-T9MO');
 		return env.run('copy', 'facebook', 'user');
@@ -316,11 +302,7 @@ testLib.addAsyncTest('copy', (assert) => {
 	.then(() => {
 		assert.equal(env.fakeClipboard.data, 'facebook.com');
 		return env.runExpectingStatus(1, 'copy', 'facebook', 'no-such-field');
-	})
-	.then(() => {
-		testLib.continueTests();
-	})
-	.done();
+	});
 });
 
 testLib.addAsyncTest('select matching item', (assert) => {
@@ -331,7 +313,7 @@ testLib.addAsyncTest('select matching item', (assert) => {
 	env.replyTo(/Re-enter/).with('jane');
 	env.replyTo(/Select Item/).with('2');
 
-	env.newVault().then(() => {
+	return env.newVault().then(() => {
 		// add a second Facebook account to the vault
 		return env.run('add', 'login', 'Facebook (Jane)');
 	}).then(() => {
@@ -341,9 +323,7 @@ testLib.addAsyncTest('select matching item', (assert) => {
 	}).then(() => {
 		// check that the password for the right item was copied
 		assert.equal(env.fakeClipboard.data, 'jane');
-
-		testLib.continueTests();
-	}).done();
+	});
 });
 
 testLib.addAsyncTest('add login', (assert) => {
@@ -353,7 +333,7 @@ testLib.addAsyncTest('add login', (assert) => {
 	env.replyTo(/Password/).with('testpass');
 	env.replyTo(/Re-enter/).with('testpass');
 
-	env.newVault().then(() => {
+	return env.newVault().then(() => {
 		return env.run('add', 'login', 'MyDomain')
 	}).then(() => {
 		return env.run('show', 'mydomain');
@@ -362,26 +342,23 @@ testLib.addAsyncTest('add login', (assert) => {
 		assert.ok(env.fakeTerm.didPrint(/mydomain.com/));
 		assert.ok(env.fakeTerm.didPrint(/testpass/));
 		assert.ok(env.fakeTerm.didPrint(/jim\.smith@gmail\.com/));
-		testLib.continueTests();
-	})
-	.done();
+	});
 });
 
 testLib.addAsyncTest('add credit card', (assert) => {
 	var env = new CLITest(assert);
-	env.newVault().then(() => {
+	return env.newVault().then(() => {
 		return env.run('add', 'card', 'MasterCard');
 	}).then(() => {
 		return env.run('show', 'master');
 	}).then(() => {
 		assert.ok(env.fakeTerm.didPrint(/MasterCard \(Credit Card\)/));
-		testLib.continueTests();
-	}).done();
+	});
 });
 
 testLib.addAsyncTest('trash/restore item', (assert) => {
 	var env = new CLITest(assert);
-	env.newVault().then(() => {
+	return env.newVault().then(() => {
 		return env.run('trash', 'facebook');
 	}).then(() => {
 		return env.run('show', 'facebook');
@@ -393,8 +370,7 @@ testLib.addAsyncTest('trash/restore item', (assert) => {
 		return env.run('show', 'facebook');
 	}).then(() => {
 		assert.ok(!env.fakeTerm.didPrint(/In Trash/));
-		testLib.continueTests();
-	}).done();
+	});
 });
 
 testLib.addAsyncTest('change password', (assert) => {
@@ -404,16 +380,14 @@ testLib.addAsyncTest('change password', (assert) => {
 	env.replyTo(/Re-enter new/).with('newpass');
 	env.replyTo(/Hint for new/).with('the-hint');
 
-	env.newVault().then(() => {
+	return env.newVault().then(() => {
 		return env.run('set-password');
 	}).then(() => {
 		return env.run('lock');
 	}).then(() => {
 		env.fakeTerm.password = 'newpass';
 		return env.run('list');
-	}).then(() => {
-		testLib.continueTests();
-	}).done();
+	});
 });
 
 testLib.addAsyncTest('item pattern formats', (assert) => {
@@ -431,31 +405,27 @@ testLib.addAsyncTest('item pattern formats', (assert) => {
 		});
 	});
 
-	asyncutil.series(tests).then(() => {
-		testLib.continueTests();
-	});
+	return asyncutil.series(tests);
 });
 
 testLib.addAsyncTest('remove items', (assert) => {
 	var env = new CLITest(assert);
 	env.replyTo(/Do you really want to remove these 1 item\(s\)/).with('y');
 
-	env.newVault().then(() => {
+	return env.newVault().then(() => {
 		return env.run('remove', 'faceb');
 	}).then(() => {
 		return env.run('list');
 	}).then(() => {
 		assert.ok(env.fakeTerm.didPrint(/0 matching item\(s\)/));
-		testLib.continueTests();
-	}).done();
+	});
 });
 
 testLib.addAsyncTest('generate password', (assert) => {
 	var env = new CLITest(assert);
-	env.run('gen-password').then((status) => {
+	return env.run('gen-password').then((status) => {
 		assert.ok(env.fakeTerm.didPrint(/[A-Za-z0-9]{3}-[A-Za-z0-9]{3}-[A-Za-z0-9]{4}/));
-		testLib.continueTests();
-	}).done();
+	});
 });
 
 testLib.addAsyncTest('edit item - set field', (assert) => {
@@ -465,7 +435,7 @@ testLib.addAsyncTest('edit item - set field', (assert) => {
 	env.replyTo(/Password \(or/).with('newpass');
 	env.replyTo(/Re-enter/).with('newpass');
 
-	env.newVault().then(() => {
+	return env.newVault().then(() => {
 		return env.run('edit', 'faceb', 'set-field', 'pass');
 	}).then(() => {
 		return env.run('edit', 'faceb', 'set-field', 'user');
@@ -474,14 +444,13 @@ testLib.addAsyncTest('edit item - set field', (assert) => {
 	}).then(() => {
 		assert.ok(env.fakeTerm.didPrint(/username.*newuser/));
 		assert.ok(env.fakeTerm.didPrint(/password.*newpass/));
-		testLib.continueTests();
-	}).done();
+	});
 });
 
 testLib.addAsyncTest('edit item - add section and field', (assert) => {
 	var env = new CLITest(assert);
 
-	env.newVault().then(() => {
+	return env.newVault().then(() => {
 		return env.run('edit', 'faceb', 'add-section', 'NewSection');
 	}).then(() => {
 		return env.run('edit', 'faceb', 'add-field', 'newsection', 'customfield', 'customvalue');
@@ -490,13 +459,12 @@ testLib.addAsyncTest('edit item - add section and field', (assert) => {
 	}).then(() => {
 		assert.ok(env.fakeTerm.didPrint(/NewSection/));
 		assert.ok(env.fakeTerm.didPrint(/customfield.*customvalue/));
-		testLib.continueTests();
-	}).done();
+	});
 });
 
 testLib.addAsyncTest('edit item - remove field', (assert) => {
 	var env = new CLITest(assert);
-	env.newVault().then(() => {
+	return env.newVault().then(() => {
 		return env.run('edit', 'faceb', 'add-section', 'NewSection');
 	}).then(() => {
 		return env.run('edit', 'faceb', 'add-field', 'newsection', 'customfield', 'customvalue');
@@ -506,8 +474,7 @@ testLib.addAsyncTest('edit item - remove field', (assert) => {
 		return env.run('show', 'faceb');
 	}).then(() => {
 		assert.ok(!env.fakeTerm.didPrint(/customfield/));
-		testLib.continueTests();
-	}).done();
+	});
 });
 
 testLib.addAsyncTest('create new vault', (assert) => {
@@ -536,8 +503,7 @@ testLib.addAsyncTest('create new vault', (assert) => {
 		return env.run('show', 'google');
 	}).then(() => {
 		assert.ok(env.fakeTerm.didPrint(/john\.doe/));
-		testLib.continueTests();
-	}).done();
+	});
 });
 
 testLib.addAsyncTest('repair items', (assert) => {
@@ -551,8 +517,7 @@ testLib.addAsyncTest('repair items', (assert) => {
 		return env.run('repair')
 	}).then(() => {
 		assert.ok(env.fakeTerm.didPrint(/Checking 1 items/));
-		testLib.continueTests();
-	}).done();
+	});
 });
 
 testLib.addAsyncTest('edit item - rename', (assert) => {
