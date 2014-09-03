@@ -77,7 +77,7 @@ export function get(url: string, opts: RequestOptions) : Q.Promise<Reply> {
 					if (redirectCount > opts.redirectLimit) {
 						throw new RedirectLimitExceeded(reply);
 					}
-					currentUrl = reply.headers['Location'];
+					currentUrl = reply.headers['location'];
 					return false;
 				} else {
 					// don't auto-follow redirects
