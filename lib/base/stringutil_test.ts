@@ -58,5 +58,12 @@ testLib.addTest('repeat string', (assert) => {
 	assert.equal(stringutil.repeat('foo', 3), 'foofoofoo');
 });
 
+testLib.addTest('extract suffix after delimiter', (assert) => {
+	var path = '/foo/bar/baz.png';
+	assert.equal(stringutil.suffix(path, '/'), 'baz.png');
+	assert.equal(stringutil.suffix(path, '/foo'), '/bar/baz.png');
+	assert.equal(stringutil.suffix(path, '?'), path);
+});
+
 testLib.start();
 

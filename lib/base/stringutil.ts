@@ -14,6 +14,19 @@ export function equalIgnoreCase(a: string, b: string) : boolean {
 	return indexOfIgnoreCase(a, b) == 0 && a.length == b.length;
 }
 
+/** Returns the part of @p str after the last occurence of @p delimiter
+  * or the whole string otherwise.
+  */
+export function suffix(str: string, delimiter: string) : string {
+	var idx = str.lastIndexOf(delimiter);
+	if (idx == -1) {
+		idx = 0;
+	} else {
+		idx += delimiter.length;
+	}
+	return str.slice(idx);
+}
+
 /** Returns a space-separated list of all the keys in @p obj which
   * have truthy values assigned to them.
   */
