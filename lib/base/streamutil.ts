@@ -6,8 +6,8 @@ import Q = require('q');
 export function readAll(readable: NodeJS.ReadableStream) : Q.Promise<string> {
 	var result = Q.defer<string>();
 	var body = '';
-	readable.on('data', (chunk: string) => {
-		body += chunk;
+	readable.on('data', (chunk: Buffer) => {
+		body += chunk.toString('binary');
 	});
 	readable.on('end', () => {
 		result.resolve(body);
