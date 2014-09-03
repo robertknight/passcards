@@ -111,6 +111,9 @@ export function iconFromData(url: string, buffer: Uint8Array) : site_info.Icon {
 	} else {
 		var imageInfo = image.getInfo(buffer);
 		if (!imageInfo) {
+			var start = collection_util.hexlify(buffer.subarray(0,50));
+			console.log('Unable to determine image type of %s', url, 'from data of length', buffer.length, start,
+			  collection_util.stringFromBuffer(buffer.subarray(0,50)));
 			return null;
 		}
 
@@ -232,7 +235,7 @@ export class SiteInfoService implements site_info.SiteInfoProvider {
 		return this.cache[url];
 	}
 
-	update(url: string) {
+	private update(url: string) {
 		url = url_util.normalize(url);
 
 		var SOURCE_COUNT = 2;
@@ -273,8 +276,10 @@ export class SiteInfoService implements site_info.SiteInfoProvider {
 		var pageLinkFetcher = new PageLinkFetcher(this.fetcher);
 		pageLinkFetcher.fetch(url).then((links) => {
 			var rootUrl = url;
+			var iconLinks = 0;
 			links.forEach((link) => {
 				if (isIconLink(link)) {
+					++iconLinks;
 					var absoluteLinkUrl = urijs(link.url).absoluteTo(rootUrl);
 					iconFetcher.addUrl(absoluteLinkUrl.toString());
 				}
