@@ -15,6 +15,7 @@ import asyncutil = require('./base/asyncutil');
 import agilekeychain = require('./agilekeychain');
 import collectionutil = require('./base/collectionutil');
 import crypto = require('./onepass_crypto');
+import dateutil = require('./base/dateutil');
 import keyAgent = require('./key_agent');
 import stringutil = require('./base/stringutil');
 import vfs = require('./vfs/vfs');
@@ -26,18 +27,6 @@ import vfs = require('./vfs/vfs');
   * the official 1Password v4 app for Mac (13/05/14)
   */
 export var DEFAULT_VAULT_PASS_ITERATIONS = 80000;
-
-// Converts a UNIX timestamp in seconds since
-// the epoch to a JS Date
-function dateFromUNIXDate(timestamp: number) : Date {
-	return new Date(timestamp * 1000);
-}
-
-// Converts a JS Date to a UNIX timestamp in seconds
-// since the epoch
-function UNIXDateFromDate(date: Date) : number {
-	return (date.getTime() / 1000)|0;
-}
 
 // typedef for item type codes
 export interface ItemType extends String {
@@ -368,8 +357,8 @@ export class Item {
 	static toAgileKeychainObject(item: Item, encryptedData: string) : agilekeychain.Item {
 		var keychainItem: any = {};
 
-		keychainItem.createdAt = UNIXDateFromDate(item.createdAt);
-		keychainItem.updatedAt = UNIXDateFromDate(item.updatedAt);
+		keychainItem.createdAt = dateutil.unixTimestampFromDate(item.createdAt);
+		keychainItem.updatedAt = dateutil.unixTimestampFromDate(item.updatedAt);
 		keychainItem.title = item.title;
 		keychainItem.securityLevel = item.securityLevel;
 		keychainItem.encrypted = btoa(encryptedData);
@@ -391,7 +380,7 @@ export class Item {
 	  */
 	static fromAgileKeychainObject(vault: Vault, data: any) : Item {
 		var item = new Item(vault);
-		item.updatedAt = dateFromUNIXDate(data.updatedAt);
+		item.updatedAt = dateutil.dateFromUnixTimestamp(data.updatedAt);
 		item.title = data.title;
 		item.securityLevel = data.securityLevel;
 
@@ -404,7 +393,7 @@ export class Item {
 
 		item.typeName = data.typeName;
 		item.uuid = data.uuid;
-		item.createdAt = dateFromUNIXDate(data.createdAt);
+		item.createdAt = dateutil.dateFromUnixTimestamp(data.createdAt);
 		item.location = data.location;
 		item.folderUuid = data.folderUuid;
 		item.faveIndex = data.faveIndex;
@@ -577,7 +566,7 @@ export class Vault {
 			entry[1] = item.typeName;
 			entry[2] = item.title;
 			entry[3] = item.location;
-			entry[4] = UNIXDateFromDate(item.updatedAt);
+			entry[4] = dateutil.unixTimestampFromDate(item.updatedAt);
 			entry[5] = item.folderUuid;
 			entry[6] = 0; // TODO - Find out what this is used for
 			entry[7] = (item.trashed ? "Y" : "N");
@@ -615,7 +604,7 @@ export class Vault {
 				item.typeName = entry[1];
 				item.title = entry[2];
 				item.location = entry[3];
-				item.updatedAt = dateFromUNIXDate(entry[4]);
+				item.updatedAt = dateutil.dateFromUnixTimestamp(entry[4]);
 				item.folderUuid = entry[5];
 				item.trashed = entry[7] === "Y";
 
@@ -989,7 +978,7 @@ export class ItemField {
 	valueString() : string {
 		switch (this.kind) {
 		case FieldType.Date:
-			return dateFromUNIXDate(this.value).toString();
+			return dateutil.dateFromUnixTimestamp(this.value).toString();
 		case FieldType.MonthYear:
 			var month = this.value % 100;
 			var year = (this.value / 100) % 100;
