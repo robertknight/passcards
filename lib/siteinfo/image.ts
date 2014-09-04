@@ -110,7 +110,7 @@ detectors.push((data) => {
 	);
 	var biSize = bmpInfoHeader.getUint32(0);
 	if (biSize != 40 /* sizeof(BITMAPINFOHEADER) */) {
-		throw new DecodeError('Unsupported bitmap type');
+		throw new DecodeError('Unsupported bitmap type: ' + biSize);
 	}
 	var biWidth = bmpInfoHeader.getInt32(4);
 	var biHeight = bmpInfoHeader.getInt32(8);

@@ -167,7 +167,7 @@ class IconFetcher {
 					queueItem.icon = iconFromData(url, buffer);
 				} catch (ex) {
 					var start = collection_util.hexlify(buffer.subarray(0,50));
-					console.log('Failed to decode icon', url, 'from data of length', buffer.length, start);
+					console.log('Failed to decode icon', url, 'from data of length', buffer.length, start, ex.message);
 				}
 			}
 		}).catch((e) => {
