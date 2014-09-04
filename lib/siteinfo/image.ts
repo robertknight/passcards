@@ -139,3 +139,17 @@ export function getInfo(data: Uint8Array) : ImageInfo {
 	return null;
 }
 
+/** Returns the MIME type string for a given image type */
+export function mimeType(type: ImageType) : string {
+	switch (type) {
+		case ImageType.Png:
+			return 'image/png';
+		case ImageType.Bmp:
+			return 'image/bmp';
+		case ImageType.Jpeg:
+			return 'image/jpeg';
+		default:
+			return 'application/octet-stream';
+	}
+}
+
