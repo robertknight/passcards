@@ -64,10 +64,14 @@ export interface RequestOptions {
 	redirectLimit: number;
 }
 
-export function get(url: string, opts: RequestOptions) : Q.Promise<Reply> {
+export function get(url: string, opts?: RequestOptions) : Q.Promise<Reply> {
 	var currentUrl = url;
 	var finalReply: Reply;
 	var redirectCount = 0;
+
+	opts = opts || {
+		redirectLimit: 0
+	};
 
 	return asyncutil.until(() => {
 		return request('GET', currentUrl).then((reply) => {
