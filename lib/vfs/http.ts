@@ -151,7 +151,7 @@ export class Server {
 			};
 			var done = (content?: any) => {
 				res.statusCode = 200;
-				res.end(content);
+				res.end(content, 'binary');
 			};
 			res.setHeader('Access-Control-Allow-Origin', '*');
 			var path = url.parse(req.url).pathname;
