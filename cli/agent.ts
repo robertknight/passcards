@@ -1,5 +1,8 @@
 /// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
+/// <reference path="../typings/atob.d.ts" />
 
+import atob = require('atob');
+import btoa = require('btoa');
 import Q = require('q');
 
 import agent_server = require('./agent_server');
@@ -47,9 +50,9 @@ export class HttpKeyAgent implements key_agent.KeyAgent {
 		this.sendRequest<agent_server.DecryptRequest>('POST', '/decrypt', {
 			id: id,
 			algo: key_agent.CryptoAlgorithm.AES128_OpenSSLKey,
-			cipherText: cipherText
+			cipherText: btoa(cipherText)
 		}).then((result) => {
-			plainText.resolve(result);
+			plainText.resolve(atob(result));
 		}).done();
 		return plainText.promise;
 	}
@@ -59,9 +62,9 @@ export class HttpKeyAgent implements key_agent.KeyAgent {
 		this.sendRequest<agent_server.EncryptRequest>('POST', '/encrypt', {
 			id: id,
 			algo: key_agent.CryptoAlgorithm.AES128_OpenSSLKey,
-			plainText: plainText
+			plainText: btoa(plainText)
 		}).then((result) => {
-			cipherText.resolve(result);
+			cipherText.resolve(atob(result));
 		}).done();
 		return cipherText.promise;
 	}

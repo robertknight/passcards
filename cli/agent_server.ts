@@ -1,7 +1,10 @@
 /// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/urlrouter/urlrouter.d.ts" />
+/// <reference path="../typings/atob.d.ts" />
 
+import atob = require('atob');
+import btoa = require('btoa');
 import child_process = require('child_process');
 import fs = require('fs');
 import http = require('http');
@@ -90,15 +93,15 @@ class Server {
 					}
 					switch (params.algo) {
 						case key_agent.CryptoAlgorithm.AES128_OpenSSLKey:
-							var plainText = crypto.decryptAgileKeychainItemData(this.crypto, this.keys[params.id],
-							  params.cipherText);
+							var cipherText = atob(params.cipherText);
+							var plainText = crypto.decryptAgileKeychainItemData(this.crypto, this.keys[params.id], cipherText);
 
-							logf('Decrypted (%d => %d) bytes with key %s', params.cipherText.length,
+							logf('Decrypted (%d => %d) bytes with key %s', cipherText.length,
 							  plainText.length, params.id);
 
 							self.resetKeyTimeout();
 
-							res.end(plainText);
+							res.end(btoa(plainText));
 							break;
 						default:
 							logf('Decrypt failed - unknown algorithm');
@@ -117,15 +120,15 @@ class Server {
 					}
 					switch (params.algo) {
 						case key_agent.CryptoAlgorithm.AES128_OpenSSLKey:
-							var cipherText = crypto.encryptAgileKeychainItemData(this.crypto, this.keys[params.id],
-							 params.plainText);
+							var plainText = atob(params.plainText);
+							var cipherText = crypto.encryptAgileKeychainItemData(this.crypto, this.keys[params.id], plainText);
 
-							logf('Encrypted (%d => %d) bytes with key %s', params.plainText.length,
+							logf('Encrypted (%d => %d) bytes with key %s', plainText.length,
 							  cipherText.length, params.id);
 
 							self.resetKeyTimeout();
 
-							res.end(cipherText);
+							res.end(btoa(cipherText));
 							break;
 						default:
 							logf('Encrypt failed - unknown algorithm');
