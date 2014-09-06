@@ -3,6 +3,19 @@
 /// <reference path="../../typings/DefinitelyTyped/underscore/underscore.d.ts" />
 /// <reference path="../../typings/URIjs.d.ts" />
 
+// This module implements a website icon/info provider which fetches
+// icons directly from the source sites.
+//
+// It can be used in environments which have the ability to make
+// requests to arbitrary origins - eg. suitably priviledged browser
+// extensions or web servers.
+//
+// For a given input URL, several sources of icons are queried:
+//
+//  - Standard icon paths such as '/favicon.ico', '/apple-touch-icon.png'
+//  - The URL is fetched and links to icons are parsed from <link> and
+//    <meta> tags on the page
+
 import Q = require('q');
 import underscore = require('underscore');
 import urijs = require('URIjs');

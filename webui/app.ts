@@ -28,6 +28,7 @@ import onepass_crypto = require('../lib/onepass_crypto');
 import page_access = require('./page_access');
 import reactutil = require('./reactutil');
 import shortcut = require('./base/shortcut');
+import siteinfo_client = require('../lib/siteinfo/client');
 import stringutil = require('../lib/base/stringutil');
 import vfs = require('../lib/vfs/vfs');
 import url_util = require('../lib/base/url_util');
@@ -637,9 +638,11 @@ export class App {
 		var keyAgent = new key_agent.SimpleKeyAgent();
 		keyAgent.setAutoLockTimeout(2 * 60 * 1000);
 
+		var siteInfoProvider = new siteinfo_client.PasscardsClient();
+
 		var iconDiskCache = new key_value_store.IndexedDBStore('passcards', 'icon-cache');
 		this.services = {
-			iconProvider: new item_icons.ItemIconProvider(iconDiskCache, pageAccess.siteInfoProvider(), 48),
+			iconProvider: new item_icons.ItemIconProvider(iconDiskCache, siteInfoProvider, 48),
 			autofiller: new autofill.AutoFiller(pageAccess),
 			pageAccess: pageAccess,
 			keyAgent: keyAgent,
