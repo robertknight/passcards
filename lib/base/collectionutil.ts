@@ -3,8 +3,61 @@ interface BiDiMapEntry<T1,T2> {
 	key2: T2;
 }
 
+/** A convenience interface for working with objects
+  * as key => value dictionaries.
+  */
 export interface OMap<T> {
 	[index: string] : T
+}
+
+/** A basic polyfill for ES6 maps */
+export class PMap<K,V> implements Map<K,V> {
+	private map : OMap<V>;
+	private count: number;
+
+	size: number;
+
+	constructor() {
+		this.clear();
+	}
+
+	set(key: K, value: V) {
+		if (!this.has(key)) {
+			++this.size;
+		}
+		this.map[this.propName(key)] = value;
+		return this;
+	}
+
+	get(key: K) {
+		return this.map[this.propName(key)];
+	}
+
+	delete(key: K) {
+		if (!this.has(key)) {
+			return false;
+		}
+		--this.size;
+		delete this.map[this.propName(key)];
+		return true;
+	}
+
+	clear() {
+		this.size = 0;
+		this.map = {};
+	}
+
+	has(key: K) {
+		return this.map.hasOwnProperty(this.propName(key));
+	}
+
+	forEach(callback: (value: V, index: K, map: Map<K,V>) => any) {
+		throw new Error('PMap.forEach() is not implemented');
+	}
+
+	private propName(key: K) {
+		return '$' + key;
+	}
 }
 
 /** A bi-directional map between two types of key.

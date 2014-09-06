@@ -133,23 +133,51 @@ interface IconFetchState {
 	status: number;
 }
 
+/** IconFetcher fetches and decodes icons from specified URLs.
+  *
+  * URLs are enqueued for fetching using addUrl(). When a URL is fetched,
+  * the 'done' event is emitted.
+  *
+  * IconFetcher remembers the URLs that have been enqueued for fetching
+  * and ignores requests to fetch URLs that have already been fetched
+  * or for which requests are in-flight.
+  */
 class IconFetcher {
 	private fetcher: UrlFetcher;
 	private queue : IconFetchState[];
 
+	// map of URL -> (null|status) for URLs that have
+	// already been fetched or are enqueued for fetching
+	private fetchedUrls : Map<string,number>;
+
+	/** Stream of URL fetch completion events. */
 	done: event_stream.EventStream<IconFetchState>;
 
 	constructor(fetcher: UrlFetcher) {
 		this.fetcher = fetcher;
 		this.done = new event_stream.EventStream<IconFetchState>();
 		this.queue = [];
+		this.fetchedUrls = new collection_util.PMap<string,number>();
 	}
 
+	/** Returns the number of outstanding URL fetch requests which
+	  * have not yet completed.
+	  */
 	remaining() : number {
 		return this.queue.length;
 	}
 
+	/** Fetch and decode an icon URL. A 'done' event is emitted
+	  * when the fetch completes.
+	  */
 	addUrl(url: string) {
+		if (this.fetchedUrls.has(url)) {
+			// URL has already been fetched or request
+			// is in-flight
+			return;
+		}
+		this.fetchedUrls.set(url, null);
+
 		var queueItem : IconFetchState = {
 			url: url,
 			icon: null,
@@ -161,6 +189,7 @@ class IconFetcher {
 
 		queueItem.reply.then((reply) => {
 			queueItem.status = reply.status;
+			this.fetchedUrls.set(url, reply.status);
 			if (reply.status == 200) {
 				var buffer = collection_util.bufferFromString(reply.body);
 				try {
@@ -172,6 +201,7 @@ class IconFetcher {
 			}
 		}).catch((e) => {
 			queueItem.status = 0;
+			this.fetchedUrls.set(url, 0);
 		}).finally(() => {
 			this.queue.splice(this.queue.indexOf(queueItem, 1));
 			this.done.publish(queueItem);
