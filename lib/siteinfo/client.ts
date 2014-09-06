@@ -1,10 +1,12 @@
 /// <reference path="../../typings/DefinitelyTyped/node/node.d.ts" />
+/// <reference path="../../typings/DefinitelyTyped/q/Q.d.ts" />
 /// <reference path="../../typings/DefinitelyTyped/underscore/underscore.d.ts" />
 
 // This module implements a website icon/info provider which
 // fetches icon details and data from an instance of the
 // Passcards site info service (https://github.com/robertknight/passcards-siteinfo-server)
 
+import Q = require('q');
 import underscore = require('underscore');
 import urlLib = require('url');
 
@@ -54,25 +56,29 @@ export class PasscardsClient implements site_info.SiteInfoProvider {
 		};
 		this.cache.set(domain, queryResult);
 
+		console.log('querying info for domain %s', domain);
 		this.queryDomainInfo(domain).then((response) => {
-			if (!response) {
+			var selectedIcons: client_api.LookupResponseIcon[] = [];
+			if (response) {
+				selectedIcons = response.icons;
+			}
+
+			var MIN_ICON_SIZE = 32;
+			var MAX_ICON_SIZE = 256;
+
+			selectedIcons = underscore.filter(selectedIcons, (icon) => {
+				return icon.width >= MIN_ICON_SIZE && icon.width <= MAX_ICON_SIZE &&
+				       icon.height >= MIN_ICON_SIZE && icon.height <= MAX_ICON_SIZE;
+			});
+
+			console.log('fetching %d icons for domain %s', selectedIcons.length, domain);
+
+			if (selectedIcons.length == 0) {
 				console.log('no icons found for domain %s', domain);
 				this.cache.get(domain).state = site_info.QueryState.Ready;
 				this.updated.publish(url);
 				return;
 			}
-
-			var selectedIcons: client_api.LookupResponseIcon[];
-
-			var MIN_ICON_SIZE = 32;
-			var MAX_ICON_SIZE = 256;
-
-			selectedIcons = underscore.filter(response.icons, (icon) => {
-				return icon.width >= MIN_ICON_SIZE && icon.width <= MAX_ICON_SIZE &&
-				       icon.height >= MIN_ICON_SIZE && icon.height <= MAX_ICON_SIZE;
-			});
-
-			console.log('fetching %d icons for domain %s', domain);
 
 			var pendingIcons = selectedIcons.length;
 			selectedIcons.forEach((icon) => {
@@ -93,9 +99,9 @@ export class PasscardsClient implements site_info.SiteInfoProvider {
 						entry.state = site_info.QueryState.Ready;
 					}
 					this.updated.publish(url);
-				});
+				}).done();
 			});
-		});
+		}).done();
 
 		return queryResult;
 	}
@@ -122,7 +128,7 @@ export class PasscardsClient implements site_info.SiteInfoProvider {
 						return Q(true);
 					} else {
 						// wait and poll again shortly
-						return Q.delay(false, 200);
+						return Q.delay(false, 500);
 					}
 				}
 			});
