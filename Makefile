@@ -44,7 +44,7 @@ $(webui_script_dir)/crypto_worker.js: build/current
 
 $(webui_css_dir)/app.css: webui/app.less
 	mkdir -p $(webui_css_dir)
-	lessc webui/app.less > $(webui_css_dir)/app.css
+	$(NODE_BIN_DIR)/lessc webui/app.less > $(webui_css_dir)/app.css
 
 webui-icons:
 	@mkdir -p ${webui_icon_dir}
@@ -54,7 +54,7 @@ webui-icons:
 # of the PBKDF2 implementation for use in Web Workers
 # in the browser
 build/lib/crypto/pbkdf2_bundle.js: build/current
-	browserify --require ./build/lib/crypto/pbkdf2.js:pbkdf2 --outfile build/lib/crypto/pbkdf2_bundle.js
+	$(BROWSERIFY) --require ./build/lib/crypto/pbkdf2.js:pbkdf2 --outfile build/lib/crypto/pbkdf2_bundle.js
 
 test: cli webui build/lib/crypto/pbkdf2_bundle.js
 	@echo $(test_files) | $(FOREACH_FILE) $(NODE)
