@@ -1,5 +1,6 @@
-/// <reference path="../typings/sprintf.d.ts" />
+/// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
+/// <reference path="../typings/sprintf.d.ts" />
 
 import http = require('http');
 import https = require('https');
@@ -8,6 +9,7 @@ import sprintf = require('sprintf');
 import urlLib = require('url');
 
 import asyncutil = require('./base/asyncutil');
+import env = require('./base/env');
 import err_util = require('./base/err_util');
 import streamutil = require('./base/streamutil');
 
@@ -110,7 +112,14 @@ export function request<T>(method: string, url: string, data?: T) : Q.Promise<Re
 		host: urlParts.hostname,
 		scheme: urlParts.protocol,
 		port: urlParts.port,
-		withCredentials: false
+		withCredentials: false,
+
+		// in the browser, where http.request is implemented by http-browserify,
+		// specify that the response type should be an ArrayBuffer.
+		//
+		// See comment about https://github.com/substack/http-browserify/issues/65
+		// below
+		responseType: 'arraybuffer'
 	};
 
 	// strip trailing colon from protocol.
@@ -141,6 +150,16 @@ export function request<T>(method: string, url: string, data?: T) : Q.Promise<Re
 			response.reject(err);
 		}).done();
 	});
+
+	if (env.isBrowser()) {
+		// work around http-browserify not setting failing to set
+		// xhr.responseType successfully due to Firefox not allowing
+		// xhr.responseType to be set until xhr.open() has been called.
+		// See https://github.com/substack/http-browserify/issues/65
+		var browserifyRequest: any = request;
+		browserifyRequest.xhr.responseType = 'arraybuffer';
+	}
+
 	if (data) {
 		switch (typeof data) {
 			case 'string':
