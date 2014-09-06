@@ -13,7 +13,6 @@ export interface OMap<T> {
 /** A basic polyfill for ES6 maps */
 export class PMap<K,V> implements Map<K,V> {
 	private map : OMap<V>;
-	private count: number;
 
 	size: number;
 

@@ -34,9 +34,6 @@
 // in PBKDF2 by minimizing allocations of typed arrays and
 // strings.
 
-/* tslint:disable:no-duplicate-variable */
-/* tslint:disable:no-use-before-declare */
-
 export function bitsToBytes(n: number) {
 	return n >> 3;
 }
@@ -149,6 +146,14 @@ var sha1core = function(stdlib: any, foreign: any, heap: any) : any {
 	return {hash: hash};
 };
 
+/** Generic cryptographic hash interface.
+  *
+  * The hash() function takes a typed array
+  * as input and writes the result to a typed array output buffer
+  * to avoid allocating a new buffer on each call, this improves
+  * performance when using the same hashing function large numbers
+  * of times on short inputs, as is the case in PBKDF2 for example.
+  */
 export interface Hash {
 	hash(src: Uint8Array, digest:Int32Array) : void;
 	blockSize() : number;
@@ -202,9 +207,10 @@ export class SHA1 implements Hash {
 		var srcLen = src.byteLength;
 		this.initHeap(srcLen);
 		var paddedLength = padLength(srcLen);
+		var i = 0;
 
 		// pad message with zeroes
-		for (var i=0; i < paddedLength >> 2; i++) {
+		for (i=0; i < paddedLength >> 2; i++) {
 			this.heap32[i] = 0;
 		}
 
@@ -238,10 +244,9 @@ export class SHA1 implements Hash {
 		this.core.hash(msgWords);
 		
 		// copy result to digest
-		for (var i=0; i < 5; i++) {
+		for (i=0; i < 5; i++) {
 			digest[i] = this.dataView.getInt32(i << 2, false /* big endian */);
 		}
 	}
 }
-
 

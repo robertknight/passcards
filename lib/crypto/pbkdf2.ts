@@ -25,11 +25,13 @@ export class HMAC implements MAC {
 		this.innerKeyPad = new Uint8Array(this.blockSize);
 		this.outerKey = new Uint8Array(this.blockSize + this.digest.byteLength);
 
+		var i = 0;
+
 		// shorten key if longer than block length
 		if (key.length > this.blockSize) {
 			var shortKey = new Uint8Array(this.blockSize);
 			this.hash.hash(key, this.digest);
-			for (var i=0; i < shortKey.length; i++) {
+			for (i=0; i < shortKey.length; i++) {
 				shortKey[i] = this.digest8[i];
 			}
 			key = shortKey;
@@ -38,20 +40,21 @@ export class HMAC implements MAC {
 		// pad key to block length
 		if (key.length < this.blockSize) {
 			var paddedKey = new Uint8Array(this.blockSize);
-			for (var i=0; i < key.length; i++) {
+			for (i=0; i < key.length; i++) {
 				paddedKey[i] = key[i];
 			}
 			key = paddedKey;
 		}
-		for (var i=key.length; i < this.blockSize; i++) {
+
+		for (i=key.length; i < this.blockSize; i++) {
 			key[i] = 0;
 		}
 
 		// setup inner key padding
-		for (var i=0; i < this.innerKeyPad.length; i++) {
+		for (i=0; i < this.innerKeyPad.length; i++) {
 			this.innerKeyPad[i] = 0x36 ^ key[i];
 		}
-		for (var i=0; i < this.outerKey.length; i++) {
+		for (i=0; i < this.outerKey.length; i++) {
 			this.outerKey[i] = 0x5c ^ key[i];
 		}
 	}
@@ -71,16 +74,17 @@ export class HMAC implements MAC {
 			this.workSpace = new Uint8Array(workSpaceLen);
 		}
 
-		for (var i=0; i < this.blockSize; i++) {
+		var i=0;
+		for (i=0; i < this.blockSize; i++) {
 			this.workSpace[i] = this.innerKeyPad[i];
 		}
-		for (var i=0; i < message.length; i++) {
+		for (i=0; i < message.length; i++) {
 			this.workSpace[this.blockSize + i] = message[i];
 		}
 		this.hash.hash(this.workSpace, this.digest);
 		
 		// outer key padding
-		for (var i=0; i < this.digest.byteLength; i++) {
+		for (i=0; i < this.digest.byteLength; i++) {
 			this.outerKey[this.blockSize + i] = this.digest8[i];
 		}
 		this.hash.hash(this.outerKey, hmac);
