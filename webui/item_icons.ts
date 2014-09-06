@@ -278,7 +278,9 @@ export class IconControl extends reactts.ReactComponentBase<IconControlProps, {}
 	private setupIconUpdateListener(iconProvider: ItemIconProvider) {
 		if (!this.iconUpdateListener) {
 			this.iconUpdateListener = (url) => {
-				if (this.props.location && this.props.iconProvider.updateMatches(url, this.props.location)) {
+				if (this.props.location &&
+				    this.props.iconProvider.updateMatches(url, this.props.location) &&
+				    this.isMounted()) {
 					this.forceUpdate();
 				}
 			};

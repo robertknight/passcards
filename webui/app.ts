@@ -433,7 +433,9 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 		nextProps.item.getContent().then((content) => {
 			// TODO - Cache content and avoid using forceUpdate()
 			this.itemContent = content;
-			this.forceUpdate();
+			if (this.isMounted()) {
+				this.forceUpdate();
+			}
 		}).done();
 	}
 
