@@ -56,7 +56,6 @@ export class PasscardsClient implements site_info.SiteInfoProvider {
 		};
 		this.cache.set(domain, queryResult);
 
-		console.log('querying info for domain %s', domain);
 		this.queryDomainInfo(domain).then((response) => {
 			var selectedIcons: client_api.LookupResponseIcon[] = [];
 			if (response) {
@@ -71,10 +70,7 @@ export class PasscardsClient implements site_info.SiteInfoProvider {
 				       icon.height >= MIN_ICON_SIZE && icon.height <= MAX_ICON_SIZE;
 			});
 
-			console.log('fetching %d icons for domain %s', selectedIcons.length, domain);
-
 			if (selectedIcons.length == 0) {
-				console.log('no icons found for domain %s', domain);
 				this.cache.get(domain).state = site_info.QueryState.Ready;
 				this.updated.publish(url);
 				return;
@@ -123,7 +119,6 @@ export class PasscardsClient implements site_info.SiteInfoProvider {
 					return Q(true);
 				} else {
 					response = <client_api.LookupResponse>(JSON.parse(reply.body));
-					console.log('queried %s, state %s', domain, response.status, response);
 					if (response.status != 'processing') {
 						return Q(true);
 					} else {
@@ -133,7 +128,6 @@ export class PasscardsClient implements site_info.SiteInfoProvider {
 				}
 			});
 		}).then(() => {
-			console.log('siteinfo query for %s completed, found %d icons', domain, response ? response.icons.length : 0);
 			return response;
 		});
 	}
