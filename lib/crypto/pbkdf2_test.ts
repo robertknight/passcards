@@ -2,6 +2,7 @@
 
 import collectionutil = require('../base/collectionutil');
 import testLib = require('../test');
+import sha1 = require('./sha1');
 import pbkdf2Lib = require('./pbkdf2');
 
 var parallel = require('paralleljs');
@@ -70,7 +71,7 @@ var PBKDF2_TEST_VECTORS = [
 ];
 
 testLib.addTest('SHA-1', (assert) => {
-	var hash = new pbkdf2Lib.SHA1();
+	var hash = new sha1.SHA1();
 	SHA1_TEST_VECTORS.forEach(function(tst) {
 		var srcBuf = collectionutil.bufferFromString(tst.msg);
 		var digest = new Int32Array(5);
@@ -81,12 +82,12 @@ testLib.addTest('SHA-1', (assert) => {
 });
 
 testLib.addTest('HMAC-SHA1', (assert) => {
-	var sha1 = new pbkdf2Lib.SHA1();
+	var hash = new sha1.SHA1();
 	HMAC_TEST_VECTORS.forEach(function(tst) {
 		var keyBuf = collectionutil.bufferFromString(tst.key);
 		var msgBuf = collectionutil.bufferFromString(tst.message);
 		var digest = new Int32Array(5);
-		var hmac = new pbkdf2Lib.HMAC(sha1, keyBuf);
+		var hmac = new pbkdf2Lib.HMAC(hash, keyBuf);
 		hmac.mac(msgBuf, digest);
 		var actual = collectionutil.hexlify(digest);
 		assert.equal(actual, tst.hmac, 'check HMACs match');
