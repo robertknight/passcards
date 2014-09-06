@@ -2,6 +2,7 @@
 /// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
 
 import http = require('http');
+import https = require('https');
 import Q = require('q');
 import sprintf = require('sprintf');
 import urlLib = require('url');
@@ -119,8 +120,15 @@ export function request<T>(method: string, url: string, data?: T) : Q.Promise<Re
 	// Would be fixed by https://github.com/substack/http-browserify/pull/42
 	requestOpts.scheme = requestOpts.scheme.replace(/:$/,'');
 
+	var requestFunc: (opts: any, callback: (resp: http.ClientResponse) => void) => http.ClientRequest;
+	if (requestOpts.scheme == 'https') {
+		requestFunc = https.request;
+	} else {
+		requestFunc = http.request;
+	}
+
 	var response = Q.defer<Reply>();
-	var request = http.request(requestOpts, (resp: http.ClientResponse) => {
+	var request = requestFunc(requestOpts, (resp: http.ClientResponse) => {
 		streamutil.readAll(resp)
 		.then((content) => {
 			response.resolve({
