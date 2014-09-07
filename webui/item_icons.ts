@@ -11,6 +11,7 @@ import reactts = require('react-typescript');
 import underscore = require('underscore');
 import urijs = require('URIjs');
 
+import collectionutil = require('../lib/base/collectionutil');
 import err_util = require('../lib/base/err_util');
 import event_stream = require('../lib/base/event_stream');
 import key_value_store = require('../lib/base/key_value_store');
@@ -40,9 +41,7 @@ export interface Icon {
   * the updated event stream will emit the normalized URL.
   */
 export class ItemIconProvider {
-	private tempCache: {
-		[index: string] : Icon;
-	};
+	private tempCache: Map<string,Icon>;
 	private diskCache : Cache;
 	private provider: site_info.SiteInfoProvider;
 	private iconSize: number;
@@ -68,7 +67,7 @@ export class ItemIconProvider {
 	  *                 size.
 	  */
 	constructor(cacheStore: key_value_store.Store, provider: site_info.SiteInfoProvider, iconSize: number) {
-		this.tempCache = {};
+		this.tempCache = new collectionutil.PMap<string,Icon>();
 		this.diskCache = new Cache(cacheStore);
 		this.provider = provider;
 		this.iconSize = iconSize;
@@ -80,12 +79,14 @@ export class ItemIconProvider {
 			if (entry.state == site_info.QueryState.Ready) {
 				this.updateCacheEntry(url, entry.info.icons);
 
-				// cache icons for future use
-				this.diskCache.insert(url, {
-					icons: entry.info.icons
-				}).catch((err) => {
-					console.log('Caching icons for URL', url, 'failed', err.message);
-				});
+				if (entry.info.icons.length > 0) {
+					// cache icons for future use
+					this.diskCache.insert(url, {
+						icons: entry.info.icons
+					}).catch((err) => {
+						console.log('Caching icons for URL', url, 'failed', err.message);
+					});
+				}
 
 				// free icon data
 				this.provider.forget(url);
@@ -117,12 +118,12 @@ export class ItemIconProvider {
 			}
 		}
 
-		if (this.tempCache.hasOwnProperty(url)) {
-			var cachedIcon = this.tempCache[url];
+		if (this.tempCache.get(url)) {
+			var cachedIcon = this.tempCache.get(url);
 			if (cachedIcon.state == IconFetchState.NoIcon) {
 				var fallbackUrl = this.fallbackUrlForIcon(url);
-				if (this.tempCache.hasOwnProperty(fallbackUrl)) {
-					return this.tempCache[fallbackUrl];
+				if (this.tempCache.get(fallbackUrl)) {
+					return this.tempCache.get(fallbackUrl);
 				}
 			}
 			return cachedIcon;
@@ -131,7 +132,7 @@ export class ItemIconProvider {
 				iconUrl: ItemIconProvider.LOADING_ICON,
 				state: IconFetchState.Fetching
 			};
-			this.tempCache[url] = icon;
+			this.tempCache.set(url, icon);
 			
 			this.diskCache.query(url).then((entry) => {
 				if (entry) {
@@ -149,7 +150,7 @@ export class ItemIconProvider {
 	}
 
 	private updateCacheEntry(url: string, icons: site_info.Icon[]) {
-		var icon = this.tempCache[url];
+		var icon = this.tempCache.get(url);
 		icon.iconUrl = this.makeIconUrl(icons, this.iconSize);
 		if (icon.iconUrl != '') {
 			icon.state = IconFetchState.Found;
