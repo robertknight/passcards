@@ -17,9 +17,17 @@ export function stripQuery(url: string) : string {
 	return strippedUrl;
 }
 
-// strips the query string from a URL string and
-// prefixes an HTTPS scheme if none is set
+/** Strips the query string from a URL string and
+ * prefixes an HTTPS scheme if none is set.
+ *
+ * Returns an empty string if the input is empty.
+ */
 export function normalize(url: string) : string {
+	url = url.trim();
+	if (url.length == 0) {
+		return '';
+	}
+
 	if (url.indexOf(':') == -1) {
 		// assume HTTPS if URL is lacking a scheme
 		url = 'https://' + url;
