@@ -63,7 +63,7 @@ export class PasscardsClient implements site_info.SiteInfoProvider {
 			}
 
 			var MIN_ICON_SIZE = 32;
-			var MAX_ICON_SIZE = 256;
+			var MAX_ICON_SIZE = 512;
 
 			selectedIcons = underscore.filter(selectedIcons, (icon) => {
 				return icon.width >= MIN_ICON_SIZE && icon.width <= MAX_ICON_SIZE &&
