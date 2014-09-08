@@ -46,17 +46,25 @@ export interface Icon {
 
 // creates a BITMAPFILEHEADER struct for data from a .bmp file
 // see http://en.wikipedia.org/wiki/BMP_file_format#Bitmap_file_header
+//
+// 'data' is the contents of a bitmap file, excluding the BITMAPFILEHEADER struct
+// at the beginning
 function bitmapFileHeader(data: Uint8Array) : Uint8Array {
+	var srcDataView = new DataView(data.buffer);
+	var biSize = srcDataView.getUint32(data.byteOffset, true /* little-endian */);
+
 	var HEADER_SIZE = 14;
 	var header = new Uint8Array(HEADER_SIZE);
-	var dataView = new DataView(header.buffer);
+	var headerDataView = new DataView(header.buffer);
 
 	// 'BM'
-	dataView.setUint8(0, 0x42);
-	dataView.setUint8(1, 0x4D);
+	headerDataView.setUint8(0, 0x42);
+	headerDataView.setUint8(1, 0x4D);
 
-	dataView.setUint32(2, data.byteLength + HEADER_SIZE, true /* little-endian */);
-	dataView.setUint32(10, HEADER_SIZE, true /* little-endian */);
+	headerDataView.setUint32(2, data.byteLength + HEADER_SIZE, true /* little-endian */);
+
+	// offset of bitmap data from start of file
+	headerDataView.setUint32(10, HEADER_SIZE + biSize, true /* little-endian */);
 
 	return header;
 }
@@ -98,7 +106,6 @@ function readNthIcon(leData: collectionutil.LittleEndianDataView, index: number)
 	// 3) The image height is given as the combined height of the
 	//    color data and the mask - so 2x the height of the bitmap
 	var sourceData = new Uint8Array(leData.buffer, imageDataOffset, imageDataLength);
-	var bmpFileHeader = bitmapFileHeader(sourceData);
 	
 	// check BITMAPFILEINFO header for the bitmap
 	// see http://msdn.microsoft.com/en-gb/library/windows/desktop/dd183376%28v=vs.85%29.aspx
@@ -118,6 +125,7 @@ function readNthIcon(leData: collectionutil.LittleEndianDataView, index: number)
 		throw new Error(sprintf('Unsupported bitmap compression type %d', biCompression));
 	}
 
+	var bmpFileHeader = bitmapFileHeader(sourceData);
 	var imageData = new Uint8Array(bmpFileHeader.byteLength + imageDataLength);
 	imageData.set(bmpFileHeader);
 	imageData.set(sourceData, bmpFileHeader.byteLength);
