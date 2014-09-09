@@ -663,6 +663,9 @@ export class App {
 			}
 		});
 
+		// update the initial URL when the app is loaded
+		this.updateState({currentUrl: pageAccess.currentUrl});
+
 		fs.login().then(() => {
 			try {
 				var vault = new onepass.Vault(fs, '/1Password/1Password.agilekeychain', this.services.keyAgent);
