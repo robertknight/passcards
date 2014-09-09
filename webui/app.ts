@@ -710,6 +710,12 @@ export class App {
 		});
 		react.renderComponent(this.appView, element);
 		this.updateState(this.savedState);
+
+		// the main item list only renders visible items,
+		// so force a re-render when the window size changes
+		rootInputElement.onresize = () => {
+			this.appView.forceUpdate();
+		};
 	}
 
 	private updateState(state: AppViewState) {
