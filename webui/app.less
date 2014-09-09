@@ -13,29 +13,12 @@
 @material-color-accent3: #f06292;
 
 /* mixins */
-.flex {
-	display: flex;
-	display: -webkit-flex;
-}
-
-.flex-row {
-	flex-direction: row;
-	-webkit-flex-direction: row;
-}
-
-.flex-column {
-	flex-direction: column;
-	-webkit-flex-direction: column;
-}
-
 .flex-cross-center {
 	align-items: center;
-	-webkit-align-items: center;
 }
 
 .flex-axis-center {
 	justify-content: center;
-	-webkit-justify-content: center;
 }
 
 .flex-center {
@@ -45,7 +28,6 @@
 
 .flex-stretch {
 	flex-grow: 1;
-	-webkit-flex-grow: 1;
 }
 
 .touch-scrolling {
@@ -56,8 +38,6 @@
 
 .border-box {
 	box-sizing:border-box;
-	-moz-box-sizing:border-box;
-	-webkit-box-sizing:border-box
 }
 
 /* mixins - material */
@@ -101,8 +81,8 @@ html, body {
 	color: white;
 	font-weight: bold;
 
-	.flex;
-	.flex-row;
+	display: flex;
+	flex-direction: row;
 	.flex-center;
 }
 
@@ -138,8 +118,8 @@ html, body {
 }
 
 .unlockPaneInputs {
-	.flex;
-	.flex-column;
+	display: flex;
+	flex-direction: column;
 	.flex-axis-center;
 	
 	width: 50%;
@@ -173,8 +153,8 @@ html, body {
 }
 
 .itemListView {
-	.flex;
-	.flex-column;
+	display: flex;
+	flex-direction: column;
 
 	height:100%;
 }
@@ -192,8 +172,8 @@ html, body {
 	width: 100%;
 	position: fixed;
 
-	.flex;
-	.flex-row;
+	display: flex;
+	flex-direction: row;
 	.flex-cross-center;
 }
 
@@ -237,8 +217,8 @@ html, body {
 }
 
 .itemOverview {
-	.flex;
-	.flex-row;
+	display: flex;
+	flex-direction: row;
 	.flex-cross-center;
 
 	cursor: pointer;
@@ -285,6 +265,7 @@ html, body {
 	display: block;
 	position: relative;
 	top: 50%;
+
 	transform: translateY(-50%);
 }
 
@@ -328,8 +309,8 @@ html, body {
 }
 
 .detailsToolbar {
-	.flex;
-	.flex-row;
+	display: flex;
+	flex-direction: row;
 	.flex-cross-center;
 
 	.material-header;
@@ -360,16 +341,16 @@ html, body {
 }
 
 .detailsHeader {
-	.flex;
-	.flex-row;
+	display: flex;
+	flex-direction: row;
 
 	padding-bottom: 5px;
 	margin-bottom: 15px;
 }
 
 .detailsOverview {
-	.flex;
-	.flex-column;
+	display: flex;
+	flex-direction: column;
 	.flex-axis-center;
 
 	margin-left: 10px;
@@ -390,8 +371,8 @@ html, body {
 }
 
 .detailsField {
-	.flex;
-	.flex-column;
+	display: flex;
+	flex-direction: column;
 
 	padding-left: 20px;
 	padding-right: 20px; 
@@ -423,8 +404,8 @@ html, body {
 }
 
 .detailsFieldActions {
-	.flex;
-	.flex-row;
+	display: flex;
+	flex-direction: row;
 	.flex-axis-center;
 	order: 3;
 }

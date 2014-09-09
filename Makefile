@@ -45,6 +45,7 @@ $(webui_script_dir)/crypto_worker.js: build/current
 $(webui_css_dir)/app.css: webui/app.less
 	mkdir -p $(webui_css_dir)
 	$(NODE_BIN_DIR)/lessc webui/app.less > $(webui_css_dir)/app.css
+	$(NODE_BIN_DIR)/autoprefixer $(webui_css_dir)/app.css
 
 webui-icons:
 	@mkdir -p ${webui_icon_dir}

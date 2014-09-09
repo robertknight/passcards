@@ -3,6 +3,7 @@
   "description": "A 1Password-compatible password manager",
   "version": "0.7.0",
   "devDependencies": {
+    "autoprefixer": "^3.0.0",
     "browserify": "^5.10.1",
     "crx": "^0.4.4",
     "jpm": "0.0.13",
