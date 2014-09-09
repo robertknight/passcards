@@ -9,7 +9,7 @@ import Q = require('q');
 import argparse = require('argparse');
 import mkdirp = require('mkdirp')
 import sprintf = require('sprintf');
-import Path = require('path');
+import pathLib = require('path');
 import underscore = require('underscore');
 
 import asyncutil = require('../lib/base/asyncutil');
@@ -191,13 +191,13 @@ export class CLI {
 
 	private findExistingVaultInDropbox(storage: vfs.VFS, dropboxRoot: string) : Q.Promise<string> {
 		var path = Q.defer<string>();
-		var settingsFilePath = Path.join(dropboxRoot, '.ws.agile.1Password.settings');
+		var settingsFilePath = pathLib.join(dropboxRoot, '.ws.agile.1Password.settings');
 		var rootFile = storage.read(settingsFilePath);
 		rootFile.then((content) => {
-			path.resolve(Path.join(dropboxRoot, content));
+			path.resolve(pathLib.join(dropboxRoot, content));
 		}, (err) => {
 			this.printf('Unable to find keychain path in %s, using default path', settingsFilePath);
-			path.resolve(Path.join(dropboxRoot, '1Password/1Password.agilekeychain'));
+			path.resolve(pathLib.join(dropboxRoot, '1Password/1Password.agilekeychain'));
 		});
 		return path.promise;
 	}
@@ -270,7 +270,7 @@ export class CLI {
 		storage = new nodefs.FileVFS('/');
 		dropboxRoot = process.env.HOME + '/Dropbox';
 		if (customVaultPath) {
-			customVaultPath = Path.resolve(customVaultPath);
+			customVaultPath = pathLib.resolve(customVaultPath);
 		}
 
 		var authenticated = Q<void>(null);
@@ -560,7 +560,8 @@ export class CLI {
 
 	private newVaultCommand(fs: vfs.VFS, path: string, iterations?: number) : Q.Promise<void> {
 		return this.readNewPassword().then((newPass) => {
-			return onepass.Vault.createVault(fs, path, newPass.pass, newPass.hint, iterations).then((vault) => {
+			var absPath = pathLib.resolve(path);
+			return onepass.Vault.createVault(fs, absPath, newPass.pass, newPass.hint, iterations).then((vault) => {
 				this.printf('New vault created in %s', vault.vaultPath());
 			});
 		});

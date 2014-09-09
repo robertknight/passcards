@@ -506,6 +506,21 @@ testLib.addAsyncTest('create new vault', (assert) => {
 	});
 });
 
+testLib.addAsyncTest('create new vault with relative path', (assert) => {
+	var env = new CLITest(assert);
+	env.replyTo(/New password/).with('vaultpass');
+	env.replyTo(/Re-enter new/).with('vaultpass');
+	env.replyTo(/Hint for new/).with('vaultpass');
+
+	var relativePath = 'newvault';
+	return env.run('new-vault', '--iterations', '100', relativePath).then(() => {
+		assert.ok(env.fakeTerm.didPrint(/New vault created/));
+
+		var fs = new nodefs.FileVFS('/');
+		return vfs.VFSUtil.rmrf(fs, path.resolve(relativePath));
+	});
+});
+
 testLib.addAsyncTest('repair items', (assert) => {
 	// This runs the 'repair' command in a vault where all
 	// items are valid. We should also check that it behaves
