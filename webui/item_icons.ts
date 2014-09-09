@@ -298,6 +298,12 @@ export class IconControl extends reactts.ReactComponentBase<IconControlProps, {}
 		}
 	}
 
+	componentWillUnmount() {
+		if (this.iconUpdateListener && this.props.iconProvider) {
+			this.props.iconProvider.updated.ignore(this.iconUpdateListener);
+		}
+	}
+
 	componentWillReceiveProps(nextProps: IconControlProps) {
 		this.setupIconUpdateListener(nextProps.iconProvider);
 	}
