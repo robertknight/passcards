@@ -87,8 +87,8 @@ node_modules/dropbox/lib/dropbox.js: node_modules/dropbox/package.json
 	@(cd ./node_modules/dropbox && npm install --quiet . $(SILENCE_STDOUT))
 
 test-package: all
-	@cd `$(TMP_DIR_CMD)` \
-	&& npm install --quiet $(ROOT_DIR) $(SILENCE_STDOUT) \
+	cd `$(TMP_DIR_CMD)` \
+	&& npm install $(ROOT_DIR) \
 	&& ./node_modules/passcards/passcards --help $(SILENCE_STDOUT) \
 	&& echo npm package OK
 	
