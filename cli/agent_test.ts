@@ -27,7 +27,11 @@ testLib.addAsyncTest('decrypt data', (assert) => {
 	var httpAgent = new agent.HttpKeyAgent();
 
 	var itemData = JSON.stringify({secret: 'secret-data'});
-	var itemPass = 'the master key';
+
+	// note: The item password below contains bytes
+	// legal in UTF-8 to test exchange of binary key data with the
+	// agent
+	var itemPass = 'the \xFFmaster\x00 key';
 	var encrypted = crypto.encryptAgileKeychainItemData(new crypto.CryptoJsCrypto, itemPass, itemData);
 
 	return httpAgent.addKey('key1', itemPass)

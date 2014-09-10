@@ -74,7 +74,7 @@ class Server {
 			app.post('/keys', (req, res) => {
 				parseJSONRequest(req, res, (params: AddKeyRequest) => {
 					logf('received key %s', params.id);
-					this.keys[params.id] = params.key;
+					this.keys[params.id] = atob(params.key);
 					res.end('Key added');
 
 					self.resetKeyTimeout();

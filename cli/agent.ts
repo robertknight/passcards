@@ -22,7 +22,7 @@ export class HttpKeyAgent implements key_agent.KeyAgent {
 		var done = Q.defer<void>();
 		this.sendRequest('POST', '/keys', {
 			id: id,
-			key: key
+			key: btoa(key)
 		}).then((reply) => {
 			done.resolve(null);
 		}).done();
