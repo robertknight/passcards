@@ -78,6 +78,12 @@ export class CLI {
 			dest: 'vault',
 			help: 'Specify the path of the vault to open'
 		});
+		parser.addArgument(['-d', '--debug'], {
+			action: 'storeTrue',
+			nargs: 1,
+			dest: 'debug',
+			help: 'Enable debug output'
+		});
 
 		var subcommands = parser.addSubparsers({dest:'command'});
 
@@ -696,6 +702,9 @@ export class CLI {
 					}
 				}).catch((err) => {
 					this.printf('%s', err);
+					if (args.debug) {
+						this.printf('%s', err.stack);
+					}
 					exitStatus.resolve(1);
 				});
 			} else {
