@@ -206,7 +206,9 @@ function run(tests: TestCase[]) {
 		}
 	});
 
-	qunit.config.testTimeout = 3000;
+	if (!timeout()) {
+		setTimeout(3000);
+	}
 
 	qunit.log((details: AssertionResult) => {
 		if (!details.result) {
@@ -284,5 +286,18 @@ export function assertEqual(assert: Assert, a: any, b: any, properties?: string[
 		console.log(diff);
 	}
 	assert.equal(diff.length, 0, 'Check objects are equal');
+}
+
+/** Set the global default timeout for individual test cases.
+  */
+export function setTimeout(timeoutMs: number) {
+	qunit.config.testTimeout = timeoutMs;
+}
+
+/** Returns the global default timeout for individual test
+  * cases or undefined to use a default value.
+  */
+export function timeout() {
+	return qunit.config.testTimeout;
 }
 
