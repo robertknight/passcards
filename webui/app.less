@@ -246,8 +246,11 @@ html, body {
 
 	background-color: white;
 
-	border: 1px solid #cccccc;
-	border-radius: 2px;
+	border: 1px solid #bbb;
+
+	/* make icon circular */
+	border-radius: 50%;
+	overflow: hidden;
 }
 
 .itemIcon {
@@ -267,6 +270,12 @@ html, body {
 	top: 50%;
 
 	transform: translateY(-50%);
+
+	/* make image circular. Even if the image is too small
+	 * to fill the circular container, it looks better if
+	 * the image and the container have the same shape.
+	 */
+	border-radius: 50%;
 }
 
 .itemDetails {
