@@ -45,10 +45,6 @@ function onPanelHidden() {
 };
 
 function main() {
-	// disable strict mode in development to suppress a large
-	// number of console warnings from normal web pages
-	preferences_service.set('javascript.options.strict', false);
-
 	// read internal settings
 	var PREF_ROOT = 'extensions.' + self_.id + '.';
 	var syncService = preferences_service.get(PREF_ROOT + '.syncService', 'dropbox');
