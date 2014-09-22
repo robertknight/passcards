@@ -37,34 +37,77 @@ function isElementVisible(elt: Element) {
 	return rect.width > 0 && rect.height > 0;
 }
 
+// Holds the details of an input field found in
+// the current document or a nested frame.
+interface InputField {
+	element: HTMLInputElement;
+	field: forms.InputField;
+}
+
+// Set of fields returned in the most recent RPC call
+// from the extension to collect the set of fields in the
+// document
 var lastFields : HTMLInputElement[] = [];
+
+function collectFieldsInDocument(document: Document) : InputField[] {
+	var fieldElements = document.getElementsByTagName('input');
+	var fields: InputField[] = [];
+
+	// collect fields from current document
+	for (var i=0; i < fieldElements.length; i++) {
+		var elt = fieldElements.item(i);
+
+		var field : InputField = {
+			element: elt,
+			field: {
+				key: fields.length,
+				id: elt.id,
+				name: elt.name,
+				type: inputFieldType(elt.type),
+				placeholder: elt.placeholder,
+				visible: isElementVisible(elt)
+			}
+		};
+		var ariaAttr = elt.attributes.getNamedItem('aria-label');
+		if (ariaAttr) {
+			field.field.ariaLabel = ariaAttr.value;
+		}
+		fields.push(field);
+	}
+
+	// collect fields from embedded iframes.
+	//
+	// FIXME: This only works for iframes hosted at the same origin as the parent document.
+	// For pages where the login form is hosted on a different domain, we'll need
+	// to use a browser-specific mechanism to attach to the iframe content document
+	// and retrieve input fields. We'll also need suitable security checks to verify
+	// the relation between the child <iframe> and the main document.
+	var frames = document.querySelectorAll('iframe');
+	for (var i=0; i < frames.length; i++) {
+		var frame = <HTMLIFrameElement>frames.item(i);
+		if (frame.contentDocument) {
+			var documentFields = collectFieldsInDocument(frame.contentDocument);
+			documentFields.forEach((field) => {
+				field.field.key += fields.length;
+			});
+			fields = fields.concat(documentFields);
+		}
+	}
+
+	return fields;
+}
 
 portRpc.on('find-fields', () => {
 	lastFields = [];
 
-	var fieldElements = document.getElementsByTagName('input');
-	var fields: forms.InputField[] = [];
-	for (var i=0; i < fieldElements.length; i++) {
-		var elt = fieldElements.item(i);
-		lastFields.push(elt);
-
-		var field : forms.InputField = {
-			key: fields.length,
-			id: elt.id,
-			name: elt.name,
-			type: inputFieldType(elt.type),
-			placeholder: elt.placeholder,
-			visible: isElementVisible(elt)
-		};
-		var ariaAttr = elt.attributes.getNamedItem('aria-label');
-		if (ariaAttr) {
-			field.ariaLabel = ariaAttr.value;
-		}
-
-		fields.push(field);
-	}
-
-	return fields;
+	var inputFields = collectFieldsInDocument(document);
+	lastFields = inputFields.map((field) => {
+		return field.element;
+	});
+	
+	return inputFields.map((field) => {
+		return field.field;
+	});
 });
 
 portRpc.on('autofill', (entries: forms.AutoFillEntry[]) => {
