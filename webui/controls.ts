@@ -1,6 +1,7 @@
 /// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
 /// <reference path="../node_modules/react-typescript/declarations/react.d.ts" />
 /// <reference path="../node_modules/react-typescript/declarations/react-typescript.d.ts" />
+/// <reference path="../typings/dom.d.ts" />
 
 // Re-usable UI controls that are used in different parts
 // of the front-end
@@ -66,11 +67,160 @@ export interface ActionButtonProps {
 }
 
 export class ActionButton extends reactts.ReactComponentBase<ActionButtonProps,{}> {
+	componentDidMount() {
+		setTimeout(() => {
+			var button = <HTMLButtonElement>(this.refs['button'].getDOMNode());
+			var ripple = <InkRipple>(this.refs['ripple']);
+			ripple.setState({
+				width: button.offsetWidth,
+				height: button.offsetHeight
+			});
+		}, 1000);
+	}
+
 	render() {
-		return react.DOM.input(reactutil.mergeProps(this.props, {
-			className: 'itemActionButton',
-			type: 'button'
-		}));
+		return react.DOM.div({
+			className: 'itemActionButtonContainer'
+		},
+			react.DOM.input(reactutil.mergeProps(this.props, {
+				className: 'itemActionButton',
+				type: 'button',
+				ref: 'button'
+			})),
+			new InkRipple({
+				color: {r: 252, g: 228, b: 236},
+				ref: 'ripple'
+			})
+		);
+	}
+}
+
+export interface InkRippleProps {
+	color: {
+		r: number;
+		g: number;
+		b: number;
+	};
+}
+
+export interface InkRippleState {
+	startX?: number;
+	startY?: number;
+	active?: boolean;
+	width?: number;
+	height?: number;
+}
+
+/** InkRipple provides a Material Design-style ripple effect when touched or clicked.
+  *
+  * To use an InkRipple, add it as the child of the element which should display
+  * the effect when touched. The ripple will expand to fill its positioned parent.
+  */
+export class InkRipple extends reactts.ReactComponentBase<InkRippleProps, InkRippleState> {
+	private anim : {
+		startTime: number;
+		context: CanvasRenderingContext2D;
+	};
+
+	getInitialState() {
+		return {
+			startX: 0,
+			startY: 0,
+			active: false,
+			width: 500,
+			height: 500
+		};
+	}
+
+	componentDidMount() {
+		var container = <HTMLCanvasElement>(this.refs['container'].getDOMNode());
+		var parentNode = <HTMLElement>(container.parentNode);
+		container.parentNode.addEventListener('mousedown', (e: MouseEvent) => {
+			console.log('beginning ink ripple render');
+			var cx = container.getBoundingClientRect().left;
+			var cy = container.getBoundingClientRect().top;
+
+			var ex: number;
+			var ey: number;
+
+			var touchEvent = <TouchEvent>(<Event>e);
+			if (touchEvent.touches) {
+				ex = touchEvent.touches[0].pageX;
+				ey = touchEvent.touches[0].pageY;
+			} else {
+				ex = e.pageX;
+				ey = e.pageY;
+			}
+
+			var x = ex - (window.pageXOffset + cx);
+			var y = ey - (window.pageYOffset + cy);
+
+			container.width = parentNode.offsetWidth;
+			container.height = parentNode.offsetHeight;
+
+			this.setState({
+				active: true,
+				startX: x,
+				startY: y,
+			});
+
+			this.anim = {
+				startTime: Date.now(),
+				context: container.getContext('2d')
+			};
+			this.stepAnimation();
+		});
+	}
+
+	componentDidUnmount() {
+		this.anim = null;
+	}
+
+	render() {
+		console.log('rendering canvas with width', this.state.width, 'and height', this.state.height);
+		return react.DOM.div({
+			className: 'inkRipple',
+			style : {
+				width: '100%',
+				height: '100%',
+				overflow: 'hidden'
+			}
+		},
+			react.DOM.canvas({
+				className: 'inkRipple',
+				ref: 'container',
+				width: this.state.width,
+				height: this.state.height
+			})
+		)
+	}
+
+	private stepAnimation() {
+		if (!this.anim) {
+			// component was unmounted during
+			// animation
+			return;
+		}
+
+		var duration = 500;
+		var elapsed = Date.now() - this.anim.startTime;
+		var radius = elapsed / 3.0;
+		var ctx = this.anim.context;
+
+		var alpha = 0.7 - (elapsed / duration);
+		var elem = <HTMLCanvasElement>(this.refs['container'].getDOMNode());
+
+		ctx.clearRect(0,0, elem.offsetWidth, elem.offsetHeight);
+		ctx.fillStyle = sprintf('rgba(%d,%d,%d,%f)',
+		  this.props.color.r, this.props.color.g, this.props.color.b,
+		  alpha);
+		ctx.beginPath();
+		ctx.arc(this.state.startX, this.state.startY, radius, 0, Math.PI * 2, true);
+		ctx.fill();
+
+		if (elapsed < duration) {
+			window.requestAnimationFrame(this.stepAnimation.bind(this));
+		}
 	}
 }
 

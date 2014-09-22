@@ -135,6 +135,13 @@ class Item extends reactts.ReactComponentBase<ItemProps, {}> {
 					top: (this.props.offsetTop).toString() + 'px'
 				}
 			},
+			new controls.InkRipple({
+				color: {
+					r: 252,
+					g: 228,
+					b: 236
+				}
+			}),
 			new item_icons.IconControl({
 				location: this.props.item.location,
 				iconProvider: this.props.iconProvider,

@@ -40,6 +40,16 @@
 	box-sizing:border-box;
 }
 
+/* force an element to be given its own
+ * compositor layer.
+ *
+ * This can be used to reduce the amount of
+ * repainting work for animated elements
+ */
+.force-new-layer {
+	transform: translate3d(0,0,0);
+}
+
 /* mixins - material */
 .material-header {
 	background-color: @material-color-primary;
@@ -223,7 +233,7 @@ html, body {
 
 	cursor: pointer;
 
-	padding-left: 5px;
+	padding-left: 16px;
 	padding-right: 5px;
 	position: absolute;
 
@@ -232,13 +242,13 @@ html, body {
 	width: 100%;
 }
 
-.itemOverview:hover {
+/*.itemOverview:hover {
 	background-color: @material-color-accent1;
 }
 
 .itemHovered {
 	background-color: @material-color-accent1;
-}
+}*/
 
 .itemIconContainer {
 	width: 48px;
@@ -349,6 +359,11 @@ html, body {
 	background-color:@material-color-accent2;
 }
 
+.itemActionButtonContainer {
+	position: relative;
+	width: fit-content;
+}
+
 .detailsHeader {
 	display: flex;
 	flex-direction: row;
@@ -434,5 +449,16 @@ html, body {
 	position: fixed;
 	z-index: 10;
 	width: 100%;
+}
+
+.inkRipple {
+	.force-new-layer;
+
+	overflow: hidden;
+	position: absolute;
+	left: 0px;
+	top: 0px;
+
+	-webkit-tap-highlight-color: transparent;
 }
 

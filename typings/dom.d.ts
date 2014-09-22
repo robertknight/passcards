@@ -1,5 +1,9 @@
 // this file contains DOM declarations and corrections for
 // methods missing from TypeScript's lib.d.ts file
+//
+// The TypeScript version against which the declarations
+// were originally written is given in brackets against
+// each group of declarations.
 
 // [TS/1.0] IDBKeyRange static interface is missing
 declare var IDBKeyRange: {
@@ -11,7 +15,7 @@ declare var IDBKeyRange: {
     upperBound(bound: any, open?: boolean): IDBKeyRange;
 }
 
-// [TS/1.0] ClipboardEvent is missing from lib.d.ts
+// [TS/1.0]
 interface ClipboardEvent extends Event {
 	clipboardData: DataTransfer;
 }
@@ -22,4 +26,21 @@ declare var ClipboardEvent: {
 		data: string;
 	}) : ClipboardEvent;
 }
+
+// [TS/1.0]
+// https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent
+interface Touch {
+	pageX: number;
+	pageY: number;
+}
+
+interface TouchList {
+	length: number;
+	[index: number] : Touch;
+}
+
+interface TouchEvent extends Event {
+	touches: TouchList
+}
+
 
