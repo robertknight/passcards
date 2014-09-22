@@ -133,12 +133,12 @@ export class InkRipple extends reactts.ReactComponentBase<InkRippleProps, InkRip
 	}
 
 	componentDidMount() {
-		var container = <HTMLCanvasElement>(this.refs['container'].getDOMNode());
+		var canvas = <HTMLCanvasElement>(this.refs['canvas'].getDOMNode());
+		var container = <HTMLElement>(this.refs['container'].getDOMNode());
 		var parentNode = <HTMLElement>(container.parentNode);
-		container.parentNode.addEventListener('mousedown', (e: MouseEvent) => {
-			console.log('beginning ink ripple render');
-			var cx = container.getBoundingClientRect().left;
-			var cy = container.getBoundingClientRect().top;
+		parentNode.addEventListener('mousedown', (e: MouseEvent) => {
+			var cx = canvas.getBoundingClientRect().left;
+			var cy = canvas.getBoundingClientRect().top;
 
 			var ex: number;
 			var ey: number;
@@ -155,8 +155,8 @@ export class InkRipple extends reactts.ReactComponentBase<InkRippleProps, InkRip
 			var x = ex - (window.pageXOffset + cx);
 			var y = ey - (window.pageYOffset + cy);
 
-			container.width = parentNode.offsetWidth;
-			container.height = parentNode.offsetHeight;
+			canvas.width = container.offsetWidth;
+			canvas.height = container.offsetHeight;
 
 			this.setState({
 				active: true,
@@ -166,7 +166,7 @@ export class InkRipple extends reactts.ReactComponentBase<InkRippleProps, InkRip
 
 			this.anim = {
 				startTime: Date.now(),
-				context: container.getContext('2d')
+				context: canvas.getContext('2d')
 			};
 			this.stepAnimation();
 		});
@@ -177,9 +177,9 @@ export class InkRipple extends reactts.ReactComponentBase<InkRippleProps, InkRip
 	}
 
 	render() {
-		console.log('rendering canvas with width', this.state.width, 'and height', this.state.height);
 		return react.DOM.div({
 			className: 'inkRipple',
+			ref: 'container',
 			style : {
 				width: '100%',
 				height: '100%',
@@ -188,7 +188,7 @@ export class InkRipple extends reactts.ReactComponentBase<InkRippleProps, InkRip
 		},
 			react.DOM.canvas({
 				className: 'inkRipple',
-				ref: 'container',
+				ref: 'canvas',
 				width: this.state.width,
 				height: this.state.height
 			})
