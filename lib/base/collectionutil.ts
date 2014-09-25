@@ -50,7 +50,7 @@ export class PMap<K,V> implements Map<K,V> {
 		return this.map.hasOwnProperty(this.propName(key));
 	}
 
-	forEach(callback: (value: V, index: K, map: Map<K,V>) => any) {
+	forEach(callback: (value: V, index?: K, map?: Map<K,V>) => any) {
 		throw new Error('PMap.forEach() is not implemented');
 	}
 
@@ -213,5 +213,23 @@ export class LittleEndianDataView {
 	setUint32(offset: number, data: number) {
 		this.view.setUint32(offset, data, true);
 	}
+}
+
+/** A function which converts a list of items to a map, using @p keyFunc
+  * to retrieve a key for each item.
+  *
+  * Throws an exception if @p keyFunc returns the same key for more
+  * than one item.
+  */
+export function listToMap<K,T>(list: T[], keyFunc: (item: T) => K) {
+	var map = new collectionutil.PMap<K,T>();
+	list.forEach((item) => {
+		var key = keyFunc(item);
+		if (map.has(key)) {
+			throw new Error('Duplicate key');
+		}
+		map.set(key, item);
+	});
+	return map;
 }
 

@@ -42,5 +42,16 @@ testLib.addTest('map polyfill basic ops', (assert) => {
 	assert.ok(!map.has('akey'));
 });
 
+testLib.addTest('convert list to map', (assert) => {
+	var map = collectionutil.listToMap([{k:1, v:1}, {k:2, v:2}, {k:3, v:3}], (item) => {
+		return item.k;
+	});
+	assert.equal(map.size, 3);
+	assert.ok(map.has(1));
+	assert.ok(map.has(2));
+	assert.ok(map.has(3));
+	assert.deepEqual(map.get(3), {k:3, v:3});
+});
+
 testLib.start();
 
