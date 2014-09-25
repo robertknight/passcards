@@ -52,9 +52,10 @@ var lastFields : HTMLInputElement[] = [];
 function collectFieldsInDocument(document: Document) : InputField[] {
 	var fieldElements = document.getElementsByTagName('input');
 	var fields: InputField[] = [];
+	var i = 0;
 
 	// collect fields from current document
-	for (var i=0; i < fieldElements.length; i++) {
+	for (i=0; i < fieldElements.length; i++) {
 		var elt = fieldElements.item(i);
 
 		var field : InputField = {
@@ -83,7 +84,7 @@ function collectFieldsInDocument(document: Document) : InputField[] {
 	// and retrieve input fields. We'll also need suitable security checks to verify
 	// the relation between the child <iframe> and the main document.
 	var frames = document.querySelectorAll('iframe');
-	for (var i=0; i < frames.length; i++) {
+	for (i=0; i < frames.length; i++) {
 		var frame = <HTMLIFrameElement>frames.item(i);
 		if (frame.contentDocument) {
 			var documentFields = collectFieldsInDocument(frame.contentDocument);
