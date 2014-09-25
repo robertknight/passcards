@@ -22,7 +22,7 @@ export class TempStore implements Store {
 	}
 
 	listItems() {
-		return this.items;
+		return Q(this.items);
 	}
 
 	saveItem(item: onepass.Item) {
@@ -43,7 +43,7 @@ export class TempStore implements Store {
 
 	getContent(item: onepass.Item) {
 		if (this.content.has(item.uuid)) {
-			return Q.resolve(this.content.get(item.uuid));
+			return Q(this.content.get(item.uuid));
 		} else {
 			return Q.reject(new Error('No such item'));
 		}

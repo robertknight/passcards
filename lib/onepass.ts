@@ -280,9 +280,6 @@ export class Item {
 			return Q.reject('Unable to save new item, no content set');
 		}
 
-		// update last-modified time
-		this.updatedAt = new Date();
-
 		// set item location to match current URL list
 		if (this.content && this.content.urls.length > 0) {
 			this.location = this.content.urls[0].url;
@@ -540,7 +537,19 @@ export class Vault {
 		if (!item.createdAt) {
 			item.createdAt = new Date();
 		}
+
+		// update last-modified time
+		var prevDate = item.updatedAt;
 		item.updatedAt = new Date();
+
+		// ensure that last-modified time always advances by at least one
+		// second from the previous time on save.
+		//
+		// This is required to ensure the 'updatedAt' time saved in contents.js
+		// changes since it only stores second-level resolution
+		if (prevDate && item.updatedAt.getTime() - prevDate.getTime() < 1000) {
+			item.updatedAt = new Date(prevDate.getTime() + 1000);
+		}
 
 		item.getContent().then((content) => {
 			var contentJSON = JSON.stringify(ItemContent.toAgileKeychainObject(content));

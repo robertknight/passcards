@@ -222,7 +222,7 @@ export class LittleEndianDataView {
   * than one item.
   */
 export function listToMap<K,T>(list: T[], keyFunc: (item: T) => K) {
-	var map = new collectionutil.PMap<K,T>();
+	var map = new PMap<K,T>();
 	list.forEach((item) => {
 		var key = keyFunc(item);
 		if (map.has(key)) {
