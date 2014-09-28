@@ -463,6 +463,9 @@ export enum FieldType {
 }
 
 export interface Store {
+	/** Unlock the vault */
+	unlock(password: string) : Q.Promise<void>;
+
 	/** List all of the items in the store */
 	listItems() : Q.Promise<Item[]>;
 
@@ -492,6 +495,10 @@ export class TempStore implements Store {
 	constructor() {
 		this.items = [];
 		this.content = new collectionutil.PMap<string,ItemContent>();
+	}
+
+	unlock(password: string) : Q.Promise<void> {
+		return Q<void>(null);
 	}
 
 	listItems() {

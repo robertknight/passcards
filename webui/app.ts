@@ -80,7 +80,7 @@ class SetupView extends reactts.ReactComponentBase<{}, {}> {
 
 interface AppViewState {
 	mainView?: ActiveView;
-	vault?: onepass.Vault;
+	store?: item_store.Store;
 	items?: item_store.Item[];
 	selectedItem?: item_store.Item;
 	isLocked?: boolean;
@@ -121,7 +121,7 @@ class AppView extends reactts.ReactComponentBase<AppViewProps, AppViewState> {
 
 	setState(changes: AppViewState) {
 		var doRefresh = false;
-		if (changes.vault && changes.vault != this.state.vault) {
+		if (changes.store && changes.store != this.state.store) {
 			doRefresh = true;
 		}
 		if (changes.currentUrl && changes.currentUrl != this.state.currentUrl) {
@@ -158,10 +158,10 @@ class AppView extends reactts.ReactComponentBase<AppViewProps, AppViewState> {
 	}
 
 	refreshItems() {
-		if (!this.state.vault) {
+		if (!this.state.store) {
 			return;
 		}
-		this.state.vault.listItems().then((items) => {
+		this.state.store.listItems().then((items) => {
 			var state = this.state;
 			state.items = underscore.filter(items, (item) => {
 				return item.isRegularItem();
@@ -190,7 +190,7 @@ class AppView extends reactts.ReactComponentBase<AppViewProps, AppViewState> {
 	}
 
 	render() : react.ReactComponent<any,any> {
-		if (!this.state.vault) {
+		if (!this.state.store) {
 			return new SetupView({});
 		}
 
@@ -203,7 +203,7 @@ class AppView extends reactts.ReactComponentBase<AppViewProps, AppViewState> {
 
 		if (this.state.isLocked) {
 			children.unlockPane = new UnlockPane({
-				vault: this.state.vault,
+				store: this.state.store,
 				isLocked: this.state.isLocked,
 				onUnlock: () => {
 					this.setState({isLocked: false});
@@ -245,7 +245,7 @@ class AppView extends reactts.ReactComponentBase<AppViewProps, AppViewState> {
 	}
 }
 
-// View for entering master password and unlocking the vault
+// View for entering master password and unlocking the store
 enum UnlockState {
 	Locked,
 	Unlocking,
@@ -258,7 +258,7 @@ class UnlockPaneState {
 }
 
 class UnlockPaneProps {
-	vault: onepass.Vault;
+	store: item_store.Store;
 	isLocked: boolean;
 	onUnlock: () => void;
 	onUnlockErr: (error: string) => void;
@@ -278,7 +278,7 @@ class UnlockPane extends reactts.ReactComponentBase<UnlockPaneProps, UnlockPaneS
 			var masterPass = $(unlockField).val();
 
 			this.setUnlockState(UnlockState.Unlocking);
-			this.props.vault.unlock(masterPass).then(() => {
+			this.props.store.unlock(masterPass).then(() => {
 				this.setUnlockState(UnlockState.Success);
 				this.props.onUnlock();
 			})
@@ -670,7 +670,7 @@ export class App {
 		fs.login().then(() => {
 			try {
 				var vault = new onepass.Vault(fs, '/1Password/1Password.agilekeychain', this.services.keyAgent);
-				this.updateState({vault: vault});
+				this.updateState({store: vault});
 
 				this.services.keyAgent.onLock().listen(() => {
 					this.updateState({isLocked: true});
