@@ -33,7 +33,13 @@ export class Syncer {
 		this.progress = new event_stream.EventStream<SyncStats>();
 	}
 
-	sync() : Q.Promise<SyncStats> {
+	syncKeys() : Q.Promise<void> {
+		return this.vault.listKeys().then((keys) => {
+			return this.store.saveKeys(keys);
+		});
+	}
+
+	syncItems() : Q.Promise<SyncStats> {
 		if (this.currentSync) {
 			return this.currentSync;
 		}

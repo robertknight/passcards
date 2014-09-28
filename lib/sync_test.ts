@@ -3,6 +3,7 @@ import testLib = require('./test');
 import vfs_node = require('./vfs/node');
 import item_builder = require('./item_builder');
 import item_store = require('./item_store');
+import key_agent = require('./key_agent');
 import sync = require('./sync');
 import onepass = require('./onepass');
 
@@ -24,7 +25,7 @@ function setup() : Q.Promise<Env> {
 		vault = _vault;
 		return vault.unlock(VAULT_PASS);
 	}).then(() => {
-		var store = new item_store.TempStore();
+		var store = new item_store.TempStore(new key_agent.SimpleKeyAgent());
 		var syncer = new sync.Syncer(store, vault);
 
 		return {
@@ -51,7 +52,7 @@ testLib.addAsyncTest('sync vault', (assert) => {
 	}).then(() => {
 		// 2. sync and verify that the updated items were
 		//    synced to the local store
-		return env.syncer.sync();
+		return env.syncer.syncItems();
 	}).then((syncStats) => {
 		assert.equal(syncStats.updated, 1);
 		assert.equal(syncStats.total, 1);
@@ -78,7 +79,7 @@ testLib.addAsyncTest('sync vault', (assert) => {
 		item.title = 'sync me - updated';
 		return item.save();
 	}).then(() => {
-		return env.syncer.sync();
+		return env.syncer.syncItems();
 	}).then((syncStats) => {
 		assert.equal(syncStats.updated, 1);
 		assert.equal(syncStats.total, 1);
@@ -91,7 +92,7 @@ testLib.addAsyncTest('sync vault', (assert) => {
 
 // TODO: Tests for:
 // - Syncing a locked vault
-// - Syncing was sync() is already in progress
+// - Syncing whilst syncItems() is already in progress
 // - Syncing a larger vault with several hundred items
 // - Syncing deleted items
 

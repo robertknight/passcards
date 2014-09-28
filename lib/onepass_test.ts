@@ -8,6 +8,7 @@ import crypto = require('./onepass_crypto');
 import env = require('./base/env');
 import exportLib = require('./export');
 import item_store = require('./item_store');
+import key_agent = require('./key_agent');
 import nodefs = require('./vfs/node');
 import onepass = require('./onepass');
 import testLib = require('./test');
@@ -413,13 +414,13 @@ testLib.addTest('Encrypt/decrypt key (sync)', (assert) => {
 	var salt = crypto.randomBytes(8);
 	var masterKey = crypto.randomBytes(1024);
 
-	var derivedKey = onepass.keyFromPasswordSync(password, salt, iterations);
-	var encryptedKey = onepass.encryptKey(derivedKey, masterKey);
-	var decryptedKey = onepass.decryptKey(derivedKey, encryptedKey.key, encryptedKey.validation);
+	var derivedKey = key_agent.keyFromPasswordSync(password, salt, iterations);
+	var encryptedKey = key_agent.encryptKey(derivedKey, masterKey);
+	var decryptedKey = key_agent.decryptKey(derivedKey, encryptedKey.key, encryptedKey.validation);
 	assert.equal(decryptedKey, masterKey);
 	assert.throws(() => {
-		var derivedKey2 = onepass.keyFromPasswordSync('wrong-pass', salt, iterations);
-		onepass.decryptKey(derivedKey2, encryptedKey.key, encryptedKey.validation)
+		var derivedKey2 = key_agent.keyFromPasswordSync('wrong-pass', salt, iterations);
+		key_agent.decryptKey(derivedKey2, encryptedKey.key, encryptedKey.validation)
 	});
 });
 
@@ -429,9 +430,9 @@ testLib.addAsyncTest('Encrypt/decrypt key (async)', (assert) => {
 	var salt = crypto.randomBytes(8);
 	var masterKey = crypto.randomBytes(1024);
 
-	onepass.keyFromPassword(password, salt, iterations).then((derivedKey) => {
-		var encryptedKey = onepass.encryptKey(derivedKey, masterKey);
-		var decryptedKey = onepass.decryptKey(derivedKey, encryptedKey.key, encryptedKey.validation);
+	key_agent.keyFromPassword(password, salt, iterations).then((derivedKey) => {
+		var encryptedKey = key_agent.encryptKey(derivedKey, masterKey);
+		var decryptedKey = key_agent.decryptKey(derivedKey, encryptedKey.key, encryptedKey.validation);
 		assert.equal(decryptedKey, masterKey);
 		testLib.continueTests();
 	}).done();
@@ -485,7 +486,7 @@ testLib.addAsyncTest('Change vault password', (assert) => {
 		vault = vault_;
 		return vault.changePassword('wrong-pass', 'new-pass', 'new-hint');
 	}).catch((err) => {
-		assert.ok(err instanceof onepass.DecryptionError);
+		assert.ok(err instanceof key_agent.DecryptionError);
 		vault.changePassword('logMEin', 'new-pass', 'new-hint')
 		.then(() => {
 			return vault.unlock('new-pass');

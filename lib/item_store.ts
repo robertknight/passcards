@@ -7,9 +7,12 @@ import Q = require('q');
 import sprintf = require('sprintf');
 import underscore = require('underscore');
 
+import asyncutil = require('./base/asyncutil');
 import crypto = require('./onepass_crypto');
 import collectionutil = require('./base/collectionutil');
 import dateutil = require('./base/dateutil');
+import event_stream = require('./base/event_stream');
+import key_agent = require('./key_agent');
 import stringutil = require('./base/stringutil');
 
 // typedef for item type codes
@@ -463,6 +466,9 @@ export enum FieldType {
 }
 
 export interface Store {
+	/** Emits events when items are updated in the store. */
+	onItemUpdated: event_stream.EventStream<Item>;
+
 	/** Unlock the vault */
 	unlock(password: string) : Q.Promise<void>;
 
@@ -485,19 +491,46 @@ export interface Store {
 	  * to an ItemContent instance.
 	  */
 	getRawDecryptedData(item: Item) : Q.Promise<string>;
+
+	/** Retrieve the master encryption keys for this store. */
+	listKeys() : Q.Promise<key_agent.Key[]>;
+
+	/** Update the encryption keys in this store. */
+	saveKeys(keys: key_agent.Key[]) : Q.Promise<void>;
 }
 
 /** A temporary store which keeps items only in-memory */
 export class TempStore implements Store {
+	onItemUpdated: event_stream.EventStream<Item>;
+
+	private keys: key_agent.Key[];
 	private items: Item[];
 	private content: collectionutil.PMap<string,ItemContent>;
+	private keyAgent: key_agent.KeyAgent;
 
-	constructor() {
+	constructor(agent: key_agent.KeyAgent) {
 		this.items = [];
 		this.content = new collectionutil.PMap<string,ItemContent>();
+		this.onItemUpdated = new event_stream.EventStream<Item>();
+		this.keyAgent = agent;
 	}
 
 	unlock(password: string) : Q.Promise<void> {
+		return key_agent.decryptKeys(this.keys, password).then((keys) => {
+			var savedKeys: Q.Promise<void>[] = [];
+			keys.forEach((key) => {
+				savedKeys.push(this.keyAgent.addKey(key.id, key.key));
+			});
+			return asyncutil.eraseResult(Q.all(savedKeys));
+		});
+	}
+
+	listKeys() {
+		return Q(this.keys);
+	}
+
+	saveKeys(keys: key_agent.Key[]) {
+		this.keys = keys;
 		return Q<void>(null);
 	}
 
@@ -518,6 +551,7 @@ export class TempStore implements Store {
 		}
 		return item.getContent().then((content) => {
 			this.content.set(item.uuid, content);
+			this.onItemUpdated.publish(item);
 		});
 	}
 

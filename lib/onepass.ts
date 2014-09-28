@@ -16,8 +16,9 @@ import agilekeychain = require('./agilekeychain');
 import collectionutil = require('./base/collectionutil');
 import crypto = require('./onepass_crypto');
 import dateutil = require('./base/dateutil');
+import event_stream = require('./base/event_stream');
 import item_store = require('./item_store');
-import keyAgent = require('./key_agent');
+import key_agent = require('./key_agent');
 import stringutil = require('./base/stringutil');
 import vfs = require('./vfs/vfs');
 
@@ -35,18 +36,6 @@ export var DEFAULT_VAULT_PASS_ITERATIONS = 80000;
 // This item data could perhaps be stored in a field for store-specific
 // data within the item_store.Item?
 var DEFAULT_AGILEKEYCHAIN_SECURITY_LEVEL = 'SL5';
-
-export class DecryptionError {
-	context : string;
-
-	constructor(context?: string) {
-		this.context = context;
-	}
-
-	toString() : string {
-		return this.context || 'Decryption failed';
-	}
-}
 
 /** Convert an item to JSON data for serialization in a .1password file.
   * @p encryptedData is the encrypted version of the item's content.
@@ -237,17 +226,20 @@ function fromAgileKeychainFormField(keychainField: agilekeychain.WebFormField) :
 export class Vault {
 	private fs: vfs.VFS;
 	private path: string;
-	private keyAgent: keyAgent.KeyAgent;
+	private keyAgent: key_agent.KeyAgent;
 	private keys : Q.Promise<agilekeychain.EncryptionKeyEntry[]>;
+
+	onItemUpdated: event_stream.EventStream<item_store.Item>;
 
 	/** Setup a vault which is stored at @p path in a filesystem.
 	  * @p fs is the filesystem interface through which the
 	  * files that make up the vault are accessed.
 	  */
-	constructor(fs: vfs.VFS, path: string, agent? : keyAgent.KeyAgent) {
+	constructor(fs: vfs.VFS, path: string, agent? : key_agent.KeyAgent) {
 		this.fs = fs;
 		this.path = path;
-		this.keyAgent = agent || new keyAgent.SimpleKeyAgent(crypto.defaultCrypto);
+		this.keyAgent = agent || new key_agent.SimpleKeyAgent(crypto.defaultCrypto);
+		this.onItemUpdated = new event_stream.EventStream<item_store.Item>();
 	}
 
 	private getKeys() : Q.Promise<agilekeychain.EncryptionKeyEntry[]> {
@@ -285,7 +277,7 @@ export class Vault {
 		return keys.promise;
 	}
 
-	private saveKeys(keyList: agilekeychain.EncryptionKeyList, passHint: string) : Q.Promise<void> {
+	private writeKeys(keyList: agilekeychain.EncryptionKeyList, passHint: string) : Q.Promise<void> {
 		// FIXME - Improve handling of concurrent attempts to update encryptionKeys.js.
 		// If the file in the VFS has been modified since the original read, the operation
 		// should fail.
@@ -296,28 +288,38 @@ export class Vault {
 		return asyncutil.eraseResult(Q.all([keysSaved, hintSaved]));
 	}
 
+	listKeys() : Q.Promise<key_agent.Key[]> {
+		return this.getKeys().then((keyEntries) => {
+			return keyEntries.map((keyEntry) => {
+				// TODO - The key's 'level' property is unused here
+				return {
+					format: key_agent.KeyFormat.AgileKeychainKey,
+					data: keyEntry.data,
+					identifier: keyEntry.identifier,
+					iterations: keyEntry.iterations,
+					validation: keyEntry.validation
+				};
+			});
+		});
+	}
+
+	saveKeys(keys: key_agent.Key[]) {
+		throw new Error('onepass.Vault.saveKeys() is not implemented');
+		return Q<void>(null);
+	}
+
 	/** Unlock the vault using the given master password.
 	  * This must be called before item contents can be decrypted.
 	  */
 	unlock(pwd: string) : Q.Promise<void> {
-		var keyEntries : agilekeychain.EncryptionKeyEntry[];
-		return this.getKeys().then((keyEntries_) => {
-			var derivedKeys : Q.Promise<string>[] = [];
-			keyEntries = keyEntries_;
-			keyEntries.forEach((item) => {
-				var saltCipher = crypto.extractSaltAndCipherText(atob(item.data));
-				derivedKeys.push(keyFromPassword(pwd, saltCipher.salt, item.iterations));
+		return this.listKeys().then((keys) => {
+			return key_agent.decryptKeys(keys, pwd);
+		}).then((keys) => {
+			var savedKeys: Q.Promise<void>[] = [];
+			keys.forEach((key) => {
+				savedKeys.push(this.keyAgent.addKey(key.id, key.key));
 			});
-			return Q.all(derivedKeys);
-		}).then((derivedKeys) => {
-			var addKeyOps : Q.Promise<void>[] = [];
-			keyEntries.forEach((item, index) => {
-				var saltCipher = crypto.extractSaltAndCipherText(atob(item.data));
-				var key = decryptKey(derivedKeys[index], saltCipher.cipherText,
-				  atob(item.validation));
-				addKeyOps.push(this.keyAgent.addKey(item.identifier, key));
-			});
-			return asyncutil.eraseResult(Q.all(addKeyOps));
+			return asyncutil.eraseResult(Q.all(savedKeys));
 		});
 	}
 
@@ -413,7 +415,9 @@ export class Vault {
 			asyncutil.resolveWith(overviewSaved, this.fs.write(this.contentsFilePath(), newContentsJSON));
 		}).done();
 
-		return <any>Q.all([itemSaved.promise, overviewSaved.promise]);
+		return <any>Q.all([itemSaved.promise, overviewSaved.promise]).then(() => {
+			this.onItemUpdated.publish(item);
+		});
 	}
 
 	private dataFolderPath() : string {
@@ -462,7 +466,7 @@ export class Vault {
 			var result : Q.Promise<string>;
 			keys.forEach((key) => {
 				if (key.level == level) {
-					var cryptoParams = new keyAgent.CryptoParams(keyAgent.CryptoAlgorithm.AES128_OpenSSLKey);
+					var cryptoParams = new key_agent.CryptoParams(key_agent.CryptoAlgorithm.AES128_OpenSSLKey);
 					result = this.keyAgent.decrypt(key.identifier, data, cryptoParams);
 					return;
 				}
@@ -480,7 +484,7 @@ export class Vault {
 			var result : Q.Promise<string>;
 			keys.forEach((key) => {
 				if (key.level == level) {
-					var cryptoParams = new keyAgent.CryptoParams(keyAgent.CryptoAlgorithm.AES128_OpenSSLKey);
+					var cryptoParams = new key_agent.CryptoParams(key_agent.CryptoAlgorithm.AES128_OpenSSLKey);
 					result = this.keyAgent.encrypt(key.identifier, data, cryptoParams);
 					return;
 				}
@@ -520,12 +524,12 @@ export class Vault {
 				keys.forEach((key) => {
 					var oldSaltCipher = crypto.extractSaltAndCipherText(atob(key.data));
 					var newSalt = crypto.randomBytes(8);
-					var derivedKey = keyFromPasswordSync(oldPass, oldSaltCipher.salt, key.iterations);
-					var oldKey = decryptKey(derivedKey, oldSaltCipher.cipherText,
+					var derivedKey = key_agent.keyFromPasswordSync(oldPass, oldSaltCipher.salt, key.iterations);
+					var oldKey = key_agent.decryptKey(derivedKey, oldSaltCipher.cipherText,
 					  atob(key.validation));
 					var newKeyIterations = iterations || key.iterations;
-					var newDerivedKey = keyFromPasswordSync(newPass, newSalt, newKeyIterations);
-					var newKey = encryptKey(newDerivedKey, oldKey);
+					var newDerivedKey = key_agent.keyFromPasswordSync(newPass, newSalt, newKeyIterations);
+					var newKey = key_agent.encryptKey(newDerivedKey, oldKey);
 					var newKeyEntry = {
 						data: btoa('Salted__' + newSalt + newKey.key),
 						identifier: key.identifier,
@@ -541,7 +545,7 @@ export class Vault {
 			}
 
 			this.keys = null;
-			return this.saveKeys(keyList, newPassHint);
+			return this.writeKeys(keyList, newPassHint);
 		});
 	}
 
@@ -564,8 +568,8 @@ export class Vault {
 
 		var masterKey = crypto.randomBytes(1024);
 		var salt = crypto.randomBytes(8);
-		var derivedKey = keyFromPasswordSync(password, salt, passIterations);
-		var encryptedKey = encryptKey(derivedKey, masterKey);
+		var derivedKey = key_agent.keyFromPasswordSync(password, salt, passIterations);
+		var encryptedKey = key_agent.encryptKey(derivedKey, masterKey);
 
 		var masterKeyEntry = {
 			data: btoa('Salted__' + salt + encryptedKey.key),
@@ -581,7 +585,7 @@ export class Vault {
 		};
 
 		return fs.mkpath(vault.dataFolderPath()).then(() => {
-			var keysSaved = vault.saveKeys(keyList, hint);
+			var keysSaved = vault.writeKeys(keyList, hint);
 			var contentsSaved = fs.write(vault.contentsFilePath(), '[]');
 			return Q.all([keysSaved, contentsSaved]);
 		}).then(() => {
@@ -636,71 +640,3 @@ var fieldTypeCodeMap = new collectionutil.BiDiMap<item_store.FormFieldType, stri
  .add(item_store.FormFieldType.Checkbox, 'C')
  .add(item_store.FormFieldType.Input, 'I');
 
-var AES_128_KEY_LEN = 32; // 16 byte key + 16 byte IV
-
-/** Derive an encryption key from a password for use with decryptKey().
-  * This version is synchronous and will block the UI if @p iterCount
-  * is high.
-  */
-export function keyFromPasswordSync(pass: string, salt: string, iterCount: number) : string {
-	return crypto.defaultCrypto.pbkdf2Sync(pass, salt, iterCount, AES_128_KEY_LEN);
-}
-
-/** Derive an encryption key from a password for use with decryptKey()
-  * This version is asynchronous and will not block the UI.
-  */
-export function keyFromPassword(pass: string, salt: string, iterCount: number) : Q.Promise<string> {
-	return crypto.defaultCrypto.pbkdf2(pass, salt, iterCount, AES_128_KEY_LEN);
-}
-
-/** Decrypt the master key for a vault.
-  *
-  * @param derivedKey The encryption key that was used to encrypt @p encryptedKey, this is
-  *   derived from a password using keyFromPassword()
-  * @param encryptedKey The encryption key, encrypted with @p derivedKey
-  * @param validation Validation data used to verify whether decryption was successful.
-  *  This is a copy of the decrypted version of @p encryptedKey, encrypted with itself.
-  */
-export function decryptKey(derivedKey: string, encryptedKey: string, validation: string) : string {
-	var aesKey = derivedKey.substring(0, 16);
-	var iv = derivedKey.substring(16, 32);
-	var decryptedKey = crypto.defaultCrypto.aesCbcDecrypt(aesKey, encryptedKey, iv);
-	var validationSaltCipher = crypto.extractSaltAndCipherText(validation);
-
-	var keyParams = crypto.openSSLKey(crypto.defaultCrypto, decryptedKey, validationSaltCipher.salt);
-	var decryptedValidation = crypto.defaultCrypto.aesCbcDecrypt(keyParams.key, validationSaltCipher.cipherText, keyParams.iv);
-
-	if (decryptedValidation != decryptedKey) {
-		throw new DecryptionError('Incorrect password');
-	}
-
-	return decryptedKey;
-}
-
-export interface EncryptedKey {
-	/** The master key for the vault, encrypted with a key derived from the user's
-	  * master password.
-	  */
-	key: string;
-
-	/** A copy of the master key encrypted with itself. This can be used to verify
-	  * successful decryption of the key when it is next decrypted.
-	  */
-	validation: string;
-}
-
-/** Encrypt the master key for a vault.
-  * @param derivedKey An encryption key for the master key, derived from a password using keyFromPassword()
-  * @param decryptedKey The master key for the vault to be encrypted.
-  */
-export function encryptKey(derivedKey: string, decryptedKey: string) : EncryptedKey {
-	var aesKey = derivedKey.substring(0, 16);
-	var iv = derivedKey.substring(16, 32);
-	var encryptedKey = crypto.defaultCrypto.aesCbcEncrypt(aesKey, decryptedKey, iv);
-
-	var validationSalt = crypto.randomBytes(8);
-	var keyParams = crypto.openSSLKey(crypto.defaultCrypto, decryptedKey, validationSalt);
-	var validation = 'Salted__' + validationSalt + crypto.defaultCrypto.aesCbcEncrypt(keyParams.key, decryptedKey, keyParams.iv);
-
-	return {key: encryptedKey, validation: validation};
-}

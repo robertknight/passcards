@@ -31,6 +31,7 @@ import reactutil = require('./reactutil');
 import shortcut = require('./base/shortcut');
 import siteinfo_client = require('../lib/siteinfo/client');
 import stringutil = require('../lib/base/stringutil');
+import sync = require('../lib/sync');
 import vfs = require('../lib/vfs/vfs');
 import url_util = require('../lib/base/url_util');
 
@@ -134,27 +135,20 @@ class AppView extends reactts.ReactComponentBase<AppViewProps, AppViewState> {
 
 		if (doRefresh) {
 			this.refreshItems();
+
+			// listen for updates to items in the store
+			if (changes.store) {
+				var debouncedRefresh = underscore.debounce(() => {
+					console.log('Store items updated, refreshing item list');
+					this.refreshItems()
+				}, 300);
+				changes.store.onItemUpdated.listen(debouncedRefresh);
+			}
 		}
 	}
 
 	componentDidUpdate() {
 		this.stateChanged.publish(this.state);
-	}
-
-	componentDidMount() {
-		var componentDoc = this.getDOMNode().ownerDocument;
-
-		// trigger a refresh of the item list when the view
-		// loses focus.
-		//
-		// It would be preferable to set up a long-poll or
-		// other notification to the cloud sync service to
-		// pick up changes without requiring the user
-		// to hide and re-show the view
-		componentDoc.addEventListener('blur', () => {
-			// TESTING
-			//this.refreshItems();
-		});
 	}
 
 	refreshItems() {
@@ -670,7 +664,19 @@ export class App {
 		fs.login().then(() => {
 			try {
 				var vault = new onepass.Vault(fs, '/1Password/1Password.agilekeychain', this.services.keyAgent);
-				this.updateState({store: vault});
+				var store = new item_store.TempStore(this.services.keyAgent);
+				var syncer = new sync.Syncer(store, vault);
+				syncer.syncKeys().then(() => {
+					console.log('encryptio keys synced')
+				}).catch((err) => {
+					console.log('Failed to sync encryption keys: %s', err);
+				});
+
+				syncer.progress.listen((progress) => {
+					console.log('sync progress: updated %d of %d items', progress.updated, progress.total);
+				});
+
+				this.updateState({store: store});
 
 				this.services.keyAgent.onLock().listen(() => {
 					this.updateState({isLocked: true});
