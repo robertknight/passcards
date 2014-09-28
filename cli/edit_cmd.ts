@@ -5,7 +5,7 @@ import underscore = require('underscore');
 
 import consoleio = require('./console');
 import item_search = require('../lib/item_search');
-import onepass = require('../lib/onepass');
+import item_store = require('../lib/item_store');
 
 var NO_SUCH_SECTION_ERROR = 'No matching section found';
 var NO_SUCH_FIELD_ERROR = 'No matching field found';
@@ -88,8 +88,8 @@ export class EditCommand {
 		// - Removing sections
 	}
 
-	handle(args: any, item: onepass.Item) : Q.Promise<void> {
-		var content : onepass.ItemContent;
+	handle(args: any, item: item_store.Item) : Q.Promise<void> {
+		var content : item_store.ItemContent;
 		return item.getContent().then((_content) => {
 			content = _content;
 			switch (args.action) {
@@ -112,12 +112,12 @@ export class EditCommand {
 		});
 	}
 
-	private selectField(content: onepass.ItemContent, field: string) : item_search.FieldMatch {
+	private selectField(content: item_store.ItemContent, field: string) : item_search.FieldMatch {
 		var matches = item_search.matchField(content, field);
 		return matches.length > 0 ? matches[0] : null;
 	}
 
-	private rename(item: onepass.Item, newTitle: string) : Q.Promise<void> {
+	private rename(item: item_store.Item, newTitle: string) : Q.Promise<void> {
 		var title = newTitle.trim();
 		if (title.length < 1) {
 			throw new Error('New item name must not be empty');
@@ -126,31 +126,31 @@ export class EditCommand {
 		return null;
 	}
 
-	private addSection(content: onepass.ItemContent, sectionTitle: string) : Q.Promise<void> {
-		var section = new onepass.ItemSection;
+	private addSection(content: item_store.ItemContent, sectionTitle: string) : Q.Promise<void> {
+		var section = new item_store.ItemSection;
 		section.name = sectionTitle;
 		section.title = sectionTitle;
 		content.sections.push(section);
 		return null;
 	}
 
-	private addField(content: onepass.ItemContent, sectionName: string, fieldTitle: string, typeName: string,
+	private addField(content: item_store.ItemContent, sectionName: string, fieldTitle: string, typeName: string,
 	  value: string) : Q.Promise<void> {
 		var sections = item_search.matchSection(content, sectionName);
 		if (sections.length == 0) {
 			return Q.reject(NO_SUCH_SECTION_ERROR);
 		}
 
-		var fieldTypes : { [index: string] : onepass.FieldType } = {
-			'text' : onepass.FieldType.Text,
-			'password' : onepass.FieldType.Password
+		var fieldTypes : { [index: string] : item_store.FieldType } = {
+			'text' : item_store.FieldType.Text,
+			'password' : item_store.FieldType.Password
 		};
 		if (fieldTypes[typeName] === undefined) {
 			return Q.reject(UNKNOWN_FIELD_TYPE_ERROR);
 		}
 
 		var section = sections[0];
-		var field = new onepass.ItemField();
+		var field = new item_store.ItemField();
 		field.kind = fieldTypes[typeName];
 		field.title = fieldTitle;
 		field.value = value;
@@ -160,11 +160,11 @@ export class EditCommand {
 		return null;
 	}
 
-	private renameSection(content: onepass.ItemContent, section: string, newName: string) : Q.Promise<void> {
+	private renameSection(content: item_store.ItemContent, section: string, newName: string) : Q.Promise<void> {
 		return Q.reject(null);
 	}
 
-	private setField(content: onepass.ItemContent, field: string, newValue: string) : Q.Promise<void> {
+	private setField(content: item_store.ItemContent, field: string, newValue: string) : Q.Promise<void> {
 		var match = this.selectField(content, field);
 		if (match) {
 			if (newValue) {
@@ -187,7 +187,7 @@ export class EditCommand {
 		}
 	}
 
-	private removeField(content: onepass.ItemContent, field: string) : Q.Promise<void> {
+	private removeField(content: item_store.ItemContent, field: string) : Q.Promise<void> {
 		var match = this.selectField(content, field);
 		if (!match) {
 			return Q.reject(NO_SUCH_FIELD_ERROR);

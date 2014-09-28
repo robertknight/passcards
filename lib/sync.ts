@@ -59,14 +59,14 @@ export class Syncer {
 		var vaultItems = this.vault.listItems();
 
 		Q.all([storeItems, vaultItems]).then((itemLists) => {
-			var storeItems: onepass.Item[] = itemLists[0];
-			var vaultItems: onepass.Item[] = itemLists[1];
+			var storeItems: item_store.Item[] = itemLists[0];
+			var vaultItems: item_store.Item[] = itemLists[1];
 
 			var storeItemMap = collectionutil.listToMap(storeItems, (item) => {
 				return item.uuid;
 			});
 
-			var updatedVaultItems: onepass.Item[] = [];
+			var updatedVaultItems: item_store.Item[] = [];
 			vaultItems.forEach((item) => {
 				var storeItem = storeItemMap.get(item.uuid);
 
@@ -76,7 +76,7 @@ export class Syncer {
 					updatedVaultItems.push(item);
 					item.getContent().then((content) => {
 						if (!storeItem) {
-							storeItem = new onepass.Item();
+							storeItem = new item_store.Item();
 						}
 						this.updateItem(item, storeItem).then(() => {
 							++syncStats.updated;
@@ -98,7 +98,7 @@ export class Syncer {
 		return this.currentSync;
 	}
 
-	private updateItem(vaultItem: onepass.Item, storeItem: onepass.Item) {
+	private updateItem(vaultItem: item_store.Item, storeItem: item_store.Item) {
 		storeItem.uuid = vaultItem.uuid;
 		storeItem.updatedAt = vaultItem.updatedAt;
 		storeItem.title = vaultItem.title;

@@ -6,10 +6,11 @@ import underscore = require('underscore');
 
 import crypto = require('./onepass_crypto');
 import env = require('./base/env');
-import testLib = require('./test');
-import onepass = require('./onepass');
 import exportLib = require('./export');
+import item_store = require('./item_store');
 import nodefs = require('./vfs/node');
+import onepass = require('./onepass');
+import testLib = require('./test');
 import vfs = require('./vfs/vfs');
 
 require('es6-shim');
@@ -34,12 +35,12 @@ var TEST_VAULTS : TestCase[] = [
 		itemDataPath : 'test.1pif'
 	}
 ];
-	
+
 var fs = new nodefs.FileVFS('lib/test-data');
 
 class ItemAndContent {
-	item : onepass.Item;
-	content : onepass.ItemContent;
+	item : item_store.Item;
+	content : item_store.ItemContent;
 }
 
 function createTestVault() : Q.Promise<onepass.Vault> {
@@ -112,7 +113,7 @@ testLib.addAsyncTest('Import item from .1pif file', (assert) => {
 		});
 		var diff = testLib.compareObjects(items[0], expectedItem);
 		assert.equal(diff.length, 0, 'Actual/expected imported items match');
-		
+
 		testLib.continueTests();
 	}).done();
 });
@@ -132,12 +133,12 @@ testLib.addAsyncTest('Compare vaults against .1pif files', (assert) => {
 		var actualItems = Q.defer<ItemAndContent[]>();
 
 		var vault = new onepass.Vault(fs, tst.path);
-		var items : onepass.Item[];
+		var items : item_store.Item[];
 		vault.unlock(tst.password).then(() => {
 			return vault.listItems();
 		}).then((_items) => {
 			items = _items;
-			var contents : Q.Promise<onepass.ItemContent>[] = [];
+			var contents : Q.Promise<item_store.ItemContent>[] = [];
 			items.forEach((item) => {
 				contents.push(item.getContent());
 			});
@@ -151,7 +152,7 @@ testLib.addAsyncTest('Compare vaults against .1pif files', (assert) => {
 		}).done();
 
 		Q.all([expectedItems, actualItems.promise]).then((expectedActual) => {
-			var expectedAry = <onepass.Item[]> expectedActual[0];
+			var expectedAry = <item_store.Item[]> expectedActual[0];
 			var actualAry = <ItemAndContent[]> expectedActual[1];
 
 			expectedAry.sort((itemA, itemB) => {
@@ -188,8 +189,8 @@ testLib.addAsyncTest('Compare vaults against .1pif files', (assert) => {
 	});
 });
 
-function createCryptoImpls() : crypto.CryptoImpl[] {
-	var cryptoImpls : crypto.CryptoImpl[] = [];
+function createCryptos() : crypto.Crypto[] {
+	var cryptoImpls : crypto.Crypto[] = [];
 	cryptoImpls.push(new crypto.CryptoJsCrypto);
 	if (env.isNodeJS()) {
 		cryptoImpls.push(new crypto.NodeCrypto);
@@ -198,7 +199,7 @@ function createCryptoImpls() : crypto.CryptoImpl[] {
 }
 
 testLib.addTest('AES encrypt/decrypt', (assert) => {
-	var cryptoImpls = createCryptoImpls();	
+	var cryptoImpls = createCryptos();
 	cryptoImpls.forEach((impl) => {
 		var plainText = 'foo bar';
 		var key = 'ABCDABCDABCDABCD';
@@ -212,7 +213,7 @@ testLib.addTest('AES encrypt/decrypt', (assert) => {
 });
 
 testLib.addTest('Encrypt/decrypt item data', (assert) => {
-	var cryptoImpls = createCryptoImpls();
+	var cryptoImpls = createCryptos();
 	cryptoImpls.forEach((impl) => {
 		var itemData = JSON.stringify({secret: 'secret-data'});
 		var itemPass = 'item password';
@@ -223,16 +224,16 @@ testLib.addTest('Encrypt/decrypt item data', (assert) => {
 });
 
 testLib.addTest('New item UUID', (assert) => {
-	var item = new onepass.Item();
+	var item = new item_store.Item();
 	assert.ok(item.uuid.match(/[0-9A-F]{32}/) != null);
 });
 
 testLib.addAsyncTest('Save item', (assert) => {
 	createTestVault().then((vault) => {
-		var item = new onepass.Item(vault);
+		var item = new item_store.Item(vault);
 		item.title = 'New Test Item';
 		item.location = 'mysite.com';
-		var content = new onepass.ItemContent();
+		var content = new item_store.ItemContent();
 		content.urls.push({
 			url: 'mysite.com',
 			label: 'website'
@@ -247,11 +248,11 @@ testLib.addAsyncTest('Save item', (assert) => {
 			// check item content matches
 			loadedItem.getContent().then((loadedContent) => {
 				testLib.assertEqual(assert, content, loadedContent);
-			
+
 				// check new item appears in vault list
 				vault.listItems().then((items) => {
 					// check that selected properties match
-					var comparedProps : any[] = ['title', 
+					var comparedProps : any[] = ['title',
 					 'uuid', 'trashed', 'faveIndex', 'typeName',
 					 'location', 'updatedAt'];
 
@@ -268,14 +269,14 @@ testLib.addAsyncTest('Save item', (assert) => {
 
 testLib.addAsyncTest('Update item', (assert) => {
 	createTestVault().then((vault) => {
-		var item = new onepass.Item(vault);
+		var item = new item_store.Item(vault);
 		item.title = 'Original item title';
 
-		var content = new onepass.ItemContent();
+		var content = new item_store.ItemContent();
 		content.formFields.push({
 			id: '',
 			name: 'password',
-			type: onepass.FormFieldType.Password,
+			type: item_store.FormFieldType.Password,
 			designation: 'password',
 			value: 'original-password'
 		});
@@ -293,7 +294,7 @@ testLib.addAsyncTest('Update item', (assert) => {
 		// second on save.
 		var originalSaveDate = new Date(Date.now() - 2000);
 
-		var loadedItem : onepass.Item;
+		var loadedItem : item_store.Item;
 		item.save().then(() => {
 			return vault.loadItem(item.uuid);
 		}).then((loadedItem_) => {
@@ -305,7 +306,7 @@ testLib.addAsyncTest('Update item', (assert) => {
 			});
 			assert.notEqual(passwordField, null);
 			assert.equal(passwordField.value, 'original-password');
-			assert.equal(passwordField.type, onepass.FormFieldType.Password);
+			assert.equal(passwordField.type, item_store.FormFieldType.Password);
 			assert.equal(content.password(), 'original-password');
 
 			loadedItem.title = 'New Item Title';
@@ -325,7 +326,7 @@ testLib.addAsyncTest('Update item', (assert) => {
 			assert.equal(loadedItem.title, 'New Item Title');
 			assert.equal(loadedItem.faveIndex, 42);
 			assert.equal(loadedItem.trashed, true);
-			
+
 			// check that Item.location property is updated
 			// to match URL list on save
 			assert.equal(loadedItem.location, 'newsite.com');
@@ -351,11 +352,11 @@ testLib.addAsyncTest('Update item', (assert) => {
 
 testLib.addAsyncTest('Remove item', (assert) => {
 	createTestVault().then((vault) => {
-		var item : onepass.Item;
+		var item : item_store.Item;
 		vault.loadItem('CA20BB325873446966ED1F4E641B5A36').then((item_) => {
 			item = item_;
 			assert.equal(item.title, 'Facebook');
-			assert.equal(item.typeName, onepass.ItemTypes.LOGIN);
+			assert.equal(item.typeName, item_store.ItemTypes.LOGIN);
 			assert.ok(item.isRegularItem());
 			return item.getContent();
 		}).then((content) => {
@@ -372,19 +373,19 @@ testLib.addAsyncTest('Remove item', (assert) => {
 			assert.ok(item.isTombstone());
 			assert.ok(!item.isRegularItem());
 			assert.equal(item.title, 'Unnamed');
-			assert.equal(item.typeName, onepass.ItemTypes.TOMBSTONE);
+			assert.equal(item.typeName, item_store.ItemTypes.TOMBSTONE);
 			return vault.loadItem(item.uuid);
 		}).then((loadedItem) => {
 			assert.ok(loadedItem.isTombstone());
 			assert.equal(loadedItem.title, 'Unnamed');
-			assert.equal(loadedItem.typeName, onepass.ItemTypes.TOMBSTONE);
+			assert.equal(loadedItem.typeName, item_store.ItemTypes.TOMBSTONE);
 			assert.equal(loadedItem.trashed, true);
 			assert.equal(loadedItem.faveIndex, null);
 			assert.equal(loadedItem.openContents, null);
 
 			return loadedItem.getContent();
 		}).then((content) => {
-			testLib.assertEqual(assert, content, new onepass.ItemContent());
+			testLib.assertEqual(assert, content, new item_store.ItemContent());
 			testLib.continueTests();
 		}).done();
 	});
@@ -452,10 +453,10 @@ testLib.addAsyncTest('Create new vault', (assert) => {
 	}).then((items) => {
 		assert.equal(items.length, 0);
 
-		var item = new onepass.Item(vault);
+		var item = new item_store.Item(vault);
 		item.title = 'Item in new vault';
 
-		var content = new onepass.ItemContent();
+		var content = new item_store.ItemContent();
 		content.urls.push({
 			url: 'foobar.com',
 			label: 'website'
@@ -499,14 +500,14 @@ testLib.addAsyncTest('Change vault password', (assert) => {
 
 testLib.addAsyncTest('Save existing item to new vault', (assert) => {
 	var vault: onepass.Vault;
-	var item: onepass.Item;
+	var item: item_store.Item;
 
 	createTestVault().then((vault_) => {
 		vault = vault_;
-		item = new onepass.Item();
+		item = new item_store.Item();
 		item.title = 'Existing Item';
 		item.location = 'somesite.com';
-		item.setContent(new onepass.ItemContent());
+		item.setContent(new item_store.ItemContent());
 		return item.saveTo(vault);
 	}).then(() => {
 		assert.equal(item.uuid.length, 32);
@@ -518,17 +519,17 @@ testLib.addAsyncTest('Save existing item to new vault', (assert) => {
 });
 
 testLib.addTest('Item content account and password accessors', (assert) => {
-	var content = new onepass.ItemContent();
+	var content = new item_store.ItemContent();
 	content.formFields.push({
 		id: '',
 		name: 'password',
-		type: onepass.FormFieldType.Password,
+		type: item_store.FormFieldType.Password,
 		designation: 'password',
 		value: 'the-item-password'
 	},{
 		id: '',
 		name: 'email',
-		type: onepass.FormFieldType.Text,
+		type: item_store.FormFieldType.Text,
 		designation: 'username',
 		value: 'jim.smith@gmail.com'
 	});
@@ -555,13 +556,13 @@ testLib.addTest('Item field value formatting', (assert) => {
 });
 
 testLib.addTest('Default item properties', (assert) => {
-	var item = new onepass.Item();
+	var item = new item_store.Item();
 	assert.strictEqual(item.location, '');
 	assert.strictEqual(item.trashed, false);
 	assert.equal(item.uuid.length, 32);
 
 	// check that new items get different IDs
-	var item2 = new onepass.Item();
+	var item2 = new item_store.Item();
 	assert.notEqual(item.uuid, item2.uuid);
 });
 

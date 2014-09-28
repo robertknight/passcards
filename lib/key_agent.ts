@@ -56,7 +56,7 @@ export interface KeyAgent {
 /** A simple key agent which just stores keys in memory */
 export class SimpleKeyAgent {
 	private autoLockTimeout: number;
-	private crypto: crypto.CryptoImpl;
+	private crypto: crypto.Crypto;
 	private keys: {[id:string] : string};
 	private lockEvents: event_stream.EventStream<void>;
 	private lockTimeout: number;
@@ -65,8 +65,8 @@ export class SimpleKeyAgent {
 		return Object.keys(this.keys).length;
 	}
 
-	constructor(cryptoImpl? : crypto.CryptoImpl) {
-		this.crypto = cryptoImpl || crypto.defaultCryptoImpl;
+	constructor(cryptoImpl? : crypto.Crypto) {
+		this.crypto = cryptoImpl || crypto.defaultCrypto;
 		this.keys = {};
 		this.lockEvents = new event_stream.EventStream<void>();
 		this.autoLockTimeout = 0;

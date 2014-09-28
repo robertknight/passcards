@@ -6,7 +6,7 @@ import autofill = require('./autofill');
 import event_stream = require('../lib/base/event_stream');
 import forms = require('./forms');
 import item_builder = require('../lib/item_builder');
-import onepass = require('../lib/onepass');
+import item_store = require('../lib/item_store');
 import page_access = require('./page_access');
 import site_info = require('../lib/siteinfo/site_info');
 import testLib = require('../lib/test');
@@ -51,8 +51,8 @@ class FakePageAccess implements page_access.PageAccess {
 	}
 }
 
-function itemWithUsernameAndPassword(user: string, password: string) : onepass.Item {
-	return new item_builder.Builder(onepass.ItemTypes.LOGIN)
+function itemWithUsernameAndPassword(user: string, password: string) : item_store.Item {
+	return new item_builder.Builder(item_store.ItemTypes.LOGIN)
 	  .setTitle('Test Item')
 	  .addLogin(user)
 	  .addPassword(password)

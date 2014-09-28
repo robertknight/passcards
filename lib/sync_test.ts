@@ -37,14 +37,14 @@ function setup() : Q.Promise<Env> {
 
 testLib.addAsyncTest('sync vault', (assert) => {
 	var env: Env;
-	
+
 	// 1. save a new item to the vault
-	var item = new item_builder.Builder(onepass.ItemTypes.LOGIN)
+	var item = new item_builder.Builder(item_store.ItemTypes.LOGIN)
 	 .setTitle('sync me')
 	 .addLogin('testuser@gmail.com')
 	 .addUrl('accounts.google.com')
 	 .item();
-	
+
 	return setup().then((_env) => {
 		env = _env;
 		return item.saveTo(env.vault);
@@ -70,7 +70,7 @@ testLib.addAsyncTest('sync vault', (assert) => {
 		testLib.assertEqual(assert, content.formFields, [{
 			id: '',
 			name: 'username',
-			type: onepass.FormFieldType.Text,
+			type: item_store.FormFieldType.Text,
 			designation: 'username',
 			value: 'testuser@gmail.com'
 		}]);

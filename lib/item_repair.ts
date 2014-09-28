@@ -4,11 +4,11 @@
 import Q = require('q');
 import sprintf = require('sprintf');
 
-import onepass = require('./onepass');
+import item_store = require('./item_store');
 
 // Check the details for an item. If any possible errors are found, prompt() is invoked
 // to prompt the user
-export function repairItem(item: onepass.Item, reportError: (err: string) => void, prompt: () => Q.Promise<boolean>) : Q.Promise<void> {
+export function repairItem(item: item_store.Item, reportError: (err: string) => void, prompt: () => Q.Promise<boolean>) : Q.Promise<void> {
 	return item.getContent().then((content) => {
 		// item URLs are stored in the overview data and encrypted
 		// in the content. Check that the URLs in the overview data
@@ -36,4 +36,3 @@ export function repairItem(item: onepass.Item, reportError: (err: string) => voi
 		});
 	});
 }
-

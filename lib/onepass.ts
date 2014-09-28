@@ -33,59 +33,8 @@ export var DEFAULT_VAULT_PASS_ITERATIONS = 80000;
 // in current versions of 1Password as far as I know but
 // the Agile Keychain allows multiple security levels to be defined.
 // This item data could perhaps be stored in a field for store-specific
-// data within the Item?
+// data within the item_store.Item?
 var DEFAULT_AGILEKEYCHAIN_SECURITY_LEVEL = 'SL5';
-
-// typedef for item type codes
-export interface ItemType extends String {
-}
-
-/** Constants for the different types of item
-  * that a vault may contain.
-  * 
-  * Item type codes are taken from 1Password v4
-  */
-export class ItemTypes {
-	// The most common type, for logins and other web forms
-	static LOGIN = <ItemType>'webforms.WebForm';
-
-	// Other item types
-	static CREDIT_CARD = <ItemType>'wallet.financial.CreditCard';
-	static ROUTER = <ItemType>'wallet.computer.Router';
-	static SECURE_NOTE = <ItemType>'securenotes.SecureNote';
-	static PASSWORD = <ItemType>'passwords.Password';
-	static EMAIL_ACCOUNT = <ItemType>'wallet.onlineservices.Email.v2';
-	static BANK_ACCOUNT = <ItemType>'wallet.financial.BankAccountUS';
-	static DATABASE = <ItemType>'wallet.computer.Database';
-	static DRIVERS_LICENSE = <ItemType>'wallet.government.DriversLicense';
-	static MEMBERSHIP = <ItemType>'wallet.membership.Membership';
-	static HUNTING_LICENSE = <ItemType>'wallet.government.HuntingLicense';
-	static PASSPORT = <ItemType>'wallet.government.Passport';
-	static REWARD_PROGRAM = <ItemType>'wallet.membership.RewardProgram';
-	static SERVER = <ItemType>'wallet.computer.UnixServer';
-	static SOCIAL_SECURITY = <ItemType>'wallet.government.SsnUS';
-	static SOFTWARE_LICENSE = <ItemType>'wallet.computer.License';
-	static IDENTITY = <ItemType>'identities.Identity';
-
-	// Non-item types
-	static FOLDER = <ItemType>'system.folder.Regular';
-	static SAVED_SEARCH = <ItemType>'system.folder.SavedSearch';
-
-	// Marker type used to deleted items. The ID is preserved
-	// but the type is set to Tombstone and all other data
-	// is removed
-	static TOMBSTONE = <ItemType>'system.Tombstone';
-}
-
-export interface ItemTypeInfo {
-	name : string;
-	shortAlias : string;
-}
-
-export interface ItemTypeMap {
-	// map of ItemType -> ItemTypeInfo
-	[index: string] : ItemTypeInfo;
-}
 
 export class DecryptionError {
 	context : string;
@@ -99,255 +48,10 @@ export class DecryptionError {
 	}
 }
 
-/** Map of item type codes to human-readable item type names */
-export var ITEM_TYPES : ItemTypeMap = {
-	"webforms.WebForm": {
-		name:       "Login",
-		shortAlias: "login",
-	},
-	"wallet.financial.CreditCard": {
-		name:       "Credit Card",
-		shortAlias: "card",
-	},
-	"wallet.computer.Router": {
-		name:       "Wireless Router",
-		shortAlias: "router",
-	},
-	"securenotes.SecureNote": {
-		name:       "Secure Note",
-		shortAlias: "note",
-	},
-	"passwords.Password": {
-		name:       "Password",
-		shortAlias: "pass",
-	},
-	"wallet.onlineservices.Email.v2": {
-		name:       "Email Account",
-		shortAlias: "email",
-	},
-	"system.folder.Regular": {
-		name:       "Folder",
-		shortAlias: "folder",
-	},
-	"system.folder.SavedSearch": {
-		name:       "Smart Folder",
-		shortAlias: "smart-folder",
-	},
-	"wallet.financial.BankAccountUS": {
-		name:       "Bank Account",
-		shortAlias: "bank",
-	},
-	"wallet.computer.Database": {
-		name:       "Database",
-		shortAlias: "db",
-	},
-	"wallet.government.DriversLicense": {
-		name:       "Driver's License",
-		shortAlias: "driver",
-	},
-	"wallet.membership.Membership": {
-		name:       "Membership",
-		shortAlias: "membership",
-	},
-	"wallet.government.HuntingLicense": {
-		name:       "Outdoor License",
-		shortAlias: "outdoor",
-	},
-	"wallet.government.Passport": {
-		name:       "Passport",
-		shortAlias: "passport",
-	},
-	"wallet.membership.RewardProgram": {
-		name:       "Reward Program",
-		shortAlias: "reward",
-	},
-	"wallet.computer.UnixServer": {
-		name:       "Unix Server",
-		shortAlias: "server",
-	},
-	"wallet.government.SsnUS": {
-		name:       "Social Security Number",
-		shortAlias: "social",
-	},
-	"wallet.computer.License": {
-		name:       "Software License",
-		shortAlias: "software",
-	},
-	"identities.Identity": {
-		name:       "Identity",
-		shortAlias: "id",
-	},
-	// internal entry type created for items
-	// that have been removed from the trash
-	"system.Tombstone": {
-		name:       "Tombstone",
-		shortAlias: "tombstone",
-	},
-};
-
-/** Represents a single item in a 1Password vault. */
-export class Item {
-	// store which this item belongs to, or null
-	// if the item has not yet been saved
-	private store: item_store.Store;
-
-	// item ID and sync metadata
-	uuid: string;
-	updatedAt: Date;
-	createdAt: Date;
-	folderUuid: string;
-	faveIndex: number;
-	trashed: boolean;
-
-	// overview metadata fields
-	typeName: ItemType;
-	title: string;
-	location: string;
-	openContents: ItemOpenContents;
-
-	/** The decrypted content of the item, either set
-	  * via setContent() or decrypted on-demand by
-	  * getContent()
-	  */
-	private content : ItemContent;
-	
-	/** Create a new item. @p store is the store
-	  * to associate the new item with. This can
-	  * be changed later via saveTo().
-	  *
-	  * When importing an existing item or loading
-	  * an existing item from the store, @p uuid may be non-null.
-	  * Otherwise a random new UUID will be allocated for
-	  * the item.
-	  */
-	constructor(store? : item_store.Store, uuid? : string) {
-		this.store = store;
-
-		this.uuid = uuid || crypto.newUUID();
-
-		this.trashed = false;
-		this.typeName = ItemTypes.LOGIN;
-		this.folderUuid = '';
-		this.location = '';
-	}
-
-	/** Retrieves and decrypts the content of a 1Password item.
-	  *
-	  * In the Agile Keychain format, items are stored in two parts.
-	  * The overview data is stored in both contents.js and replicated
-	  * in the <UUID>.1password file for the item and is unencrypted.
-	  *
-	  * The item content is stored in the <UUID>.1password file and
-	  * is encrypted using the store's master key.
-	  *
-	  * The item's store must be unlocked using Store.unlock() before
-	  * item content can be retrieved.
-	  */
-	getContent() : Q.Promise<ItemContent> {
-		if (this.content) {
-			return Q(this.content);
-		}
-		return this.store.getContent(this);
-	}
-
-	setContent(content: ItemContent) {
-		this.content = content;
-	}
-
-	/** Return the raw decrypted JSON data for an item.
-	  * This is only available for saved items.
-	  */
-	getRawDecryptedData() : Q.Promise<string> {
-		return this.store.getRawDecryptedData(this);
-	}
-
-	/** Save this item to its associated store */
-	save() : Q.Promise<void> {
-		if (!this.store) {
-			return Q.reject('Item has no associated store');
-		}
-		return this.saveTo(this.store);
-	}
-
-	/** Save this item to the specified store */
-	saveTo(store: item_store.Store) : Q.Promise<void> {
-		if (!this.content && !this.isSaved()) {
-			return Q.reject('Unable to save new item, no content set');
-		}
-
-		// set item location to match current URL list
-		if (this.content && this.content.urls.length > 0) {
-			this.location = this.content.urls[0].url;
-		}
-
-		this.store = store;
-		return this.store.saveItem(this);
-	}
-
-	/** Remove the item from the store.
-	  * This erases all of the item's data and leaves behind a 'tombstone'
-	  * entry for syncing purposes.
-	  */
-	remove() : Q.Promise<void> {
-		if (!this.store) {
-			return Q.reject('Item has no associated store');
-		}
-		this.typeName = ItemTypes.TOMBSTONE;
-		this.title = 'Unnamed';
-		this.trashed = true;
-		this.setContent(new ItemContent);
-		this.folderUuid = '';
-		this.location = '';
-		this.faveIndex = null;
-		this.openContents = null;
-
-		return this.store.saveItem(this);
-	}
-
-	/** Returns true if this is a 'tombstone' entry remaining from
-	  * a deleted item. When an item is deleted, all of the properties except
-	  * the UUID are erased and the item's type is changed to 'system.Tombstone'.
-	  *
-	  * These 'tombstone' markers are preserved so that deletions are synced between
-	  * different 1Password clients.
-	  */
-	isTombstone() : boolean {
-		return this.typeName == ItemTypes.TOMBSTONE;
-	}
-
-	/** Returns true if this is a regular item - ie. not a folder,
-	  * tombstone or saved search.
-	  */
-	isRegularItem() : boolean {
-		return !stringutil.startsWith(<string>this.typeName, 'system.');
-	}
-
-	/** Returns a shortened version of the item's UUID, suitable for disambiguation
-	  * between different items with the same type and title.
-	  */
-	shortID() : string {
-		return this.uuid.slice(0,4);
-	}
-
-	/** Returns the human-readable type name for this item's type. */
-	typeDescription() : string {
-		if (ITEM_TYPES[<string>this.typeName]) {
-			return ITEM_TYPES[<string>this.typeName].name;
-		} else {
-			return <string>this.typeName;
-		}
-	}
-
-	/** Returns true if this item has been saved to a store. */
-	isSaved() : boolean {
-		return this.updatedAt != null;
-	}
-}
-
 /** Convert an item to JSON data for serialization in a .1password file.
   * @p encryptedData is the encrypted version of the item's content.
   */
-export function toAgileKeychainItem(item: Item, encryptedData: string) : agilekeychain.Item {
+export function toAgileKeychainItem(item: item_store.Item, encryptedData: string) : agilekeychain.Item {
 	var keychainItem: any = {};
 
 	keychainItem.createdAt = dateutil.unixTimestampFromDate(item.createdAt);
@@ -366,18 +70,18 @@ export function toAgileKeychainItem(item: Item, encryptedData: string) : agileke
 	return keychainItem;
 }
 
-/** Parses an Item from JSON data in a .1password file.
+/** Parses an item_store.Item from JSON data in a .1password file.
   *
   * The item content is initially encrypted. The decrypted
   * contents can be retrieved using getContent()
   */
-export function fromAgileKeychainItem(vault: Vault, data: agilekeychain.Item) : Item {
-	var item = new Item(vault);
+export function fromAgileKeychainItem(vault: Vault, data: agilekeychain.Item) : item_store.Item {
+	var item = new item_store.Item(vault);
 	item.updatedAt = dateutil.dateFromUnixTimestamp(data.updatedAt);
 	item.title = data.title;
 
 	// These fields are not currently stored in
-	// an Item directly. They could potentially be stored in
+	// an item_store.Item directly. They could potentially be stored in
 	// a Store-specific data field in the item?
 	//
 	//  - data.securityLevel
@@ -398,7 +102,7 @@ export function fromAgileKeychainItem(vault: Vault, data: agilekeychain.Item) : 
 	return item;
 }
 
-export function toAgileKeychainField(field: ItemField) : agilekeychain.ItemField {
+export function toAgileKeychainField(field: item_store.ItemField) : agilekeychain.ItemField {
 	var keychainField = new agilekeychain.ItemField;
 	keychainField.k = fieldKindMap.get(field.kind);
 	keychainField.n = field.name;
@@ -407,8 +111,8 @@ export function toAgileKeychainField(field: ItemField) : agilekeychain.ItemField
 	return keychainField;
 }
 
-export function fromAgileKeychainField(fieldData: agilekeychain.ItemField) : ItemField {
-	var field = new ItemField;
+export function fromAgileKeychainField(fieldData: agilekeychain.ItemField) : item_store.ItemField {
+	var field = new item_store.ItemField;
 	field.kind = fieldKindMap.get2(fieldData.k);
 	field.name = fieldData.n;
 	field.title = fieldData.t;
@@ -416,10 +120,10 @@ export function fromAgileKeychainField(fieldData: agilekeychain.ItemField) : Ite
 	return field;
 }
 
-/** Convert an ItemContent entry into a `contents` blob for storage in
+/** Convert an item_store.ItemContent entry into a `contents` blob for storage in
   * a 1Password item.
   */
-function toAgileKeychainContent(content: ItemContent) : agilekeychain.ItemContent {
+function toAgileKeychainContent(content: item_store.ItemContent) : agilekeychain.ItemContent {
 	var keychainContent = new agilekeychain.ItemContent();
 	if (content.sections) {
 		keychainContent.sections = [];
@@ -447,10 +151,10 @@ function toAgileKeychainContent(content: ItemContent) : agilekeychain.ItemConten
 }
 
 /** Convert a decrypted JSON `contents` blob from a 1Password item
-  * into an ItemContent instance.
+  * into an item_store.ItemContent instance.
   */
-function fromAgileKeychainContent(data: agilekeychain.ItemContent) : ItemContent {
-	var content = new ItemContent();
+function fromAgileKeychainContent(data: agilekeychain.ItemContent) : item_store.ItemContent {
+	var content = new item_store.ItemContent();
 	if (data.sections) {
 		data.sections.forEach((section) => {
 			content.sections.push(fromAgileKeychainSection(section));
@@ -482,7 +186,7 @@ function fromAgileKeychainContent(data: agilekeychain.ItemContent) : ItemContent
 	return content;
 }
 
-function toAgileKeychainSection(section: ItemSection) : agilekeychain.ItemSection {
+function toAgileKeychainSection(section: item_store.ItemSection) : agilekeychain.ItemSection {
 	var keychainSection = new agilekeychain.ItemSection();
 	keychainSection.name = section.name;
 	keychainSection.title = section.title;
@@ -494,10 +198,10 @@ function toAgileKeychainSection(section: ItemSection) : agilekeychain.ItemSectio
 }
 
 /** Convert a section entry from the JSON contents blob for
-  * an item into an ItemSection instance.
+  * an item into an item_store.ItemSection instance.
   */
-function fromAgileKeychainSection(data: agilekeychain.ItemSection) : ItemSection {
-	var section = new ItemSection();
+function fromAgileKeychainSection(data: agilekeychain.ItemSection) : item_store.ItemSection {
+	var section = new item_store.ItemSection();
 	section.name = data.name;
 	section.title = data.title;
 	section.fields = [];
@@ -509,7 +213,7 @@ function fromAgileKeychainSection(data: agilekeychain.ItemSection) : ItemSection
 	return section;
 }
 
-function toAgileKeychainFormField(field: WebFormField) : agilekeychain.WebFormField {
+function toAgileKeychainFormField(field: item_store.WebFormField) : agilekeychain.WebFormField {
 	var keychainField = new agilekeychain.WebFormField();
 	keychainField.id = field.id;
 	keychainField.name = field.name;
@@ -519,8 +223,8 @@ function toAgileKeychainFormField(field: WebFormField) : agilekeychain.WebFormFi
 	return keychainField;
 }
 
-function fromAgileKeychainFormField(keychainField: agilekeychain.WebFormField) : WebFormField {
-	var field = new WebFormField();
+function fromAgileKeychainFormField(keychainField: agilekeychain.WebFormField) : item_store.WebFormField {
+	var field = new item_store.WebFormField();
 	field.id = keychainField.id;
 	field.name = keychainField.name;
 	field.type = fieldTypeCodeMap.get2(keychainField.type);
@@ -543,7 +247,7 @@ export class Vault {
 	constructor(fs: vfs.VFS, path: string, agent? : keyAgent.KeyAgent) {
 		this.fs = fs;
 		this.path = path;
-		this.keyAgent = agent || new keyAgent.SimpleKeyAgent(crypto.defaultCryptoImpl);
+		this.keyAgent = agent || new keyAgent.SimpleKeyAgent(crypto.defaultCrypto);
 	}
 
 	private getKeys() : Q.Promise<agilekeychain.EncryptionKeyEntry[]> {
@@ -625,7 +329,7 @@ export class Vault {
 	}
 
 	/** Returns true if the vault was successfully unlocked using unlock().
-	  * Only once the vault is unlocked can item contents be retrieved using Item.getContents()
+	  * Only once the vault is unlocked can item contents be retrieved using item_store.Item.getContents()
 	  */
 	isLocked() : Q.Promise<boolean> {
 		return Q.all([this.keyAgent.listKeys(), this.getKeys()]).spread<boolean>(
@@ -645,14 +349,14 @@ export class Vault {
 		return Path.join(this.path, 'data/default/' + uuid + '.1password')
 	}
 
-	loadItem(uuid: string) : Q.Promise<Item> {
+	loadItem(uuid: string) : Q.Promise<item_store.Item> {
 		var content = this.fs.read(this.itemPath(uuid));
 		return content.then((content) => {
 			return fromAgileKeychainItem(this, JSON.parse(content));
 		});
 	}
 
-	saveItem(item: Item) : Q.Promise<void> {
+	saveItem(item: item_store.Item) : Q.Promise<void> {
 		var itemSaved = Q.defer<void>();
 		var overviewSaved = Q.defer<void>();
 
@@ -723,14 +427,14 @@ export class Vault {
 	/** Returns a list of overview data for all items in the vault,
 	  * except tombstone markers for deleted items.
 	  */
-	listItems() : Q.Promise<Item[]> {
-		var items = Q.defer<Item[]>();
+	listItems() : Q.Promise<item_store.Item[]> {
+		var items = Q.defer<item_store.Item[]>();
 		var content = this.fs.read(this.contentsFilePath());
 		content.then((content) => {
 			var entries = JSON.parse(content);
-			var vaultItems : Item[] = [];
+			var vaultItems : item_store.Item[] = [];
 			entries.forEach((entry: any[]) => {
-				var item = new Item(this);
+				var item = new item_store.Item(this);
 				item.uuid = entry[0];
 				item.typeName = entry[1];
 				item.title = entry[2];
@@ -893,7 +597,7 @@ export class Vault {
 		return this.path;
 	}
 
-	getRawDecryptedData(item: Item) : Q.Promise<string> {
+	getRawDecryptedData(item: item_store.Item) : Q.Promise<string> {
 		var encryptedContent = this.fs.read(this.itemPath(item.uuid));
 		return encryptedContent.then((content) => {
 			var keychainItem = <agilekeychain.Item>JSON.parse(content);
@@ -901,7 +605,7 @@ export class Vault {
 		});
 	}
 
-	getContent(item: Item) : Q.Promise<ItemContent> {
+	getContent(item: item_store.Item) : Q.Promise<item_store.ItemContent> {
 		return this.getRawDecryptedData(item).then((data: string) => {
 			var content = <agilekeychain.ItemContent>(JSON.parse(data));
 			return fromAgileKeychainContent(content);
@@ -909,181 +613,28 @@ export class Vault {
 	}
 }
 
-/** Represents the content of an item, usually stored
-  * encrypted in a vault.
-  */
-export class ItemContent {
-	sections : ItemSection[];
-	urls : ItemUrl[];
-	notes : string;
-	formFields : WebFormField[];
-	htmlMethod : string;
-	htmlAction : string;
-	htmlId : string;
-
-	constructor() {
-		this.sections = [];
-		this.urls = [];
-		this.notes = '';
-		this.formFields = [];
-		this.htmlMethod = '';
-		this.htmlAction = '';
-		this.htmlId = '';
-	}
-
-	/** Returns the account name associated with this item.
-	  *
-	  * The field used for the account name depends on the item
-	  * type. For logins, this is the 'username' field.
-	  *
-	  * Returns an empty string if the item has no associated account.
-	  */
-	account() : string {
-		var accountFields = underscore.filter(this.formFields, (field) => {
-			return field.designation == 'username';
-		});
-		if (accountFields.length > 0) {
-			return accountFields[0].value;
-		}
-		return '';
-	}
-
-	/** Returns the primary password associated with this item.
-	  *
-	  * This depends upon the item type. For logins, this is
-	  * the 'password' field.
-	  *
-	  * Returns an empty password if the item has no associated
-	  * account.
-	  */
-	password() : string {
-		var passFields = underscore.filter(this.formFields, (field) => {
-			return field.designation == 'password';
-		});
-		if (passFields.length > 0) {
-			return passFields[0].value;
-		}
-		return '';
-	}
-}
-
-/** Content of an item which is usually stored unencrypted
-  * as part of the overview data.
-  */
-export class ItemOpenContents {
-	tags : string[];
-
-	/** Indicates where this item will be displayed.
-	  * Known values are 'Always' (show everywhere)
-	  * and 'Never' (never shown in browser)
-	  */
-	scope : string;
-}
-
-export class ItemSection {
-	/** Internal name of the section. */
-	name : string;
-		  
-	/** User-visible title for the section. */
-	title : string;
-	fields : ItemField[];
-
-	constructor() {
-		this.fields = [];
-		this.title = '';
-		this.name = '';
-	}
-}
-
-export enum FieldType {
-	Text,
-	Password,
-	Address,
-	Date,
-	MonthYear,
-	URL,
-	CreditCardType,
-	PhoneNumber,
-	Gender,
-	Email,
-	Menu
-}
-
-var fieldKindMap = new collectionutil.BiDiMap<FieldType, string>()
- .add(FieldType.Text, 'string')
- .add(FieldType.Password, 'concealed')
- .add(FieldType.Address, 'address')
- .add(FieldType.Date, 'date')
- .add(FieldType.MonthYear, 'monthYear')
- .add(FieldType.URL, 'URL')
- .add(FieldType.CreditCardType, 'cctype')
- .add(FieldType.PhoneNumber, 'phone')
- .add(FieldType.Gender, 'gender')
- .add(FieldType.Email, 'email')
- .add(FieldType.Menu, 'menu');
-
-export class ItemField {
-	kind : FieldType;
-	name : string;
-	title : string;
-	value : any;
-
-	valueString() : string {
-		switch (this.kind) {
-		case FieldType.Date:
-			return dateutil.dateFromUnixTimestamp(this.value).toString();
-		case FieldType.MonthYear:
-			var month = this.value % 100;
-			var year = (this.value / 100) % 100;
-			return sprintf('%02d/%d', month, year);
-		default:
-			return this.value;
-		}
-	}
-}
-
-export enum FormFieldType {
-	Text,
-	Password,
-	Email,
-	Checkbox,
-	Input
-}
+var fieldKindMap = new collectionutil.BiDiMap<item_store.FieldType, string>()
+ .add(item_store.FieldType.Text, 'string')
+ .add(item_store.FieldType.Password, 'concealed')
+ .add(item_store.FieldType.Address, 'address')
+ .add(item_store.FieldType.Date, 'date')
+ .add(item_store.FieldType.MonthYear, 'monthYear')
+ .add(item_store.FieldType.URL, 'URL')
+ .add(item_store.FieldType.CreditCardType, 'cctype')
+ .add(item_store.FieldType.PhoneNumber, 'phone')
+ .add(item_store.FieldType.Gender, 'gender')
+ .add(item_store.FieldType.Email, 'email')
+ .add(item_store.FieldType.Menu, 'menu');
 
 // mapping between input element types
 // and the single-char codes used to represent
 // them in .1password files
-var fieldTypeCodeMap = new collectionutil.BiDiMap<FormFieldType, string>()
- .add(FormFieldType.Text, 'T')
- .add(FormFieldType.Password, 'P')
- .add(FormFieldType.Email, 'E')
- .add(FormFieldType.Checkbox, 'C')
- .add(FormFieldType.Input, 'I');
-
-/** Saved value of an input field in a web form. */
-export class WebFormField {
-	value : string;
-
-	/** 'id' attribute of the <input> element */
-	id : string;
-
-	/** Name of the field. For web forms this is the 'name'
-	  * attribute of the <input> element.
-	  */
-	name : string;
-
-	/** Type of input element used for this form field */
-	type : FormFieldType;
-
-	/** Purpose of the field. Known values are 'username', 'password' */
-	designation : string;
-}
-
-/** Entry in an item's 'Websites' list. */
-export class ItemUrl {
-	label : string;
-	url : string;
-}
+var fieldTypeCodeMap = new collectionutil.BiDiMap<item_store.FormFieldType, string>()
+ .add(item_store.FormFieldType.Text, 'T')
+ .add(item_store.FormFieldType.Password, 'P')
+ .add(item_store.FormFieldType.Email, 'E')
+ .add(item_store.FormFieldType.Checkbox, 'C')
+ .add(item_store.FormFieldType.Input, 'I');
 
 var AES_128_KEY_LEN = 32; // 16 byte key + 16 byte IV
 
@@ -1092,14 +643,14 @@ var AES_128_KEY_LEN = 32; // 16 byte key + 16 byte IV
   * is high.
   */
 export function keyFromPasswordSync(pass: string, salt: string, iterCount: number) : string {
-	return crypto.defaultCryptoImpl.pbkdf2Sync(pass, salt, iterCount, AES_128_KEY_LEN);
+	return crypto.defaultCrypto.pbkdf2Sync(pass, salt, iterCount, AES_128_KEY_LEN);
 }
 
 /** Derive an encryption key from a password for use with decryptKey()
   * This version is asynchronous and will not block the UI.
   */
 export function keyFromPassword(pass: string, salt: string, iterCount: number) : Q.Promise<string> {
-	return crypto.defaultCryptoImpl.pbkdf2(pass, salt, iterCount, AES_128_KEY_LEN);
+	return crypto.defaultCrypto.pbkdf2(pass, salt, iterCount, AES_128_KEY_LEN);
 }
 
 /** Decrypt the master key for a vault.
@@ -1113,11 +664,11 @@ export function keyFromPassword(pass: string, salt: string, iterCount: number) :
 export function decryptKey(derivedKey: string, encryptedKey: string, validation: string) : string {
 	var aesKey = derivedKey.substring(0, 16);
 	var iv = derivedKey.substring(16, 32);
-	var decryptedKey = crypto.defaultCryptoImpl.aesCbcDecrypt(aesKey, encryptedKey, iv);
+	var decryptedKey = crypto.defaultCrypto.aesCbcDecrypt(aesKey, encryptedKey, iv);
 	var validationSaltCipher = crypto.extractSaltAndCipherText(validation);
 
-	var keyParams = crypto.openSSLKey(crypto.defaultCryptoImpl, decryptedKey, validationSaltCipher.salt);
-	var decryptedValidation = crypto.defaultCryptoImpl.aesCbcDecrypt(keyParams.key, validationSaltCipher.cipherText, keyParams.iv);
+	var keyParams = crypto.openSSLKey(crypto.defaultCrypto, decryptedKey, validationSaltCipher.salt);
+	var decryptedValidation = crypto.defaultCrypto.aesCbcDecrypt(keyParams.key, validationSaltCipher.cipherText, keyParams.iv);
 
 	if (decryptedValidation != decryptedKey) {
 		throw new DecryptionError('Incorrect password');
@@ -1145,12 +696,11 @@ export interface EncryptedKey {
 export function encryptKey(derivedKey: string, decryptedKey: string) : EncryptedKey {
 	var aesKey = derivedKey.substring(0, 16);
 	var iv = derivedKey.substring(16, 32);
-	var encryptedKey = crypto.defaultCryptoImpl.aesCbcEncrypt(aesKey, decryptedKey, iv);
+	var encryptedKey = crypto.defaultCrypto.aesCbcEncrypt(aesKey, decryptedKey, iv);
 
 	var validationSalt = crypto.randomBytes(8);
-	var keyParams = crypto.openSSLKey(crypto.defaultCryptoImpl, decryptedKey, validationSalt);
-	var validation = 'Salted__' + validationSalt + crypto.defaultCryptoImpl.aesCbcEncrypt(keyParams.key, decryptedKey, keyParams.iv);
+	var keyParams = crypto.openSSLKey(crypto.defaultCrypto, decryptedKey, validationSalt);
+	var validation = 'Salted__' + validationSalt + crypto.defaultCrypto.aesCbcEncrypt(keyParams.key, decryptedKey, keyParams.iv);
 
 	return {key: encryptedKey, validation: validation};
 }
-

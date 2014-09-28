@@ -1,23 +1,23 @@
 import item_search = require('./item_search');
-import onepass = require('./onepass');
+import item_store = require('./item_store');
 import testLib = require('./test');
 
-function itemWithTitleAndUrl(title: string, url: string) : onepass.Item {
-	var item = new onepass.Item();
+function itemWithTitleAndUrl(title: string, url: string) : item_store.Item {
+	var item = new item_store.Item();
 	item.title = title;
 	item.location = url;
 	return item;
 }
 
-function formField(name: string, type: onepass.FormFieldType, value: string) : onepass.WebFormField {
-	var field = new onepass.WebFormField;
+function formField(name: string, type: item_store.FormFieldType, value: string) : item_store.WebFormField {
+	var field = new item_store.WebFormField;
 	field.name = name;
 	field.type = type;
 	field.value = value;
 
-	if (type == onepass.FormFieldType.Password) {
+	if (type == item_store.FormFieldType.Password) {
 		field.designation = 'password';
-	} else if (type == onepass.FormFieldType.Email) {
+	} else if (type == item_store.FormFieldType.Email) {
 		field.designation = 'username';
 	}
 
@@ -27,12 +27,12 @@ function formField(name: string, type: onepass.FormFieldType, value: string) : o
 testLib.addTest('match item', (assert) => {
 	var item = itemWithTitleAndUrl('Google', 'google.com');
 
-	var content = new onepass.ItemContent();
-	content.formFields.push(formField('login', onepass.FormFieldType.Email, 'jimsmith@gmail.com'));
-	content.formFields.push(formField('password', onepass.FormFieldType.Password, 'mypass'));
-	content.formFields.push(formField('remember_me', onepass.FormFieldType.Checkbox, 'Y'));
+	var content = new item_store.ItemContent();
+	content.formFields.push(formField('login', item_store.FormFieldType.Email, 'jimsmith@gmail.com'));
+	content.formFields.push(formField('password', item_store.FormFieldType.Password, 'mypass'));
+	content.formFields.push(formField('remember_me', item_store.FormFieldType.Checkbox, 'Y'));
 	item.setContent(content);
-	
+
 	assert.ok(item_search.matchItem(item, 'goog'));
 	assert.ok(item_search.matchItem(item, 'GOOGLE'));
 	assert.ok(item_search.matchItem(item, 'google.com'));
@@ -71,7 +71,7 @@ testLib.addTest('URL match score', (assert) => {
 
 	// unrelated domains
 	assert.equal(item_search.itemUrlScore(item, 'google.com'), 0);
-	
+
 	// invalid URLs
 	assert.equal(item_search.itemUrlScore(itemWithTitleAndUrl('Foo', ''), 'about:newtab'), 0);
 	assert.equal(item_search.itemUrlScore(itemWithTitleAndUrl('Foo', ''), ''), 0);
@@ -96,13 +96,13 @@ testLib.addTest('filter items by URL match', (assert) => {
 
 testLib.addTest('item type patterns', (assert) => {
 	var types = item_search.matchType('card');
-	assert.deepEqual(types, [onepass.ItemTypes.CREDIT_CARD]);
+	assert.deepEqual(types, [item_store.ItemTypes.CREDIT_CARD]);
 
 	types = item_search.matchType('router');
-	assert.deepEqual(types, [onepass.ItemTypes.ROUTER]);
+	assert.deepEqual(types, [item_store.ItemTypes.ROUTER]);
 
 	types = item_search.matchType('login');
-	assert.deepEqual(types, [onepass.ItemTypes.LOGIN]);
+	assert.deepEqual(types, [item_store.ItemTypes.LOGIN]);
 });
 
 testLib.start();

@@ -21,6 +21,7 @@ import crypto = require('../lib/onepass_crypto');
 import edit_cmd = require('./edit_cmd');
 import item_repair = require('../lib/item_repair');
 import item_search = require('../lib/item_search');
+import item_store = require('../lib/item_store');
 import key_agent = require('../lib/key_agent');
 import nodefs = require('../lib/vfs/node');
 import onepass = require('../lib/onepass');
@@ -220,7 +221,7 @@ export class CLI {
 		});
 	}
 
-	private printOverview(item: onepass.Item) {
+	private printOverview(item: item_store.Item) {
 		this.printf('%s (%s)', item.title, item.typeDescription());
 		this.printf('\nInfo:');
 		this.printf('  ID: %s', item.uuid);
@@ -236,7 +237,7 @@ export class CLI {
 		}
 	}
 
-	private printDetails(content: onepass.ItemContent) {
+	private printDetails(content: item_store.ItemContent) {
 		if (content.sections.length > 0) {
 			this.printf('\nSections:');
 			content.sections.forEach((section) => {
@@ -308,7 +309,7 @@ export class CLI {
 	/** Returns the item from @p vault matching a given @p pattern.
 	  * If there are multiple matching items the user is prompted to select one.
 	  */
-	private selectItem(vault: onepass.Vault, pattern: string) : Q.Promise<onepass.Item> {
+	private selectItem(vault: onepass.Vault, pattern: string) : Q.Promise<item_store.Item> {
 		return item_search.lookupItems(vault, pattern).then((items) => {
 			return this.select(items, 'items', 'Item', pattern, (item) => { return item.title; });
 		});
@@ -340,7 +341,7 @@ export class CLI {
 		});
 	}
 
-	private addLoginFields(content: onepass.ItemContent) : Q.Promise<onepass.ItemContent> {
+	private addLoginFields(content: item_store.ItemContent) : Q.Promise<item_store.ItemContent> {
 		return this.io.readLine('Website: ').then((website) => {
 			content.urls.push({
 				label: 'website',
@@ -353,7 +354,7 @@ export class CLI {
 				id: '',
 				name: 'username',
 				designation: 'username',
-				type: onepass.FormFieldType.Text,
+				type: item_store.FormFieldType.Text,
 				value: username
 			});
 			return this.passwordFieldPrompt();
@@ -363,7 +364,7 @@ export class CLI {
 				id: '',
 				name: 'password',
 				designation: 'password',
-				type: onepass.FormFieldType.Password,
+				type: item_store.FormFieldType.Password,
 				value: password
 			});
 			return content;
@@ -373,23 +374,23 @@ export class CLI {
 	private addItemCommand(vault: onepass.Vault, type: string, title: string) : Q.Promise<void> {
 		var types = item_search.matchType(type);
 		return this.select(types, 'item types', 'item type', type, (typeCode) => {
-			return onepass.ITEM_TYPES[<string>typeCode].name;
+			return item_store.ITEM_TYPES[<string>typeCode].name;
 		}).then((type) => {
-			var item = new onepass.Item(vault);
+			var item = new item_store.Item(vault);
 			item.title = title;
 			item.typeName = type;
 
-			var content = new onepass.ItemContent();
+			var content = new item_store.ItemContent();
 
-			var contentReady : Q.Promise<onepass.ItemContent>;
-			if (type == onepass.ItemTypes.LOGIN) {
+			var contentReady : Q.Promise<item_store.ItemContent>;
+			if (type == item_store.ItemTypes.LOGIN) {
 				contentReady = this.addLoginFields(content);
 			} else {
 				// add a default section with a blank title
-				content.sections.push(new onepass.ItemSection());
+				content.sections.push(new item_store.ItemSection());
 				contentReady = Q(content);
 			}
-			
+
 			return contentReady.then(() => {
 				item.setContent(content);
 				return item.save();
@@ -461,7 +462,7 @@ export class CLI {
 	}
 
 	private removeCommand(vault: onepass.Vault, pattern: string) : Q.Promise<void> {
-		var items : onepass.Item[];
+		var items : item_store.Item[];
 
 		return item_search.lookupItems(vault, pattern).then((items_) => {
 			items = items_;
@@ -513,7 +514,7 @@ export class CLI {
 	}
 
 	private showItemCommand(vault: onepass.Vault, pattern: string, format: ShowItemFormat) : Q.Promise<void> {
-		var item: onepass.Item;
+		var item: item_store.Item;
 		return this.selectItem(vault, pattern).then((_item) => {
 			item = _item;
 			return item.getContent();
@@ -616,7 +617,7 @@ export class CLI {
 		} else {
 			vaultReady = Q<void>(null);
 		}
-		
+
 		var handlers : HandlerMap = {};
 
 		handlers['list'] = (args) => {
@@ -720,4 +721,3 @@ export class CLI {
 		return exitStatus.promise;
 	}
 }
-

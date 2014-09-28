@@ -112,7 +112,7 @@ export class ItemContent {
  */
 export class WebFormField {
 	value: string;
-	
+
 	/** 'id' attribute of the <input> element */
 	id: string;
 
@@ -147,7 +147,7 @@ export interface Item {
 	uuid: string;
 	title: string;
 
-	/** Item type code. See onepass.ITEM_TYPES */
+	/** Item type code. See item_store.ITEM_TYPES */
 	typeName: string;
 
 	/** Identifies the encryption key used to encrypt
@@ -185,4 +185,3 @@ export interface Item {
 
 	contentsHash?: string;
 }
-

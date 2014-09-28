@@ -1,7 +1,7 @@
 import Q = require('q');
 
 import forms = require('./forms');
-import onepass = require('../lib/onepass');
+import item_store = require('../lib/item_store');
 import page_access = require('./page_access');
 import stringutil = require('../lib/base/stringutil');
 
@@ -16,7 +16,7 @@ export interface AutoFillHandler {
 	/** Autofill fields on the current page with values from a given @p item.
 	  * Returns a promise for the auto-filled entries.
 	  */
-	autofill(item: onepass.Item) : Q.Promise<AutoFillResult>
+	autofill(item: item_store.Item) : Q.Promise<AutoFillResult>
 }
 
 export class AutoFiller {
@@ -34,7 +34,7 @@ export class AutoFiller {
 		return keyMatch(field.id) || keyMatch(field.name) || keyMatch(field.ariaLabel) || keyMatch(field.placeholder);
 	}
 
-	autofill(item: onepass.Item) : Q.Promise<AutoFillResult> {
+	autofill(item: item_store.Item) : Q.Promise<AutoFillResult> {
 		var result = Q.defer<AutoFillResult>();
 		var usernameKeys = ['email', 'user', 'account'];
 
@@ -95,4 +95,3 @@ export class AutoFiller {
 		return result.promise;
 	}
 }
-

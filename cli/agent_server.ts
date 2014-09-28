@@ -60,7 +60,7 @@ function parseJSONRequest(req: http.ServerRequest, rsp: http.ServerResponse, cb:
 }
 
 class Server {
-	private crypto : crypto.CryptoImpl;
+	private crypto : crypto.Crypto;
 	private httpServer : http.Server;
 	private keys : {[id:string]: string};
 	private keyTimeout : NodeJS.Timer;

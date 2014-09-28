@@ -23,6 +23,7 @@ import key_value_store = require('../lib/base/key_value_store');
 import http_vfs = require('../lib/vfs/http');
 import item_icons = require('./item_icons');
 import item_list = require('./item_list');
+import item_store = require('../lib/item_store');
 import onepass = require('../lib/onepass');
 import onepass_crypto = require('../lib/onepass_crypto');
 import page_access = require('./page_access');
@@ -80,8 +81,8 @@ class SetupView extends reactts.ReactComponentBase<{}, {}> {
 interface AppViewState {
 	mainView?: ActiveView;
 	vault?: onepass.Vault;
-	items?: onepass.Item[];
-	selectedItem?: onepass.Item;
+	items?: item_store.Item[];
+	selectedItem?: item_store.Item;
 	isLocked?: boolean;
 	currentUrl?: string;
 	status?: Status;
@@ -112,7 +113,7 @@ class AppView extends reactts.ReactComponentBase<AppViewProps, AppViewState> {
 	getInitialState() {
 		var state = {
 			mainView: ActiveView.UnlockPane,
-			items: <onepass.Item[]>[],
+			items: <item_store.Item[]>[],
 			isLocked: true
 		};
 		return state;
@@ -178,7 +179,7 @@ class AppView extends reactts.ReactComponentBase<AppViewProps, AppViewState> {
 		});
 	}
 
-	autofill(item: onepass.Item) {
+	autofill(item: item_store.Item) {
 		this.props.services.autofiller.autofill(item).then((result) => {
 			if (result.count > 0) {
 				this.props.services.pageAccess.hidePanel();
@@ -372,7 +373,7 @@ class ItemField extends reactts.ReactComponentBase<ItemFieldProps, ItemFieldStat
 				copyButton = new controls.ActionButton({
 					value: 'Copy',
 					onClick: (e) => {
-						this.props.clipboard.copy('text/plain', this.props.value)	
+						this.props.clipboard.copy('text/plain', this.props.value)
 					}
 				});
 			}
@@ -402,7 +403,7 @@ class ItemField extends reactts.ReactComponentBase<ItemFieldProps, ItemFieldStat
 
 // Detail view for an individual item
 class DetailsViewProps {
-	item: onepass.Item;
+	item: item_store.Item;
 	iconProvider: item_icons.ItemIconProvider;
 	clipboard: page_access.ClipboardAccess;
 
@@ -412,12 +413,12 @@ class DetailsViewProps {
 
 class ItemSectionProps {
 	title: string;
-	type: onepass.FormFieldType
+	type: item_store.FormFieldType
 	value: string;
 }
 
 class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
-	private itemContent : onepass.ItemContent;
+	private itemContent : item_store.ItemContent;
 	private shortcuts: shortcut.Shortcut[];
 
 	componentWillReceiveProps(nextProps: DetailsViewProps) {
@@ -486,7 +487,7 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 						fields.push(new ItemField({
 							label: field.title,
 							value: field.value,
-							isPassword: field.kind == onepass.FieldType.Password,
+							isPassword: field.kind == item_store.FieldType.Password,
 							clipboard: this.props.clipboard
 						}));
 					}
@@ -728,4 +729,3 @@ export class App {
 		}
 	}
 }
-

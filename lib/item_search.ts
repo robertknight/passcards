@@ -4,30 +4,30 @@
 import underscore = require('underscore');
 import urijs = require('URIjs');
 
-import onepass = require('./onepass');
+import item_store = require('./item_store');
 import stringutil = require('./base/stringutil');
 import url_util = require('./base/url_util');
 
 export class FieldMatch {
-	url : onepass.ItemUrl;
-	field : onepass.ItemField;
-	formField : onepass.WebFormField;
-	section : onepass.ItemSection;
+	url : item_store.ItemUrl;
+	field : item_store.ItemField;
+	formField : item_store.WebFormField;
+	section : item_store.ItemSection;
 
-	static fromURL(url: onepass.ItemUrl) : FieldMatch {
+	static fromURL(url: item_store.ItemUrl) : FieldMatch {
 		var match = new FieldMatch;
 		match.url = url;
 		return match;
 	}
 
-	static fromField(section: onepass.ItemSection, field: onepass.ItemField) : FieldMatch {
+	static fromField(section: item_store.ItemSection, field: item_store.ItemField) : FieldMatch {
 		var match = new FieldMatch;
 		match.field = field;
 		match.section = section;
 		return match;
 	}
 
-	static fromFormField(field: onepass.WebFormField) : FieldMatch {
+	static fromFormField(field: item_store.WebFormField) : FieldMatch {
 		var match = new FieldMatch;
 		match.formField = field;
 		return match;
@@ -74,8 +74,8 @@ export class FieldMatch {
 	}
 
 	isPassword() : boolean {
-		return this.field && this.field.kind == onepass.FieldType.Password ||
-		       this.formField && this.formField.type == onepass.FormFieldType.Password;
+		return this.field && this.field.kind == item_store.FieldType.Password ||
+		       this.formField && this.formField.type == item_store.FormFieldType.Password;
 	}
 }
 
@@ -83,14 +83,14 @@ export class FieldMatch {
   *
   * Looks for matches in the title, ID and location of the item.
   */
-export function matchItem(item: onepass.Item, pattern: string) : boolean {
+export function matchItem(item: item_store.Item, pattern: string) : boolean {
 	var tokens = stringutil.parseCommandLine(pattern).map((token) => {
 		return token.toLowerCase();
 	});
 
-	var matchToken = (item: onepass.Item, token: string) => {
+	var matchToken = (item: item_store.Item, token: string) => {
 		var titleLower = item.title.toLowerCase();
-		
+
 		if (titleLower.indexOf(token) != -1) {
 			return true;
 		}
@@ -111,9 +111,9 @@ export function matchItem(item: onepass.Item, pattern: string) : boolean {
 	});
 }
 
-/** Returns a list of items in @p vault which match a given pattern. */
-export function lookupItems(vault: onepass.Vault, pattern: string) : Q.Promise<onepass.Item[]> {
-	return vault.listItems().then((items) => {
+/** Returns a list of items in @p store which match a given pattern. */
+export function lookupItems(store: item_store.Store, pattern: string) : Q.Promise<item_store.Item[]> {
+	return store.listItems().then((items) => {
 		return underscore.filter(items, (item) => {
 			return matchItem(item, pattern);
 		});
@@ -124,7 +124,7 @@ export function lookupItems(vault: onepass.Vault, pattern: string) : Q.Promise<o
   * A positive (> 0) score indicates some relevance. A zero or negative
   * score indicates no match.
   */
-export function itemUrlScore(item: onepass.Item, url: string) {
+export function itemUrlScore(item: item_store.Item, url: string) {
 	var itemUrl = url_util.normalize(item.location);
 	url = url_util.normalize(url);
 
@@ -141,7 +141,7 @@ export function itemUrlScore(item: onepass.Item, url: string) {
 	    itemUrl == url) {
 		return 1;
 	}
-	
+
 	// full authority match
 	if (parsedItemUrl.authority().length > 0 &&
 	    parsedItemUrl.authority() == parsedUrl.authority()) {
@@ -158,7 +158,7 @@ export function itemUrlScore(item: onepass.Item, url: string) {
 }
 
 /** Returns a ranked list of items which may match a given URL. */
-export function filterItemsByUrl(items: onepass.Item[], url: string) : onepass.Item[] {
+export function filterItemsByUrl(items: item_store.Item[], url: string) : item_store.Item[] {
 	var matches = underscore.filter(items, (item) => {
 		return itemUrlScore(item, url) > 0;
 	});
@@ -169,7 +169,7 @@ export function filterItemsByUrl(items: onepass.Item[], url: string) : onepass.I
 }
 
 /** Returns a list of fields in an item's content which match @p pattern */
-export function matchField(content: onepass.ItemContent, pattern: string) : FieldMatch[] {
+export function matchField(content: item_store.ItemContent, pattern: string) : FieldMatch[] {
 	var matches : FieldMatch[] = [];
 	content.urls.forEach((url) => {
 		if (matchLabel(pattern, url.label)) {
@@ -191,7 +191,7 @@ export function matchField(content: onepass.ItemContent, pattern: string) : Fiel
 	return matches;
 }
 
-export function matchSection(content: onepass.ItemContent, pattern: string) : onepass.ItemSection[] {
+export function matchSection(content: item_store.ItemContent, pattern: string) : item_store.ItemSection[] {
 	return underscore.filter(content.sections, (section) => {
 		return stringutil.indexOfIgnoreCase(section.title, pattern) != -1;
 	});
@@ -201,13 +201,12 @@ function matchLabel(pattern: string, label: string) : boolean {
 	return label && stringutil.indexOfIgnoreCase(label, pattern) != -1;
 }
 
-export function matchType(pattern: string) : onepass.ItemType[] {
-	var typeKeys = underscore.filter(Object.keys(onepass.ItemTypes), (key) => {
+export function matchType(pattern: string) : item_store.ItemType[] {
+	var typeKeys = underscore.filter(Object.keys(item_store.ItemTypes), (key) => {
 		return stringutil.indexOfIgnoreCase(key, pattern) != -1;
 	});
-	var typeCodes : onepass.ItemType[] = typeKeys.map((key) => {
-		return (<any>onepass.ItemTypes)[key];
+	var typeCodes : item_store.ItemType[] = typeKeys.map((key) => {
+		return (<any>item_store.ItemTypes)[key];
 	});
 	return typeCodes;
 }
-

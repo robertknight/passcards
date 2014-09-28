@@ -1,23 +1,23 @@
-import onepass = require('./onepass');
+import item_store = require('./item_store');
 
 /** Utility class for constructing vault items. */
 export class Builder {
-	private _item: onepass.Item;
-	private _content: onepass.ItemContent;
+	private _item: item_store.Item;
+	private _content: item_store.ItemContent;
 
-	constructor(type: onepass.ItemType) {
-		this._item = new onepass.Item();
-		this._content = new onepass.ItemContent();
+	constructor(type: item_store.ItemType) {
+		this._item = new item_store.Item();
+		this._content = new item_store.ItemContent();
 
 		this._item.typeName = type;
 		this._item.setContent(this._content);
 	}
 
-	item() : onepass.Item {
+	item() : item_store.Item {
 		return this._item;
 	}
 
-	content() : onepass.ItemContent {
+	content() : item_store.ItemContent {
 		return this._content;
 	}
 
@@ -27,14 +27,14 @@ export class Builder {
 	}
 
 	addLogin(username: string) : Builder {
-		return this.addFormField('username', 'username', onepass.FormFieldType.Text, username);
+		return this.addFormField('username', 'username', item_store.FormFieldType.Text, username);
 	}
 
 	addPassword(password: string) : Builder {
-		return this.addFormField('password', 'password', onepass.FormFieldType.Password, password);
+		return this.addFormField('password', 'password', item_store.FormFieldType.Password, password);
 	}
 
-	addFormField(name: string, designation: string, type: onepass.FormFieldType, value: string) : Builder {
+	addFormField(name: string, designation: string, type: item_store.FormFieldType, value: string) : Builder {
 		this._content.formFields.push({
 			id: '',
 			name: name,
@@ -56,4 +56,3 @@ export class Builder {
 		return this;
 	}
 }
-

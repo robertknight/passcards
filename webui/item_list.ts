@@ -11,8 +11,8 @@ import controls = require('./controls');
 import keycodes = require('./base/keycodes');
 import item_icons = require('./item_icons');
 import item_search = require('../lib/item_search');
+import item_store = require('../lib/item_store');
 import stringutil = require('../lib/base/stringutil');
-import onepass = require('../lib/onepass');
 import url_util = require('../lib/base/url_util');
 
 export class ItemListViewState {
@@ -20,9 +20,9 @@ export class ItemListViewState {
 }
 
 export class ItemListViewProps {
-	items: onepass.Item[];
-	selectedItem: onepass.Item;
-	onSelectedItemChanged: (item: onepass.Item) => void;
+	items: item_store.Item[];
+	selectedItem: item_store.Item;
+	onSelectedItemChanged: (item: item_store.Item) => void;
 	currentUrl: string;
 	iconProvider: item_icons.ItemIconProvider;
 
@@ -65,7 +65,7 @@ export class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, 
 		if (!this.state.filter && this.props.currentUrl) {
 			filterUrl = this.props.currentUrl;
 		}
-		
+
 		return react.DOM.div({className: 'itemListView'},
 			new ItemListToolbar({
 				onQueryChanged: this.updateFilter,
@@ -108,7 +108,7 @@ export class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, 
 
 class ItemProps {
 	key: string;
-	item: onepass.Item;
+	item: item_store.Item;
 	accountName: string;
 	domain: string;
 	onSelected: () => void;
@@ -157,10 +157,10 @@ class Item extends reactts.ReactComponentBase<ItemProps, {}> {
 
 interface ItemListState {
 	// TODO - Remove selected item here
-	selectedItem?: onepass.Item;
+	selectedItem?: item_store.Item;
 
 	hoveredIndex?: number;
-	matchingItems?: onepass.Item[];
+	matchingItems?: item_store.Item[];
 
 	visibleIndexes? : {
 		first: number;
@@ -171,16 +171,16 @@ interface ItemListState {
 }
 
 class ItemListProps {
-	items: onepass.Item[];
+	items: item_store.Item[];
 	filter: string;
 	filterUrl: string;
-	onSelectedItemChanged: (item: onepass.Item) => void;
+	onSelectedItemChanged: (item: item_store.Item) => void;
 	iconProvider: item_icons.ItemIconProvider;
 }
 
 class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> {
 
-	itemAccount(item: onepass.Item) : string {
+	itemAccount(item: item_store.Item) : string {
 		// TODO - Extract item contents and save account name
 		// for future use
 		//
@@ -189,7 +189,7 @@ class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> 
 		return '';
 	}
 
-	setSelectedItem(item: onepass.Item) {
+	setSelectedItem(item: item_store.Item) {
 		var state = this.state;
 		state.selectedItem = item;
 		this.setState(state);
@@ -198,14 +198,14 @@ class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> 
 
 	getInitialState() {
 		return {
-			selectedItem: <onepass.Item>null,
+			selectedItem: <item_store.Item>null,
 			hoveredIndex: 0,
-			matchingItems: <onepass.Item[]>[],
+			matchingItems: <item_store.Item[]>[],
 			itemHeight: 60
 		};
 	}
 
-	createListItem(item: onepass.Item, state: {
+	createListItem(item: item_store.Item, state: {
 		hovered: boolean;
 		index: number;
 		offsetTop: number;
@@ -277,7 +277,7 @@ class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> 
 				return null;
 			}
 		});
-		
+
 		var listHeight = this.state.matchingItems.length * this.state.itemHeight;
 		return react.DOM.div({
 			className: 'itemList',
@@ -323,7 +323,7 @@ class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> 
 				if (topIndex != -1) {
 					bottomIndex = i;
 				}
-					
+
 				if (itemRect.bottom > itemListRect.bottom) {
 					break;
 				}
@@ -345,7 +345,7 @@ class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> 
 
 	private updateMatchingItems(props: ItemListProps) {
 		var prevHoveredItem = this.hoveredItem();
-		var matchingItems: onepass.Item[] = [];
+		var matchingItems: item_store.Item[] = [];
 		var matchesAreSorted = false;
 
 		if (props.filter) {
@@ -387,7 +387,7 @@ class ItemListToolbarProps {
 	onMoveUp: () => void;
 	onMoveDown: () => void;
 	onActivate: () => void;
-	
+
 	onLockClicked: () => void;
 }
 
@@ -454,4 +454,3 @@ class ItemListToolbar extends reactts.ReactComponentBase<ItemListToolbarProps, {
 			);
 	}
 }
-

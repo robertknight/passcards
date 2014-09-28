@@ -44,7 +44,7 @@ export function extractSaltAndCipherText(input: string) : SaltedCipherText {
 /** Derives an AES-128 key and initialization vector from a key of arbitrary length and salt
   * using.
   */
-export function openSSLKey(cryptoImpl: CryptoImpl, password: string, salt: string) : AESKeyParams {
+export function openSSLKey(cryptoImpl: Crypto, password: string, salt: string) : AESKeyParams {
 	var data = password + salt;
 	var key = cryptoImpl.md5Digest(data);
 	var iv = cryptoImpl.md5Digest(key + data);
@@ -52,14 +52,14 @@ export function openSSLKey(cryptoImpl: CryptoImpl, password: string, salt: strin
 }
 
 /** Encrypt the JSON data for an item for storage in the Agile Keychain format. */
-export function encryptAgileKeychainItemData(cryptoImpl: CryptoImpl, key: string, plainText: string) {
+export function encryptAgileKeychainItemData(cryptoImpl: Crypto, key: string, plainText: string) {
 	var salt = randomBytes(8);
 	var keyParams = openSSLKey(cryptoImpl, key, salt);
 	return 'Salted__' + salt + cryptoImpl.aesCbcEncrypt(keyParams.key, plainText, keyParams.iv);
 }
 
 /** Decrypt the encrypted contents of an item stored in the Agile Keychain format. */
-export function decryptAgileKeychainItemData(cryptoImpl: CryptoImpl, key: string, cipherText: string) {
+export function decryptAgileKeychainItemData(cryptoImpl: Crypto, key: string, cipherText: string) {
 	var saltCipher = extractSaltAndCipherText(cipherText);
 	var keyParams = openSSLKey(cryptoImpl, key, saltCipher.salt);
 	return cryptoImpl.aesCbcDecrypt(keyParams.key, saltCipher.cipherText, keyParams.iv);
@@ -85,7 +85,7 @@ export function randomBytes(length: number) : string {
 	if (crypto.pseudoRandomBytes) {
 		return crypto.pseudoRandomBytes(length).toString('binary');
 	}
-	
+
 	// fall back to Math.random()-based PRNG
 	return cryptoJS.lib.WordArray.random(length).toString(this.encoding);
 }
@@ -135,10 +135,10 @@ export function generatePassword(length: number, charsets?: string[]) : string {
 	}
 }
 
-/** CryptoImpl is an interface to common crypto algorithms required
+/** Crypto is an interface to common crypto algorithms required
   * to decrypt Agile Keychain vaults.
   */
-export interface CryptoImpl {
+export interface Crypto {
 	/** Decrypt @p cipherText using AES-128 with the given key and initialization vector.
 	  */
 	aesCbcDecrypt(key:string, cipherText: string, iv: string) : string;
@@ -148,14 +148,14 @@ export interface CryptoImpl {
 	  * of PBKDF2
 	  */
 	pbkdf2(masterPwd: string, salt: string, iterCount: number, keyLen: number) : Q.Promise<string>;
-	
+
 	pbkdf2Sync(masterPwd: string, salt: string, iterCount: number, keyLen: number) : string;
 
 	md5Digest(input: string) : string;
 }
 
 // crypto implementation using Node.js' crypto lib
-export class NodeCrypto implements CryptoImpl {
+export class NodeCrypto implements Crypto {
 	aesCbcDecrypt(key:string, cipherText: string, iv: string) : string {
 		var decipher = crypto.createDecipheriv('AES-128-CBC', key, iv);
 		var result = '';
@@ -176,7 +176,7 @@ export class NodeCrypto implements CryptoImpl {
 		var derivedKey = crypto.pbkdf2Sync(masterPwd, salt, iterCount, keyLen);
 		return derivedKey.toString('binary');
 	}
-	
+
 	pbkdf2(masterPwd: string, salt: string, iterCount: number, keyLen: number) : Q.Promise<string> {
 		var key = Q.defer<string>();
 		// FIXME - Type definition for crypto.pbkdf2() is wrong, result
@@ -200,7 +200,7 @@ export class NodeCrypto implements CryptoImpl {
 
 // crypto implementation using CryptoJS plus the
 // crypto functions in lib/crypto
-export class CryptoJsCrypto implements CryptoImpl {
+export class CryptoJsCrypto implements Crypto {
 	static workerPool : webworker_pool.WorkerPool<crypto_worker.Request, crypto_worker.Response>;
 	encoding : any
 
@@ -268,7 +268,7 @@ export class CryptoJsCrypto implements CryptoImpl {
 		var key = pbkdf2Impl.key(passBuf, saltBuf, iterCount, keyLen);
 		return collectionutil.stringFromBuffer(key);
 	}
-	
+
 	/** Derive a key from a password using PBKDF2. If initWorkers() has been called,
 	  * this will run asynchronously and in parallel in a worker, otherwise it will fall back to
 	  * pbkdf2Sync()
@@ -301,7 +301,7 @@ export class CryptoJsCrypto implements CryptoImpl {
 			return Q(this.pbkdf2Sync(pass, salt, iterCount, keyLen));
 		}
 	}
-	
+
 	md5Digest(input: string) : string {
 		return cryptoJS.MD5(this.encoding.parse(input)).toString(this.encoding);
 	}
@@ -320,11 +320,10 @@ export class CryptoJsCrypto implements CryptoImpl {
 		if (crypto.pseudoRandomBytes) {
 			return crypto.pseudoRandomBytes(length).toString('binary');
 		}
-		
+
 		// fall back to Math.random()-based PRNG
 		return cryptoJS.lib.WordArray.random(length).toString(this.encoding);
 	}
 }
 
-export var defaultCryptoImpl = new CryptoJsCrypto();
-
+export var defaultCrypto = new CryptoJsCrypto();
