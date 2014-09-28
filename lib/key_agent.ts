@@ -7,7 +7,6 @@ import atob = require('atob');
 import assert = require('assert');
 import Q = require('q');
 
-import asyncutil = require('./base/asyncutil');
 import crypto = require('./onepass_crypto');
 import event_stream = require('./base/event_stream');
 

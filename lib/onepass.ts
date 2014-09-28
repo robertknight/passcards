@@ -2,13 +2,11 @@
 /// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
 /// <reference path="../typings/atob.d.ts" />
-/// <reference path="../typings/sprintf.d.ts" />
 
 import atob = require('atob');
 import btoa = require('btoa');
 import Q = require('q');
 import Path = require('path');
-import sprintf = require('sprintf');
 import underscore = require('underscore');
 
 import asyncutil = require('./base/asyncutil');
@@ -21,6 +19,29 @@ import item_store = require('./item_store');
 import key_agent = require('./key_agent');
 import stringutil = require('./base/stringutil');
 import vfs = require('./vfs/vfs');
+
+var fieldKindMap = new collectionutil.BiDiMap<item_store.FieldType, string>()
+ .add(item_store.FieldType.Text, 'string')
+ .add(item_store.FieldType.Password, 'concealed')
+ .add(item_store.FieldType.Address, 'address')
+ .add(item_store.FieldType.Date, 'date')
+ .add(item_store.FieldType.MonthYear, 'monthYear')
+ .add(item_store.FieldType.URL, 'URL')
+ .add(item_store.FieldType.CreditCardType, 'cctype')
+ .add(item_store.FieldType.PhoneNumber, 'phone')
+ .add(item_store.FieldType.Gender, 'gender')
+ .add(item_store.FieldType.Email, 'email')
+ .add(item_store.FieldType.Menu, 'menu');
+
+// mapping between input element types
+// and the single-char codes used to represent
+// them in .1password files
+var fieldTypeCodeMap = new collectionutil.BiDiMap<item_store.FormFieldType, string>()
+ .add(item_store.FormFieldType.Text, 'T')
+ .add(item_store.FormFieldType.Password, 'P')
+ .add(item_store.FormFieldType.Email, 'E')
+ .add(item_store.FormFieldType.Checkbox, 'C')
+ .add(item_store.FormFieldType.Input, 'I');
 
 /** Default number of iterations to use in the PBKDF2 password
   * stretching function used to secure the master key.
@@ -306,7 +327,9 @@ export class Vault {
 	}
 
 	saveKeys(keys: key_agent.Key[]) {
-		throw new Error('onepass.Vault.saveKeys() is not implemented');
+		if (true) { // suppress TSLint warning about unreachable code
+			throw new Error('onepass.Vault.saveKeys() is not implemented');
+		}
 		return Q<void>(null);
 	}
 
@@ -620,27 +643,4 @@ export class Vault {
 		});
 	}
 }
-
-var fieldKindMap = new collectionutil.BiDiMap<item_store.FieldType, string>()
- .add(item_store.FieldType.Text, 'string')
- .add(item_store.FieldType.Password, 'concealed')
- .add(item_store.FieldType.Address, 'address')
- .add(item_store.FieldType.Date, 'date')
- .add(item_store.FieldType.MonthYear, 'monthYear')
- .add(item_store.FieldType.URL, 'URL')
- .add(item_store.FieldType.CreditCardType, 'cctype')
- .add(item_store.FieldType.PhoneNumber, 'phone')
- .add(item_store.FieldType.Gender, 'gender')
- .add(item_store.FieldType.Email, 'email')
- .add(item_store.FieldType.Menu, 'menu');
-
-// mapping between input element types
-// and the single-char codes used to represent
-// them in .1password files
-var fieldTypeCodeMap = new collectionutil.BiDiMap<item_store.FormFieldType, string>()
- .add(item_store.FormFieldType.Text, 'T')
- .add(item_store.FormFieldType.Password, 'P')
- .add(item_store.FormFieldType.Email, 'E')
- .add(item_store.FormFieldType.Checkbox, 'C')
- .add(item_store.FormFieldType.Input, 'I');
 

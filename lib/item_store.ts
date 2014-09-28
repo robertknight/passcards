@@ -56,7 +56,6 @@ export class ItemTypes {
 	static TOMBSTONE = <ItemType>'system.Tombstone';
 }
 
-
 /** Map of item type codes to human-readable item type names */
 export var ITEM_TYPES : ItemTypeMap = {
 	"webforms.WebForm": {
