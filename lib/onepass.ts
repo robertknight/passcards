@@ -384,7 +384,7 @@ export function fromAgileKeychainItem(vault: Vault, data: agilekeychain.Item) : 
 	//  - data.encrypted
 
 	if (data.secureContents) {
-		item.setContent(ItemContent.fromAgileKeychainObject(data.secureContents));
+		item.setContent(fromAgileKeychainContent(data.secureContents));
 	}
 
 	item.typeName = data.typeName;
@@ -396,6 +396,137 @@ export function fromAgileKeychainItem(vault: Vault, data: agilekeychain.Item) : 
 	item.trashed = data.trashed;
 	item.openContents = data.openContents;
 	return item;
+}
+
+export function toAgileKeychainField(field: ItemField) : agilekeychain.ItemField {
+	var keychainField = new agilekeychain.ItemField;
+	keychainField.k = fieldKindMap.get(field.kind);
+	keychainField.n = field.name;
+	keychainField.t = field.title;
+	keychainField.v = field.value;
+	return keychainField;
+}
+
+export function fromAgileKeychainField(fieldData: agilekeychain.ItemField) : ItemField {
+	var field = new ItemField;
+	field.kind = fieldKindMap.get2(fieldData.k);
+	field.name = fieldData.n;
+	field.title = fieldData.t;
+	field.value = fieldData.v;
+	return field;
+}
+
+/** Convert an ItemContent entry into a `contents` blob for storage in
+  * a 1Password item.
+  */
+function toAgileKeychainContent(content: ItemContent) : agilekeychain.ItemContent {
+	var keychainContent = new agilekeychain.ItemContent();
+	if (content.sections) {
+		keychainContent.sections = [];
+		content.sections.forEach((section) => {
+			keychainContent.sections.push(toAgileKeychainSection(section));
+		});
+	}
+	if (content.urls) {
+		keychainContent.URLs = [];
+		content.urls.forEach((url) => {
+			keychainContent.URLs.push(url);
+		});
+	}
+	keychainContent.notesPlain = content.notes;
+	if (content.formFields) {
+		keychainContent.fields = [];
+		content.formFields.forEach((field) => {
+			keychainContent.fields.push(toAgileKeychainFormField(field));
+		});
+	}
+	keychainContent.htmlAction = content.htmlAction;
+	keychainContent.htmlMethod = content.htmlMethod;
+	keychainContent.htmlID = content.htmlId;
+	return keychainContent;
+}
+
+/** Convert a decrypted JSON `contents` blob from a 1Password item
+  * into an ItemContent instance.
+  */
+function fromAgileKeychainContent(data: agilekeychain.ItemContent) : ItemContent {
+	var content = new ItemContent();
+	if (data.sections) {
+		data.sections.forEach((section) => {
+			content.sections.push(fromAgileKeychainSection(section));
+		});
+	}
+	if (data.URLs) {
+		data.URLs.forEach((url) => {
+			content.urls.push(url);
+		});
+	}
+	if (data.notesPlain) {
+		content.notes = data.notesPlain;
+	}
+	if (data.fields) {
+		data.fields.forEach((field) => {
+			content.formFields.push(fromAgileKeychainFormField(field));
+		});
+	}
+	if (data.htmlAction) {
+		content.htmlAction = data.htmlAction;
+	}
+	if (data.htmlMethod) {
+		content.htmlMethod = data.htmlMethod;
+	}
+	if (data.htmlID) {
+		content.htmlId = data.htmlID;
+	}
+
+	return content;
+}
+
+function toAgileKeychainSection(section: ItemSection) : agilekeychain.ItemSection {
+	var keychainSection = new agilekeychain.ItemSection();
+	keychainSection.name = section.name;
+	keychainSection.title = section.title;
+	keychainSection.fields = [];
+	section.fields.forEach((field) => {
+		keychainSection.fields.push(toAgileKeychainField(field));
+	});
+	return keychainSection;
+}
+
+/** Convert a section entry from the JSON contents blob for
+  * an item into an ItemSection instance.
+  */
+function fromAgileKeychainSection(data: agilekeychain.ItemSection) : ItemSection {
+	var section = new ItemSection();
+	section.name = data.name;
+	section.title = data.title;
+	section.fields = [];
+	if (data.fields) {
+		data.fields.forEach((fieldData) => {
+			section.fields.push(fromAgileKeychainField(fieldData));
+		});
+	}
+	return section;
+}
+
+function toAgileKeychainFormField(field: WebFormField) : agilekeychain.WebFormField {
+	var keychainField = new agilekeychain.WebFormField();
+	keychainField.id = field.id;
+	keychainField.name = field.name;
+	keychainField.type = fieldTypeCodeMap.get(field.type);
+	keychainField.designation = field.designation;
+	keychainField.value = field.value;
+	return keychainField;
+}
+
+function fromAgileKeychainFormField(keychainField: agilekeychain.WebFormField) : WebFormField {
+	var field = new WebFormField();
+	field.id = keychainField.id;
+	field.name = keychainField.name;
+	field.type = fieldTypeCodeMap.get2(keychainField.type);
+	field.designation = keychainField.designation;
+	field.value = keychainField.value;
+	return field;
 }
 
 /** Represents a 1Password vault. */
@@ -543,7 +674,7 @@ export class Vault {
 		}
 
 		item.getContent().then((content) => {
-			var contentJSON = JSON.stringify(ItemContent.toAgileKeychainObject(content));
+			var contentJSON = JSON.stringify(toAgileKeychainContent(content));
 			this.encryptItemData(DEFAULT_AGILEKEYCHAIN_SECURITY_LEVEL, contentJSON).then((encryptedContent) => {
 				var itemPath = this.itemPath(item.uuid);
 				var keychainJSON = JSON.stringify(toAgileKeychainItem(item, encryptedContent));
@@ -773,7 +904,7 @@ export class Vault {
 	getContent(item: Item) : Q.Promise<ItemContent> {
 		return this.getRawDecryptedData(item).then((data: string) => {
 			var content = <agilekeychain.ItemContent>(JSON.parse(data));
-			return ItemContent.fromAgileKeychainObject(content);
+			return fromAgileKeychainContent(content);
 		});
 	}
 }
@@ -834,72 +965,6 @@ export class ItemContent {
 		}
 		return '';
 	}
-
-	/** Convert an ItemContent entry into a `contents` blob for storage in
-	  * a 1Password item.
-	  */
-	static toAgileKeychainObject(content: ItemContent) : agilekeychain.ItemContent {
-		var keychainContent = new agilekeychain.ItemContent();
-		if (content.sections) {
-			keychainContent.sections = [];
-			content.sections.forEach((section) => {
-				keychainContent.sections.push(ItemSection.toAgileKeychainObject(section));
-			});
-		}
-		if (content.urls) {
-			keychainContent.URLs = [];
-			content.urls.forEach((url) => {
-				keychainContent.URLs.push(url);
-			});
-		}
-		keychainContent.notesPlain = content.notes;
-		if (content.formFields) {
-			keychainContent.fields = [];
-			content.formFields.forEach((field) => {
-				keychainContent.fields.push(WebFormField.toAgileKeychainObject(field));
-			});
-		}
-		keychainContent.htmlAction = content.htmlAction;
-		keychainContent.htmlMethod = content.htmlMethod;
-		keychainContent.htmlID = content.htmlId;
-		return keychainContent;
-	}
-
-	/** Convert a decrypted JSON `contents` blob from a 1Password item
-	  * into an ItemContent instance.
-	  */
-	static fromAgileKeychainObject(data: agilekeychain.ItemContent) : ItemContent {
-		var content = new ItemContent();
-		if (data.sections) {
-			data.sections.forEach((section) => {
-				content.sections.push(ItemSection.fromAgileKeychainObject(section));
-			});
-		}
-		if (data.URLs) {
-			data.URLs.forEach((url) => {
-				content.urls.push(url);
-			});
-		}
-		if (data.notesPlain) {
-			content.notes = data.notesPlain;
-		}
-		if (data.fields) {
-			data.fields.forEach((field) => {
-				content.formFields.push(WebFormField.fromAgileKeychainObject(field));
-			});
-		}
-		if (data.htmlAction) {
-			content.htmlAction = data.htmlAction;
-		}
-		if (data.htmlMethod) {
-			content.htmlMethod = data.htmlMethod;
-		}
-		if (data.htmlID) {
-			content.htmlId = data.htmlID;
-		}
-
-		return content;
-	}
 }
 
 /** Content of an item which is usually stored unencrypted
@@ -927,33 +992,6 @@ export class ItemSection {
 		this.fields = [];
 		this.title = '';
 		this.name = '';
-	}
-
-	static toAgileKeychainObject(section: ItemSection) : agilekeychain.ItemSection {
-		var keychainSection = new agilekeychain.ItemSection();
-		keychainSection.name = section.name;
-		keychainSection.title = section.title;
-		keychainSection.fields = [];
-		section.fields.forEach((field) => {
-			keychainSection.fields.push(ItemField.toAgileKeychainObject(field));
-		});
-		return keychainSection;
-	}
-
-	/** Convert a section entry from the JSON contents blob for
-	  * an item into an ItemSection instance.
-	  */
-	static fromAgileKeychainObject(data: agilekeychain.ItemSection) : ItemSection {
-		var section = new ItemSection();
-		section.name = data.name;
-		section.title = data.title;
-		section.fields = [];
-		if (data.fields) {
-			data.fields.forEach((fieldData) => {
-				section.fields.push(ItemField.fromAgileKeychainObject(fieldData));
-			});
-		}
-		return section;
 	}
 }
 
@@ -1002,24 +1040,6 @@ export class ItemField {
 			return this.value;
 		}
 	}
-
-	static toAgileKeychainObject(field: ItemField) : agilekeychain.ItemField {
-		var keychainField = new agilekeychain.ItemField;
-		keychainField.k = fieldKindMap.get(field.kind);
-		keychainField.n = field.name;
-		keychainField.t = field.title;
-		keychainField.v = field.value;
-		return keychainField;
-	}
-
-	static fromAgileKeychainObject(fieldData: agilekeychain.ItemField) : ItemField {
-		var field = new ItemField;
-		field.kind = fieldKindMap.get2(fieldData.k);
-		field.name = fieldData.n;
-		field.title = fieldData.t;
-		field.value = fieldData.v;
-		return field;
-	}
 }
 
 export enum FormFieldType {
@@ -1057,26 +1077,6 @@ export class WebFormField {
 
 	/** Purpose of the field. Known values are 'username', 'password' */
 	designation : string;
-
-	static toAgileKeychainObject(field: WebFormField) : agilekeychain.WebFormField {
-		var keychainField = new agilekeychain.WebFormField();
-		keychainField.id = field.id;
-		keychainField.name = field.name;
-		keychainField.type = fieldTypeCodeMap.get(field.type);
-		keychainField.designation = field.designation;
-		keychainField.value = field.value;
-		return keychainField;
-	}
-
-	static fromAgileKeychainObject(keychainField: agilekeychain.WebFormField) : WebFormField {
-		var field = new WebFormField();
-		field.id = keychainField.id;
-		field.name = keychainField.name;
-		field.type = fieldTypeCodeMap.get2(keychainField.type);
-		field.designation = keychainField.designation;
-		field.value = keychainField.value;
-		return field;
-	}
 }
 
 /** Entry in an item's 'Websites' list. */
