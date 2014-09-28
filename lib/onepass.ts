@@ -241,6 +241,7 @@ export class Vault {
 		this.path = path;
 		this.keyAgent = agent || new key_agent.SimpleKeyAgent(crypto.defaultCrypto);
 		this.onItemUpdated = new event_stream.EventStream<item_store.Item>();
+		this.onUnlock = new event_stream.EventStream<void>();
 	}
 
 	private getKeys() : Q.Promise<agilekeychain.EncryptionKeyEntry[]> {
