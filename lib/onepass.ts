@@ -230,6 +230,7 @@ export class Vault {
 	private keys : Q.Promise<agilekeychain.EncryptionKeyEntry[]>;
 
 	onItemUpdated: event_stream.EventStream<item_store.Item>;
+	onUnlock: event_stream.EventStream<void>;
 
 	/** Setup a vault which is stored at @p path in a filesystem.
 	  * @p fs is the filesystem interface through which the
@@ -319,7 +320,9 @@ export class Vault {
 			keys.forEach((key) => {
 				savedKeys.push(this.keyAgent.addKey(key.id, key.key));
 			});
-			return asyncutil.eraseResult(Q.all(savedKeys));
+			return asyncutil.eraseResult(Q.all(savedKeys)).then(() => {
+				this.onUnlock.publish(null);
+			});
 		});
 	}
 

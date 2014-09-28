@@ -469,6 +469,9 @@ export interface Store {
 	/** Emits events when items are updated in the store. */
 	onItemUpdated: event_stream.EventStream<Item>;
 
+	/** Emits events when the vault is unlocked. */
+	onUnlock: event_stream.EventStream<void>;
+
 	/** Unlock the vault */
 	unlock(password: string) : Q.Promise<void>;
 
@@ -502,6 +505,7 @@ export interface Store {
 /** A temporary store which keeps items only in-memory */
 export class TempStore implements Store {
 	onItemUpdated: event_stream.EventStream<Item>;
+	onUnlock: event_stream.EventStream<void>;
 
 	private keys: key_agent.Key[];
 	private items: Item[];
@@ -512,6 +516,7 @@ export class TempStore implements Store {
 		this.items = [];
 		this.content = new collectionutil.PMap<string,ItemContent>();
 		this.onItemUpdated = new event_stream.EventStream<Item>();
+		this.onUnlock = new event_stream.EventStream<void>();
 		this.keyAgent = agent;
 	}
 
@@ -521,7 +526,9 @@ export class TempStore implements Store {
 			keys.forEach((key) => {
 				savedKeys.push(this.keyAgent.addKey(key.id, key.key));
 			});
-			return asyncutil.eraseResult(Q.all(savedKeys));
+			return asyncutil.eraseResult(Q.all(savedKeys)).then(() => {
+				this.onUnlock.publish(null);
+			});
 		});
 	}
 

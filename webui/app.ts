@@ -667,9 +667,13 @@ export class App {
 				var store = new item_store.TempStore(this.services.keyAgent);
 				var syncer = new sync.Syncer(store, vault);
 				syncer.syncKeys().then(() => {
-					console.log('encryptio keys synced')
+					console.log('Encryption keys synced')
 				}).catch((err) => {
 					console.log('Failed to sync encryption keys: %s', err);
+				});
+
+				store.onUnlock.listen(() => {
+					syncer.syncItems();
 				});
 
 				syncer.progress.listen((progress) => {
