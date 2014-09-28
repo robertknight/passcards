@@ -35,6 +35,14 @@ export class Worker {
 		this.process.send(obj, undefined /* [sendHandle] */);
 	}
 
+	addEventListener(event: string, callback: Function) {
+		if (event == 'message') {
+			this.process.on('message', (message: any) => {
+				callback({data: message});
+			});
+		}
+	}
+
 	terminate() {
 		this.process.kill();
 	}
@@ -61,6 +69,14 @@ export class WorkerClient {
 	
 	postMessage(message?: any, ports?: any) {
 		process.send(message);
+	}
+
+	addEventListener(event: string, callback: Function) {
+		if (event == 'message') {
+			process.on('message', (message: any) => {
+				callback({data: message});
+			});
+		}
 	}
 }
 

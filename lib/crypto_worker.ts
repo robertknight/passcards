@@ -4,49 +4,22 @@
 import collectionutil = require('./base/collectionutil');
 import env = require('./base/env');
 import pbkdf2Lib = require('./crypto/pbkdf2');
+import rpc = require('./net/rpc');
 
 export var SCRIPT_PATH = env.isNodeJS() ? './build/lib/crypto_worker.js' : 'scripts/crypto_worker.js';
 
-export interface Request {
-	id?: number;
-
-	pass: string;
-	salt: string;
-	iterations: number;
-
-	/** When computing a key in chunks, this specifies
-	  * the output block of the key to compute.
-	  */
-	blockIndex: number;
+export function setupWorker(worker: Worker) {
+	var rpcHandler = new rpc.RpcHandler(new rpc.WorkerMessagePort(worker, 'passcards', 'crypto-worker'));
+	rpcHandler.on('pbkdf2Block', (password: string, salt: string, iterations: number, blockIndex: number) => {
+		var pbkdf2 = new pbkdf2Lib.PBKDF2();
+		var passBuf = collectionutil.bufferFromString(password);
+		var saltBuf = collectionutil.bufferFromString(salt);
+		var derivedKeyBlock = pbkdf2.keyBlock(passBuf, saltBuf, iterations, blockIndex);
+		return collectionutil.stringFromBuffer(new Uint8Array(derivedKeyBlock));
+	});
 }
 
-export interface Response {
-	requestId: number;
-
-	/** Block of the derived key corresponding to
-	  * Request.blockIndex
-	  */
-	keyBlock: string;
-}
-
-export function startWorker(worker: MessagePort) {
-	var pbkdf2 = new pbkdf2Lib.PBKDF2();
-
-	worker.onmessage = (e) => {
-		var req = <Request>e.data;
-		var passBuf = collectionutil.bufferFromString(req.pass);
-		var saltBuf = collectionutil.bufferFromString(req.salt);
-		var derivedKeyBlock = pbkdf2.keyBlock(passBuf, saltBuf, req.iterations, req.blockIndex);
-		var response = {
-			requestId: req.id,
-			keyBlock: collectionutil.stringFromBuffer(new Uint8Array(derivedKeyBlock))
-		};
-
-		worker.postMessage(response);
-	}
-}
-
-var workerClient: MessagePort;
+var workerClient: Worker;
 if (env.isNodeJS()) {
 	var nodeworker = require('./node_worker');
 	workerClient = new nodeworker.WorkerClient();
@@ -54,6 +27,6 @@ if (env.isNodeJS()) {
 	workerClient = <any>self;
 }
 if (workerClient) {
-	startWorker(workerClient);
+	setupWorker(workerClient);
 }
 

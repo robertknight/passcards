@@ -9,9 +9,9 @@ import underscore = require('underscore');
 import uuid = require('node-uuid');
 
 import collectionutil = require('./base/collectionutil');
-import webworker_pool = require('./webworker_pool');
 import crypto_worker = require('./crypto_worker');
 import pbkdf2Lib = require('./crypto/pbkdf2');
+import rpc = require('./net/rpc');
 
 // see https://developer.mozilla.org/en-US/docs/Web/API/window.crypto.getRandomValues
 interface WebCrypto {
@@ -198,19 +198,32 @@ export class NodeCrypto implements Crypto {
 	}
 }
 
+interface WorkerAndRpc {
+	worker: Worker;
+	rpc: rpc.RpcHandler;
+}
+
 // crypto implementation using CryptoJS plus the
 // crypto functions in lib/crypto
 export class CryptoJsCrypto implements Crypto {
-	static workerPool : webworker_pool.WorkerPool<crypto_worker.Request, crypto_worker.Response>;
+	static workers: WorkerAndRpc[];
 	encoding : any
 
-	/** Enable the use of web workers to avoid blocking the UI during
-	  * calls to pbkdf2()
+	/** Setup workers for async encryption tasks
 	  */
 	static initWorkers() {
 		if (typeof Worker != 'undefined') {
-			CryptoJsCrypto.workerPool = new webworker_pool.WorkerPool<crypto_worker.Request,
-			crypto_worker.Response>(crypto_worker.SCRIPT_PATH);
+			var script = crypto_worker.SCRIPT_PATH;
+
+			CryptoJsCrypto.workers = [];
+			for (var i=0; i < 2; i++) {
+				var worker = new Worker(script);
+				var rpcHandler = new rpc.RpcHandler(new rpc.WorkerMessagePort(worker, 'crypto-worker', 'passcards'));
+				CryptoJsCrypto.workers.push({
+					worker: worker,
+					rpc: rpcHandler
+				});
+			}
 		}
 	}
 
@@ -274,28 +287,31 @@ export class CryptoJsCrypto implements Crypto {
 	  * pbkdf2Sync()
 	  */
 	pbkdf2(pass: string, salt: string, iterCount: number, keyLen: number) : Q.Promise<string> {
-		if (CryptoJsCrypto.workerPool) {
-			var result = Q.defer<string>();
+		if (CryptoJsCrypto.workers) {
+			var keyBlocks: Q.Promise<string>[] = [];
+			var PBKDF2_BLOCK_SIZE = 20;
+			var blockCount = Math.round(keyLen / PBKDF2_BLOCK_SIZE);
 
-			var blockResponses : Q.Promise<crypto_worker.Response>[] = [];
-			for (var i=0; i < 2; i++) {
-				blockResponses.push(CryptoJsCrypto.workerPool.dispatch({
-					pass: pass,
-					salt: salt,
-					iterations: iterCount,
-					blockIndex: i
-				}));
+			var processBlock = (blockIndex: number, keyBlock: Q.Deferred<string>) => {
+				var rpc = CryptoJsCrypto.workers[blockIndex % CryptoJsCrypto.workers.length].rpc;
+				rpc.call('pbkdf2Block', [pass, salt, iterCount, blockIndex], (err: any, block: string) => {
+					if (err) {
+						keyBlock.reject(err);
+					} else {
+						keyBlock.resolve(block);
+					}
+				});
+			};
+
+			for (var blockIndex=0; blockIndex < blockCount; blockIndex++) {
+				var keyBlock = Q.defer<string>();
+				processBlock(blockIndex, keyBlock);
+				keyBlocks.push(keyBlock.promise);
 			}
 
-			Q.all(blockResponses).then((responses) => {
-				var derivedKey = underscore.map(responses, (response) => {
-					return response.keyBlock;
-				}).join('').slice(0, keyLen);
-
-				result.resolve(derivedKey);
+			return Q.all(keyBlocks).then((blocks) => {
+				return blocks.join('').slice(0, keyLen);
 			});
-
-			return result.promise;
 		} else {
 			// fall back to sync calculation
 			return Q(this.pbkdf2Sync(pass, salt, iterCount, keyLen));

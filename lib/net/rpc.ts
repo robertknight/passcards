@@ -112,6 +112,26 @@ export class WindowMessagePort {
 	}
 }
 
+export class WorkerMessagePort {
+	constructor(public worker: Worker, public sendTag: string, public receiveTag: string) {
+	}
+
+	on(method: string, handler: Function) {
+		this.worker.addEventListener('message', (ev: MessageEvent) => {
+			if (typeof ev.data.rpcMethod !== 'undefined' &&
+			    typeof ev.data.tag !== 'undefined' &&
+			    ev.data.rpcMethod == method &&
+			    ev.data.tag == this.receiveTag) {
+				handler(ev.data.data);
+			}
+		});
+	}
+
+	emit(method: string, data: Object) {
+		this.worker.postMessage({rpcMethod: method, data: data, tag: this.sendTag});
+	}
+}
+
 interface ChromeEvent extends chrome.events.Event {
 	addListener(callback: (message: any, sender: any, reply: any) => void): void;
 }
