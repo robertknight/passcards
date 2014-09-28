@@ -35,7 +35,7 @@ export class PIFImporter {
 			})
 			.map((text) => {
 				var json = JSON.parse(text);
-				return onepass.Item.fromAgileKeychainObject(null, json);
+				return onepass.fromAgileKeychainItem(null, json);
 			});
 
 			return items;

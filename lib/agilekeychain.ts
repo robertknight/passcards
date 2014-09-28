@@ -143,7 +143,7 @@ export class ItemOpenContent {
 	scope: string;
 }
 
-export class Item {
+export interface Item {
 	uuid: string;
 	title: string;
 
@@ -159,21 +159,30 @@ export class Item {
 	createdAt: number;
 	/** UNIX timestamp specifying the last update date for this item */
 	updatedAt: number;
-	faveIndex: number;
-	trashed: boolean;
+
+	faveIndex?: number;
+	trashed?: boolean;
 
 	/** Base64-encoded encrypted data for the item */
-	encrypted: string;
+	encrypted?: string;
 
 	/** Tags, 'scope' and other unencrypted metadata
 	  * for the item.
 	  */
-	openContents: ItemOpenContent;
+	openContents?: ItemOpenContent;
 
 	/** When exporting to .1pif format, secureContents contains
 	  * the data that normally appears in the encrypted field as
 	  * a plaintext JSON object.
 	  */
-	secureContents: ItemContent;
+	secureContents?: ItemContent;
+
+	/** Primary location associated with this item. */
+	location?: string;
+
+	/** ID of the folder that this item belongs to (if any) */
+	folderUuid?: string;
+
+	contentsHash?: string;
 }
 

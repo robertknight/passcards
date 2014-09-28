@@ -64,9 +64,9 @@ testLib.addAsyncTest('Import item from .1pif file', (assert) => {
 	var actualItems = importer.importItems(fs, 'test.1pif');
 	actualItems.then((items) => {
 		assert.equal(items.length, 1, 'Imported expected number of items');
-		var expectedItem = onepass.Item.fromAgileKeychainObject(null, {
+		var expectedItem = onepass.fromAgileKeychainItem(null, {
 		  "vault": null,
-		  "updatedAt": "2014-04-25T08:05:20.000Z",
+		  "updatedAt": 1398413120,
 		  "title": "Facebook",
 		  "securityLevel": "SL5",
 		  "secureContents": {
@@ -77,7 +77,7 @@ testLib.addAsyncTest('Import item from .1pif file', (assert) => {
 				"url": "facebook.com"
 			  }
 			],
-			"notes": "",
+			"notesPlain": "",
 			"fields": [
 			  {
 				"value": "john.doe@gmail.com",
@@ -96,11 +96,11 @@ testLib.addAsyncTest('Import item from .1pif file', (assert) => {
 			],
 			"htmlMethod": "",
 			"htmlAction": "",
-			"htmlId": ""
+			"htmlID": ""
 		  },
 		  "typeName": "webforms.WebForm",
 		  "uuid": "CA20BB325873446966ED1F4E641B5A36",
-		  "createdAt": "2014-04-25T08:05:20.000Z",
+		  "createdAt": 1398413120,
 		  "location": "facebook.com",
 		  "folderUuid": "",
 		  "faveIndex": 0,
@@ -170,7 +170,7 @@ testLib.addAsyncTest('Compare vaults against .1pif files', (assert) => {
 				actualItem.setContent(actualAry[i].content);
 
 				var diff = testLib.compareObjects(expectedItem, actualItem,
-				  ['root/vault', 'root/encrypted'],
+				  ['root/store', 'root/encrypted'],
 				  ['root/securityLevel', 'root/createdAt', 'root/faveIndex', 'root/openContents']
 				);
 				if (diff.length > 0) {
@@ -556,7 +556,6 @@ testLib.addTest('Item field value formatting', (assert) => {
 
 testLib.addTest('Default item properties', (assert) => {
 	var item = new onepass.Item();
-	assert.equal(item.securityLevel, 'SL5');
 	assert.strictEqual(item.location, '');
 	assert.strictEqual(item.trashed, false);
 	assert.equal(item.uuid.length, 32);

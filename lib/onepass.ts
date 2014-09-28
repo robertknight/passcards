@@ -16,6 +16,7 @@ import agilekeychain = require('./agilekeychain');
 import collectionutil = require('./base/collectionutil');
 import crypto = require('./onepass_crypto');
 import dateutil = require('./base/dateutil');
+import item_store = require('./item_store');
 import keyAgent = require('./key_agent');
 import stringutil = require('./base/stringutil');
 import vfs = require('./vfs/vfs');
@@ -27,6 +28,13 @@ import vfs = require('./vfs/vfs');
   * the official 1Password v4 app for Mac (13/05/14)
   */
 export var DEFAULT_VAULT_PASS_ITERATIONS = 80000;
+
+// TODO: 'SL5' is the default and only used value for items
+// in current versions of 1Password as far as I know but
+// the Agile Keychain allows multiple security levels to be defined.
+// This item data could perhaps be stored in a field for store-specific
+// data within the Item?
+var DEFAULT_AGILEKEYCHAIN_SECURITY_LEVEL = 'SL5';
 
 // typedef for item type codes
 export interface ItemType extends String {
@@ -179,24 +187,23 @@ export var ITEM_TYPES : ItemTypeMap = {
 
 /** Represents a single item in a 1Password vault. */
 export class Item {
-	updatedAt : Date;
-	title : string;
-	securityLevel : string;
+	// store which this item belongs to, or null
+	// if the item has not yet been saved
+	private store: item_store.Store;
 
-	/** The encrypted contents of the item, or null if only
-	  * the overview data has been loaded.
-	  */
-	encrypted : string;
-	typeName : ItemType;
-	uuid : string;
-	createdAt : Date;
-	location : string;
-	folderUuid : string;
-	faveIndex : number;
-	trashed : boolean;
-	openContents : ItemOpenContents;
+	// item ID and sync metadata
+	uuid: string;
+	updatedAt: Date;
+	createdAt: Date;
+	folderUuid: string;
+	faveIndex: number;
+	trashed: boolean;
 
-	private vault : Vault;
+	// overview metadata fields
+	typeName: ItemType;
+	title: string;
+	location: string;
+	openContents: ItemOpenContents;
 
 	/** The decrypted content of the item, either set
 	  * via setContent() or decrypted on-demand by
@@ -204,22 +211,21 @@ export class Item {
 	  */
 	private content : ItemContent;
 	
-	/** Create a new item. @p vault is the vault
+	/** Create a new item. @p store is the store
 	  * to associate the new item with. This can
 	  * be changed later via saveTo().
 	  *
 	  * When importing an existing item or loading
-	  * an existing item from the vault, @p uuid may be non-null.
+	  * an existing item from the store, @p uuid may be non-null.
 	  * Otherwise a random new UUID will be allocated for
 	  * the item.
 	  */
-	constructor(vault? : Vault, uuid? : string) {
-		this.vault = vault;
+	constructor(store? : item_store.Store, uuid? : string) {
+		this.store = store;
 
 		this.uuid = uuid || crypto.newUUID();
 
 		this.trashed = false;
-		this.securityLevel = 'SL5';
 		this.typeName = ItemTypes.LOGIN;
 		this.folderUuid = '';
 		this.location = '';
@@ -232,27 +238,16 @@ export class Item {
 	  * in the <UUID>.1password file for the item and is unencrypted.
 	  *
 	  * The item content is stored in the <UUID>.1password file and
-	  * is encrypted using the vault's master key.
+	  * is encrypted using the store's master key.
 	  *
-	  * The item's vault must be unlocked using Vault.unlock() before
+	  * The item's store must be unlocked using Store.unlock() before
 	  * item content can be retrieved.
 	  */
 	getContent() : Q.Promise<ItemContent> {
 		if (this.content) {
 			return Q(this.content);
 		}
-		if (this.encrypted) {
-			return this.getRawDecryptedData().then((content) => {
-				return ItemContent.fromAgileKeychainObject(JSON.parse(content));
-			});
-		}
-		if (this.vault) {
-			return this.vault.loadItem(this.uuid).then((item) => {
-				this.encrypted = item.encrypted;
-				return this.getContent();
-			});
-		}
-		return Q.reject('Content not available and item has no associated vault');
+		return this.store.getContent(this);
 	}
 
 	setContent(content: ItemContent) {
@@ -263,20 +258,20 @@ export class Item {
 	  * This is only available for saved items.
 	  */
 	getRawDecryptedData() : Q.Promise<string> {
-		return this.vault.decryptItemData(this.securityLevel, this.encrypted);
+		return this.store.getRawDecryptedData(this);
 	}
 
-	/** Save this item to its associated vault */
+	/** Save this item to its associated store */
 	save() : Q.Promise<void> {
-		if (!this.vault) {
-			return Q.reject('Item has no associated vault');
+		if (!this.store) {
+			return Q.reject('Item has no associated store');
 		}
-		return this.saveTo(this.vault);
+		return this.saveTo(this.store);
 	}
 
-	/** Save this item to the specified vault */
-	saveTo(vault: Vault) : Q.Promise<void> {
-		if (!this.content && !this.encrypted && !this.isSaved()) {
+	/** Save this item to the specified store */
+	saveTo(store: item_store.Store) : Q.Promise<void> {
+		if (!this.content && !this.isSaved()) {
 			return Q.reject('Unable to save new item, no content set');
 		}
 
@@ -285,17 +280,17 @@ export class Item {
 			this.location = this.content.urls[0].url;
 		}
 
-		this.vault = vault;
-		return this.vault.saveItem(this);
+		this.store = store;
+		return this.store.saveItem(this);
 	}
 
-	/** Remove the item from the vault.
+	/** Remove the item from the store.
 	  * This erases all of the item's data and leaves behind a 'tombstone'
 	  * entry for syncing purposes.
 	  */
 	remove() : Q.Promise<void> {
-		if (!this.vault) {
-			return Q.reject('Item has no associated vault');
+		if (!this.store) {
+			return Q.reject('Item has no associated store');
 		}
 		this.typeName = ItemTypes.TOMBSTONE;
 		this.title = 'Unnamed';
@@ -306,7 +301,7 @@ export class Item {
 		this.faveIndex = null;
 		this.openContents = null;
 
-		return this.vault.saveItem(this);
+		return this.store.saveItem(this);
 	}
 
 	/** Returns true if this is a 'tombstone' entry remaining from
@@ -343,61 +338,64 @@ export class Item {
 		}
 	}
 
-	/** Returns true if this item has been saved to a vault. */
+	/** Returns true if this item has been saved to a store. */
 	isSaved() : boolean {
 		return this.updatedAt != null;
 	}
+}
 
-	/** Convert an item to JSON data for serialization in a .1password file.
-	  * @p encryptedData is the encrypted version of the item's content.
-	  */
-	static toAgileKeychainObject(item: Item, encryptedData: string) : agilekeychain.Item {
-		var keychainItem: any = {};
+/** Convert an item to JSON data for serialization in a .1password file.
+  * @p encryptedData is the encrypted version of the item's content.
+  */
+export function toAgileKeychainItem(item: Item, encryptedData: string) : agilekeychain.Item {
+	var keychainItem: any = {};
 
-		keychainItem.createdAt = dateutil.unixTimestampFromDate(item.createdAt);
-		keychainItem.updatedAt = dateutil.unixTimestampFromDate(item.updatedAt);
-		keychainItem.title = item.title;
-		keychainItem.securityLevel = item.securityLevel;
-		keychainItem.encrypted = btoa(encryptedData);
-		keychainItem.typeName = item.typeName;
-		keychainItem.uuid = item.uuid;
-		keychainItem.location = item.location;
-		keychainItem.folderUuid = item.folderUuid;
-		keychainItem.faveIndex = item.faveIndex;
-		keychainItem.trashed = item.trashed;
-		keychainItem.openContents = item.openContents;
+	keychainItem.createdAt = dateutil.unixTimestampFromDate(item.createdAt);
+	keychainItem.updatedAt = dateutil.unixTimestampFromDate(item.updatedAt);
+	keychainItem.title = item.title;
+	keychainItem.securityLevel = DEFAULT_AGILEKEYCHAIN_SECURITY_LEVEL;
+	keychainItem.encrypted = btoa(encryptedData);
+	keychainItem.typeName = item.typeName;
+	keychainItem.uuid = item.uuid;
+	keychainItem.location = item.location;
+	keychainItem.folderUuid = item.folderUuid;
+	keychainItem.faveIndex = item.faveIndex;
+	keychainItem.trashed = item.trashed;
+	keychainItem.openContents = item.openContents;
 
-		return keychainItem;
+	return keychainItem;
+}
+
+/** Parses an Item from JSON data in a .1password file.
+  *
+  * The item content is initially encrypted. The decrypted
+  * contents can be retrieved using getContent()
+  */
+export function fromAgileKeychainItem(vault: Vault, data: agilekeychain.Item) : Item {
+	var item = new Item(vault);
+	item.updatedAt = dateutil.dateFromUnixTimestamp(data.updatedAt);
+	item.title = data.title;
+
+	// These fields are not currently stored in
+	// an Item directly. They could potentially be stored in
+	// a Store-specific data field in the item?
+	//
+	//  - data.securityLevel
+	//  - data.encrypted
+
+	if (data.secureContents) {
+		item.setContent(ItemContent.fromAgileKeychainObject(data.secureContents));
 	}
 
-	/** Parses an Item from JSON data in a .1password file.
-	  *
-	  * The item content is initially encrypted. The decrypted
-	  * contents can be retrieved using getContent()
-	  */
-	static fromAgileKeychainObject(vault: Vault, data: any) : Item {
-		var item = new Item(vault);
-		item.updatedAt = dateutil.dateFromUnixTimestamp(data.updatedAt);
-		item.title = data.title;
-		item.securityLevel = data.securityLevel;
-
-		if (data.encrypted) {
-			item.encrypted = atob(data.encrypted);
-		}
-		if (data.secureContents) {
-			item.setContent(ItemContent.fromAgileKeychainObject(data.secureContents));
-		}
-
-		item.typeName = data.typeName;
-		item.uuid = data.uuid;
-		item.createdAt = dateutil.dateFromUnixTimestamp(data.createdAt);
-		item.location = data.location;
-		item.folderUuid = data.folderUuid;
-		item.faveIndex = data.faveIndex;
-		item.trashed = data.trashed;
-		item.openContents = data.openContents;
-		return item;
-	}
+	item.typeName = data.typeName;
+	item.uuid = data.uuid;
+	item.createdAt = dateutil.dateFromUnixTimestamp(data.createdAt);
+	item.location = data.location;
+	item.folderUuid = data.folderUuid;
+	item.faveIndex = data.faveIndex;
+	item.trashed = data.trashed;
+	item.openContents = data.openContents;
+	return item;
 }
 
 /** Represents a 1Password vault. */
@@ -517,17 +515,10 @@ export class Vault {
 	}
 
 	loadItem(uuid: string) : Q.Promise<Item> {
-		var item = Q.defer<Item>();
 		var content = this.fs.read(this.itemPath(uuid));
-		
-		content.then((content) => {
-			item.resolve(Item.fromAgileKeychainObject(this, JSON.parse(content)));
-		}, (err: any) => {
-			item.reject(err);
-		})
-		.done();
-
-		return item.promise;
+		return content.then((content) => {
+			return fromAgileKeychainItem(this, JSON.parse(content));
+		});
 	}
 
 	saveItem(item: Item) : Q.Promise<void> {
@@ -553,9 +544,9 @@ export class Vault {
 
 		item.getContent().then((content) => {
 			var contentJSON = JSON.stringify(ItemContent.toAgileKeychainObject(content));
-			this.encryptItemData(item.securityLevel, contentJSON).then((encryptedContent) => {
+			this.encryptItemData(DEFAULT_AGILEKEYCHAIN_SECURITY_LEVEL, contentJSON).then((encryptedContent) => {
 				var itemPath = this.itemPath(item.uuid);
-				var keychainJSON = JSON.stringify(Item.toAgileKeychainObject(item, encryptedContent));
+				var keychainJSON = JSON.stringify(toAgileKeychainItem(item, encryptedContent));
 				this.fs.write(itemPath, keychainJSON).then(() => {
 					itemSaved.resolve(null);
 				})
@@ -769,6 +760,21 @@ export class Vault {
 
 	vaultPath() : string {
 		return this.path;
+	}
+
+	getRawDecryptedData(item: Item) : Q.Promise<string> {
+		var encryptedContent = this.fs.read(this.itemPath(item.uuid));
+		return encryptedContent.then((content) => {
+			var keychainItem = <agilekeychain.Item>JSON.parse(content);
+			return this.decryptItemData(keychainItem.securityLevel, atob(keychainItem.encrypted));
+		});
+	}
+
+	getContent(item: Item) : Q.Promise<ItemContent> {
+		return this.getRawDecryptedData(item).then((data: string) => {
+			var content = <agilekeychain.ItemContent>(JSON.parse(data));
+			return ItemContent.fromAgileKeychainObject(content);
+		});
 	}
 }
 
