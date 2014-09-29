@@ -294,13 +294,7 @@ export class CryptoJsCrypto implements Crypto {
 
 			var processBlock = (blockIndex: number, keyBlock: Q.Deferred<string>) => {
 				var rpc = CryptoJsCrypto.workers[blockIndex % CryptoJsCrypto.workers.length].rpc;
-				rpc.call('pbkdf2Block', [pass, salt, iterCount, blockIndex], (err: any, block: string) => {
-					if (err) {
-						keyBlock.reject(err);
-					} else {
-						keyBlock.resolve(block);
-					}
-				});
+				rpc.call('pbkdf2Block', [pass, salt, iterCount, blockIndex], keyBlock.makeNodeResolver());
 			};
 
 			for (var blockIndex=0; blockIndex < blockCount; blockIndex++) {

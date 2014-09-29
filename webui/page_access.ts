@@ -20,13 +20,7 @@ class ExtensionUrlFetcher {
 
 	fetch(url: string) : Q.Promise<site_info_service.UrlResponse> {
 		var result = Q.defer<site_info_service.UrlResponse>();
-		this.rpc.call('fetch-url', [url], (err: any, response: site_info_service.UrlResponse) => {
-			if (err) {
-				result.reject(err);
-			} else {
-				result.resolve(response);
-			}
-		});
+		this.rpc.call('fetch-url', [url], result.makeNodeResolver());
 		return result.promise;
 	}
 }
@@ -151,13 +145,7 @@ export class ExtensionPageAccess implements PageAccess, ClipboardAccess {
 
 	autofill(fields: forms.AutoFillEntry[]) : Q.Promise<number> {
 		var filled = Q.defer<number>();
-		this.rpc.call('autofill', [fields], (err: any, count: number) => {
-			if (err) {
-				filled.reject(err);
-			} else {
-				filled.resolve(count);
-			}
-		});
+		this.rpc.call('autofill', [fields], filled.makeNodeResolver());
 		return filled.promise;
 	}
 
@@ -249,13 +237,7 @@ export class ChromeExtensionPageAccess implements PageAccess, ClipboardAccess {
 	autofill(fields: forms.AutoFillEntry[]) : Q.Promise<number> {
 		var filled = Q.defer<number>();
 		this.connectToCurrentTab().then((rpc) => {
-			rpc.call('autofill', [fields], (err: any, count: number) => {
-				if (err) {
-					filled.reject(err);
-				} else {
-					filled.resolve(count);
-				}
-			});
+			rpc.call('autofill', [fields], filled.makeNodeResolver());
 		});
 		return filled.promise;
 	}

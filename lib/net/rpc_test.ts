@@ -1,3 +1,7 @@
+/// <reference path="../../typings/DefinitelyTyped/q/Q.d.ts" />
+
+import Q = require('q');
+
 import rpc = require('./rpc');
 import testLib = require('../test');
 
@@ -183,6 +187,25 @@ testLib.addAsyncTest('window.postMessage() rpc call and reply', (assert) => {
 		assert.equal(server1Calls, 1);
 		assert.equal(server2Calls, 0);
 		testLib.continueTests();
+	});
+});
+
+testLib.addAsyncTest('rpc-promise bridge', (assert) => {
+	var clientPort = new FakePort();
+	var serverPort = new FakePort(clientPort);
+
+	var client = new rpc.RpcHandler(clientPort);
+	var server = new rpc.RpcHandler(serverPort);
+
+	server.on('greet', () => {
+		return 'hello';
+	});
+
+	var greeting = Q.defer<string>();
+	client.call('greet', [], greeting.makeNodeResolver());
+
+	return greeting.promise.then((message) => {
+		assert.equal(message, 'hello');
 	});
 });
 
