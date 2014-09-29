@@ -79,14 +79,26 @@ class SetupView extends reactts.ReactComponentBase<{}, {}> {
 	}
 }
 
+interface SyncState {
+	syncing: boolean;
+	syncProgressValue: number;
+	syncProgressMax: number;
+}
+
 interface AppViewState {
 	mainView?: ActiveView;
+
 	store?: item_store.Store;
+	syncer?: sync.Syncer;
 	items?: item_store.Item[];
+
 	selectedItem?: item_store.Item;
 	isLocked?: boolean;
 	currentUrl?: string;
+
 	status?: Status;
+	syncState?: SyncState;
+	syncListener?: event_stream.EventListener<sync.SyncStats>;
 }
 
 interface AppServices {
@@ -112,12 +124,29 @@ class AppView extends reactts.ReactComponentBase<AppViewProps, AppViewState> {
 	}
 
 	getInitialState() {
+		var syncListener = (progress: sync.SyncStats) => {
+			this.setState({
+				syncState: {
+					syncing: progress.updated != progress.total,
+					syncProgressValue: progress.updated,
+					syncProgressMax: progress.total
+				}
+			});
+		};
+
 		var state = {
 			mainView: ActiveView.UnlockPane,
 			items: <item_store.Item[]>[],
-			isLocked: true
+			isLocked: true,
+			syncListener: syncListener
 		};
 		return state;
+	}
+
+	componentDidUnmount() {
+		if (this.state.syncer) {
+			this.state.syncer.onProgress.ignore(this.state.syncListener);
+		}
 	}
 
 	setState(changes: AppViewState) {
@@ -131,6 +160,13 @@ class AppView extends reactts.ReactComponentBase<AppViewProps, AppViewState> {
 		if (changes.isLocked === false) {
 			changes.selectedItem = null;
 		}
+		if (changes.syncer) {
+			if (this.state.syncer) {
+				this.state.syncer.onProgress.ignore(this.state.syncListener);
+			}
+			changes.syncer.onProgress.listen(this.state.syncListener);
+		}
+
 		super.setState(changes);
 
 		if (doRefresh) {
@@ -193,6 +229,7 @@ class AppView extends reactts.ReactComponentBase<AppViewProps, AppViewState> {
 			itemList?: item_list.ItemListView;
 			itemDetails?: DetailsView;
 			statusView?: StatusView;
+			toaster?: controls.Toaster;
 		} = {};
 
 		if (this.state.isLocked) {
@@ -230,6 +267,13 @@ class AppView extends reactts.ReactComponentBase<AppViewProps, AppViewState> {
 		if (this.state.status) {
 			children.statusView = new StatusView({
 				status: this.state.status
+			});
+		}
+		if (this.state.syncState && this.state.syncState.syncing) {
+			children.toaster = new controls.Toaster({
+				message: 'Syncing...',
+				progressValue: this.state.syncState.syncProgressValue,
+				progressMax: this.state.syncState.syncProgressMax
 			});
 		}
 
@@ -636,8 +680,8 @@ export class App {
 		keyAgent.setAutoLockTimeout(2 * 60 * 1000);
 
 		var siteInfoProvider = new siteinfo_client.PasscardsClient();
-
 		var iconDiskCache = new key_value_store.IndexedDBStore('passcards', 'icon-cache');
+
 		this.services = {
 			iconProvider: new item_icons.ItemIconProvider(iconDiskCache, siteInfoProvider, 48),
 			autofiller: new autofill.AutoFiller(pageAccess),
@@ -676,11 +720,10 @@ export class App {
 					syncer.syncItems();
 				});
 
-				syncer.progress.listen((progress) => {
-					console.log('sync progress: updated %d of %d items', progress.updated, progress.total);
+				this.updateState({
+					store: store,
+					syncer: syncer
 				});
-
-				this.updateState({store: store});
 
 				this.services.keyAgent.onLock().listen(() => {
 					this.updateState({isLocked: true});

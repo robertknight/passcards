@@ -25,12 +25,12 @@ export class Syncer {
 	// is in progress
 	private currentSync: Q.Promise<SyncStats>;
 
-	progress: event_stream.EventStream<SyncStats>;
+	onProgress: event_stream.EventStream<SyncStats>;
 
 	constructor(store: item_store.Store, vault: onepass.Vault) {
 		this.store = store;
 		this.vault = vault;
-		this.progress = new event_stream.EventStream<SyncStats>();
+		this.onProgress = new event_stream.EventStream<SyncStats>();
 	}
 
 	syncKeys() : Q.Promise<void> {
@@ -55,7 +55,7 @@ export class Syncer {
 			total: 0
 		};
 
-		this.progress.listen(() => {
+		this.onProgress.listen(() => {
 			if (syncStats.updated == syncStats.total) {
 				result.resolve(syncStats);
 			}
@@ -86,7 +86,7 @@ export class Syncer {
 						}
 						this.updateItem(item, storeItem).then(() => {
 							++syncStats.updated;
-							this.progress.publish(syncStats);
+							this.onProgress.publish(syncStats);
 						}).catch((err) => {
 							result.reject(new Error(sprintf('Failed to save updates for item %s: %s', item.uuid, err)));
 						});
@@ -95,7 +95,7 @@ export class Syncer {
 					});
 				}
 			});
-			this.progress.publish(syncStats);
+			this.onProgress.publish(syncStats);
 		}).catch((err) => {
 			console.log('Failed to list items in vault or store');
 			result.reject(err);

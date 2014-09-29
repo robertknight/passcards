@@ -467,3 +467,44 @@ html, body {
 	pointer-events: none;
 }
 
+/* Notification toaster component */
+.toaster {
+	font-size: 12px;
+
+	position: fixed;	
+	z-index: 10;
+	bottom: 5px;
+	background-color: rgba(0,0,0,0.85);
+	color: white;
+	border-radius: 5px;
+
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+
+	padding: 4px;
+	padding-left: 10px;
+	padding-right: 10px;
+
+	left: 50%;
+	transform: translate(-50%);
+}
+
+.toaster > * {
+	margin-left: 2px;
+	margin-right: 2px;
+}
+
+.toasterProgress {
+	border: 1px solid white;
+	border-radius: 5px;
+	height: 4px;
+}
+
+.toasterProgressMeter {
+	background-color: white;
+	border-radius: 5px;
+	height: 4px;
+}
+
