@@ -16,6 +16,19 @@ app.
 See [the passcards site](http://robertknight.github.io/passcards/) for links to
 current releases.
 
+### Supported Browsers
+
+The initial stable release of Passcards will target current stable releases of
+the major desktop and mobile browsers:
+
+ * Firefox stable + current ESR release
+ * Chrome stable
+ * Internet Explorer 11 and later
+ * Mobile Safari from iOS 7 and later
+ * Safari from OS X 10.9
+
+Support for older browsers may be possible in future.
+
 ## Development
 
 Local development requires Node.js 0.10 and make. To build the CLI and web clients, clone the source and run `make`.
