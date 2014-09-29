@@ -1,5 +1,6 @@
 /// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/node-uuid/node-uuid.d.ts" />
+/// <reference path="../typings/dom.d.ts" />
 
 import assert = require('assert');
 import crypto = require('crypto');
@@ -10,17 +11,9 @@ import uuid = require('node-uuid');
 
 import collectionutil = require('./base/collectionutil');
 import crypto_worker = require('./crypto_worker');
+import env = require('./base/env');
 import pbkdf2Lib = require('./crypto/pbkdf2');
 import rpc = require('./net/rpc');
-
-// see https://developer.mozilla.org/en-US/docs/Web/API/window.crypto.getRandomValues
-interface WebCrypto {
-	getRandomValues<T extends ArrayBufferView>(buffer: T): T;
-}
-
-interface Window {
-	crypto: WebCrypto;
-}
 
 export class AESKeyParams {
 	constructor(public key: string, public iv: string) {
@@ -72,22 +65,28 @@ export function newUUID() : string {
 
 /** Generate a buffer of @p length strong pseudo-random bytes */
 export function randomBytes(length: number) : string {
-	// use browser's PRNG if available
-	if (typeof window != 'undefined') {
-		var theWindow = <Window><any>window;
-		if (theWindow.crypto && theWindow.crypto.getRandomValues) {
+	if (env.isBrowser()) {
+		// Web Crypto is prefixed in IE 11
+		// see http://msdn.microsoft.com/en-gb/library/ie/dn302339%28v=vs.85%29.aspx
+		var browserCrypto = window.crypto || window.msCrypto;
+		if (browserCrypto && browserCrypto.getRandomValues) {
 			var buffer = new Uint8Array(length);
-			return collectionutil.stringFromBuffer(theWindow.crypto.getRandomValues(buffer));
+			browserCrypto.getRandomValues(buffer);
+			return collectionutil.stringFromBuffer(buffer);
 		}
-	}
-
-	// fall back to NodeJS' PRNG otherwise
-	if (crypto.pseudoRandomBytes) {
+	} else if (env.isNodeJS()) {
 		return crypto.pseudoRandomBytes(length).toString('binary');
 	}
 
-	// fall back to Math.random()-based PRNG
-	return cryptoJS.lib.WordArray.random(length).toString(this.encoding);
+	// according to MDN, crypto.getRandomValues() is available in
+	// IE 11, Firefox 21, Chrome 11, iOS 6 and later.
+	// 
+	// If we decide to support older browsers in future, we could use
+	// CryptoJS' Math.random() fallback:
+	//
+	// - cryptoJS.lib.WordArray.random(length).toString(this.encoding);
+	//
+	throw new Error('No secure pseudo-random number generator available');
 }
 
 var DEFAULT_PASSWORD_CHARSETS = ["ABCDEFGHIJKLMNOPQRSTUVWXYZ",
@@ -314,25 +313,6 @@ export class CryptoJsCrypto implements Crypto {
 
 	md5Digest(input: string) : string {
 		return cryptoJS.MD5(this.encoding.parse(input)).toString(this.encoding);
-	}
-
-	randomBytes(length: number) : string {
-		// use browser's PRNG if available
-		if (typeof window != 'undefined') {
-			var theWindow = <Window><any>window;
-			if (theWindow.crypto && theWindow.crypto.getRandomValues) {
-				var buffer = new Uint8Array(length);
-				return collectionutil.stringFromBuffer(theWindow.crypto.getRandomValues(buffer));
-			}
-		}
-
-		// fall back to NodeJS' PRNG otherwise
-		if (crypto.pseudoRandomBytes) {
-			return crypto.pseudoRandomBytes(length).toString('binary');
-		}
-
-		// fall back to Math.random()-based PRNG
-		return cryptoJS.lib.WordArray.random(length).toString(this.encoding);
 	}
 }
 

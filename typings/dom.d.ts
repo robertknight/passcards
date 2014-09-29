@@ -43,4 +43,10 @@ interface TouchEvent extends Event {
 	touches: TouchList
 }
 
+// [TS/1.0]
+interface Window {
+	// Unprefixed crypto property for browsers other than IE
+	// available via msCrypto in IE 11
+	crypto: Crypto;
+}
 
