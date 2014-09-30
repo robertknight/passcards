@@ -81,12 +81,6 @@ class SetupView extends reactts.ReactComponentBase<{}, {}> {
 	}
 }
 
-interface SyncState {
-	syncing: boolean;
-	syncProgressValue: number;
-	syncProgressMax: number;
-}
-
 interface AppViewState {
 	mainView?: ActiveView;
 
@@ -99,8 +93,8 @@ interface AppViewState {
 	currentUrl?: string;
 
 	status?: Status;
-	syncState?: SyncState;
-	syncListener?: event_stream.EventListener<sync.SyncStats>;
+	syncState?: sync.SyncProgress;
+	syncListener?: event_stream.EventListener<sync.SyncProgress>;
 }
 
 interface AppServices {
@@ -126,14 +120,8 @@ class AppView extends reactts.ReactComponentBase<AppViewProps, AppViewState> {
 	}
 
 	getInitialState() {
-		var syncListener = (progress: sync.SyncStats) => {
-			this.setState({
-				syncState: {
-					syncing: progress.updated != progress.total,
-					syncProgressValue: progress.updated,
-					syncProgressMax: progress.total
-				}
-			});
+		var syncListener = (progress: sync.SyncProgress) => {
+			this.setState({ syncState: progress });
 		};
 
 		var state = {
@@ -177,7 +165,6 @@ class AppView extends reactts.ReactComponentBase<AppViewProps, AppViewState> {
 			// listen for updates to items in the store
 			if (changes.store) {
 				var debouncedRefresh = underscore.debounce(() => {
-					console.log('Store items updated, refreshing item list');
 					this.refreshItems()
 				}, 300);
 				changes.store.onItemUpdated.listen(debouncedRefresh);
@@ -266,18 +253,19 @@ class AppView extends reactts.ReactComponentBase<AppViewProps, AppViewState> {
 				clipboard: this.props.services.clipboard
 			});
 		}
-		if (this.state.status) {
-			children.statusView = new StatusView({
-				status: this.state.status
-			});
-		}
 
 		var toasters: controls.Toaster[] = [];
-		if (this.state.syncState && this.state.syncState.syncing) {
+		if (this.state.status) {
+			toasters.push(new controls.Toaster({
+				message: this.state.status.text
+			}));
+		}
+		if (this.state.syncState &&
+		    this.state.syncState.state !== sync.SyncState.Idle) {
 			toasters.push(new controls.Toaster({
 				message: 'Syncing...',
-				progressValue: this.state.syncState.syncProgressValue,
-				progressMax: this.state.syncState.syncProgressMax
+				progressValue: this.state.syncState.updated,
+				progressMax: this.state.syncState.total
 			}));
 		}
 

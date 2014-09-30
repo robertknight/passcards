@@ -11,8 +11,24 @@ import event_stream = require('./base/event_stream');
 import item_store = require('./item_store');
 import onepass = require('./onepass');
 
-export interface SyncStats {
+export enum SyncState {
+	/** Sync is not currently in progress */
+	Idle,
+
+	/** Sync is enumerating changed items */
+	ListingItems,
+
+	/** Sync is fetching and updating changed items */
+	SyncingItems
+}
+
+export interface SyncProgress {
+	state: SyncState;
+
+	/** Count of items that have been synced. */
 	updated: number;
+
+	/** Total number of changed items to sync. */
 	total: number;
 }
 
@@ -23,14 +39,14 @@ export class Syncer {
 	// promise for the result of the
 	// current sync task or null if no sync
 	// is in progress
-	private currentSync: Q.Promise<SyncStats>;
+	private currentSync: Q.Promise<SyncProgress>;
 
-	onProgress: event_stream.EventStream<SyncStats>;
+	onProgress: event_stream.EventStream<SyncProgress>;
 
 	constructor(store: item_store.Store, vault: onepass.Vault) {
 		this.store = store;
 		this.vault = vault;
-		this.onProgress = new event_stream.EventStream<SyncStats>();
+		this.onProgress = new event_stream.EventStream<SyncProgress>();
 	}
 
 	syncKeys() : Q.Promise<void> {
@@ -39,27 +55,34 @@ export class Syncer {
 		});
 	}
 
-	syncItems() : Q.Promise<SyncStats> {
+	syncItems() : Q.Promise<SyncProgress> {
 		if (this.currentSync) {
 			return this.currentSync;
 		}
 
-		var result = Q.defer<SyncStats>();
+		var result = Q.defer<SyncProgress>();
 		this.currentSync = result.promise;
 		this.currentSync.then(() => {
 			this.currentSync = null;
 		});
 
-		var syncStats: SyncStats = {
+		var syncProgress: SyncProgress = {
+			state: SyncState.ListingItems,
 			updated: 0,
 			total: 0
 		};
 
 		this.onProgress.listen(() => {
-			if (syncStats.updated == syncStats.total) {
-				result.resolve(syncStats);
+			if (syncProgress.state == SyncState.SyncingItems &&
+			    syncProgress.updated == syncProgress.total) {
+				
+				syncProgress.state = SyncState.Idle;
+				this.onProgress.publish(syncProgress);
+
+				result.resolve(syncProgress);
 			}
 		});
+		this.onProgress.publish(syncProgress);
 
 		var storeItems = this.store.listItems();
 		var vaultItems = this.vault.listItems();
@@ -77,7 +100,12 @@ export class Syncer {
 				var storeItem = storeItemMap.get(item.uuid);
 
 				if (!storeItem || item.updatedAt.getTime() > storeItem.updatedAt.getTime()) {
-					++syncStats.total;
+					++syncProgress.total;
+
+					var itemDone = () => {
+						++syncProgress.updated;
+						this.onProgress.publish(syncProgress);
+					};
 
 					updatedVaultItems.push(item);
 					item.getContent().then((content) => {
@@ -85,20 +113,31 @@ export class Syncer {
 							storeItem = new item_store.Item();
 						}
 						this.updateItem(item, storeItem).then(() => {
-							++syncStats.updated;
-							this.onProgress.publish(syncStats);
+							itemDone();
 						}).catch((err) => {
 							result.reject(new Error(sprintf('Failed to save updates for item %s: %s', item.uuid, err)));
+							itemDone();
 						});
 					}).catch((err) => {
 						result.reject(new Error(sprintf('Failed to retrieve updated item %s: %s', item.uuid, err)));
+						itemDone();
 					});
 				}
 			});
-			this.onProgress.publish(syncStats);
+
+			if (syncProgress.total > 0) {
+				syncProgress.state = SyncState.SyncingItems;
+			} else {
+				syncProgress.state = SyncState.Idle;
+			}
+
+			this.onProgress.publish(syncProgress);
 		}).catch((err) => {
 			console.log('Failed to list items in vault or store');
 			result.reject(err);
+
+			syncProgress.state = SyncState.Idle;
+			this.onProgress.publish(syncProgress);
 		});
 
 		return this.currentSync;

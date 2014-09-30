@@ -90,6 +90,52 @@ testLib.addAsyncTest('sync vault', (assert) => {
 	});
 });
 
+testLib.addAsyncTest('sync progress', (assert) => {
+	var env: Env;
+
+	var item = new item_builder.Builder(item_store.ItemTypes.LOGIN)
+	 .setTitle('sync me')
+	 .addLogin('testuser@gmail.com')
+	 .addUrl('accounts.google.com')
+	 .item();
+
+	var progressUpdates: sync.SyncProgress[] = [];
+
+	return setup().then((_env) => {
+		env = _env;
+		env.syncer.onProgress.listen((progress) => {
+			progressUpdates.push(progress);
+		});
+		return item.saveTo(env.vault);
+	}).then(() => {
+		return env.syncer.syncItems();
+	}).then((finalState) => {
+		assert.deepEqual(progressUpdates, [{
+			state: sync.SyncState.ListingItems,
+			updated: 0,
+			total: 0
+		},{
+			state: sync.SyncState.SyncingItems,
+			updated: 0,
+			total: 1
+		},{
+			state: sync.SyncState.SyncingItems,
+			updated: 1,
+			total: 1
+		},{
+			state: sync.SyncState.Idle,
+			updated: 1,
+			total: 1
+		}], 'check that expected progress updates were received');
+
+		assert.deepEqual(finalState, {
+			state: sync.SyncState.Idle,
+			updated: 1,
+			total: 1
+		});
+	});
+});
+
 // TODO: Tests for:
 // - Syncing a locked vault
 // - Syncing whilst syncItems() is already in progress

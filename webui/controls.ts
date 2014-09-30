@@ -226,8 +226,8 @@ export class InkRipple extends reactts.ReactComponentBase<InkRippleProps, InkRip
 
 export interface ToasterProps {
 	message: string;
-	progressValue: number;
-	progressMax: number;
+	progressValue?: number;
+	progressMax?: number;
 }
 
 /** Control for displaying a temporary notification,
@@ -238,21 +238,26 @@ export class Toaster extends reactts.ReactComponentBase<ToasterProps, {}> {
 		var PROGRESS_WIDTH = 200;
 		var meterWidth = (this.props.progressValue / this.props.progressMax) * PROGRESS_WIDTH;
 
-		return react.DOM.div({className: 'toaster'},
-			react.DOM.div({className: 'toasterMessage'},
-				this.props.message
-			),
-			react.DOM.div({
-				className: 'toasterProgress',
-				style: {
-					width: PROGRESS_WIDTH + 'px'
-				}
-			},
+		var progressBar: react.ReactComponent<any,any>;
+		if (this.props.progressMax) {
+			progressBar = react.DOM.div({
+					className: 'toasterProgress',
+					style: {
+						width: PROGRESS_WIDTH + 'px'
+					}
+				},
 				react.DOM.div({
 					className: 'toasterProgressMeter',
 					style: { width: meterWidth + 'px' }
 				})
-			)
+			);
+		}
+
+		return react.DOM.div({className: 'toaster'},
+			react.DOM.div({className: 'toasterMessage'},
+				this.props.message
+			),
+			progressBar
 		);
 	}
 }

@@ -3,6 +3,8 @@
 declare module React {
 	interface CSSTransitionGroupProps {
 		transitionName: string;
+		transitionEnter?: boolean;
+		transitionLeave?: boolean;
 	}
 
 	export var addons: {
