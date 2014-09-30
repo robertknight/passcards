@@ -208,8 +208,24 @@ testLib.addAsyncTest('sync deleted items', (assert) => {
 	});
 });
 
+testLib.addAsyncTest('sync locked vault', (assert) => {
+	var env: Env;
+	var item: item_store.Item;
+
+	setupWithItem().then((_env) => {
+		env = _env.env;
+		item = _env.item;
+
+		return env.vault.lock()
+	}).then(() => {
+		return env.syncer.syncItems();
+	}).catch((err) => {
+		assert.ok(err.message.indexOf('No such key') != -1);
+		testLib.continueTests();
+	});
+});
+
 // TODO: Tests for:
-// - Syncing a locked vault
 // - Syncing whilst syncItems() is already in progress
 // - Syncing a larger vault with several hundred items
 
