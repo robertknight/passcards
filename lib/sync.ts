@@ -92,8 +92,9 @@ export class Syncer {
 		});
 		this.onProgress.publish(syncProgress);
 
-		var storeItems = this.store.listItems();
-		var vaultItems = this.vault.listItems();
+		var listOpts = { includeTombstones: true };
+		var storeItems = this.store.listItems(listOpts);
+		var vaultItems = this.vault.listItems(listOpts);
 
 		Q.all([storeItems, vaultItems]).then((itemLists) => {
 			var storeItems: item_store.Item[] = itemLists[0];

@@ -464,6 +464,10 @@ export enum FieldType {
 	Menu
 }
 
+export interface ListItemsOptions {
+	includeTombstones?: boolean;
+}
+
 export interface Store {
 	/** Emits events when items are updated in the store. */
 	onItemUpdated: event_stream.EventStream<Item>;
@@ -475,7 +479,7 @@ export interface Store {
 	unlock(password: string) : Q.Promise<void>;
 
 	/** List all of the items in the store */
-	listItems() : Q.Promise<Item[]>;
+	listItems(opts?: ListItemsOptions) : Q.Promise<Item[]>;
 
 	/** Load the item with a specific ID */
 	loadItem(uuid: string) : Q.Promise<Item>;
@@ -540,8 +544,15 @@ export class TempStore implements Store {
 		return Q<void>(null);
 	}
 
-	listItems() {
-		return Q(this.items);
+	listItems(opts: ListItemsOptions = {}) {
+		var matches = this.items.filter((item) => {
+			if (!opts.includeTombstones && item.isTombstone()) {
+				return false;
+			}
+			return true;
+		});
+
+		return Q(matches);
 	}
 
 	saveItem(item: Item) {

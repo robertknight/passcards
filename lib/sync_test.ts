@@ -39,6 +39,29 @@ function setup() : Q.Promise<Env> {
 	});
 }
 
+// create a vault, a local store and a syncer.
+// Add a single item to the vault and the vault, local store, syncer and
+// a reference to the item in the vault
+function setupWithItem() : Q.Promise<{env: Env; item: item_store.Item}> {
+	var env: Env;
+
+	var item = new item_builder.Builder(item_store.ItemTypes.LOGIN)
+	 .setTitle('sync me')
+	 .addLogin('jim@acme.org')
+	 .addUrl('acme.org')
+	 .item();
+
+	return setup().then((_env) => {
+		env = _env;
+		return item.saveTo(env.vault);
+	}).then(() => {
+		return {
+			env: env,
+			item: item
+		}
+	});
+}
+
 testLib.addAsyncTest('sync vault', (assert) => {
 	var env: Env;
 
@@ -156,10 +179,38 @@ testLib.addAsyncTest('sync progress', (assert) => {
 	});
 });
 
+testLib.addAsyncTest('sync deleted items', (assert) => {
+	var env: Env;
+	var item: item_store.Item;
+
+	return setupWithItem().then((_env) => {
+		env = _env.env;
+		item = _env.item;
+
+		// sync item to local store
+		return env.syncer.syncItems();
+	}).then(() => {
+
+		// remove it in the vault
+		return item.remove(); 
+	}).then(() => {
+
+		// sync again
+		return env.syncer.syncItems();
+	}).then(() => {
+		return env.store.listItems({includeTombstones: true});
+	}).then((items) => {
+
+		// verify that the store item was also
+		// deleted
+		assert.equal(items.length, 1);
+		assert.ok(items[0].isTombstone());
+	});
+});
+
 // TODO: Tests for:
 // - Syncing a locked vault
 // - Syncing whilst syncItems() is already in progress
 // - Syncing a larger vault with several hundred items
-// - Syncing deleted items
 
 testLib.start();

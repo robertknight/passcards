@@ -458,7 +458,7 @@ export class Vault {
 	/** Returns a list of overview data for all items in the vault,
 	  * except tombstone markers for deleted items.
 	  */
-	listItems() : Q.Promise<item_store.Item[]> {
+	listItems(opts: item_store.ListItemsOptions = {}) : Q.Promise<item_store.Item[]> {
 		var items = Q.defer<item_store.Item[]>();
 		var content = this.fs.read(this.contentsFilePath());
 		content.then((content) => {
@@ -474,7 +474,7 @@ export class Vault {
 				item.folderUuid = entry[5];
 				item.trashed = entry[7] === "Y";
 
-				if (item.isTombstone()) {
+				if (item.isTombstone() && !opts.includeTombstones) {
 					// skip markers for deleted items
 					return;
 				}
