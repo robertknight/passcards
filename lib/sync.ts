@@ -133,12 +133,7 @@ export class Syncer {
 				}
 			});
 
-			if (syncProgress.total > 0) {
-				syncProgress.state = SyncState.SyncingItems;
-			} else {
-				syncProgress.state = SyncState.Idle;
-			}
-
+			syncProgress.state = SyncState.SyncingItems;
 			this.onProgress.publish(syncProgress);
 		}).catch((err) => {
 			console.log('Failed to list items in vault or store');

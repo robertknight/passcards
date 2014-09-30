@@ -136,6 +136,23 @@ testLib.addAsyncTest('sync progress', (assert) => {
 			updated: 1,
 			total: 1
 		});
+
+		progressUpdates = [];
+		return env.syncer.syncItems();
+	}).then(() => {
+		assert.deepEqual(progressUpdates, [{
+			state: sync.SyncState.ListingItems,
+			updated: 0,
+			total: 0
+		},{
+			state: sync.SyncState.SyncingItems,
+			updated: 0,
+			total: 0
+		},{
+			state: sync.SyncState.Idle,
+			updated: 0,
+			total: 0
+		}]);
 	});
 });
 
