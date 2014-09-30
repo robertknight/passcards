@@ -4,10 +4,12 @@
 /// <reference path="../node_modules/react-typescript/declarations/react.d.ts" />
 /// <reference path="../node_modules/react-typescript/declarations/react-typescript.d.ts" />
 /// <reference path="../typings/fastclick.d.ts" />
+/// <reference path="../typings/react.addons.d.ts" />
 
 import $ = require('jquery');
 import fastclick = require('fastclick');
 import react = require('react');
+import react_addons = require('react/addons');
 import reactts = require('react-typescript');
 import url = require('url');
 import underscore = require('underscore');
@@ -229,7 +231,7 @@ class AppView extends reactts.ReactComponentBase<AppViewProps, AppViewState> {
 			itemList?: item_list.ItemListView;
 			itemDetails?: DetailsView;
 			statusView?: StatusView;
-			toaster?: controls.Toaster;
+			toaster?: react.ReactComponent<any,any>;
 		} = {};
 
 		if (this.state.isLocked) {
@@ -269,13 +271,19 @@ class AppView extends reactts.ReactComponentBase<AppViewProps, AppViewState> {
 				status: this.state.status
 			});
 		}
+
+		var toasters: controls.Toaster[] = [];
 		if (this.state.syncState && this.state.syncState.syncing) {
-			children.toaster = new controls.Toaster({
+			toasters.push(new controls.Toaster({
 				message: 'Syncing...',
 				progressValue: this.state.syncState.syncProgressValue,
 				progressMax: this.state.syncState.syncProgressMax
-			});
+			}));
 		}
+
+		children.toaster = react_addons.addons.CSSTransitionGroup({transitionName: 'fade'},
+		  toasters
+		);
 
 		return react.DOM.div({className: 'appView', ref: 'app'},
 			reactutil.mapToComponentArray(children)
