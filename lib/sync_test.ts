@@ -1,11 +1,14 @@
-import testLib = require('./test');
+/// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
 
-import vfs_node = require('./vfs/node');
+import underscore = require('underscore');
+
 import item_builder = require('./item_builder');
 import item_store = require('./item_store');
 import key_agent = require('./key_agent');
-import sync = require('./sync');
 import onepass = require('./onepass');
+import sync = require('./sync');
+import testLib = require('./test');
+import vfs_node = require('./vfs/node');
 
 interface Env {
 	store: item_store.TempStore;
@@ -104,7 +107,7 @@ testLib.addAsyncTest('sync progress', (assert) => {
 	return setup().then((_env) => {
 		env = _env;
 		env.syncer.onProgress.listen((progress) => {
-			progressUpdates.push(progress);
+			progressUpdates.push(underscore.clone(progress));
 		});
 		return item.saveTo(env.vault);
 	}).then(() => {

@@ -49,12 +49,20 @@ export class Syncer {
 		this.onProgress = new event_stream.EventStream<SyncProgress>();
 	}
 
+	/** Sync encryption keys for the vault.
+	  * This does not require the vault to be unlocked.
+	  */
 	syncKeys() : Q.Promise<void> {
 		return this.vault.listKeys().then((keys) => {
 			return this.store.saveKeys(keys);
 		});
 	}
 
+	/** Sync items from the vault to the local store.
+	  * Returns a promise which is resolved when the current sync completes.
+	  *
+	  * Syncing items requires the vault to be unlocked.
+	  */
 	syncItems() : Q.Promise<SyncProgress> {
 		if (this.currentSync) {
 			return this.currentSync;
