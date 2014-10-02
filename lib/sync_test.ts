@@ -229,7 +229,7 @@ testLib.addAsyncTest('sync locked vault', (assert) => {
 });
 
 testLib.addAsyncTest('repeat sync', (assert) => {
-	setupWithItem().then((env) => {
+	return setupWithItem().then((env) => {
 		// syncing whilst a sync is already in progress should return
 		// the same promise
 		var synced = env.env.syncer.syncItems();
@@ -245,23 +245,18 @@ testLib.addAsyncTest('sync many items', (assert) => {
 
 	return setup().then((_env) => {
 		env = _env;
-		var saved = 0;
 
-		// FIXME - onepass.Vault.saveItem() does not update contents.js
-		// correctly if a client tries to save multiple items concurrently,
-		// if that is fixed, this sequential loop could be replaced
-		// with one that concurrently created and saved items to the vault.
-		return asyncutil.until(() => {
+		var saves: Q.Promise<void>[] = [];
+		while (saves.length < ITEM_COUNT) {
 			var item = new item_builder.Builder(item_store.ItemTypes.LOGIN)
-			 .setTitle('sync me ' + saved)
-			 .addLogin('testuser' + saved + '@gmail.com')
+			 .setTitle('sync me ' + saves.length)
+			 .addLogin('testuser' + saves.length + '@gmail.com')
 		  	 .addUrl('signon.acme.org')
 			 .item();
-			return item.saveTo(env.vault).then(() => {
-				++saved;
-				return saved == ITEM_COUNT;
-			});
-		});
+			saves.push(item.saveTo(env.vault));
+		}
+
+		return Q.all(saves);
 	}).then(() => {
 		return env.syncer.syncItems();
 	}).then(() => {

@@ -243,12 +243,21 @@ function fromAgileKeychainFormField(keychainField: agilekeychain.WebFormField) :
 	return field;
 }
 
-/** Represents a 1Password vault. */
+/** Represents an Agile Keychain-format 1Password vault. */
 export class Vault {
 	private fs: vfs.VFS;
 	private path: string;
 	private keyAgent: key_agent.KeyAgent;
 	private keys : Q.Promise<agilekeychain.EncryptionKeyEntry[]>;
+
+	// map of (item ID -> Item) for items that have been
+	// modified and require the contents.js index file to be updated
+	private pendingIndexUpdates: collectionutil.PMap<string, item_store.Item>;
+
+	// promise which is resolved when the current flush of
+	// index updates completes
+	private indexUpdated: Q.Promise<void>;
+	private indexUpdatePending: boolean;
 
 	onItemUpdated: event_stream.EventStream<item_store.Item>;
 	onUnlock: event_stream.EventStream<void>;
@@ -263,6 +272,10 @@ export class Vault {
 		this.keyAgent = agent || new key_agent.SimpleKeyAgent(crypto.defaultCrypto);
 		this.onItemUpdated = new event_stream.EventStream<item_store.Item>();
 		this.onUnlock = new event_stream.EventStream<void>();
+
+		this.pendingIndexUpdates = new collectionutil.PMap<string,item_store.Item>();
+		this.indexUpdated = Q<void>(null);
+		this.indexUpdatePending = false;
 	}
 
 	private getKeys() : Q.Promise<agilekeychain.EncryptionKeyEntry[]> {
@@ -386,9 +399,6 @@ export class Vault {
 	}
 
 	saveItem(item: item_store.Item) : Q.Promise<void> {
-		var itemSaved = Q.defer<void>();
-		var overviewSaved = Q.defer<void>();
-
 		if (!item.createdAt) {
 			item.createdAt = new Date();
 		}
@@ -406,44 +416,89 @@ export class Vault {
 			item.updatedAt = new Date(prevDate.getTime() + 1000);
 		}
 
-		item.getContent().then((content) => {
+		// update the '<item ID>.1password' file
+		var itemSaved = item.getContent().then((content) => {
 			var contentJSON = JSON.stringify(toAgileKeychainContent(content));
-			this.encryptItemData(DEFAULT_AGILEKEYCHAIN_SECURITY_LEVEL, contentJSON).then((encryptedContent) => {
+			return this.encryptItemData(DEFAULT_AGILEKEYCHAIN_SECURITY_LEVEL, contentJSON);
+		}).then((encryptedContent) => {
 				var itemPath = this.itemPath(item.uuid);
 				var keychainJSON = JSON.stringify(toAgileKeychainItem(item, encryptedContent));
-				this.fs.write(itemPath, keychainJSON).then(() => {
-					itemSaved.resolve(null);
-				})
-			}).done();
-		})
-		.done();
+			return this.fs.write(itemPath, keychainJSON);
+		});
 
-		this.fs.read(this.contentsFilePath()).then((contentsJSON) => {
-			var contentEntries : any[] = JSON.parse(contentsJSON);
+		// update the contents.js index file.
+		//
+		// Updates are added to a queue which is then flushed so that an update for one
+		// entry does not clobber an update for another. This also reduces the number
+		// of VFS requests.
+		// 
+		this.pendingIndexUpdates.set(item.uuid, item);
+		var indexSaved = asyncutil.until(() => {
+			// wait for the current index update to complete
+			return this.indexUpdated.then(() => {
+				if (this.pendingIndexUpdates.size == 0) {
+					// if there are no more updates to save,
+					// we're done
+					return true;
+				} else {
+					// otherwise, schedule another flush of updates
+					// to the index, unless another save operation
+					// has already started one
+					if (!this.indexUpdatePending) {
+						this.saveContentsFile();
+					}
+					return false;
+				}
+			});
+		});
 
-			var entry = underscore.find(contentEntries, (entry) => { return entry[0] == item.uuid });
-			if (!entry) {
-				entry = [null, null, null, null, null, null, null, null];
-				contentEntries.push(entry);
-			}
-			entry[0] = item.uuid;
-			entry[1] = item.typeName;
-			entry[2] = item.title;
-			entry[3] = item.location;
-			entry[4] = dateutil.unixTimestampFromDate(item.updatedAt);
-			entry[5] = item.folderUuid;
-			entry[6] = 0; // TODO - Find out what this is used for
-			entry[7] = (item.trashed ? "Y" : "N");
-
-			// FIXME - Improve handling of concurrent updates to contents.js file.
-			// If the file has been modified in the VFS since the original write then
-			// the operation should fail.
-			var newContentsJSON = JSON.stringify(contentEntries);
-			asyncutil.resolveWith(overviewSaved, this.fs.write(this.contentsFilePath(), newContentsJSON));
-		}).done();
-
-		return <any>Q.all([itemSaved.promise, overviewSaved.promise]).then(() => {
+		return <any>Q.all([itemSaved, indexSaved]).then(() => {
 			this.onItemUpdated.publish(item);
+		});
+	}
+
+	// save pending changes to the contents.js index file
+	private saveContentsFile() {
+		var overviewSaved = Q.defer<void>();
+		var revision: string;
+
+		this.indexUpdated = this.fs.stat(this.contentsFilePath()).then((stat) => {
+			revision = stat.revision;
+			return this.fs.read(this.contentsFilePath());
+		}).then((contentsJSON) => {
+			// [TODO TypeScript/1.3] - Type the contents.js entry tuples
+			var updatedItems: item_store.Item[] = [];
+			this.pendingIndexUpdates.forEach((item) => {
+				updatedItems.push(item);
+			});
+			this.pendingIndexUpdates.clear();
+
+			var contentEntries : any[] = JSON.parse(contentsJSON);
+			updatedItems.forEach((item) => {
+				var entry = underscore.find(contentEntries, (entry) => { return entry[0] == item.uuid });
+				if (!entry) {
+					entry = [null, null, null, null, null, null, null, null];
+					contentEntries.push(entry);
+				}
+				entry[0] = item.uuid;
+				entry[1] = item.typeName;
+				entry[2] = item.title;
+				entry[3] = item.location;
+				entry[4] = dateutil.unixTimestampFromDate(item.updatedAt);
+				entry[5] = item.folderUuid;
+				entry[6] = 0; // TODO - Find out what this is used for
+				entry[7] = (item.trashed ? "Y" : "N");
+			});
+
+			var newContentsJSON = JSON.stringify(contentEntries);
+			return asyncutil.resolveWith(overviewSaved, this.fs.write(this.contentsFilePath(), newContentsJSON, {
+				parentRevision: revision
+			}));
+		});
+		
+		this.indexUpdatePending = true;
+		this.indexUpdated.then(() => {
+			this.indexUpdatePending = false;
 		});
 	}
 
