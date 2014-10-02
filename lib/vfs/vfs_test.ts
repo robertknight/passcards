@@ -232,7 +232,7 @@ function addTests(fsName: string, createFs: () => Q.Promise<vfs.VFS>) {
 			// should succeed, the other should fail
 			var writeOpts = { parentRevision: stat.revision };
 			var attemptA = fs.write('test-file-conflict', 'content-v2-a', writeOpts);
-			var attemptB = fs.write('test-file-conflict', 'content-v2', writeOpts);
+			var attemptB = fs.write('test-file-conflict', 'content-v2-b-b', writeOpts);
 			return Q.allSettled([attemptA, attemptB]);
 		}).then((states) => {
 			states.sort((a,b) => { 
@@ -248,7 +248,7 @@ function addTests(fsName: string, createFs: () => Q.Promise<vfs.VFS>) {
 			assert.equal(states[1].state, 'rejected');
 			return fs.read('test-file-conflict');
 		}).then((content) => {
-			assert.ok(content == 'content-v2' || content == 'content-v2-a');
+			assert.ok(content == 'content-v2-a' || content == 'content-v2-b-b');
 		});
 	});
 }
