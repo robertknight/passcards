@@ -100,12 +100,25 @@ export class FS implements vfs.VFS {
 			parentDirEntry.entries.push(entry);
 		}
 
-		if (options.parentRevision && entry.mtime.toString() != options.parentRevision) {
+		var parentRev: number;
+		if (options.parentRevision) {
+			parentRev = parseInt(options.parentRevision);
+		}
+
+		if (options.parentRevision && entry.mtime && entry.mtime !== parentRev) {
 			return Q.reject(new vfs.ConflictError(path));
 		}
 
 		assert(entry.parent);
+
 		entry.mtime = Date.now();
+
+		if (parentRev == entry.mtime) {
+			// if multiple saves happen in a short time period, force the clock
+			// forwards
+			++entry.mtime;
+		}
+
 		this.writeDirIndex(entry.parent);
 
 		this.storage.setItem(entry.key, content);
@@ -293,9 +306,12 @@ export class FS implements vfs.VFS {
 		var fileInfo = <vfs.FileInfo>{
 			name: entry.name,
 			isDir: entry.isDir,
-			path: entry.name,
-			revision: entry.mtime.toString()
+			path: entry.name
 		};
+		if (entry.mtime) {
+			fileInfo.revision = entry.mtime.toString();
+		}
+
 		var parent = entry.parent;
 		while (parent && parent.parent) {
 			fileInfo.path = parent.name + '/' + fileInfo.path;
