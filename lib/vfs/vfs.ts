@@ -5,12 +5,34 @@
 import Q = require('q');
 
 import asyncutil = require('../base/asyncutil');
+import err_util = require('../base/err_util');
 
 /** Holds details of a file retrieved by a VFS implementation */
-export class FileInfo {
+export interface FileInfo {
 	name: string;
 	path: string;
 	isDir: boolean;
+
+	/** The current version of the file. */
+	revision?: string;
+}
+
+export interface WriteOptions {
+	/** The revision of the file that the client
+	  * is expecting to update. If this is specified
+	  * and does not match the current version of
+	  * the file then the write will fail.
+	  */
+	parentRevision?: string;
+}
+
+/** Error reported when a file update with VFS.write() conflicts
+  * with another update to the same file.
+  */
+export class ConflictError extends err_util.BaseError {
+	constructor(public path: string) {
+		super('Conflict updating file');
+	}
 }
 
 /** Interface for async file system access.
@@ -36,7 +58,7 @@ export interface VFS {
 	/** Read the contents of a file at @p path */
 	read(path: string) : Q.Promise<string>
 	/** Write the contents of a file at @p path */
-	write(path: string, content: string) : Q.Promise<void>;
+	write(path: string, content: string, options?: WriteOptions) : Q.Promise<void>;
 	/** List the contents of a directory */
 	list(path: string) : Q.Promise<FileInfo[]>;
 	/** Remove a file or directory */

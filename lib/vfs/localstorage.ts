@@ -14,6 +14,9 @@ interface FSEntry {
 	name: string;
 	// file type of this entry
 	isDir: boolean;
+	// modification time for this entry,
+	// stored as msecs since the Unix epoch
+	mtime?: number;
 	// key in the key/value store
 	// for the file's content or directory index.
 	//
@@ -80,10 +83,10 @@ export class FS implements vfs.VFS {
 		return Q(this.storage.getItem(entry.key));
 	}
 
-	write(path: string, content: string) : Q.Promise<void> {
+	write(path: string, content: string, options: vfs.WriteOptions = {}) : Q.Promise<void> {
 		var entry = this.entryForPath(path);
 		if (!entry) {
-			// create a new dir entry for this path
+			// create a new file entry for this path
 			entry = {
 				name: Path.basename(path),
 				isDir: false,
@@ -95,9 +98,16 @@ export class FS implements vfs.VFS {
 			}
 			entry.parent = parentDirEntry;
 			parentDirEntry.entries.push(entry);
-
-			this.writeDirIndex(parentDirEntry);
 		}
+
+		if (options.parentRevision && entry.mtime.toString() != options.parentRevision) {
+			return Q.reject(new vfs.ConflictError(path));
+		}
+
+		assert(entry.parent);
+		entry.mtime = Date.now();
+		this.writeDirIndex(entry.parent);
+
 		this.storage.setItem(entry.key, content);
 		return Q<void>(null);
 	}
@@ -283,7 +293,8 @@ export class FS implements vfs.VFS {
 		var fileInfo = <vfs.FileInfo>{
 			name: entry.name,
 			isDir: entry.isDir,
-			path: entry.name
+			path: entry.name,
+			revision: entry.mtime.toString()
 		};
 		var parent = entry.parent;
 		while (parent && parent.parent) {

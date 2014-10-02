@@ -27,7 +27,8 @@ declare module "dropbox" {
 	}
 
 	export interface WriteFileOptions {
-		// TODO
+		parentRev?: string;
+		lastVersionTag?: string;
 	}
 
 	export interface ReadDirOptions {

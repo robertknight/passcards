@@ -13,6 +13,20 @@ export class FileVFS implements vfs.VFS {
 		this.root = Path.normalize(_root);
 	}
 
+	private static statToRevision(stat: fs.Stats) {
+		// Ideally we would like a revision which is guaranteed to change
+		// on each write to the file.
+		//
+		// The obvious choice is fs.Stats.mtime, but it only has a resolution
+		// of 1 second in Node 0.10.x and on OS X where this is a limitation
+		// of the HFS+ file system, so we append the file size to get a revision
+		// which is more likely to change.
+		//
+		// An alternative but more expensive option would be to use a checksum
+		// of the file's content
+		return stat.mtime.getTime().toString() + '.' + stat.size.toString();
+	}
+
 	stat(path: string) : Q.Promise<vfs.FileInfo> {
 		var result = Q.defer<vfs.FileInfo>();
 		fs.stat(this.absPath(path), (err, info) => {
@@ -20,10 +34,12 @@ export class FileVFS implements vfs.VFS {
 				result.reject(err);
 				return;
 			}
-			var fileInfo = new vfs.FileInfo;
-			fileInfo.name = Path.basename(path);
-			fileInfo.path = path;
-			fileInfo.isDir = info.isDirectory();
+			var fileInfo = {
+				name: Path.basename(path),
+				path: path,
+				isDir: info.isDirectory(),
+				revision: FileVFS.statToRevision(info)
+			};
 			result.resolve(fileInfo);
 		});
 		return result.promise;
@@ -62,15 +78,42 @@ export class FileVFS implements vfs.VFS {
 		return result.promise;
 	}
 
-	write(path: string, content: string) : Q.Promise<void> {
+	write(path: string, content: string, options: vfs.WriteOptions = {}) : Q.Promise<void> {
 		var result = Q.defer<void>();
-		fs.writeFile(this.absPath(path), content, (error) => {
+
+		var fullPath = this.absPath(path);
+		var tempPath = '';
+
+		if (options.parentRevision) {
+			var randomNamePart = Math.round(Math.random() * (2<<16)).toString();
+			tempPath = this.absPath(path + '.' + randomNamePart +  '.tmp');
+		} else {
+			tempPath = fullPath;
+		}
+
+		fs.writeFile(tempPath, content, (error) => {
 			if (error) {
 				result.reject(error);
 				return;
 			}
-			result.resolve(null);
+
+			if (!options.parentRevision) {
+				result.resolve(null);
+				return;
+			}
+
+			try {
+				var fileStat = fs.statSync(fullPath);
+				if (FileVFS.statToRevision(fileStat) !== options.parentRevision) {
+					result.reject(new vfs.ConflictError(path));
+				}
+				fs.renameSync(tempPath, fullPath);
+				result.resolve(null);
+			} catch (err) {
+				result.reject(new vfs.ConflictError(path));
+			}
 		});
+		
 		return result.promise;
 	}
 

@@ -231,6 +231,38 @@ function addTests(fsName: string, createFs: () => Q.Promise<vfs.VFS>) {
 			testLib.continueTests();
 		}).done();
 	});
+
+	testLib.addAsyncTest(fsName + ': write conflict detection', (assert) => {
+		var fs: vfs.VFS;
+		return createFs().then((_fs) => {
+			fs = _fs;
+			return fs.write('test-file-conflict', 'content-v1');
+		}).then(() => {
+			return fs.stat('test-file-conflict');
+		}).then((stat) => {
+			// attempt two concurrent updates to the file, one
+			// should succeed, the other should fail
+			var writeOpts = { parentRevision: stat.revision };
+			var attemptA = fs.write('test-file-conflict', 'content-v2-a', writeOpts);
+			var attemptB = fs.write('test-file-conflict', 'content-v2', writeOpts);
+			return Q.allSettled([attemptA, attemptB]);
+		}).then((states) => {
+			states.sort((a,b) => { 
+				if (a.state == b.state) {
+					return 0;
+				} else if (a.state < b.state) {
+					return -1;
+				} else {
+					return 1;
+				}
+			});
+			assert.equal(states[0].state, 'fulfilled');
+			assert.equal(states[1].state, 'rejected');
+			return fs.read('test-file-conflict');
+		}).then((content) => {
+			assert.ok(content == 'content-v2' || content == 'content-v2-a');
+		});
+	});
 }
 
 addTests('Node FS', createNodeFs);

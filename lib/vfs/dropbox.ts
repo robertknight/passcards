@@ -125,9 +125,17 @@ export class DropboxVFS implements vfs.VFS {
 		return result.promise;
 	}
 
-	write(path: string, content: string) : Q.Promise<void> {
+	write(path: string, content: string, options: vfs.WriteOptions = {}) : Q.Promise<void> {
 		var result = Q.defer<void>();
-		this.client.writeFile(path, content, {}, (error) => {
+		var dropboxWriteOpts: dropbox.WriteFileOptions;
+
+		if (options && options.parentRevision) {
+			dropboxWriteOpts.parentRev = options.parentRevision;
+			// TODO - Add support to dropbox-js for the autorename option
+			// dropboxWriteOpts.autorename = false;
+		}
+
+		this.client.writeFile(path, content, dropboxWriteOpts, (error) => {
 			if (error) {
 				result.reject(error);
 				return;
@@ -185,12 +193,13 @@ export class DropboxVFS implements vfs.VFS {
 		return result.promise;
 	}
 
-	private toVfsFile(file: any) : vfs.FileInfo {
-		var fileInfo = new vfs.FileInfo;
-		fileInfo.name = file.name;
-		fileInfo.path = file.path;
-		fileInfo.isDir = file.isFolder;
-		return fileInfo;
+	private toVfsFile(file: dropbox.File.Stat) : vfs.FileInfo {
+		return {
+			name: file.name,
+			path: file.path,
+			isDir: file.isFolder,
+			revision: file.versionTag
+		};
 	}
 }
 
