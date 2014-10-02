@@ -51,7 +51,9 @@ export class PMap<K,V> implements Map<K,V> {
 	}
 
 	forEach(callback: (value: V, index?: K, map?: Map<K,V>) => any) {
-		throw new Error('PMap.forEach() is not implemented');
+		for (var key in this.map) {
+			callback(this.map[key], key.slice(1), this);
+		}
 	}
 
 	private propName(key: K) {

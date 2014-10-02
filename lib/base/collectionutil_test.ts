@@ -42,6 +42,29 @@ testLib.addTest('map polyfill basic ops', (assert) => {
 	assert.ok(!map.has('akey'));
 });
 
+interface KeyValue {
+	key: string;
+	value: number;
+}
+
+testLib.addTest('map iteration', (assert) => {
+	var map: Map<string, number> = new collectionutil.PMap<string,number>();
+	map.set('foo', 1);
+	map.set('bar', 2);
+
+	var entries: KeyValue[] = [];
+	map.forEach((value, key) => {
+		entries.push({key: key, value: value});
+	});
+	entries.sort((a,b) => {
+		return a.key.localeCompare(b.key);
+	});
+	assert.deepEqual(entries, [
+		{key: 'bar', value: 2},
+		{key: 'foo', value: 1}
+	]);
+});
+
 testLib.addTest('convert list to map', (assert) => {
 	var map = collectionutil.listToMap([{k:1, v:1}, {k:2, v:2}, {k:3, v:3}], (item) => {
 		return item.k;
