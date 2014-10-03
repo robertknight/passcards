@@ -646,7 +646,7 @@ export class Vault {
 		// 2. Add empty contents.js, encryptionKeys.js, 1Password.keys files
 		// 3. If this is a Dropbox folder and no file exists in the root
 		//    specifying the vault path, add one
-		// 4. Generate new random key and encrypt with master passworD
+		// 4. Generate new random key and encrypt with master password
 
 		var masterKey = crypto.randomBytes(1024);
 		var salt = crypto.randomBytes(8);

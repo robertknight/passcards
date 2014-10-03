@@ -11,7 +11,11 @@ export interface Store {
 	set<T>(key: string, value: T) : Q.Promise<void>;
 	get<T>(key: string) : Q.Promise<T>;
 	remove(key: string) : Q.Promise<void>;
-	list(prefix: string) : Q.Promise<string[]>;
+	list(prefix?: string) : Q.Promise<string[]>;
+}
+
+export interface StoreFactory {
+	(storeName: string) : Store;
 }
 
 /** Implementation of async key/value storage using IndexedDB */
@@ -70,7 +74,7 @@ export class IndexedDBStore implements Store {
 		});
 	}
 
-	list(prefix: string) : Q.Promise<string[]> {
+	list(prefix: string = '') : Q.Promise<string[]> {
 		return this.db.then((db) => {
 			var store = db.transaction(this.storeName, 'readwrite').objectStore(this.storeName);
 			var req = store.openCursor(IDBKeyRange.lowerBound(prefix));
