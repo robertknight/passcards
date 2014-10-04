@@ -34,7 +34,7 @@ class FakeKeyValueStore implements key_value_store.Store {
 		return Q<void>(null);
 	}
 
-	list(prefix: string) {
+	list(prefix: string = '') {
 		var keys: string[] = [];
 		this.items.forEach((value, key) => {
 			if (stringutil.startsWith(key, prefix)) {
