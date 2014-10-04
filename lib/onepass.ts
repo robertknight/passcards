@@ -399,22 +399,7 @@ export class Vault {
 	}
 
 	saveItem(item: item_store.Item) : Q.Promise<void> {
-		if (!item.createdAt) {
-			item.createdAt = new Date();
-		}
-
-		// update last-modified time
-		var prevDate = item.updatedAt;
-		item.updatedAt = new Date();
-
-		// ensure that last-modified time always advances by at least one
-		// second from the previous time on save.
-		//
-		// This is required to ensure the 'updatedAt' time saved in contents.js
-		// changes since it only stores second-level resolution
-		if (prevDate && item.updatedAt.getTime() - prevDate.getTime() < 1000) {
-			item.updatedAt = new Date(prevDate.getTime() + 1000);
-		}
+		item.updateTimestamps();
 
 		// update the '<item ID>.1password' file
 		var itemSaved = item.getContent().then((content) => {

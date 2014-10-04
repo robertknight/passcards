@@ -64,18 +64,18 @@ export class Store implements item_store.Store {
 	}
 
 	listItems(opts: item_store.ListItemsOptions = {}) : Q.Promise<item_store.Item[]> {
-		var items: Q.Promise<item_store.Item>[] = [];
-		this.itemStore.list('overview/').then((keys) => {
+		return this.itemStore.list('overview/').then((keys) => {
+			var items: Q.Promise<item_store.Item>[] = [];
 			keys.forEach((key) => {
 				var itemId = key.slice('overview/'.length);
 				items.push(this.loadItem(itemId));
 			});
-		});
-		return Q.all(items).then((items) => {
-			var filteredItems = items.filter((item) => {
-				return !item.isTombstone() || opts.includeTombstones;
+			return Q.all(items).then((items) => {
+				var filteredItems = items.filter((item) => {
+					return !item.isTombstone() || opts.includeTombstones;
+				});
+				return filteredItems;
 			});
-			return filteredItems;
 		});
 	}
 
@@ -85,11 +85,11 @@ export class Store implements item_store.Store {
 			key = _key;
 			return this.itemStore.get<EncryptedOverview>('overview/' + uuid);
 		}).then((encryptedOverview) => {
-			var decrypted = onepass_crypto.decryptAgileKeychainItemData(this.crypto, key, encryptedOverview.data);
+			return this.keyAgent.decrypt(key, encryptedOverview.data, {algo: key_agent.CryptoAlgorithm.AES128_OpenSSLKey});
+		}).then((decrypted) => {
 			var overview = <ItemOverview>JSON.parse(decrypted);
 
-			var item = new item_store.Item();
-			item.uuid = uuid;
+			var item = new item_store.Item(this, uuid);
 			item.title = overview.title;
 			item.updatedAt = new Date(overview.updatedAt);
 			item.createdAt = new Date(overview.createdAt);
@@ -97,12 +97,13 @@ export class Store implements item_store.Store {
 			item.trashed = overview.trashed;
 			item.typeName = overview.typeName;
 			item.openContents = overview.openContents;
-
 			return item;
 		});
 	}
 
 	saveItem(item: item_store.Item) : Q.Promise<void> {
+		item.updateTimestamps();
+
 		var cryptoParams = new key_agent.CryptoParams(key_agent.CryptoAlgorithm.AES128_OpenSSLKey);
 		var key: string;
 		return this.keyForItem(item).then((_key) => {
@@ -145,7 +146,8 @@ export class Store implements item_store.Store {
 			key = _key;
 			return this.itemStore.get<EncryptedContent>('content/' + item.uuid);
 		}).then((encryptedContent) => {
-			var decrypted = onepass_crypto.decryptAgileKeychainItemData(this.crypto, key, encryptedContent.data);
+			return this.keyAgent.decrypt(key, encryptedContent.data, {algo: key_agent.CryptoAlgorithm.AES128_OpenSSLKey});
+		}).then((decrypted) => {
 			return <item_store.ItemContent>JSON.parse(decrypted);
 		});
 	}

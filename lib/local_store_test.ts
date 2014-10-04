@@ -7,6 +7,8 @@ import underscore = require('underscore');
 
 import collectionutil = require('./base/collectionutil');
 import crypto = require('./onepass_crypto');
+import item_builder = require('./item_builder');
+import item_store = require('./item_store');
 import key_agent = require('./key_agent');
 import key_value_store = require('./base/key_value_store');
 import local_store = require('./local_store');
@@ -14,7 +16,7 @@ import stringutil = require('./base/stringutil');
 import testLib = require('./test');
 
 class FakeKeyValueStore implements key_value_store.Store {
-	private items: collectionutil.PMap<string,any>;
+	items: collectionutil.PMap<string,any>;
 
 	constructor() {
 		this.items = new collectionutil.PMap<string,any>();
@@ -50,7 +52,7 @@ interface Env {
 	masterPass: string;
 	masterKey: key_agent.Key;
 	keyAgent: key_agent.SimpleKeyAgent;
-	stores: collectionutil.PMap<string, key_value_store.Store>;
+	stores: collectionutil.PMap<string, FakeKeyValueStore>;
 	storeFactory: (name: string) => key_value_store.Store;
 }
 
@@ -73,7 +75,7 @@ function generateKey(password: string, iterations: number) : key_agent.Key {
 
 function setupEnv() : Env {
 	var keyAgent = new key_agent.SimpleKeyAgent();
-	var stores = new collectionutil.PMap<string, key_value_store.Store>();
+	var stores = new collectionutil.PMap<string, FakeKeyValueStore>();
 	var kvStoreFactory = (name: string) => {
 		var store = stores.get(name);
 		if (!store) {
@@ -126,6 +128,38 @@ testLib.addAsyncTest('save and load keys', (assert) => {
 		return env.keyAgent.decrypt(env.masterKey.identifier, encrypted, params);
 	}).then((plainText) => {
 		assert.equal(plainText, 'testcontent2');
+	});
+});
+
+testLib.addAsyncTest('save and load items', (assert) => {
+	var env = setupEnv();
+	var store = new local_store.Store(env.storeFactory, env.keyAgent);
+	var params = { algo: key_agent.CryptoAlgorithm.AES128_OpenSSLKey };
+
+	var item = new item_builder.Builder(item_store.ItemTypes.LOGIN)
+	 .setTitle('test item')
+	 .addLogin('foo.bar@gmail.com')
+	 .addPassword('pass3')
+	 .addUrl('acme.org')
+	 .addUrl('foo.acme.org')
+	 .item();
+
+	return store.saveKeys([env.masterKey]).then(() => {
+		return store.unlock(env.masterPass);
+	}).then(() => {
+		return item.saveTo(store);
+	}).then(() => {
+		return store.listItems();
+	}).then((items) => {
+		assert.equal(items.length, 1);
+		testLib.assertEqual(assert, items[0], item, null, ['store', 'content', 'openContents']);
+		return items[0].getContent();
+	}).then((content) => {
+		assert.deepEqual(content.urls, [{
+			label: 'website', url: 'acme.org'
+		},{
+			label: 'website', url: 'foo.acme.org'
+		}]);
 	});
 });
 

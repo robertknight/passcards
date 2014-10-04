@@ -309,6 +309,29 @@ export class Item {
 	isSaved() : boolean {
 		return this.updatedAt != null;
 	}
+
+	/** Set the last-modified time for the item to the current time.
+	  * If the created time for the item has not been initialized, it
+	  * is also set to the current time.
+	  */
+	updateTimestamps() {
+		if (!this.createdAt) {
+			this.createdAt = new Date();
+		}
+
+		// update last-modified time
+		var prevDate = this.updatedAt;
+		this.updatedAt = new Date();
+
+		// ensure that last-modified time always advances by at least one
+		// second from the previous time on save.
+		//
+		// This is required to ensure the 'updatedAt' time saved in contents.js
+		// changes since it only stores second-level resolution
+		if (prevDate && this.updatedAt.getTime() - prevDate.getTime() < 1000) {
+			this.updatedAt = new Date(prevDate.getTime() + 1000);
+		}
+	}
 }
 
 /** Represents the content of an item, usually stored

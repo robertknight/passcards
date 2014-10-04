@@ -275,10 +275,13 @@ export function compareObjects(a: any, b: any, expectedAdditions?: string[], exp
   * If @p properties is specified, only the listed properties are compared
   * between objects @p a and @p b.
   */
-export function assertEqual(assert: Assert, a: any, b: any, properties?: string[]) {
+export function assertEqual(assert: Assert, a: any, b: any, properties?: string[], excludeProperties?: string[]) {
 	if (properties) {
 		a = underscore.pick.apply(null, [a].concat(<any[]>properties));
 		b = underscore.pick.apply(null, [b].concat(<any[]>properties));
+	} else if (excludeProperties) {
+		a = underscore.omit.apply(null, [a].concat(<any[]>excludeProperties));
+		b = underscore.omit.apply(null, [b].concat(<any[]>excludeProperties));
 	}
 
 	var diff = compareObjects(a, b);
