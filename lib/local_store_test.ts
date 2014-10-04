@@ -46,6 +46,15 @@ class FakeKeyValueStore implements key_value_store.Store {
 	}
 }
 
+interface Env {
+	masterPass: string;
+	masterKey: key_agent.Key;
+	keyAgent: key_agent.SimpleKeyAgent;
+	stores: collectionutil.PMap<string, key_value_store.Store>;
+	storeFactory: (name: string) => key_value_store.Store;
+}
+
+// TODO - Move to onepass_crypto
 function generateKey(password: string, iterations: number) : key_agent.Key {
 	var masterKey = crypto.randomBytes(1024);
 	var salt = crypto.randomBytes(8);
@@ -62,9 +71,8 @@ function generateKey(password: string, iterations: number) : key_agent.Key {
 	return key;
 }
 
-testLib.addAsyncTest('save and load keys', (assert) => {
+function setupEnv() : Env {
 	var keyAgent = new key_agent.SimpleKeyAgent();
-
 	var stores = new collectionutil.PMap<string, key_value_store.Store>();
 	var kvStoreFactory = (name: string) => {
 		var store = stores.get(name);
@@ -75,37 +83,51 @@ testLib.addAsyncTest('save and load keys', (assert) => {
 		return store;
 	};
 
-	var masterKey = generateKey('testpass', 100);
-	var store = new local_store.Store(kvStoreFactory, keyAgent);
+	var masterPass = 'testpass';
+	var masterKey = generateKey(masterPass, 100);
+
+	return {
+		masterPass: masterPass,
+		masterKey: masterKey,
+		keyAgent: keyAgent,
+		stores: stores,
+		storeFactory: kvStoreFactory
+	};
+}
+
+testLib.addAsyncTest('save and load keys', (assert) => {
+	var env = setupEnv();
+
+	var store = new local_store.Store(env.storeFactory, env.keyAgent);
 	var params: key_agent.CryptoParams = {
 		algo: key_agent.CryptoAlgorithm.AES128_OpenSSLKey
 	};
 
-	return store.saveKeys([masterKey]).then(() => {
+	return store.saveKeys([env.masterKey]).then(() => {
 		return store.listKeys();
 	}).then((keys) => {
 		assert.equal(keys.length, 1);
-		return store.unlock('testpass');
+		return store.unlock(env.masterPass);
 	}).then(() => {
-		return keyAgent.encrypt(masterKey.identifier, 'testcontent', params);
+		return env.keyAgent.encrypt(env.masterKey.identifier, 'testcontent', params);
 	}).then((encrypted) => {
-		return keyAgent.decrypt(masterKey.identifier, encrypted, params);
+		return env.keyAgent.decrypt(env.masterKey.identifier, encrypted, params);
 	}).then((plainText) => {
 		assert.equal(plainText, 'testcontent');
 
 		// reset the store and try unlocking again
-		store = new local_store.Store(kvStoreFactory, keyAgent);
-		return keyAgent.forgetKeys();
+		store = new local_store.Store(env.storeFactory, env.keyAgent);
+		return env.keyAgent.forgetKeys();
 	}).then(() => {
-		return store.unlock('testpass');
+		return store.unlock(env.masterPass);
 	}).then(() => {
-		return keyAgent.encrypt(masterKey.identifier, 'testcontent2', params);
+		return env.keyAgent.encrypt(env.masterKey.identifier, 'testcontent2', params);
 	}).then((encrypted) => {
-		return keyAgent.decrypt(masterKey.identifier, encrypted, params);
+		return env.keyAgent.decrypt(env.masterKey.identifier, encrypted, params);
 	}).then((plainText) => {
 		assert.equal(plainText, 'testcontent2');
 	});
-})
+});
 
 testLib.start();
 
