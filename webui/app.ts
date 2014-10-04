@@ -22,6 +22,7 @@ import event_stream = require('../lib/base/event_stream');
 import key_agent = require('../lib/key_agent');
 import keycodes = require('./base/keycodes');
 import key_value_store = require('../lib/base/key_value_store');
+import local_store = require('../lib/local_store');
 import http_vfs = require('../lib/vfs/http');
 import item_icons = require('./item_icons');
 import item_list = require('./item_list');
@@ -703,8 +704,12 @@ export class App {
 
 		fs.login().then(() => {
 			try {
+				var localStoreFactory = (name: string) => {
+					return new key_value_store.IndexedDBStore('passcards-items', name);
+				};
+
 				var vault = new onepass.Vault(fs, '/1Password/1Password.agilekeychain', this.services.keyAgent);
-				var store = new item_store.TempStore(this.services.keyAgent);
+				var store = new local_store.Store(localStoreFactory, this.services.keyAgent);
 				var syncer = new sync.Syncer(store, vault);
 				syncer.syncKeys().then(() => {
 					console.log('Encryption keys synced')
