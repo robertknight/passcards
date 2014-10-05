@@ -211,27 +211,27 @@ export class SimpleKeyAgent {
 
 	decrypt(id: string, cipherText: string, params: CryptoParams) : Q.Promise<string> {
 		if (!this.keys.hasOwnProperty(id)) {
-			return Q.reject('No such key: ' + id);
+			return Q.reject(new Error('No such key: ' + id));
 		}
 		switch (params.algo) {
 			case CryptoAlgorithm.AES128_OpenSSLKey:
 				return Q(crypto.decryptAgileKeychainItemData(this.crypto,
 					  this.keys[id], cipherText));
 			default:
-				return Q.reject('Unknown encryption algorithm');
+				return Q.reject(new Error('Unknown encryption algorithm'));
 		}
 	}
 
 	encrypt(id: string, plainText: string, params: CryptoParams) : Q.Promise<string> {
 		if (!this.keys.hasOwnProperty(id)) {
-			return Q.reject('No such key: ' + id);
+			return Q.reject(new Error('No such key: ' + id));
 		}
 		switch (params.algo) {
 			case CryptoAlgorithm.AES128_OpenSSLKey:
 				return Q(crypto.encryptAgileKeychainItemData(this.crypto,
 					this.keys[id], plainText));
 			default:
-				return Q.reject('Unknown encryption algorithm');
+				return Q.reject(new Error('Unknown encryption algorithm'));
 		}
 	}
 

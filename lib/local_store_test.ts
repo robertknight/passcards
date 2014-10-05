@@ -15,8 +15,42 @@ import local_store = require('./local_store');
 import stringutil = require('./base/stringutil');
 import testLib = require('./test');
 
-class FakeKeyValueStore implements key_value_store.Store {
-	items: collectionutil.PMap<string,any>;
+class FakeKeyValueDatabase implements key_value_store.Database {
+	stores: Map<string,FakeKeyValueStore>;
+	version: number;
+
+	constructor() {
+		this.stores = new collectionutil.PMap<string,FakeKeyValueStore>();
+		this.version = 0;
+	}
+
+	open(name: string, version: number, schemaUpdateCallback: (schemaUpdater: key_value_store.DatabaseSchemaModifier) => void) {
+		if (version > this.version) {
+			schemaUpdateCallback({
+				createStore : (name: string) => {
+					if (!this.stores.get(name)) {
+						this.stores.set(name, new FakeKeyValueStore);
+					}
+				},
+				currentVersion : () => {
+					return this.version;
+				}
+			});
+			this.version = version;
+		}
+		return Q<void>(null);
+	}
+
+	store(name: string) {
+		if (!this.stores.get(name)) {
+			this.stores.set(name, new FakeKeyValueStore);
+		}
+		return this.stores.get(name);
+	}
+}
+
+class FakeKeyValueStore implements key_value_store.ObjectStore {
+	items: Map<string,any>;
 
 	constructor() {
 		this.items = new collectionutil.PMap<string,any>();
@@ -52,8 +86,7 @@ interface Env {
 	masterPass: string;
 	masterKey: key_agent.Key;
 	keyAgent: key_agent.SimpleKeyAgent;
-	stores: collectionutil.PMap<string, FakeKeyValueStore>;
-	storeFactory: (name: string) => key_value_store.Store;
+	database: FakeKeyValueDatabase;
 }
 
 // TODO - Move to onepass_crypto
@@ -75,15 +108,7 @@ function generateKey(password: string, iterations: number) : key_agent.Key {
 
 function setupEnv() : Env {
 	var keyAgent = new key_agent.SimpleKeyAgent();
-	var stores = new collectionutil.PMap<string, FakeKeyValueStore>();
-	var kvStoreFactory = (name: string) => {
-		var store = stores.get(name);
-		if (!store) {
-			store = new FakeKeyValueStore();
-			stores.set(name, store);
-		}
-		return store;
-	};
+	var database = new FakeKeyValueDatabase();
 
 	var masterPass = 'testpass';
 	var masterKey = generateKey(masterPass, 100);
@@ -92,15 +117,14 @@ function setupEnv() : Env {
 		masterPass: masterPass,
 		masterKey: masterKey,
 		keyAgent: keyAgent,
-		stores: stores,
-		storeFactory: kvStoreFactory
+		database: database
 	};
 }
 
 testLib.addAsyncTest('save and load keys', (assert) => {
 	var env = setupEnv();
 
-	var store = new local_store.Store(env.storeFactory, env.keyAgent);
+	var store = new local_store.Store(env.database, env.keyAgent);
 	var params: key_agent.CryptoParams = {
 		algo: key_agent.CryptoAlgorithm.AES128_OpenSSLKey
 	};
@@ -118,7 +142,7 @@ testLib.addAsyncTest('save and load keys', (assert) => {
 		assert.equal(plainText, 'testcontent');
 
 		// reset the store and try unlocking again
-		store = new local_store.Store(env.storeFactory, env.keyAgent);
+		store = new local_store.Store(env.database, env.keyAgent);
 		return env.keyAgent.forgetKeys();
 	}).then(() => {
 		return store.unlock(env.masterPass);
@@ -133,7 +157,7 @@ testLib.addAsyncTest('save and load keys', (assert) => {
 
 testLib.addAsyncTest('save and load items', (assert) => {
 	var env = setupEnv();
-	var store = new local_store.Store(env.storeFactory, env.keyAgent);
+	var store = new local_store.Store(env.database, env.keyAgent);
 	var params = { algo: key_agent.CryptoAlgorithm.AES128_OpenSSLKey };
 
 	var item = new item_builder.Builder(item_store.ItemTypes.LOGIN)

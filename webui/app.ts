@@ -187,6 +187,8 @@ class AppView extends reactts.ReactComponentBase<AppViewProps, AppViewState> {
 				return item.isRegularItem();
 			});
 			this.setState(state);
+		}).catch((err) => {
+			console.log('Error listing items: ', err);
 		});
 	}
 
@@ -677,10 +679,13 @@ export class App {
 		keyAgent.setAutoLockTimeout(2 * 60 * 1000);
 
 		var siteInfoProvider = new siteinfo_client.PasscardsClient();
-		var iconDiskCache = new key_value_store.IndexedDBStore('passcards', 'icon-cache');
+		var iconDiskCache = new key_value_store.IndexedDBDatabase();
+		iconDiskCache.open('passcards', 1 /* version */, (schemaModifier) => {
+			schemaModifier.createStore('icon-cache');
+		});
 
 		this.services = {
-			iconProvider: new item_icons.ItemIconProvider(iconDiskCache, siteInfoProvider, 48),
+			iconProvider: new item_icons.ItemIconProvider(iconDiskCache.store('icon-cache'), siteInfoProvider, 48),
 			autofiller: new autofill.AutoFiller(pageAccess),
 			pageAccess: pageAccess,
 			keyAgent: keyAgent,
@@ -704,12 +709,9 @@ export class App {
 
 		fs.login().then(() => {
 			try {
-				var localStoreFactory = (name: string) => {
-					return new key_value_store.IndexedDBStore('passcards-items', name);
-				};
-
+				var itemDatabase = new key_value_store.IndexedDBDatabase();
 				var vault = new onepass.Vault(fs, '/1Password/1Password.agilekeychain', this.services.keyAgent);
-				var store = new local_store.Store(localStoreFactory, this.services.keyAgent);
+				var store = new local_store.Store(itemDatabase, this.services.keyAgent);
 				var syncer = new sync.Syncer(store, vault);
 				syncer.syncKeys().then(() => {
 					console.log('Encryption keys synced')

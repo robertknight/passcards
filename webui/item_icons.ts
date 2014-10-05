@@ -66,7 +66,7 @@ export class ItemIconProvider {
 	  *                 the actual icon image may be larger or smaller than the preferred
 	  *                 size.
 	  */
-	constructor(cacheStore: key_value_store.Store, provider: site_info.SiteInfoProvider, iconSize: number) {
+	constructor(cacheStore: key_value_store.ObjectStore, provider: site_info.SiteInfoProvider, iconSize: number) {
 		this.tempCache = new collectionutil.PMap<string,Icon>();
 		this.diskCache = new Cache(cacheStore);
 		this.provider = provider;
@@ -234,7 +234,7 @@ interface CacheEntry {
 }
 
 class Cache {
-	constructor(private store: key_value_store.Store) {
+	constructor(private store: key_value_store.ObjectStore) {
 	}
 
 	/** Look up the icons for @p url in the cache.

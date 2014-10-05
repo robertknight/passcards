@@ -32,17 +32,25 @@ interface ItemOverview {
 export class Store implements item_store.Store {
 	private crypto: onepass_crypto.Crypto;
 	private keyAgent: key_agent.KeyAgent;
-	private keyStore: key_value_store.Store;
-	private itemStore: key_value_store.Store;
+	private keyStore: key_value_store.ObjectStore;
+	private itemStore: key_value_store.ObjectStore;
 
 	onItemUpdated: event_stream.EventStream<item_store.Item>;
 	onUnlock: event_stream.EventStream<void>;
 
-	constructor(storeFactory: key_value_store.StoreFactory, keyAgent: key_agent.KeyAgent) {
+	constructor(database: key_value_store.Database, keyAgent: key_agent.KeyAgent) {
+		database.open('passcards-items', 1, (schemaUpdater) => {
+			if (schemaUpdater.currentVersion() < 1) {
+				schemaUpdater.createStore('key-store');
+				schemaUpdater.createStore('item-store');
+			}
+		});
+
 		this.keyAgent = keyAgent;
 		this.crypto = onepass_crypto.defaultCrypto;
-		this.keyStore = storeFactory('key-store');
-		this.itemStore = storeFactory('item-store');
+
+		this.keyStore = database.store('key-store');
+		this.itemStore = database.store('item-store');
 
 		this.onItemUpdated = new event_stream.EventStream<item_store.Item>();
 		this.onUnlock = new event_stream.EventStream<void>();
@@ -177,6 +185,9 @@ export class Store implements item_store.Store {
 	// returns the key used to encrypt item overview data
 	private overviewKey() {
 		return this.keyAgent.listKeys().then((keyIds) => {
+			if (keyIds.length < 1) {
+				throw new Error('Unable to fetch overview key. Vault may be locked?');
+			}
 			return keyIds[0];
 		});
 	}
