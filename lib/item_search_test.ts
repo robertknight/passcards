@@ -5,7 +5,7 @@ import testLib = require('./test');
 function itemWithTitleAndUrl(title: string, url: string) : item_store.Item {
 	var item = new item_store.Item();
 	item.title = title;
-	item.location = url;
+	item.locations.push(url);
 	return item;
 }
 

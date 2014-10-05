@@ -24,7 +24,7 @@ interface ItemOverview {
 	title: string;
 	updatedAt: number;
 	createdAt: number;
-	location: string;
+	locations: string[];
 	trashed: boolean;
 	typeName: string;
 	openContents: item_store.ItemOpenContents;
@@ -102,7 +102,7 @@ export class Store implements item_store.Store {
 			item.title = overview.title;
 			item.updatedAt = new Date(overview.updatedAt);
 			item.createdAt = new Date(overview.createdAt);
-			item.location = overview.location;
+			item.locations = overview.locations;
 			item.trashed = overview.trashed;
 			item.typeName = overview.typeName;
 			item.openContents = overview.openContents;
@@ -119,11 +119,13 @@ export class Store implements item_store.Store {
 			key = _key;
 			return item.getContent();
 		}).then((content) => {
+			item.updateOverviewFromContent(content);
+
 			var itemOverview: ItemOverview = {
 				title: item.title,
 				updatedAt: item.updatedAt.getTime(),
 				createdAt: item.createdAt.getTime(),
-				location: item.location,
+				locations: item.locations,
 				trashed: item.trashed,
 				typeName: <string>item.typeName,
 				openContents: item.openContents

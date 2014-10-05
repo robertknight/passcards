@@ -226,7 +226,10 @@ export class CLI {
 		this.printf('\nInfo:');
 		this.printf('  ID: %s', item.uuid);
 		this.printf('  Updated: %s', item.updatedAt);
-		this.printf('  Location: %s', item.location);
+
+		item.locations.forEach((location) => {
+			this.printf('  Location: %s', location);
+		});
 
 		if (item.trashed) {
 			this.printf('  In Trash: Yes');

@@ -560,15 +560,15 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 			detailsContent = react.DOM.div({className: 'detailsContent'},
 				react.DOM.div({className: 'detailsHeader'},
 					new item_icons.IconControl({
-						location: this.props.item.location,
+						location: this.props.item.primaryLocation(),
 						iconProvider: this.props.iconProvider,
 						visible: true
 					}),
 					react.DOM.div({className: 'detailsOverview'},
 						react.DOM.div({className: 'detailsTitle'}, this.props.item.title),
 						react.DOM.div({className: 'detailsLocation'},
-							react.DOM.a({href: this.props.item.location},
-								url_util.domain(this.props.item.location)
+							react.DOM.a({href: this.props.item.primaryLocation()},
+								url_util.domain(this.props.item.primaryLocation())
 							)
 						)
 					)

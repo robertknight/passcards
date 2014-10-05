@@ -13,13 +13,16 @@ export function repairItem(item: item_store.Item, reportError: (err: string) => 
 		// item URLs are stored in the overview data and encrypted
 		// in the content. Check that the URLs in the overview data
 		// match those in the encrypted content
-
 		var expectedLocation = content.urls.length > 0 ? content.urls[0].url : '';
 		var wasRepaired = false;
-		if (item.location != expectedLocation) {
+		if (item.primaryLocation() != expectedLocation) {
 			reportError(sprintf('%s:', item.title));
-			reportError(sprintf('  Location mismatch. Actual "%s", expected "%s"', item.location, expectedLocation));
-			item.location = expectedLocation;
+			reportError(sprintf('  Location mismatch. Actual "%s", expected "%s"', item.primaryLocation(), expectedLocation));
+
+			item.locations = [];
+			content.urls.forEach((url) => {
+				item.locations.push(url.url);
+			});
 			wasRepaired = true;
 		}
 

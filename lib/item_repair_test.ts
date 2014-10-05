@@ -18,7 +18,7 @@ testLib.addAsyncTest('fix location field', (assert) => {
 
 	// set Location to incorrect value in item overview
 	// data
-	item.location = '';
+	item.locations = [];
 
 	var reports: string[] = [];
 
@@ -30,7 +30,7 @@ testLib.addAsyncTest('fix location field', (assert) => {
 	});
 
 	repaired.then(() => {
-		assert.equal(item.location, content.urls[0].url);
+		assert.deepEqual(item.locations, [content.urls[0].url]);
 		assert.ok(reports.length > 0);
 
 		testLib.continueTests();

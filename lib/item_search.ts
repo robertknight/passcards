@@ -99,8 +99,11 @@ export function matchItem(item: item_store.Item, pattern: string) : boolean {
 			return true;
 		}
 
-		if (item.location && item.location.toLowerCase().indexOf(token) != -1) {
-			return true;
+		for (var i=0; i < item.locations.length; i++) {
+			var location = item.locations[i];
+			if (location.toLowerCase().indexOf(token) != -1) {
+				return true;
+			}
 		}
 
 		return false;
@@ -120,12 +123,8 @@ export function lookupItems(store: item_store.Store, pattern: string) : Q.Promis
 	});
 }
 
-/** Returns a score indicating the relevance of an item to a URL.
-  * A positive (> 0) score indicates some relevance. A zero or negative
-  * score indicates no match.
-  */
-export function itemUrlScore(item: item_store.Item, url: string) {
-	var itemUrl = url_util.normalize(item.location);
+function urlScore(itemUrl: string, url: string) {
+	itemUrl = url_util.normalize(itemUrl);
 	url = url_util.normalize(url);
 
 	var parsedItemUrl = urijs(itemUrl);
@@ -155,6 +154,21 @@ export function itemUrlScore(item: item_store.Item, url: string) {
 	}
 
 	return 0;
+}
+
+/** Returns a score indicating the relevance of an item to a URL.
+  * A positive (> 0) score indicates some relevance. A zero or negative
+  * score indicates no match.
+  */
+export function itemUrlScore(item: item_store.Item, url: string) {
+	var maxScore = 0;
+	item.locations.forEach((itemUrl) => {
+		var score = urlScore(itemUrl, url);
+		if (score > maxScore) {
+			maxScore = score;
+		}
+	});
+	return maxScore;
 }
 
 /** Returns a ranked list of items which may match a given URL. */

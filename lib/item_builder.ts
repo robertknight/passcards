@@ -46,9 +46,7 @@ export class Builder {
 	}
 
 	addUrl(url: string) : Builder {
-		if (this._content.urls.length == 0) {
-			this._item.location = url;
-		}
+		this._item.locations.push(url);
 		this._content.urls.push({
 			label: 'website',
 			url: url

@@ -71,7 +71,7 @@ export function toAgileKeychainItem(item: item_store.Item, encryptedData: string
 	keychainItem.encrypted = btoa(encryptedData);
 	keychainItem.typeName = item.typeName;
 	keychainItem.uuid = item.uuid;
-	keychainItem.location = item.location;
+	keychainItem.location = item.primaryLocation();
 	keychainItem.folderUuid = item.folderUuid;
 	keychainItem.faveIndex = item.faveIndex;
 	keychainItem.trashed = item.trashed;
@@ -104,7 +104,11 @@ export function fromAgileKeychainItem(vault: Vault, data: agilekeychain.Item) : 
 	item.typeName = data.typeName;
 	item.uuid = data.uuid;
 	item.createdAt = dateutil.dateFromUnixTimestamp(data.createdAt);
-	item.location = data.location;
+
+	if (data.location) {
+		item.locations.push(data.location);
+	}
+
 	item.folderUuid = data.folderUuid;
 	item.faveIndex = data.faveIndex;
 	item.trashed = data.trashed;
@@ -403,6 +407,8 @@ export class Vault {
 
 		// update the '<item ID>.1password' file
 		var itemSaved = item.getContent().then((content) => {
+			item.updateOverviewFromContent(content);
+
 			var contentJSON = JSON.stringify(toAgileKeychainContent(content));
 			return this.encryptItemData(DEFAULT_AGILEKEYCHAIN_SECURITY_LEVEL, contentJSON);
 		}).then((encryptedContent) => {
@@ -468,7 +474,7 @@ export class Vault {
 				entry[0] = item.uuid;
 				entry[1] = item.typeName;
 				entry[2] = item.title;
-				entry[3] = item.location;
+				entry[3] = item.primaryLocation();
 				entry[4] = dateutil.unixTimestampFromDate(item.updatedAt);
 				entry[5] = item.folderUuid;
 				entry[6] = 0; // TODO - Find out what this is used for
@@ -509,7 +515,12 @@ export class Vault {
 				item.uuid = entry[0];
 				item.typeName = entry[1];
 				item.title = entry[2];
-				item.location = entry[3];
+
+				var primaryLocation = entry[3];
+				if (primaryLocation) {
+					item.locations.push(primaryLocation);
+				}
+
 				item.updatedAt = dateutil.dateFromUnixTimestamp(entry[4]);
 				item.folderUuid = entry[5];
 				item.trashed = entry[7] === "Y";

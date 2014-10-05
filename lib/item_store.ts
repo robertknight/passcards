@@ -169,7 +169,7 @@ export class Item {
 	// overview metadata fields
 	typeName: ItemType;
 	title: string;
-	location: string;
+	locations: string[];
 	openContents: ItemOpenContents;
 
 	/** The decrypted content of the item, either set
@@ -195,7 +195,7 @@ export class Item {
 		this.trashed = false;
 		this.typeName = ItemTypes.LOGIN;
 		this.folderUuid = '';
-		this.location = '';
+		this.locations = [];
 	}
 
 	/** Retrieves and decrypts the content of a 1Password item.
@@ -241,12 +241,6 @@ export class Item {
 		if (!this.content && !this.isSaved()) {
 			return Q.reject('Unable to save new item, no content set');
 		}
-
-		// set item location to match current URL list
-		if (this.content && this.content.urls.length > 0) {
-			this.location = this.content.urls[0].url;
-		}
-
 		this.store = store;
 		return this.store.saveItem(this);
 	}
@@ -264,7 +258,7 @@ export class Item {
 		this.trashed = true;
 		this.setContent(new ItemContent);
 		this.folderUuid = '';
-		this.location = '';
+		this.locations = [];
 		this.faveIndex = null;
 		this.openContents = null;
 
@@ -331,6 +325,29 @@ export class Item {
 		if (prevDate && this.updatedAt.getTime() - prevDate.getTime() < 1000) {
 			this.updatedAt = new Date(prevDate.getTime() + 1000);
 		}
+	}
+
+	/** Returns the main URL associated with this item or an empty
+	  * string if there are no associated URLs.
+	  */
+	primaryLocation() : string {
+		if (this.locations.length > 0) {
+			return this.locations[0];
+		} else {
+			return '';
+		}
+	}
+
+	/** Update item overview metadata to match the complete
+	  * content of an item.
+	  *
+	  * This updates the URL list for an item.
+	  */
+	updateOverviewFromContent(content: ItemContent) {
+		this.locations = [];
+		content.urls.forEach((url) => {
+			this.locations.push(url.url);
+		});
 	}
 }
 
@@ -590,6 +607,7 @@ export class TempStore implements Store {
 			this.items.push(item);
 		}
 		return item.getContent().then((content) => {
+			item.updateOverviewFromContent(content);
 			this.content.set(item.uuid, content);
 			this.onItemUpdated.publish(item);
 		});

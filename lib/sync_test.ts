@@ -92,7 +92,7 @@ testLib.addAsyncTest('sync vault', (assert) => {
 		//    to the local store
 		assert.equal(storeItems.length, 1);
 		assert.equal(storeItems[0].title, item.title);
-		assert.equal(storeItems[0].location, item.location);
+		assert.deepEqual(storeItems[0].locations, item.locations);
 		return storeItems[0].getContent();
 	}).then((content) => {
 		// 3.1. Check that the encrypted content was synced

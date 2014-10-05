@@ -143,7 +143,7 @@ class Item extends reactts.ReactComponentBase<ItemProps, {}> {
 				}
 			}),
 			new item_icons.IconControl({
-				location: this.props.item.location,
+				location: this.props.item.primaryLocation(),
 				iconProvider: this.props.iconProvider,
 			}),
 			react.DOM.div({className: 'itemDetails'},
@@ -214,7 +214,7 @@ class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> 
 			key: item.uuid,
 			item: item,
 			accountName: this.itemAccount(item),
-			domain: url_util.domain(item.location),
+			domain: url_util.domain(item.primaryLocation()),
 			onSelected: () => {
 				this.setSelectedItem(item);
 			},

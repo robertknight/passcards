@@ -233,7 +233,7 @@ testLib.addAsyncTest('Save item', (assert) => {
 	createTestVault().then((vault) => {
 		var item = new item_store.Item(vault);
 		item.title = 'New Test Item';
-		item.location = 'mysite.com';
+		item.locations.push('mysite.com');
 		var content = new item_store.ItemContent();
 		content.urls.push({
 			url: 'mysite.com',
@@ -330,7 +330,7 @@ testLib.addAsyncTest('Update item', (assert) => {
 
 			// check that Item.location property is updated
 			// to match URL list on save
-			assert.equal(loadedItem.location, 'newsite.com');
+			assert.deepEqual(loadedItem.locations, ['newsite.com']);
 
 			// check that Item.updatedAt is updated on save
 			assert.ok(loadedItem.updatedAt > originalSaveDate);
@@ -507,7 +507,7 @@ testLib.addAsyncTest('Save existing item to new vault', (assert) => {
 		vault = vault_;
 		item = new item_store.Item();
 		item.title = 'Existing Item';
-		item.location = 'somesite.com';
+		item.locations.push('somesite.com');
 		item.setContent(new item_store.ItemContent());
 		return item.saveTo(vault);
 	}).then(() => {
@@ -558,7 +558,7 @@ testLib.addTest('Item field value formatting', (assert) => {
 
 testLib.addTest('Default item properties', (assert) => {
 	var item = new item_store.Item();
-	assert.strictEqual(item.location, '');
+	assert.deepEqual(item.locations, []);
 	assert.strictEqual(item.trashed, false);
 	assert.equal(item.uuid.length, 32);
 

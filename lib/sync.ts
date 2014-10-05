@@ -153,7 +153,6 @@ export class Syncer {
 		storeItem.title = vaultItem.title;
 		storeItem.typeName = vaultItem.typeName;
 		storeItem.createdAt = vaultItem.createdAt;
-		storeItem.location = vaultItem.location;
 		storeItem.folderUuid = vaultItem.folderUuid;
 		storeItem.faveIndex = vaultItem.faveIndex;
 		storeItem.trashed = vaultItem.trashed;
@@ -161,6 +160,7 @@ export class Syncer {
 
 		return vaultItem.getContent().then((content) => {
 			storeItem.setContent(underscore.clone(content));
+			storeItem.updateOverviewFromContent(content);
 			return this.store.saveItem(storeItem);
 		});
 	}
