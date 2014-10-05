@@ -59,6 +59,8 @@ import url_util = require('../base/url_util');
 // to an icon for the site.
 //
 // See also: 
+// - http://microformats.org/wiki/existing-rel-values (list of known
+//   values for 'rel' attribute of <link> tags)
 // - http://www.iacquire.com/blog/18-meta-tags-every-webpage-should-have-in-2013
 // - Google structured data testing tool: http://www.google.com/webmasters/tools/richsnippets
 // 
@@ -66,6 +68,7 @@ var ICON_LINK_TYPES : PageLink[] = [
   // Favicons
   { type: MetaTagType.Link, rel: 'icon' },
   { type: MetaTagType.Link, rel: 'shortcut icon' },
+  { type: MetaTagType.Link, rel: 'image_src' },
 
   // iOS hi-DPI site icons
   { type: MetaTagType.Link, rel: 'apple-touch-icon' },
