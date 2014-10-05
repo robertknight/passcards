@@ -146,6 +146,8 @@ export class Store implements item_store.Store {
 			var overviewSaved = this.itemStore.set('overview/' + item.uuid, encryptedOverview);
 			var contentSaved = this.itemStore.set('content/' + item.uuid, encryptedContent);
 			return asyncutil.eraseResult(Q.all([overviewSaved, contentSaved]));
+		}).then(() => {
+			this.onItemUpdated.publish(item);
 		});
 	}
 

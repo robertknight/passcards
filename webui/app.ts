@@ -155,21 +155,17 @@ class AppView extends reactts.ReactComponentBase<AppViewProps, AppViewState> {
 			}
 			changes.syncer.onProgress.listen(this.state.syncListener);
 		}
-
+		// listen for updates to items in the store
+		if (changes.store) {
+			var debouncedRefresh = underscore.debounce(() => {
+				this.refreshItems()
+			}, 300);
+			changes.store.onItemUpdated.listen(debouncedRefresh);
+		}
 		super.setState(changes);
 
 		if (doRefresh) {
 			this.refreshItems();
-
-			// listen for updates to items in the store
-			if (changes.store) {
-				var debouncedRefresh = underscore.debounce(() => {
-					if (!this.state.isLocked) {
-						this.refreshItems()
-					}
-				}, 300);
-				changes.store.onItemUpdated.listen(debouncedRefresh);
-			}
 		}
 	}
 
