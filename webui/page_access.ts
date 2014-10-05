@@ -226,6 +226,7 @@ export class ChromeExtensionPageAccess implements PageAccess, ClipboardAccess {
 		this.connectToCurrentTab().then((rpc) => {
 			rpc.call('find-fields', [], (err: any, forms: forms.InputField[]) => {
 				if (err) {
+					console.log('Error listing form fields:', err);
 					callback([]);
 					return;
 				}

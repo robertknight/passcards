@@ -85,13 +85,20 @@ function collectFieldsInDocument(document: Document) : InputField[] {
 	// the relation between the child <iframe> and the main document.
 	var frames = document.querySelectorAll('iframe');
 	for (i=0; i < frames.length; i++) {
+		// in Firefox (v.32+), the contentDocument property is missing for cross-origin
+		// iframes. In Chrome (v.37+), attempting to access the property results in
+		// a SecurityException error
 		var frame = <HTMLIFrameElement>frames.item(i);
-		if (frame.contentDocument) {
-			var documentFields = collectFieldsInDocument(frame.contentDocument);
-			documentFields.forEach((field) => {
-				field.field.key += fields.length;
-			});
-			fields = fields.concat(documentFields);
+		try {
+			if (frame.contentDocument) {
+				var documentFields = collectFieldsInDocument(frame.contentDocument);
+				documentFields.forEach((field) => {
+					field.field.key += fields.length;
+				});
+				fields = fields.concat(documentFields);
+			}
+		} catch (ex) {
+			console.log('Unable to collect fields from iframe:', ex);
 		}
 	}
 
