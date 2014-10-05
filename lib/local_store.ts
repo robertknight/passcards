@@ -1,6 +1,7 @@
 /// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
 
 import Q = require('q');
+import underscore = require('underscore');
 
 import asyncutil = require('./base/asyncutil');
 import event_stream = require('./base/event_stream');
@@ -156,7 +157,11 @@ export class Store implements item_store.Store {
 		}).then((encryptedContent) => {
 			return this.keyAgent.decrypt(key, encryptedContent.data, {algo: key_agent.CryptoAlgorithm.AES128_OpenSSLKey});
 		}).then((decrypted) => {
-			return <item_store.ItemContent>JSON.parse(decrypted);
+			// TODO - Split item_store.ItemContent into data which can
+			// be serialized directly and methods related to that data
+			var content = new item_store.ItemContent();
+			underscore.extend(content, JSON.parse(decrypted));
+			return content;
 		});
 	}
 

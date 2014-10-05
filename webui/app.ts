@@ -142,14 +142,12 @@ class AppView extends reactts.ReactComponentBase<AppViewProps, AppViewState> {
 
 	setState(changes: AppViewState) {
 		var doRefresh = false;
-		if (changes.store && changes.store != this.state.store) {
-			doRefresh = true;
-		}
 		if (changes.currentUrl && changes.currentUrl != this.state.currentUrl) {
 			changes.selectedItem = null;
 		}
-		if (changes.isLocked === false) {
+		if (this.state.isLocked && changes.isLocked === false) {
 			changes.selectedItem = null;
+			doRefresh = true;
 		}
 		if (changes.syncer) {
 			if (this.state.syncer) {
@@ -166,7 +164,9 @@ class AppView extends reactts.ReactComponentBase<AppViewProps, AppViewState> {
 			// listen for updates to items in the store
 			if (changes.store) {
 				var debouncedRefresh = underscore.debounce(() => {
-					this.refreshItems()
+					if (!this.state.isLocked) {
+						this.refreshItems()
+					}
 				}, 300);
 				changes.store.onItemUpdated.listen(debouncedRefresh);
 			}
@@ -178,7 +178,7 @@ class AppView extends reactts.ReactComponentBase<AppViewProps, AppViewState> {
 	}
 
 	refreshItems() {
-		if (!this.state.store) {
+		if (!this.state.store || this.state.isLocked) {
 			return;
 		}
 		this.state.store.listItems().then((items) => {
