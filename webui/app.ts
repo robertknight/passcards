@@ -180,7 +180,7 @@ class AppView extends reactts.ReactComponentBase<AppViewProps, AppViewState> {
 		this.state.store.listItems().then((items) => {
 			var state = this.state;
 			state.items = underscore.filter(items, (item) => {
-				return item.isRegularItem();
+				return item.isRegularItem() && !item.trashed;
 			});
 			this.setState(state);
 		}).catch((err) => {
