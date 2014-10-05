@@ -169,8 +169,10 @@ export class Item {
 	// overview metadata fields
 	typeName: ItemType;
 	title: string;
-	locations: string[];
 	openContents: ItemOpenContents;
+	
+	locations: string[];
+	account: string;
 
 	/** The decrypted content of the item, either set
 	  * via setContent() or decrypted on-demand by
@@ -348,6 +350,8 @@ export class Item {
 		content.urls.forEach((url) => {
 			this.locations.push(url.url);
 		});
+
+		this.account = content.account();
 	}
 }
 

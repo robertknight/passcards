@@ -109,7 +109,6 @@ export class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, 
 class ItemProps {
 	key: string;
 	item: item_store.Item;
-	accountName: string;
 	domain: string;
 	onSelected: () => void;
 	isHovered: boolean;
@@ -149,7 +148,7 @@ class Item extends reactts.ReactComponentBase<ItemProps, {}> {
 			react.DOM.div({className: 'itemDetails'},
 				react.DOM.div({className: 'itemTitle'}, this.props.item.title),
 				react.DOM.div({className: 'itemLocation'}, this.props.domain),
-				react.DOM.div({className: 'itemAccount'}, this.props.accountName)
+				react.DOM.div({className: 'itemAccount'}, this.props.item.account)
 			)
 		);
 	}
@@ -180,15 +179,6 @@ class ItemListProps {
 
 class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> {
 
-	itemAccount(item: item_store.Item) : string {
-		// TODO - Extract item contents and save account name
-		// for future use
-		//
-		// In the Agile Keychain format it is only available
-		// after the item has been decrypted
-		return '';
-	}
-
 	setSelectedItem(item: item_store.Item) {
 		var state = this.state;
 		state.selectedItem = item;
@@ -213,8 +203,7 @@ class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> 
 		return new Item({
 			key: item.uuid,
 			item: item,
-			accountName: this.itemAccount(item),
-			domain: url_util.domain(item.primaryLocation()),
+			domain: url_util.domain(url_util.normalize(item.primaryLocation())),
 			onSelected: () => {
 				this.setSelectedItem(item);
 			},

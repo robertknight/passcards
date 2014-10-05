@@ -24,10 +24,12 @@ interface ItemOverview {
 	title: string;
 	updatedAt: number;
 	createdAt: number;
-	locations: string[];
 	trashed: boolean;
 	typeName: string;
 	openContents: item_store.ItemOpenContents;
+
+	locations: string[];
+	account: string;
 }
 
 export class Store implements item_store.Store {
@@ -102,10 +104,13 @@ export class Store implements item_store.Store {
 			item.title = overview.title;
 			item.updatedAt = new Date(overview.updatedAt);
 			item.createdAt = new Date(overview.createdAt);
-			item.locations = overview.locations;
 			item.trashed = overview.trashed;
 			item.typeName = overview.typeName;
 			item.openContents = overview.openContents;
+			
+			item.account = overview.account;
+			item.locations = overview.locations;
+
 			return item;
 		});
 	}
@@ -125,10 +130,12 @@ export class Store implements item_store.Store {
 				title: item.title,
 				updatedAt: item.updatedAt.getTime(),
 				createdAt: item.createdAt.getTime(),
-				locations: item.locations,
 				trashed: item.trashed,
 				typeName: <string>item.typeName,
-				openContents: item.openContents
+				openContents: item.openContents,
+
+				locations: item.locations,
+				account: item.account
 			};
 			var contentData = this.keyAgent.encrypt(key, JSON.stringify(content), cryptoParams);
 			var overviewData = this.keyAgent.encrypt(key, JSON.stringify(itemOverview), cryptoParams);
