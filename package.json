@@ -10,7 +10,7 @@
     "less": "^1.7.4",
     "qunitjs": ">=1.14",
     "tslint": ">=0.4.8",
-    "typescript": ">=1.0",
+    "typescript": "^1.1.0-1",
     "xdiff": ">=0.2.11"
   },
   "dependencies": {

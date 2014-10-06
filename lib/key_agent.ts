@@ -149,7 +149,10 @@ export class SimpleKeyAgent {
 	private crypto: crypto.Crypto;
 	private keys: {[id:string] : string};
 	private lockEvents: event_stream.EventStream<void>;
-	private lockTimeout: number;
+
+	// in Node, setTimeout() returns a Timer, in the browser
+	// it returns a number
+	private lockTimeout: any;
 
 	keyCount() : number {
 		return Object.keys(this.keys).length;
