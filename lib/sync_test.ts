@@ -1,8 +1,9 @@
+/// <reference path="../typings/DefinitelyTyped/clone/clone.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
 
+import clone = require('clone');
 import Q = require('q');
-import underscore = require('underscore');
 
 import asyncutil = require('./base/asyncutil');
 import item_builder = require('./item_builder');
@@ -133,7 +134,7 @@ testLib.addAsyncTest('sync progress', (assert) => {
 	return setup().then((_env) => {
 		env = _env;
 		env.syncer.onProgress.listen((progress) => {
-			progressUpdates.push(underscore.clone(progress));
+			progressUpdates.push(<sync.SyncProgress>clone(progress));
 		});
 		return item.saveTo(env.vault);
 	}).then(() => {

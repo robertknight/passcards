@@ -158,7 +158,7 @@ export class Syncer {
 		storeItem.folderUuid = vaultItem.folderUuid;
 		storeItem.faveIndex = vaultItem.faveIndex;
 		storeItem.trashed = vaultItem.trashed;
-		storeItem.openContents = underscore.clone(vaultItem.openContents);
+		storeItem.openContents = <item_store.ItemOpenContents>clone(vaultItem.openContents);
 
 		return vaultItem.getContent().then((content) => {
 			storeItem.setContent(<item_store.ItemContent>clone(content));
