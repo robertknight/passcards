@@ -54,7 +54,18 @@ export class IndexedDBDatabase implements Database {
 					db.createObjectStore(name);
 				},
 				currentVersion : () => {
-					return e.oldVersion;
+					// [WORKAROUND / iOS 8.0 / Bug #136888] - the initial current
+					// version reported for a new DB is a large positive value
+					// (specifically, the result of Math.pow(2,63)) instead of 0 or undefined.
+					//
+					// Set old version to 0 if it appears to be invalid so that
+					// correct schema upgrade steps are run.
+					var MAX_SCHEMA_VERSION = Math.pow(2,50);
+					var oldVersion = e.oldVersion || 0;
+					if (oldVersion > MAX_SCHEMA_VERSION) {
+						oldVersion = 0;
+					}
+					return oldVersion;
 				}
 			});
 		};
