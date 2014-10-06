@@ -19,6 +19,7 @@
     "assert": ">=1.1.0",
     "atob": ">=1.1",
     "btoa": ">=1.1",
+    "clone": "^0.1.18",
     "crypto-js": "^3.1.2",
     "dropbox": "https://github.com/robertknight/dropbox-js/archive/c2b797baaa65280d2a59c7086b339f63a9cc842d.tar.gz",
     "es6-shim": ">=0.10.0",

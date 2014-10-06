@@ -1,7 +1,9 @@
+/// <reference path="../typings/DefinitelyTyped/clone/clone.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
 /// <reference path="../typings/sprintf.d.ts" />
 
+import clone = require('clone');
 import Q = require('q');
 import sprintf = require('sprintf');
 import underscore = require('underscore');
@@ -159,8 +161,7 @@ export class Syncer {
 		storeItem.openContents = underscore.clone(vaultItem.openContents);
 
 		return vaultItem.getContent().then((content) => {
-			storeItem.setContent(underscore.clone(content));
-			storeItem.updateOverviewFromContent(content);
+			storeItem.setContent(<item_store.ItemContent>clone(content));
 			return this.store.saveItem(storeItem);
 		});
 	}
