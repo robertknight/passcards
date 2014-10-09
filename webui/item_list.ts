@@ -147,7 +147,6 @@ class Item extends reactts.ReactComponentBase<ItemProps, {}> {
 			}),
 			react.DOM.div({className: 'itemDetails'},
 				react.DOM.div({className: 'itemTitle'}, this.props.item.title),
-				react.DOM.div({className: 'itemLocation'}, this.props.domain),
 				react.DOM.div({className: 'itemAccount'}, this.props.item.account)
 			)
 		);
