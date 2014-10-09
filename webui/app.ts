@@ -562,7 +562,8 @@ class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
 					new item_icons.IconControl({
 						location: this.props.item.primaryLocation(),
 						iconProvider: this.props.iconProvider,
-						visible: true
+						visible: true,
+						isFocused: false
 					}),
 					react.DOM.div({className: 'detailsOverview'},
 						react.DOM.div({className: 'detailsTitle'}, this.props.item.title),

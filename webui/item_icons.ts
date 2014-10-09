@@ -8,6 +8,7 @@
 import Q = require('q');
 import react = require('react');
 import reactts = require('react-typescript');
+import stringutil = require('../lib/base/stringutil');
 import underscore = require('underscore');
 import urijs = require('URIjs');
 
@@ -271,6 +272,7 @@ class Cache {
 export class IconControlProps {
 	location: string;
 	iconProvider: ItemIconProvider;
+	isFocused: boolean;
 }
 
 export class IconControl extends reactts.ReactComponentBase<IconControlProps, {}> {
@@ -311,7 +313,10 @@ export class IconControl extends reactts.ReactComponentBase<IconControlProps, {}
 	render() {
 		var iconUrl = this.props.iconProvider.query(this.props.location).iconUrl;
 
-		return react.DOM.div({className: 'itemIconContainer'},
+		return react.DOM.div({className: stringutil.truthyKeys({
+			  itemIconContainer: true,
+			  focused: this.props.isFocused
+			})},
 			react.DOM.img({className: 'itemIcon', src: iconUrl})
 		);
 	}

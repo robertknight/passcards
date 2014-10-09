@@ -71,13 +71,13 @@ export class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, 
 				onQueryChanged: this.updateFilter,
 				ref: 'searchField',
 				onMoveUp: () => {
-					(<ItemList>this.refs['itemList']).hoverPrevItem();
+					(<ItemList>this.refs['itemList']).focusPrevItem();
 				},
 				onMoveDown: () => {
-					(<ItemList>this.refs['itemList']).hoverNextItem();
+					(<ItemList>this.refs['itemList']).focusNextItem();
 				},
 				onActivate: () => {
-					this.props.onSelectedItemChanged((<ItemList>this.refs['itemList']).hoveredItem());
+					this.props.onSelectedItemChanged((<ItemList>this.refs['itemList']).focusedItem());
 				},
 				onLockClicked: () => this.props.onLockClicked()
 			}),
@@ -111,7 +111,7 @@ class ItemProps {
 	item: item_store.Item;
 	domain: string;
 	onSelected: () => void;
-	isHovered: boolean;
+	isFocused: boolean;
 	iconProvider: item_icons.ItemIconProvider;
 	index: number;
 	offsetTop: number;
@@ -123,10 +123,15 @@ class Item extends reactts.ReactComponentBase<ItemProps, {}> {
 	}
 
 	render() {
+		var focusIndicator: react.ReactComponent<any,any>;
+		if (this.props.isFocused) {
+			focusIndicator = react.DOM.div({className: 'itemFocusIndicator'}, '>');
+		}
+
 		return react.DOM.div({
 				className: stringutil.truthyKeys({
 					itemOverview: true,
-					itemHovered: this.props.isHovered,
+					itemFocused: this.props.isFocused,
 				}),
 				ref: 'itemOverview',
 				onClick: () => this.props.onSelected(),
@@ -144,11 +149,13 @@ class Item extends reactts.ReactComponentBase<ItemProps, {}> {
 			new item_icons.IconControl({
 				location: this.props.item.primaryLocation(),
 				iconProvider: this.props.iconProvider,
+				isFocused: this.props.isFocused
 			}),
 			react.DOM.div({className: 'itemDetails'},
 				react.DOM.div({className: 'itemTitle'}, this.props.item.title),
 				react.DOM.div({className: 'itemAccount'}, this.props.item.account)
-			)
+			),
+			focusIndicator
 		);
 	}
 }
@@ -157,7 +164,7 @@ interface ItemListState {
 	// TODO - Remove selected item here
 	selectedItem?: item_store.Item;
 
-	hoveredIndex?: number;
+	focusedIndex?: number;
 	matchingItems?: item_store.Item[];
 
 	visibleIndexes? : {
@@ -188,14 +195,14 @@ class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> 
 	getInitialState() {
 		return {
 			selectedItem: <item_store.Item>null,
-			hoveredIndex: 0,
+			focusedIndex: 0,
 			matchingItems: <item_store.Item[]>[],
 			itemHeight: 60
 		};
 	}
 
 	createListItem(item: item_store.Item, state: {
-		hovered: boolean;
+		focused: boolean;
 		index: number;
 		offsetTop: number;
 	}) : Item {
@@ -206,7 +213,7 @@ class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> 
 			onSelected: () => {
 				this.setSelectedItem(item);
 			},
-			isHovered: state.hovered,
+			isFocused: state.focused,
 			iconProvider: this.props.iconProvider,
 			ref: item.uuid,
 			index: state.index,
@@ -214,23 +221,23 @@ class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> 
 		});
 	}
 
-	hoverNextItem() {
-		if (this.state.hoveredIndex < this.state.matchingItems.length-1) {
-			++this.state.hoveredIndex;
+	focusNextItem() {
+		if (this.state.focusedIndex < this.state.matchingItems.length-1) {
+			++this.state.focusedIndex;
 			this.setState(this.state);
 		}
 	}
 
-	hoverPrevItem() {
-		if (this.state.hoveredIndex > 0) {
-			--this.state.hoveredIndex;
+	focusPrevItem() {
+		if (this.state.focusedIndex > 0) {
+			--this.state.focusedIndex;
 			this.setState(this.state);
 		}
 	}
 
-	hoveredItem() {
-		if (this.state.hoveredIndex < this.state.matchingItems.length) {
-			return this.state.matchingItems[this.state.hoveredIndex];
+	focusedItem() {
+		if (this.state.focusedIndex < this.state.matchingItems.length) {
+			return this.state.matchingItems[this.state.focusedIndex];
 		}
 		return null;
 	}
@@ -257,7 +264,7 @@ class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> 
 			}
 			if (isVisible) {
 				return this.createListItem(item, {
-					hovered: index == this.state.hoveredIndex,
+					focused: index == this.state.focusedIndex,
 					index: index,
 					offsetTop: index * this.state.itemHeight
 				});
@@ -332,7 +339,7 @@ class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> 
 	}
 
 	private updateMatchingItems(props: ItemListProps) {
-		var prevHoveredItem = this.hoveredItem();
+		var prevFocusedIndex = this.focusedItem();
 		var matchingItems: item_store.Item[] = [];
 		var matchesAreSorted = false;
 
@@ -359,12 +366,12 @@ class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> 
 			});
 		}
 
-		var nextHoveredIndex = matchingItems.indexOf(prevHoveredItem);
-		if (nextHoveredIndex == -1) {
-			nextHoveredIndex = 0;
+		var nextFocusedIndex = matchingItems.indexOf(prevFocusedIndex);
+		if (nextFocusedIndex == -1) {
+			nextFocusedIndex = 0;
 		}
 
-		this.state.hoveredIndex = nextHoveredIndex;
+		this.state.focusedIndex = nextFocusedIndex;
 		this.state.matchingItems = matchingItems;
 		this.setState(this.state);
 	}
