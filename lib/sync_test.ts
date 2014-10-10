@@ -5,7 +5,6 @@
 import clone = require('clone');
 import Q = require('q');
 
-import asyncutil = require('./base/asyncutil');
 import item_builder = require('./item_builder');
 import item_store = require('./item_store');
 import key_agent = require('./key_agent');

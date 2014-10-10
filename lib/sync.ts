@@ -1,12 +1,10 @@
 /// <reference path="../typings/DefinitelyTyped/clone/clone.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
-/// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
 /// <reference path="../typings/sprintf.d.ts" />
 
 import clone = require('clone');
 import Q = require('q');
 import sprintf = require('sprintf');
-import underscore = require('underscore');
 
 import collectionutil = require('./base/collectionutil');
 import event_stream = require('./base/event_stream');

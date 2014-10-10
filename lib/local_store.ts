@@ -10,8 +10,6 @@ import key_agent = require('./key_agent');
 import key_value_store = require('./base/key_value_store');
 import onepass_crypto = require('./onepass_crypto');
 
-var DB_NAME = 'passcards-store';
-
 interface EncryptedOverview {
 	data: string;
 }

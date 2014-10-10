@@ -1,9 +1,7 @@
 /// <reference path="../typings/DefinitelyTyped/q/Q.d.ts"/>
 
-import atob = require('atob');
 import btoa = require('btoa');
 import Q = require('q');
-import underscore = require('underscore');
 
 import collectionutil = require('./base/collectionutil');
 import crypto = require('./onepass_crypto');
@@ -158,7 +156,6 @@ testLib.addAsyncTest('save and load keys', (assert) => {
 testLib.addAsyncTest('save and load items', (assert) => {
 	var env = setupEnv();
 	var store = new local_store.Store(env.database, env.keyAgent);
-	var params = { algo: key_agent.CryptoAlgorithm.AES128_OpenSSLKey };
 
 	var item = new item_builder.Builder(item_store.ItemTypes.LOGIN)
 	 .setTitle('test item')
