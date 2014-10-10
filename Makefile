@@ -22,7 +22,7 @@ deps=$(submodule_marker) $(nodemodule_marker) $(dropboxjs_lib)
 all: build/current webui-build
 
 build/current: $(lib_srcs) $(cli_srcs) $(webui_srcs) $(deps)
-	@$(TSC) --outDir build $(lib_srcs) $(cli_srcs) $(webui_srcs) && touch build/current
+	@$(TSC) --outDir build $(lib_srcs) $(cli_srcs) $(webui_srcs) && touch $@
 
 webui-build: $(webui_script_dir)/webui_bundle.js \
              $(webui_script_dir)/page_bundle.js \
@@ -32,20 +32,20 @@ webui-build: $(webui_script_dir)/webui_bundle.js \
 
 $(webui_script_dir)/webui_bundle.js: build/current
 	mkdir -p $(webui_script_dir)
-	$(BROWSERIFY) --entry build/webui/init.js --outfile $(webui_script_dir)/webui_bundle.js
+	$(BROWSERIFY) --entry build/webui/init.js --outfile $@
 
 $(webui_script_dir)/page_bundle.js: build/current
 	mkdir -p $(webui_script_dir)
-	$(BROWSERIFY) build/webui/page.js --outfile $(webui_script_dir)/page_bundle.js
+	$(BROWSERIFY) build/webui/page.js --outfile $@
 
 $(webui_script_dir)/crypto_worker.js: build/current
 	mkdir -p $(webui_script_dir)
-	$(BROWSERIFY) --entry build/lib/crypto_worker.js --outfile $(webui_script_dir)/crypto_worker.js
+	$(BROWSERIFY) --entry build/lib/crypto_worker.js --outfile $@
 
 $(webui_css_dir)/app.css: webui/app.less
 	mkdir -p $(webui_css_dir)
-	$(NODE_BIN_DIR)/lessc webui/app.less > $(webui_css_dir)/app.css
-	$(NODE_BIN_DIR)/autoprefixer $(webui_css_dir)/app.css
+	$(NODE_BIN_DIR)/lessc webui/app.less > $@
+	$(NODE_BIN_DIR)/autoprefixer $@
 
 webui-icons:
 	@mkdir -p ${webui_icon_dir}
@@ -55,7 +55,7 @@ webui-icons:
 # of the PBKDF2 implementation for use in Web Workers
 # in the browser
 build/lib/crypto/pbkdf2_bundle.js: build/current
-	$(BROWSERIFY) --require ./build/lib/crypto/pbkdf2.js:pbkdf2 --outfile build/lib/crypto/pbkdf2_bundle.js
+	$(BROWSERIFY) --require ./build/lib/crypto/pbkdf2.js:pbkdf2 --outfile $@
 
 test: cli webui build/lib/crypto/pbkdf2_bundle.js
 	@echo $(test_files) | $(FOREACH_FILE) $(NODE)
@@ -95,6 +95,8 @@ test-package: all
 clean:
 	rm -rf build/*
 	rm -rf webui/scripts/*
+	cd addons/firefox && make clean
+	cd addons/chrome && make clean
 
 firefox-addon: webui-build
 	cd addons/firefox && make

@@ -11,15 +11,15 @@ all: $(XPI_PACKAGE)
 
 $(XPI_PACKAGE): build/xpi_content
 	mkdir -p $(PKG_DIR)
-	$(CFX) xpi --update-link=$(XPI_UPDATE_LINK) --update-url=$(XPI_UPDATE_RDF_URL) --output-file=$(XPI_PACKAGE)
+	$(CFX) xpi --update-link=$(XPI_UPDATE_LINK) --update-url=$(XPI_UPDATE_RDF_URL) --output-file=$@
 	mv passcards.update.rdf $(PKG_DIR)
 
 run: build/xpi_content
 	$(CFX) run
 
-build/xpi_content: lib/main.js data/index.html data/scripts/webui_bundle.js data/scripts/crypto_worker.js data/style/app.css data/panel.html data/scripts/panel_content.js data/scripts/page.js icons
-	@mkdir -p build/xpi_content
-	@touch build/xpi_content
+build/xpi_content: lib/main.js data/index.html data/scripts/webui_bundle.js data/scripts/crypto_worker.js data/style/app.css data/panel.html data/scripts/panel_content.js data/scripts/page.js data/icons
+	@mkdir -p $@
+	@touch $@
 
 lib/main.js: src/main.ts
 	$(TSC) src/main.ts --outDir build/
@@ -28,41 +28,41 @@ lib/main.js: src/main.ts
 	# when trying to require() a dependency outside of the current
 	# dir tree
 	cp build/lib/net/rpc.js lib/
-	cp build/addons/firefox/src/main.js lib/
-	sed -i='' 's/..\/..\/..\/lib\/net\/rpc/.\/rpc/' lib/main.js
+	cp build/addons/firefox/src/main.js $@
+	sed -i='' 's/..\/..\/..\/lib\/net\/rpc/.\/rpc/' $@
 
-icons:
+data/icons: $(wildcard ../../icons/*)
 	mkdir -p data/icons
 	cp ../../icons/* data/icons
 
 data/scripts:
-	mkdir -p data/scripts
+	mkdir -p $@
 
 data/style:
-	mkdir -p data/style
+	mkdir -p $@
 
 data/index.html: ../../webui/index.html
 	mkdir -p data
-	cp ../../webui/index.html data/
+	cp ../../webui/index.html $@
 
 data/scripts/crypto_worker.js: data/scripts ../../webui/scripts/crypto_worker.js
-	cp ../../webui/scripts/crypto_worker.js data/scripts/
+	cp ../../webui/scripts/crypto_worker.js $@
 
 data/scripts/webui_bundle.js: data/scripts ../../webui/scripts/webui_bundle.js
-	cp ../../webui/scripts/webui_bundle.js data/scripts/
+	cp ../../webui/scripts/webui_bundle.js $@
 
 data/scripts/panel_content.js: data/scripts src/panel_content.ts
 	$(TSC) --outDir build/ src/panel_content.ts 
-	$(BROWSERIFY) --no-builtins build/addons/firefox/src/panel_content.js > data/scripts/panel_content.js
+	$(BROWSERIFY) --no-builtins build/addons/firefox/src/panel_content.js > $@
 
 data/scripts/page.js: data/scripts ../../webui/scripts/page_bundle.js
-	cp ../../webui/scripts/page_bundle.js data/scripts/
+	cp ../../webui/scripts/page_bundle.js $@
 
 data/style/app.css: data/style ../../webui/style/app.css
-	cp ../../webui/style/app.css data/style/
+	cp ../../webui/style/app.css $@
 
 data/panel.html: src/panel.html
-	cp src/panel.html data/
+	cp src/panel.html $@
 
 clean:
 	rm -rf build data lib
