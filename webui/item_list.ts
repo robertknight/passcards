@@ -225,6 +225,10 @@ class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> 
 		if (this.state.focusedIndex < this.state.matchingItems.length-1) {
 			++this.state.focusedIndex;
 			this.setState(this.state);
+
+			if (this.isMounted() && this.state.focusedIndex >= this.state.visibleIndexes.last) {
+				this.scrollList(1);
+			}
 		}
 	}
 
@@ -232,7 +236,16 @@ class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> 
 		if (this.state.focusedIndex > 0) {
 			--this.state.focusedIndex;
 			this.setState(this.state);
+
+			if (this.isMounted() && this.state.focusedIndex <= this.state.visibleIndexes.first) {
+				this.scrollList(-1);
+			}
 		}
+	}
+
+	private scrollList(count: number) {
+		var itemList = <HTMLElement>this.refs['itemList'].getDOMNode();
+		itemList.scrollTop += this.state.itemHeight * count;
 	}
 
 	focusedItem() {
