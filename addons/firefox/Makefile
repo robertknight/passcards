@@ -17,7 +17,7 @@ $(XPI_PACKAGE): build/xpi_content
 run: build/xpi_content
 	$(CFX) run
 
-build/xpi_content: lib/main.js data/index.html data/scripts/webui_bundle.js data/scripts/crypto_worker.js data/style/app.css data/panel.html data/scripts/panel_content.js data/scripts/page.js data/icons
+build/xpi_content: lib/main.js data/index.html data/scripts/webui_bundle.js data/scripts/crypto_worker.js data/style/app.css data/panel.html data/scripts/panel_content.js data/scripts/page_bundle.js data/icons
 	@mkdir -p $@
 	@touch $@
 
@@ -55,7 +55,7 @@ data/scripts/panel_content.js: data/scripts src/panel_content.ts
 	$(TSC) --outDir build/ src/panel_content.ts 
 	$(BROWSERIFY) --no-builtins build/addons/firefox/src/panel_content.js > $@
 
-data/scripts/page.js: data/scripts ../../webui/scripts/page_bundle.js
+data/scripts/page_bundle.js: data/scripts ../../webui/scripts/page_bundle.js
 	cp ../../webui/scripts/page_bundle.js $@
 
 data/style/app.css: data/style ../../webui/style/app.css
