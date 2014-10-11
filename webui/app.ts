@@ -93,6 +93,7 @@ interface AppViewState {
 	status?: Status;
 	syncState?: sync.SyncProgress;
 	syncListener?: event_stream.EventListener<sync.SyncProgress>;
+	showMenu?: boolean;
 }
 
 interface AppServices {
@@ -215,6 +216,7 @@ class AppView extends reactts.ReactComponentBase<AppViewProps, AppViewState> {
 			itemDetails?: details_view.DetailsView;
 			statusView?: StatusView;
 			toaster?: react.ReactComponent<any,any>;
+			menu?: controls.Menu;
 		} = {};
 
 		if (this.state.isLocked) {
@@ -235,7 +237,10 @@ class AppView extends reactts.ReactComponentBase<AppViewProps, AppViewState> {
 				onSelectedItemChanged: (item) => { this.setState({selectedItem: item}); },
 				currentUrl: this.state.currentUrl,
 				iconProvider: this.props.services.iconProvider,
-				onLockClicked: () => this.props.services.keyAgent.forgetKeys()
+				onLockClicked: () => this.props.services.keyAgent.forgetKeys(),
+				onMenuClicked: () => {
+					this.setState({showMenu: true});
+				}
 			});
 			children.itemDetails = new details_view.DetailsView({
 				item: this.state.selectedItem,
@@ -265,6 +270,10 @@ class AppView extends reactts.ReactComponentBase<AppViewProps, AppViewState> {
 			}));
 		}
 
+		if (this.state.showMenu) {
+			children.menu = this.renderMenu();
+		}
+
 		children.toaster = react_addons.addons.CSSTransitionGroup({transitionName: 'fade'},
 		  toasters
 		);
@@ -272,6 +281,36 @@ class AppView extends reactts.ReactComponentBase<AppViewProps, AppViewState> {
 		return react.DOM.div({className: 'appView', ref: 'app'},
 			reactutil.mapToComponentArray(children)
 		);
+	}
+
+	private renderMenu() {
+		var menuItems: controls.MenuItem[] = [{
+			label: 'Clear Offline Storage',
+			onClick: () => {
+				return this.props.services.keyAgent.forgetKeys().then(() => {
+					return this.state.store.clear();
+				}).then(() => {
+					console.log('Re-syncing keys');
+					return this.state.syncer.syncKeys();
+				}).catch((err) => {
+					this.showError(err);
+				});
+			}
+		},{
+			label: 'Help',
+			onClick: () => {
+				var win = window.open('https://robertknight.github.io/passcards', '_blank');
+				win.focus();
+			}
+		}];
+		return new controls.Menu({
+			items: menuItems,
+			   top: 5,
+			   right: 5,
+			   onDismiss: () => {
+				   this.setState({showMenu: false});
+			   }
+		});
 	}
 }
 

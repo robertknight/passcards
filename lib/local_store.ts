@@ -32,6 +32,7 @@ interface ItemOverview {
 
 export class Store implements item_store.Store {
 	private crypto: onepass_crypto.Crypto;
+	private database: key_value_store.Database;
 	private keyAgent: key_agent.KeyAgent;
 	private keyStore: key_value_store.ObjectStore;
 	private itemStore: key_value_store.ObjectStore;
@@ -40,21 +41,32 @@ export class Store implements item_store.Store {
 	onUnlock: event_stream.EventStream<void>;
 
 	constructor(database: key_value_store.Database, keyAgent: key_agent.KeyAgent) {
-		database.open('passcards-items', 1, (schemaUpdater) => {
+		this.database = database;
+		this.keyAgent = keyAgent;
+		this.crypto = onepass_crypto.defaultCrypto;
+
+		this.onItemUpdated = new event_stream.EventStream<item_store.Item>();
+		this.onUnlock = new event_stream.EventStream<void>();
+		
+		this.initDatabase();
+	}
+
+	private initDatabase() {
+		this.database.open('passcards-items', 1, (schemaUpdater) => {
 			if (schemaUpdater.currentVersion() < 1) {
 				schemaUpdater.createStore('key-store');
 				schemaUpdater.createStore('item-store');
 			}
 		});
 
-		this.keyAgent = keyAgent;
-		this.crypto = onepass_crypto.defaultCrypto;
+		this.keyStore = this.database.store('key-store');
+		this.itemStore = this.database.store('item-store');
+	}
 
-		this.keyStore = database.store('key-store');
-		this.itemStore = database.store('item-store');
-
-		this.onItemUpdated = new event_stream.EventStream<item_store.Item>();
-		this.onUnlock = new event_stream.EventStream<void>();
+	clear() {
+		return this.database.delete().then(() => {
+			this.initDatabase();
+		});
 	}
 
 	unlock(pwd: string) : Q.Promise<void> {

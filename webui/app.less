@@ -178,6 +178,11 @@ html, body {
 	height: 30px;
 }
 
+.toolbarIconGroup {
+	margin-left: 10px;
+	margin-right: 10px;
+}
+
 .itemListToolbar {
 	width: 100%;
 	position: fixed;
@@ -185,6 +190,12 @@ html, body {
 	display: flex;
 	flex-direction: row;
 	.flex-cross-center;
+}
+
+.toolbarIconButton {
+	display: inline-block;
+	margin-left:5px;
+	margin-right:5px;
 }
 
 .searchFieldInput {
@@ -206,10 +217,6 @@ html, body {
 
 .toolbarSearchIcon {
 	margin-left: 20px;
-}
-
-.toolbarLockIcon {
-	margin-right: 20px;
 }
 
 .itemList {
@@ -530,3 +537,29 @@ html, body {
 	opacity: 0.01;
 }
 
+/* menu control
+   http://www.google.co.uk/design/spec/components/menus.html
+*/
+.menu {
+	position: absolute;
+	padding-top: 8px;
+	padding-bottom: 8px;
+
+	box-shadow: rgba(0, 0, 0, 0.26) 0px 1px 2px 2px;
+	z-index: 10;
+	background-color: white;
+}
+
+.menuItem {
+	position: relative;
+
+	padding-left: 16px;
+	padding-right: 16px;
+
+	font-size: 16px;
+	cursor: pointer;
+	user-select: none;
+
+	vertical-align:middle;
+	line-height:48px;
+}

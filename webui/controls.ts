@@ -20,7 +20,7 @@ export class ToolbarButtonProps {
 export class ToolbarButton extends reactts.ReactComponentBase<ToolbarButtonProps,{}> {
 	render() {
 		return react.DOM.a(reactutil.mergeProps(this.props, {
-			className: 'toolbarLink',
+			className: 'toolbarIconButton',
 			href: '#',
 		}),
 		new SvgIcon({
@@ -259,6 +259,75 @@ export class Toaster extends reactts.ReactComponentBase<ToasterProps, {}> {
 			),
 			progressBar
 		);
+	}
+}
+
+export interface MenuItem {
+	label: string;
+	onClick: () => void;
+}
+
+export interface MenuProps {
+	top?: number;
+	left?: number;
+	right?: number;
+	bottom?: number;
+
+	items: MenuItem[];
+	onDismiss: () => void;
+}
+
+function toPixels(unit: number) {
+	if (unit) {
+		return unit + 'px';
+	} else {
+		return undefined;
+	}
+}
+
+var menuListener: EventListener;
+
+export class Menu extends reactts.ReactComponentBase<MenuProps, {}> {
+	componentDidMount() {
+		menuListener = (e: MouseEvent) => {
+			var menuNode = <HTMLElement>this.refs['menu'].getDOMNode();
+			if (!menuNode.contains(<HTMLElement>e.target)) {
+				e.preventDefault();
+				this.props.onDismiss();
+			}
+		};
+		document.addEventListener('mousedown', menuListener);
+	}
+
+	componentDidUnmount() {
+		document.removeEventListener('mousedown', menuListener);
+	}
+
+	render() {
+		var menuItems = this.props.items.map((item) => {
+			return react.DOM.div({
+				className: 'menuItem',
+				onClick: () => {
+					setTimeout(() => {
+						item.onClick();
+						this.props.onDismiss();
+					}, 300);
+				}
+			}, 
+				new InkRipple({color: {r: 200, g: 200, b: 200}}),
+				item.label
+			);
+		});
+		return react.DOM.div({
+			className:'menu',
+			ref: 'menu',
+			style: {
+				top: toPixels(this.props.top),
+				left: toPixels(this.props.left),
+				right: toPixels(this.props.right),
+				bottom: toPixels(this.props.bottom)
+			}
+		}, menuItems);
 	}
 }
 

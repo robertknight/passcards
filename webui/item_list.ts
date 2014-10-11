@@ -27,6 +27,7 @@ export class ItemListViewProps {
 	iconProvider: item_icons.ItemIconProvider;
 
 	onLockClicked: () => void;
+	onMenuClicked: () => void;
 }
 
 export class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, ItemListViewState> {
@@ -79,7 +80,8 @@ export class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, 
 				onActivate: () => {
 					this.props.onSelectedItemChanged((<ItemList>this.refs['itemList']).focusedItem());
 				},
-				onLockClicked: () => this.props.onLockClicked()
+				onLockClicked: () => this.props.onLockClicked(),
+				onMenuClicked: () => this.props.onMenuClicked()
 			}),
 			new ItemList({items: this.props.items, filter: this.state.filter,
 				filterUrl: filterUrl,
@@ -407,6 +409,7 @@ class ItemListToolbarProps {
 	onActivate: () => void;
 
 	onLockClicked: () => void;
+	onMenuClicked: () => void;
 }
 
 class ItemListToolbar extends reactts.ReactComponentBase<ItemListToolbarProps, {}> {
@@ -464,11 +467,18 @@ class ItemListToolbar extends reactts.ReactComponentBase<ItemListToolbarProps, {
 					placeholder: 'Search items...',
 					ref: 'searchField'
 				}),
-				new controls.ToolbarButton({
-					className: 'toolbarLockIcon',
-					iconHref: 'icons/icons.svg#lock-outline',
-					onClick: () => this.props.onLockClicked()
-				})
+				react.DOM.div({className: 'toolbarIconGroup'},
+					new controls.ToolbarButton({
+						className: 'toolbarLockIcon',
+						iconHref: 'icons/icons.svg#lock-outline',
+						onClick: () => this.props.onLockClicked()
+					}),
+					new controls.ToolbarButton({
+						className: 'toolbarMenuIcon',
+						iconHref: 'icons/icons.svg#menu',
+						onClick: () => this.props.onMenuClicked()
+					})
+				)
 			);
 	}
 }

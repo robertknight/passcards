@@ -693,5 +693,11 @@ export class Vault {
 			return fromAgileKeychainContent(content);
 		});
 	}
+
+	clear() {
+		// not implemented for onepass.Vault since this is the user's
+		// primary data source.
+		return Q.reject(new Error('Primary vault does not support being cleared'));
+	}
 }
 

@@ -1,8 +1,10 @@
+/// <reference path="../typings/DefinitelyTyped/clone/clone.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
 
 // item_store contains the core interfaces and types for
 // encrypted items and storage of them
 
+import clone = require('clone');
 import Q = require('q');
 import sprintf = require('sprintf');
 import underscore = require('underscore');
@@ -547,6 +549,11 @@ export interface Store {
 
 	/** Update the encryption keys in this store. */
 	saveKeys(keys: key_agent.Key[]) : Q.Promise<void>;
+
+	/** Clear the store. This can be used to wipe stores
+	  * which cache data for offline use.
+	  */
+	clear() : Q.Promise<void>;
 }
 
 /** A temporary store which keeps items only in-memory */
@@ -560,11 +567,11 @@ export class TempStore implements Store {
 	private keyAgent: key_agent.KeyAgent;
 
 	constructor(agent: key_agent.KeyAgent) {
-		this.items = [];
-		this.content = new collectionutil.PMap<string,ItemContent>();
 		this.onItemUpdated = new event_stream.EventStream<Item>();
 		this.onUnlock = new event_stream.EventStream<void>();
 		this.keyAgent = agent;
+
+		this.clear();
 	}
 
 	unlock(password: string) : Q.Promise<void> {
@@ -584,7 +591,7 @@ export class TempStore implements Store {
 	}
 
 	saveKeys(keys: key_agent.Key[]) {
-		this.keys = keys;
+		this.keys = <key_agent.Key[]>clone(keys);
 		return Q<void>(null);
 	}
 
@@ -638,5 +645,12 @@ export class TempStore implements Store {
 
 	getRawDecryptedData(item: Item) {
 		return Q.reject(new Error('Not implemented in TempStore'));
+	}
+
+	clear() {
+		this.keys = [];
+		this.items = [];
+		this.content = new collectionutil.PMap<string,ItemContent>();
+		return Q<void>(null);
 	}
 }

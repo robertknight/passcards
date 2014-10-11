@@ -18,8 +18,7 @@ class FakeKeyValueDatabase implements key_value_store.Database {
 	version: number;
 
 	constructor() {
-		this.stores = new collectionutil.PMap<string,FakeKeyValueStore>();
-		this.version = 0;
+		this.reset();
 	}
 
 	open(name: string, version: number, schemaUpdateCallback: (schemaUpdater: key_value_store.DatabaseSchemaModifier) => void) {
@@ -44,6 +43,19 @@ class FakeKeyValueDatabase implements key_value_store.Database {
 			this.stores.set(name, new FakeKeyValueStore);
 		}
 		return this.stores.get(name);
+	}
+
+	delete() {
+		if (this.version < 1) {
+			return Q.reject(new Error('Database is not open'));
+		}
+		this.reset();
+		return Q<void>(null);
+	}
+
+	private reset() {
+		this.stores = new collectionutil.PMap<string,FakeKeyValueStore>();
+		this.version = 0;
 	}
 }
 
@@ -153,17 +165,20 @@ testLib.addAsyncTest('save and load keys', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('save and load items', (assert) => {
-	var env = setupEnv();
-	var store = new local_store.Store(env.database, env.keyAgent);
-
-	var item = new item_builder.Builder(item_store.ItemTypes.LOGIN)
+function makeItem() {
+	return new item_builder.Builder(item_store.ItemTypes.LOGIN)
 	 .setTitle('test item')
 	 .addLogin('foo.bar@gmail.com')
 	 .addPassword('pass3')
 	 .addUrl('acme.org')
 	 .addUrl('foo.acme.org')
 	 .item();
+}
+
+testLib.addAsyncTest('save and load items', (assert) => {
+	var env = setupEnv();
+	var store = new local_store.Store(env.database, env.keyAgent);
+	var item = makeItem();
 
 	return store.saveKeys([env.masterKey]).then(() => {
 		return store.unlock(env.masterPass);
@@ -181,6 +196,27 @@ testLib.addAsyncTest('save and load items', (assert) => {
 		},{
 			label: 'website', url: 'foo.acme.org'
 		}]);
+	});
+});
+
+testLib.addAsyncTest('clear store', (assert) => {
+	var env = setupEnv();
+	var store = new local_store.Store(env.database, env.keyAgent);
+	var item = makeItem();
+
+	return store.saveKeys([env.masterKey]).then(() => {
+		return store.unlock(env.masterPass);
+	}).then(() => {
+		return item.saveTo(store);
+	}).then(() => {
+		return store.listItems();
+	}).then((items) => {
+		assert.equal(items.length, 1);
+		return store.clear();
+	}).then(() => {
+		return store.listItems();
+	}).then((items) => {
+		assert.equal(items.length, 0);
 	});
 });
 

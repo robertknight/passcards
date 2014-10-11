@@ -1,6 +1,9 @@
 /// <reference path="../../typings/DefinitelyTyped/q/Q.d.ts" />
 /// <reference path="../../typings/dom.d.ts" />
 
+// key_value_store.Database is an interface for IndexedDB-style databases.
+// In the browser it is implemented with IndexedDB.
+
 import assert = require('assert');
 import Q = require('q');
 
@@ -9,14 +12,31 @@ import collectionutil = require('./collectionutil');
 import err_util = require('./err_util');
 import stringutil = require('./stringutil');
 
+function promisify<T>(req: IDBRequest) : Q.Promise<T> {
+	var result = Q.defer<T>();
+	req.onsuccess = () => {
+		result.resolve(req.result);
+	};
+	req.onerror = () => {
+		result.reject(req.error);
+	};
+	return result.promise;
+}
+
 export interface DatabaseSchemaModifier {
 	createStore(name: string) : void;
 	currentVersion(): number;
 }
 
 export interface Database {
+	/** Open a database with a given name and version number. */
 	open(name: string, version: number, schemaUpdateCallback: (schemaUpdater: DatabaseSchemaModifier) => void) : Q.Promise<void>;
+
+	/** Return an object store within the current database. */
 	store(name: string) : ObjectStore;
+
+	/** Close and remove the open database. */
+	delete() : Q.Promise<void>;
 }
 
 export interface ObjectStore {
@@ -91,6 +111,18 @@ export class IndexedDBDatabase implements Database {
 		assert(store);
 		return store;
 	}
+
+	delete() {
+		if (!this.database) {
+			return Q.reject(new Error('Database is not open'));
+		}
+
+		return this.database.then((db) => {
+			var deleteRequest = indexedDB.deleteDatabase(db.name);
+			this.database = null;
+			return promisify<void>(deleteRequest);
+		});
+	}
 }
 
 class IndexedDBStore implements ObjectStore {
@@ -103,21 +135,21 @@ class IndexedDBStore implements ObjectStore {
 	set<T>(key: string, value: T) : Q.Promise<void> {
 		return this.db.then((db) => {
 			var store = db.transaction(this.storeName, 'readwrite').objectStore(this.storeName);
-			return this.promisify<void>(store.put(value, key));
+			return promisify<void>(store.put(value, key));
 		});
 	}
 
 	get<T>(key: string) : Q.Promise<T> {
 		return this.db.then((db) => {
 			var store = db.transaction(this.storeName, 'readonly').objectStore(this.storeName);
-			return this.promisify<T>(store.get(key));
+			return promisify<T>(store.get(key));
 		});
 	}
 
 	remove(key: string) : Q.Promise<void> {
 		return this.db.then((db) => {
 			var store = db.transaction(this.storeName, 'readwrite').objectStore(this.storeName);
-			return this.promisify<void>(store.delete(key));
+			return promisify<void>(store.delete(key));
 		});
 	}
 
@@ -143,17 +175,6 @@ class IndexedDBStore implements ObjectStore {
 
 			return result.promise;
 		});
-	}
-
-	private promisify<T>(req: IDBRequest) : Q.Promise<T> {
-		var result = Q.defer<T>();
-		req.onsuccess = () => {
-			result.resolve(req.result);
-		};
-		req.onerror = () => {
-			result.reject(req.error);
-		};
-		return result.promise;
 	}
 }
 
