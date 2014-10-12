@@ -44,3 +44,17 @@ export function isChromeExtension() {
 	       typeof chrome.extension !== 'undefined';
 }
 
+/** Returns true if (probably) running on a touch-screen device.
+  *
+  * See http://ctrlq.org/code/19616-detect-touch-screen-javascript
+  */
+export function isTouchDevice() {
+	if (!isBrowser()) {
+		return false;
+	}
+
+	return ('ontouchstart' in window) ||
+	       (navigator.maxTouchPoints > 0) ||
+	       (navigator.msMaxTouchPoints > 0);
+}
+

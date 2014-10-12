@@ -8,6 +8,7 @@ import reactts = require('react-typescript');
 import underscore = require('underscore');
 
 import controls = require('./controls');
+import env = require('../lib/base/env');
 import keycodes = require('./base/keycodes');
 import item_icons = require('./item_icons');
 import item_search = require('../lib/item_search');
@@ -37,7 +38,13 @@ export class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, 
 	}
 
 	componentDidMount() {
-		this.focusSearchField();
+		// on the desktop, focus the search field to allow instant searching
+		// via the keyboard. On mobile/touch devices we don't do this to avoid
+		// immediately obscuring most of the list content with a popup
+		// keyboard
+		if (!env.isTouchDevice()) {
+			this.focusSearchField();
+		}
 	}
 
 	componentWillReceiveProps(nextProps: ItemListViewProps) {
@@ -50,7 +57,10 @@ export class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, 
 				}, 0);
 			} else {
 				// no item selected, focus search field to allow item list navigation
-				this.focusSearchField();
+				// via keyboard
+				if (!env.isTouchDevice()) {
+					this.focusSearchField();
+				}
 			}
 		}
 	}
