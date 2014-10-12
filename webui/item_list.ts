@@ -486,7 +486,7 @@ class ItemListToolbar extends reactts.ReactComponentBase<ItemListToolbarProps, {
 					new controls.ToolbarButton({
 						className: 'toolbarMenuIcon',
 						iconHref: 'icons/icons.svg#menu',
-						onClick: () => this.props.onMenuClicked()
+						onMouseDown: () => this.props.onMenuClicked()
 					})
 				)
 			);
