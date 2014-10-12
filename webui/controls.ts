@@ -196,7 +196,7 @@ export class InkRipple extends reactts.ReactComponentBase<InkRippleProps, InkRip
 	}
 
 	private stepAnimation() {
-		if (!this.anim) {
+		if (!this.isMounted()) {
 			// component was unmounted during
 			// animation
 			return;
@@ -267,6 +267,10 @@ export interface MenuItem {
 	onClick: () => void;
 }
 
+export interface MenuState {
+	showTime?: Date;
+}
+
 export interface MenuProps {
 	top?: number;
 	left?: number;
@@ -285,9 +289,10 @@ function toPixels(unit: number) {
 	}
 }
 
+var MENU_DISMISS_EVENTS = ['mousedown', 'touchstart'];
 var menuListener: EventListener;
 
-export class Menu extends reactts.ReactComponentBase<MenuProps, {}> {
+export class Menu extends reactts.ReactComponentBase<MenuProps, MenuState> {
 	componentDidMount() {
 		menuListener = (e: MouseEvent) => {
 			var menuNode = <HTMLElement>this.refs['menu'].getDOMNode();
@@ -296,11 +301,18 @@ export class Menu extends reactts.ReactComponentBase<MenuProps, {}> {
 				this.props.onDismiss();
 			}
 		};
-		document.addEventListener('mousedown', menuListener);
+
+		MENU_DISMISS_EVENTS.forEach((event) => {
+			document.addEventListener(event, menuListener);
+		});
+
+		this.setState({showTime: new Date});
 	}
 
 	componentDidUnmount() {
-		document.removeEventListener('mousedown', menuListener);
+		MENU_DISMISS_EVENTS.forEach((event) => {
+			document.removeEventListener(event, menuListener);
+		});
 	}
 
 	render() {
@@ -308,6 +320,13 @@ export class Menu extends reactts.ReactComponentBase<MenuProps, {}> {
 			return react.DOM.div({
 				className: 'menuItem',
 				onClick: () => {
+					// when the menu is first opened, ignore any immediate taps that
+					// might still be events from the user tapping to open the menu
+					var MIN_ITEM_CLICK_DELAY = 500;
+					if (Date.now() - this.state.showTime.getTime() < MIN_ITEM_CLICK_DELAY) {
+						return;
+					}
+
 					setTimeout(() => {
 						item.onClick();
 						this.props.onDismiss();
