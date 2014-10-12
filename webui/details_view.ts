@@ -5,6 +5,7 @@ import react = require('react');
 import reactts = require('react-typescript');
 
 import controls = require('./controls');
+import env = require('../lib/base/env');
 import item_icons = require('./item_icons');
 import item_store = require('../lib/item_store');
 import keycodes = require('./base/keycodes');
@@ -228,6 +229,15 @@ export class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}
 			);
 		}
 
+		var autofillButton: react.ReactComponent<any,any>;
+		if (env.isFirefoxAddon() || env.isChromeExtension()) {
+			autofillButton = new controls.ActionButton({
+				accessKey:'a',
+				value: 'Autofill',
+				onClick: () => this.props.autofill()
+			});
+		}
+
 		return react.DOM.div({
 			className: stringutil.truthyKeys({
 					detailsView: true,
@@ -242,13 +252,9 @@ export class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}
 					onClick: () => this.props.onGoBack()
 				})),
 				react.DOM.div({className: 'itemActionBar'},
-					new controls.ActionButton({
-						accessKey:'a',
-						value: 'Autofill',
-						onClick: () => this.props.autofill()
-					})
+					autofillButton
 				),
-			detailsContent ? detailsContent : []
+				detailsContent
 		);
 	}
 }
