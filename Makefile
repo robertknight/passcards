@@ -101,8 +101,8 @@ clean:
 firefox-addon: webui-build
 	cd addons/firefox && make
 
-chrome-extension-zip: webui-build
-	cd addons/chrome && make zip
+chrome-extension: webui-build
+	cd addons/chrome && make
 
 publish-chrome-extension: chrome-extension-zip
 	./utils/publish-chrome-extension.js pkg/passcards.zip

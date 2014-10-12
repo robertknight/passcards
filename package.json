@@ -5,7 +5,6 @@
   "devDependencies": {
     "autoprefixer": "^3.0.0",
     "browserify": "^5.10.1",
-    "crx": "^0.4.4",
     "jpm": "0.0.13",
     "less": "^1.7.4",
     "qunitjs": ">=1.14",
