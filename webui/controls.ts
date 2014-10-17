@@ -1,13 +1,12 @@
 /// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
-/// <reference path="../node_modules/react-typescript/declarations/react.d.ts" />
-/// <reference path="../node_modules/react-typescript/declarations/react-typescript.d.ts" />
 /// <reference path="../typings/dom.d.ts" />
+/// <reference path="../typings/react-0.12.d.ts" />
 
 // Re-usable UI controls that are used in different parts
 // of the front-end
 
 import react = require('react');
-import reactts = require('react-typescript');
+import typed_react = require('typed-react');
 import sprintf = require('sprintf');
 import underscore = require('underscore');
 
@@ -17,13 +16,13 @@ export class ToolbarButtonProps {
 	iconHref: string;
 }
 
-export class ToolbarButton extends reactts.ReactComponentBase<ToolbarButtonProps,{}> {
+export class ToolbarButton extends typed_react.Component<ToolbarButtonProps,{}> {
 	render() {
 		return react.DOM.a(reactutil.mergeProps(this.props, {
 			className: 'toolbarIconButton',
 			href: '#',
 		}),
-		new SvgIcon({
+		SvgIconF({
 			href: this.props.iconHref,
 			width: 20,
 			height: 20,
@@ -32,6 +31,8 @@ export class ToolbarButton extends reactts.ReactComponentBase<ToolbarButtonProps
 		}));
 	}
 }
+
+export var ToolbarButtonF = reactutil.createFactory(ToolbarButton);
 
 export class SvgIconProps {
 	href: string;
@@ -46,7 +47,7 @@ export class SvgIconProps {
 	height: number;
 }
 
-export class SvgIcon extends reactts.ReactComponentBase<SvgIconProps, {}> {
+export class SvgIcon extends typed_react.Component<SvgIconProps, {}> {
 	render() {
 		return react.DOM.svg(reactutil.mergeProps(this.props, {
 			dangerouslySetInnerHTML: {
@@ -61,12 +62,14 @@ export class SvgIcon extends reactts.ReactComponentBase<SvgIconProps, {}> {
 	}
 }
 
+export var SvgIconF = reactutil.createFactory(SvgIcon);
+
 export interface ActionButtonProps {
 	value: string;
 	onClick: (e: MouseEvent) => void;
 }
 
-export class ActionButton extends reactts.ReactComponentBase<ActionButtonProps,{}> {
+export class ActionButton extends typed_react.Component<ActionButtonProps,{}> {
 	componentDidMount() {
 		setTimeout(() => {
 			var button = <HTMLButtonElement>(this.refs['button'].getDOMNode());
@@ -87,13 +90,15 @@ export class ActionButton extends reactts.ReactComponentBase<ActionButtonProps,{
 				type: 'button',
 				ref: 'button'
 			})),
-			new InkRipple({
+			InkRippleF({
 				color: {r: 252, g: 228, b: 236},
 				ref: 'ripple'
 			})
 		);
 	}
 }
+
+export var ActionButtonF = reactutil.createFactory(ActionButton);
 
 export interface InkRippleProps {
 	color: {
@@ -116,7 +121,7 @@ export interface InkRippleState {
   * To use an InkRipple, add it as the child of the element which should display
   * the effect when touched. The ripple will expand to fill its positioned parent.
   */
-export class InkRipple extends reactts.ReactComponentBase<InkRippleProps, InkRippleState> {
+export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleState> {
 	private anim : {
 		startTime: number;
 		context: CanvasRenderingContext2D;
@@ -223,6 +228,7 @@ export class InkRipple extends reactts.ReactComponentBase<InkRippleProps, InkRip
 		}
 	}
 }
+export var InkRippleF = reactutil.createFactory(InkRipple);
 
 export interface ToasterProps {
 	message: string;
@@ -233,12 +239,12 @@ export interface ToasterProps {
 /** Control for displaying a temporary notification,
   * with an optional progress indicator.
   */
-export class Toaster extends reactts.ReactComponentBase<ToasterProps, {}> {
+export class Toaster extends typed_react.Component<ToasterProps, {}> {
 	render() {
 		var PROGRESS_WIDTH = 200;
 		var meterWidth = (this.props.progressValue / this.props.progressMax) * PROGRESS_WIDTH;
 
-		var progressBar: react.ReactComponent<any,any>;
+		var progressBar: react.Descriptor<any>;
 		if (this.props.progressMax) {
 			progressBar = react.DOM.div({
 					className: 'toasterProgress',
@@ -261,6 +267,8 @@ export class Toaster extends reactts.ReactComponentBase<ToasterProps, {}> {
 		);
 	}
 }
+
+export var ToasterF = reactutil.createFactory(Toaster);
 
 export interface MenuItem {
 	label: string;
@@ -292,7 +300,7 @@ function toPixels(unit: number) {
 var MENU_DISMISS_EVENTS = ['mousedown', 'touchstart'];
 var menuListener: EventListener;
 
-export class Menu extends reactts.ReactComponentBase<MenuProps, MenuState> {
+export class Menu extends typed_react.Component<MenuProps, MenuState> {
 	componentDidMount() {
 		menuListener = (e: MouseEvent) => {
 			var menuNode = <HTMLElement>this.refs['menu'].getDOMNode();
@@ -333,7 +341,7 @@ export class Menu extends reactts.ReactComponentBase<MenuProps, MenuState> {
 					}, 300);
 				}
 			}, 
-				new InkRipple({color: {r: 200, g: 200, b: 200}}),
+				InkRippleF({color: {r: 200, g: 200, b: 200}}),
 				item.label
 			);
 		});
@@ -349,4 +357,6 @@ export class Menu extends reactts.ReactComponentBase<MenuProps, MenuState> {
 		}, menuItems);
 	}
 }
+
+export var MenuF = reactutil.createFactory(Menu);
 

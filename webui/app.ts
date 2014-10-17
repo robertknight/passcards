@@ -1,16 +1,14 @@
 /// <reference path="../typings/DefinitelyTyped/jquery/jquery.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
-/// <reference path="../node_modules/react-typescript/declarations/react.d.ts" />
-/// <reference path="../node_modules/react-typescript/declarations/react-typescript.d.ts" />
 /// <reference path="../typings/fastclick.d.ts" />
-/// <reference path="../typings/react.addons.d.ts" />
+/// <reference path="../typings/react-0.12.d.ts" />
 
 import $ = require('jquery');
 import fastclick = require('fastclick');
 import react = require('react');
 import react_addons = require('react/addons');
-import reactts = require('react-typescript');
+import typed_react = require('typed-react');
 import url = require('url');
 import underscore = require('underscore');
 
@@ -57,7 +55,7 @@ class StatusViewProps {
 /** A status bar for showing app-wide notifications, such
   * as syncing progress, connection errors etc.
   */
-class StatusView extends reactts.ReactComponentBase<StatusViewProps, {}> {
+class StatusView extends typed_react.Component<StatusViewProps, {}> {
 	render() {
 		return react.DOM.div({className: 'statusView'},
 			this.props.status ? this.props.status.text : ''
@@ -69,7 +67,7 @@ class StatusView extends reactts.ReactComponentBase<StatusViewProps, {}> {
   * to the app and displaying the initial status page when connecting
   * to cloud storage.
   */
-class SetupView extends reactts.ReactComponentBase<{}, {}> {
+class SetupView extends typed_react.Component<{}, {}> {
 	render() {
 		return react.DOM.div({className: 'setupView'},
 			react.DOM.div({className: 'loginText'},
@@ -79,240 +77,7 @@ class SetupView extends reactts.ReactComponentBase<{}, {}> {
 	}
 }
 
-interface AppViewState {
-	mainView?: ActiveView;
-
-	store?: item_store.Store;
-	syncer?: sync.Syncer;
-	items?: item_store.Item[];
-
-	selectedItem?: item_store.Item;
-	isLocked?: boolean;
-	currentUrl?: string;
-
-	status?: Status;
-	syncState?: sync.SyncProgress;
-	syncListener?: event_stream.EventListener<sync.SyncProgress>;
-	showMenu?: boolean;
-}
-
-interface AppServices {
-	pageAccess: page_access.PageAccess;
-	autofiller: autofill.AutoFillHandler;
-	iconProvider: item_icons.ItemIconProvider;
-	keyAgent: key_agent.SimpleKeyAgent;
-	clipboard: page_access.ClipboardAccess;
-}
-
-interface AppViewProps {
-	services: AppServices;
-}
-
-/** The main top-level app view. */
-class AppView extends reactts.ReactComponentBase<AppViewProps, AppViewState> {
-	stateChanged: event_stream.EventStream<AppViewState>;
-
-	constructor(props: AppViewProps) {
-		super(props);
-
-		this.stateChanged = new event_stream.EventStream<AppViewState>();
-	}
-
-	getInitialState() {
-		var syncListener = (progress: sync.SyncProgress) => {
-			this.setState({ syncState: progress });
-		};
-
-		var state = {
-			mainView: ActiveView.UnlockPane,
-			items: <item_store.Item[]>[],
-			isLocked: true,
-			syncListener: syncListener
-		};
-		return state;
-	}
-
-	componentDidUnmount() {
-		if (this.state.syncer) {
-			this.state.syncer.onProgress.ignore(this.state.syncListener);
-		}
-	}
-
-	setState(changes: AppViewState) {
-		var doRefresh = false;
-		if (changes.currentUrl && changes.currentUrl != this.state.currentUrl) {
-			changes.selectedItem = null;
-		}
-		if (this.state.isLocked && changes.isLocked === false) {
-			changes.selectedItem = null;
-			doRefresh = true;
-		}
-		if (changes.syncer) {
-			if (this.state.syncer) {
-				this.state.syncer.onProgress.ignore(this.state.syncListener);
-			}
-			changes.syncer.onProgress.listen(this.state.syncListener);
-		}
-		// listen for updates to items in the store
-		if (changes.store) {
-			var debouncedRefresh = underscore.debounce(() => {
-				this.refreshItems()
-			}, 300);
-			changes.store.onItemUpdated.listen(debouncedRefresh);
-		}
-		super.setState(changes);
-
-		if (doRefresh) {
-			this.refreshItems();
-		}
-	}
-
-	componentDidUpdate() {
-		this.stateChanged.publish(this.state);
-	}
-
-	refreshItems() {
-		if (!this.state.store || this.state.isLocked) {
-			return;
-		}
-		this.state.store.listItems().then((items) => {
-			var state = this.state;
-			state.items = underscore.filter(items, (item) => {
-				return item.isRegularItem() && !item.trashed;
-			});
-			this.setState(state);
-		}).catch((err) => {
-			console.log('Error listing items: ', err);
-		});
-	}
-
-	showError(error: string) {
-		this.setState({
-			status: {
-				type: StatusType.Error,
-				text: error
-			}
-		});
-	}
-
-	autofill(item: item_store.Item) {
-		this.props.services.autofiller.autofill(item).then((result) => {
-			if (result.count > 0) {
-				this.props.services.pageAccess.hidePanel();
-			}
-		}).catch((err) => {
-			this.showError(err.message);
-		});
-	}
-
-	render() : react.ReactComponent<any,any> {
-		if (!this.state.store) {
-			return new SetupView({});
-		}
-
-		var children : {
-			unlockPane?: UnlockPane;
-			itemList?: item_list.ItemListView;
-			itemDetails?: details_view.DetailsView;
-			statusView?: StatusView;
-			toaster?: react.ReactComponent<any,any>;
-			menu?: controls.Menu;
-		} = {};
-
-		if (this.state.isLocked) {
-			children.unlockPane = new UnlockPane({
-				store: this.state.store,
-				isLocked: this.state.isLocked,
-				onUnlock: () => {
-					this.setState({isLocked: false});
-				},
-				onUnlockErr: (err) => {
-					this.showError(err);
-				}
-			});
-		} else {
-			children.itemList = new item_list.ItemListView({
-				items: this.state.items,
-				selectedItem: this.state.selectedItem,
-				onSelectedItemChanged: (item) => { this.setState({selectedItem: item}); },
-				currentUrl: this.state.currentUrl,
-				iconProvider: this.props.services.iconProvider,
-				onLockClicked: () => this.props.services.keyAgent.forgetKeys(),
-				onMenuClicked: () => {
-					this.setState({showMenu: true});
-				}
-			});
-			children.itemDetails = new details_view.DetailsView({
-				item: this.state.selectedItem,
-				iconProvider: this.props.services.iconProvider,
-				onGoBack: () => {
-					this.setState({selectedItem: null});
-				},
-				autofill: () => {
-					this.autofill(this.state.selectedItem);
-				},
-				clipboard: this.props.services.clipboard
-			});
-		}
-
-		var toasters: controls.Toaster[] = [];
-		if (this.state.status) {
-			toasters.push(new controls.Toaster({
-				message: this.state.status.text
-			}));
-		}
-		if (this.state.syncState &&
-		    this.state.syncState.state !== sync.SyncState.Idle) {
-			toasters.push(new controls.Toaster({
-				message: 'Syncing...',
-				progressValue: this.state.syncState.updated,
-				progressMax: this.state.syncState.total
-			}));
-		}
-
-		if (this.state.showMenu) {
-			children.menu = this.renderMenu();
-		}
-
-		children.toaster = react_addons.addons.CSSTransitionGroup({transitionName: 'fade'},
-		  toasters
-		);
-
-		return react.DOM.div({className: 'appView', ref: 'app'},
-			reactutil.mapToComponentArray(children)
-		);
-	}
-
-	private renderMenu() {
-		var menuItems: controls.MenuItem[] = [{
-			label: 'Clear Offline Storage',
-			onClick: () => {
-				return this.props.services.keyAgent.forgetKeys().then(() => {
-					return this.state.store.clear();
-				}).then(() => {
-					console.log('Re-syncing keys');
-					return this.state.syncer.syncKeys();
-				}).catch((err) => {
-					this.showError(err);
-				});
-			}
-		},{
-			label: 'Help',
-			onClick: () => {
-				var win = window.open('https://robertknight.github.io/passcards', '_blank');
-				win.focus();
-			}
-		}];
-		return new controls.Menu({
-			items: menuItems,
-			   top: 5,
-			   right: 5,
-			   onDismiss: () => {
-				   this.setState({showMenu: false});
-			   }
-		});
-	}
-}
+var SetupViewF = reactutil.createFactory(SetupView);
 
 // View for entering master password and unlocking the store
 enum UnlockState {
@@ -333,7 +98,7 @@ class UnlockPaneProps {
 	onUnlockErr: (error: string) => void;
 }
 
-class UnlockPane extends reactts.ReactComponentBase<UnlockPaneProps, UnlockPaneState> {
+class UnlockPane extends typed_react.Component<UnlockPaneProps, UnlockPaneState> {
 	getInitialState() {
 		return new UnlockPaneState();
 	}
@@ -397,10 +162,249 @@ class UnlockPane extends reactts.ReactComponentBase<UnlockPaneProps, UnlockPaneS
 	}
 }
 
+var UnlockPaneF = reactutil.createFactory(UnlockPane);
+
+interface AppViewState {
+	mainView?: ActiveView;
+
+	store?: item_store.Store;
+	syncer?: sync.Syncer;
+	items?: item_store.Item[];
+
+	selectedItem?: item_store.Item;
+	isLocked?: boolean;
+	currentUrl?: string;
+
+	status?: Status;
+	syncState?: sync.SyncProgress;
+	syncListener?: event_stream.EventListener<sync.SyncProgress>;
+	showMenu?: boolean;
+}
+
+interface AppServices {
+	pageAccess: page_access.PageAccess;
+	autofiller: autofill.AutoFillHandler;
+	iconProvider: item_icons.ItemIconProvider;
+	keyAgent: key_agent.SimpleKeyAgent;
+	clipboard: page_access.ClipboardAccess;
+}
+
+interface AppViewProps {
+	services: AppServices;
+	stateChanged: event_stream.EventStream<AppViewState>;
+}
+
+/** The main top-level app view. */
+class AppView extends typed_react.Component<AppViewProps, AppViewState> {
+	getInitialState() {
+		var syncListener = (progress: sync.SyncProgress) => {
+			this.setState({ syncState: progress });
+		};
+
+		var state = {
+			mainView: ActiveView.UnlockPane,
+			items: <item_store.Item[]>[],
+			isLocked: true,
+			syncListener: syncListener
+		};
+		return state;
+	}
+
+	componentDidMount() {
+		this.componentWillUpdate(this.props, this.state);
+	}
+
+	componentDidUnmount() {
+		if (this.state.syncer) {
+			this.state.syncer.onProgress.ignore(this.state.syncListener);
+		}
+	}
+
+	componentWillUpdate(nextProps: AppViewProps, changes: AppViewState) {
+		var doRefresh = false;
+		if (changes.currentUrl && changes.currentUrl != this.state.currentUrl) {
+			changes.selectedItem = null;
+		}
+		if (this.state.isLocked && changes.isLocked === false) {
+			changes.selectedItem = null;
+			doRefresh = true;
+		}
+		if (changes.syncer) {
+			if (this.state.syncer) {
+				this.state.syncer.onProgress.ignore(this.state.syncListener);
+			}
+			changes.syncer.onProgress.listen(this.state.syncListener);
+		}
+		// listen for updates to items in the store
+		if (changes.store) {
+			var debouncedRefresh = underscore.debounce(() => {
+				if (this.state.store && !this.state.isLocked) {
+					this.refreshItems()
+				}
+			}, 300);
+			changes.store.onItemUpdated.listen(debouncedRefresh);
+		}
+
+		if (doRefresh) {
+			this.refreshItems();
+		}
+	}
+
+	componentDidUpdate() {
+		this.props.stateChanged.publish(this.state);
+	}
+
+	private refreshItems() {
+		if (!this.state.store) {
+			return;
+		}
+		this.state.store.listItems().then((items) => {
+			var state = this.state;
+			state.items = underscore.filter(items, (item) => {
+				return item.isRegularItem() && !item.trashed;
+			});
+			this.setState(state);
+		}).catch((err) => {
+			console.log('Error listing items: ', err);
+		});
+	}
+
+	showError(error: string) {
+		this.setState({
+			status: {
+				type: StatusType.Error,
+				text: error
+			}
+		});
+	}
+
+	autofill(item: item_store.Item) {
+		this.props.services.autofiller.autofill(item).then((result) => {
+			if (result.count > 0) {
+				this.props.services.pageAccess.hidePanel();
+			}
+		}).catch((err) => {
+			this.showError(err.message);
+		});
+	}
+
+	render() : react.Descriptor<any> {
+		if (!this.state.store) {
+			return SetupViewF({});
+		}
+
+		var children : {
+			unlockPane?: react.Descriptor<UnlockPaneProps>;
+			itemList?: react.Descriptor<item_list.ItemListViewProps>;
+			itemDetails?: react.Descriptor<details_view.DetailsViewProps>;
+			statusView?: react.Descriptor<StatusViewProps>;
+			toaster?: react.Descriptor<any>;
+			menu?: react.Descriptor<controls.MenuProps>;
+		} = {};
+
+		if (this.state.isLocked) {
+			children.unlockPane = UnlockPaneF({
+				store: this.state.store,
+				isLocked: this.state.isLocked,
+				onUnlock: () => {
+					this.setState({isLocked: false});
+				},
+				onUnlockErr: (err) => {
+					this.showError(err);
+				}
+			});
+		} else {
+			children.itemList = item_list.ItemListViewF({
+				items: this.state.items,
+				selectedItem: this.state.selectedItem,
+				onSelectedItemChanged: (item) => { this.setState({selectedItem: item}); },
+				currentUrl: this.state.currentUrl,
+				iconProvider: this.props.services.iconProvider,
+				onLockClicked: () => this.props.services.keyAgent.forgetKeys(),
+				onMenuClicked: () => {
+					this.setState({showMenu: true});
+				}
+			});
+			children.itemDetails = details_view.DetailsViewF({
+				item: this.state.selectedItem,
+				iconProvider: this.props.services.iconProvider,
+				onGoBack: () => {
+					this.setState({selectedItem: null});
+				},
+				autofill: () => {
+					this.autofill(this.state.selectedItem);
+				},
+				clipboard: this.props.services.clipboard
+			});
+		}
+
+		var toasters: react.Descriptor<controls.ToasterProps>[] = [];
+		if (this.state.status) {
+			toasters.push(controls.ToasterF({
+				message: this.state.status.text
+			}));
+		}
+		if (this.state.syncState &&
+		    this.state.syncState.state !== sync.SyncState.Idle) {
+			toasters.push(controls.ToasterF({
+				message: 'Syncing...',
+				progressValue: this.state.syncState.updated,
+				progressMax: this.state.syncState.total
+			}));
+		}
+
+		if (this.state.showMenu) {
+			children.menu = this.renderMenu();
+		}
+
+		children.toaster = react_addons.addons.CSSTransitionGroup({transitionName: 'fade'},
+		  toasters
+		);
+
+		return react.DOM.div({className: 'appView', ref: 'app'},
+			reactutil.mapToComponentArray(children)
+		);
+	}
+
+	private renderMenu() {
+		var menuItems: controls.MenuItem[] = [{
+			label: 'Clear Offline Storage',
+			onClick: () => {
+				return this.props.services.keyAgent.forgetKeys().then(() => {
+					return this.state.store.clear();
+				}).then(() => {
+					console.log('Re-syncing keys');
+					return this.state.syncer.syncKeys();
+				}).catch((err) => {
+					this.showError(err);
+				});
+			}
+		},{
+			label: 'Help',
+			onClick: () => {
+				var win = window.open('https://robertknight.github.io/passcards', '_blank');
+				win.focus();
+			}
+		}];
+		return controls.MenuF({
+			items: menuItems,
+			   top: 5,
+			   right: 5,
+			   onDismiss: () => {
+				   this.setState({showMenu: false});
+			   }
+		});
+	}
+}
+
+var AppViewF = reactutil.createFactory(AppView);
+
 declare var firefoxAddOn: page_access.ExtensionConnector;
 
 export class App {
-	private appView: AppView;
+	// a reference to the rendered AppView instance
+	private activeAppView: any;
+
 	private savedState: AppViewState;
 	private services: AppServices;
 
@@ -525,7 +529,7 @@ export class App {
 				console.log('vault setup failed', err, err.stack);
 			}
 		}).catch((err) => {
-			this.appView.showError(err.toString());
+			this.activeAppView.showError(err.toString());
 			console.log('Failed to setup vault', err.toString());
 		});
 	}
@@ -545,25 +549,29 @@ export class App {
 		});
 
 		// create main app view
-		this.appView = new AppView({services: this.services});
-		this.appView.stateChanged.listen((state) => {
+		var stateChanged = new event_stream.EventStream<AppViewState>();
+		var appView = AppViewF({
+			services: this.services,
+			stateChanged: stateChanged
+		});
+		stateChanged.listen((state: AppViewState) => {
 			// save app state for when the app's view is mounted
 			// via renderInto()
 			this.savedState = underscore.clone(state);
 		});
-		react.renderComponent(this.appView, element);
+		this.activeAppView = react.render(appView, element);
 		this.updateState(this.savedState);
 
 		// the main item list only renders visible items,
 		// so force a re-render when the window size changes
 		rootInputElement.onresize = () => {
-			this.appView.forceUpdate();
+			this.activeAppView.forceUpdate();
 		};
 	}
 
 	private updateState(state: AppViewState) {
-		if (this.appView) {
-			this.appView.setState(state);
+		if (this.activeAppView) {
+			this.activeAppView.setState(state);
 		} else {
 			// save app state for when the app's view is mounted
 			// via renderInto()

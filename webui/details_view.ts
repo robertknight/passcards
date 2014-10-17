@@ -1,8 +1,7 @@
-/// <reference path="../node_modules/react-typescript/declarations/react.d.ts" />
-/// <reference path="../node_modules/react-typescript/declarations/react-typescript.d.ts" />
+/// <reference path="../typings/react-0.12.d.ts" />
 
 import react = require('react');
-import reactts = require('react-typescript');
+import typed_react = require('typed-react');
 
 import controls = require('./controls');
 import env = require('../lib/base/env');
@@ -10,6 +9,7 @@ import item_icons = require('./item_icons');
 import item_store = require('../lib/item_store');
 import keycodes = require('./base/keycodes');
 import page_access = require('./page_access');
+import reactutil = require('./reactutil');
 import shortcut = require('./base/shortcut');
 import stringutil = require('../lib/base/stringutil');
 import url_util = require('../lib/base/url_util');
@@ -26,7 +26,7 @@ class ItemFieldProps {
 	clipboard: page_access.ClipboardAccess;
 }
 
-class ItemField extends reactts.ReactComponentBase<ItemFieldProps, ItemFieldState> {
+class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 	getInitialState() {
 		return {
 			selected: false,
@@ -40,11 +40,11 @@ class ItemField extends reactts.ReactComponentBase<ItemFieldProps, ItemFieldStat
 			displayValue = stringutil.repeat('•', this.props.value.length);
 		}
 
-		var fieldActions: react.ReactComponent<any,any>;
+		var fieldActions: react.Descriptor<any>;
 
-		var revealButton: controls.ActionButton;
+		var revealButton: react.Descriptor<controls.ActionButtonProps>;
 		if (this.props.isPassword) {
-			revealButton = new controls.ActionButton({
+			revealButton = controls.ActionButtonF({
 				value: this.state.revealed ? 'Hide' : 'Reveal',
 				onClick: (e) => {
 					e.preventDefault();
@@ -54,9 +54,9 @@ class ItemField extends reactts.ReactComponentBase<ItemFieldProps, ItemFieldStat
 		}
 
 		if (this.state.selected) {
-			var copyButton: controls.ActionButton;
+			var copyButton: react.Descriptor<controls.ActionButtonProps>;
 			if (this.props.clipboard.clipboardAvailable()) {
-				copyButton = new controls.ActionButton({
+				copyButton = controls.ActionButtonF({
 					value: 'Copy',
 					onClick: (e) => {
 						this.props.clipboard.copy('text/plain', this.props.value)
@@ -87,7 +87,9 @@ class ItemField extends reactts.ReactComponentBase<ItemFieldProps, ItemFieldStat
 	}
 }
 
-class DetailsViewProps {
+var ItemFieldF = reactutil.createFactory(ItemField);
+
+export class DetailsViewProps {
 	item: item_store.Item;
 	iconProvider: item_icons.ItemIconProvider;
 	clipboard: page_access.ClipboardAccess;
@@ -96,7 +98,7 @@ class DetailsViewProps {
 	autofill: () => void;
 }
 
-export class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}> {
+export class DetailsView extends typed_react.Component<DetailsViewProps, {}> {
 	private itemContent : item_store.ItemContent;
 	private shortcuts: shortcut.Shortcut[];
 
@@ -151,19 +153,19 @@ export class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}
 	}
 
 	render() {
-		var detailsContent : react.ReactComponent<any,any>;
+		var detailsContent : react.Descriptor<any>;
 		if (this.props.item && this.itemContent) {
 			var account = this.itemContent.account();
 			var password = this.itemContent.password();
-			var coreFields: react.ReactComponent<any,any>[] = [];
-			var websites: react.ReactComponent<any,any>[] = [];
-			var sections: react.ReactComponent<any,any>[] = [];
+			var coreFields: react.Descriptor<any>[] = [];
+			var websites: react.Descriptor<any>[] = [];
+			var sections: react.Descriptor<any>[] = [];
 
 			this.itemContent.sections.forEach((section) => {
-				var fields: react.ReactComponent<any,any>[] = [];
+				var fields: react.Descriptor<any>[] = [];
 				section.fields.forEach((field) => {
 					if (field.value) {
-						fields.push(new ItemField({
+						fields.push(ItemFieldF({
 							label: field.title,
 							value: field.value,
 							isPassword: field.kind == item_store.FieldType.Password,
@@ -177,7 +179,7 @@ export class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}
 			});
 
 			this.itemContent.urls.forEach((url) => {
-				websites.push(new ItemField({
+				websites.push(ItemFieldF({
 					label: url.label,
 					value: url.url,
 					isPassword: false,
@@ -186,7 +188,7 @@ export class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}
 			});
 
 			if (account) {
-				coreFields.push(new ItemField({
+				coreFields.push(ItemFieldF({
 					label: 'Account',
 					value: account,
 					isPassword: false,
@@ -195,7 +197,7 @@ export class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}
 			}
 
 			if (password) {
-				coreFields.push(new ItemField({
+				coreFields.push(ItemFieldF({
 					label: 'Password',
 					value: password,
 					isPassword: true,
@@ -205,7 +207,7 @@ export class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}
 
 			detailsContent = react.DOM.div({className: 'detailsContent'},
 				react.DOM.div({className: 'detailsHeader'},
-					new item_icons.IconControl({
+					item_icons.IconControlF({
 						location: this.props.item.primaryLocation(),
 						iconProvider: this.props.iconProvider,
 						visible: true,
@@ -229,9 +231,9 @@ export class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}
 			);
 		}
 
-		var autofillButton: react.ReactComponent<any,any>;
+		var autofillButton: react.Descriptor<any>;
 		if (env.isFirefoxAddon() || env.isChromeExtension()) {
-			autofillButton = new controls.ActionButton({
+			autofillButton = controls.ActionButtonF({
 				accessKey:'a',
 				value: 'Autofill',
 				onClick: () => this.props.autofill()
@@ -247,7 +249,7 @@ export class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}
 			tabIndex: 0
 			},
 			react.DOM.div({className: stringutil.truthyKeys({toolbar: true, detailsToolbar: true})},
-				new controls.ToolbarButton({
+				controls.ToolbarButtonF({
 					iconHref: 'icons/icons.svg#arrow-back',
 					onClick: () => this.props.onGoBack()
 				})),
@@ -258,4 +260,6 @@ export class DetailsView extends reactts.ReactComponentBase<DetailsViewProps, {}
 		);
 	}
 }
+
+export var DetailsViewF = reactutil.createFactory(DetailsView);
 

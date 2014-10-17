@@ -1,10 +1,9 @@
-/// <reference path="../node_modules/react-typescript/declarations/react.d.ts" />
-/// <reference path="../node_modules/react-typescript/declarations/react-typescript.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
+/// <reference path="../typings/react-0.12.d.ts" />
 
 import $ = require('jquery');
 import react = require('react');
-import reactts = require('react-typescript');
+import typed_react = require('typed-react');
 import underscore = require('underscore');
 
 import controls = require('./controls');
@@ -13,6 +12,7 @@ import keycodes = require('./base/keycodes');
 import item_icons = require('./item_icons');
 import item_search = require('../lib/item_search');
 import item_store = require('../lib/item_store');
+import reactutil = require('./reactutil');
 import stringutil = require('../lib/base/stringutil');
 import url_util = require('../lib/base/url_util');
 
@@ -31,7 +31,7 @@ export class ItemListViewProps {
 	onMenuClicked: () => void;
 }
 
-export class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, ItemListViewState> {
+export class ItemListView extends typed_react.Component<ItemListViewProps, ItemListViewState> {
 	getInitialState() {
 		var state = new ItemListViewState();
 		return state;
@@ -65,7 +65,7 @@ export class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, 
 		}
 	}
 
-	updateFilter = (filter: string) => {
+	private updateFilter(filter: string) {
 		var state = this.state;
 		state.filter = filter;
 		this.setState(state);
@@ -78,8 +78,10 @@ export class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, 
 		}
 
 		return react.DOM.div({className: 'itemListView'},
-			new ItemListToolbar({
-				onQueryChanged: this.updateFilter,
+			ItemListToolbarF({
+				onQueryChanged: (query) => {
+					this.updateFilter(query)
+				},
 				ref: 'searchField',
 				onMoveUp: () => {
 					(<ItemList>this.refs['itemList']).focusPrevItem();
@@ -93,7 +95,7 @@ export class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, 
 				onLockClicked: () => this.props.onLockClicked(),
 				onMenuClicked: () => this.props.onMenuClicked()
 			}),
-			new ItemList({items: this.props.items, filter: this.state.filter,
+			ItemListF({items: this.props.items, filter: this.state.filter,
 				filterUrl: filterUrl,
 				onSelectedItemChanged: (item) => {
 					if (!item) {
@@ -117,6 +119,7 @@ export class ItemListView extends reactts.ReactComponentBase<ItemListViewProps, 
 		searchField.blur();
 	}
 }
+export var ItemListViewF = reactutil.createFactory(ItemListView);
 
 class ItemProps {
 	key: string;
@@ -129,13 +132,13 @@ class ItemProps {
 	offsetTop: number;
 }
 
-class Item extends reactts.ReactComponentBase<ItemProps, {}> {
+class Item extends typed_react.Component<ItemProps, {}> {
 	getInitialState() {
 		return {};
 	}
 
 	render() {
-		var focusIndicator: react.ReactComponent<any,any>;
+		var focusIndicator: react.Descriptor<any>;
 		if (this.props.isFocused) {
 			focusIndicator = react.DOM.div({className: 'itemFocusIndicator'}, '>');
 		}
@@ -151,14 +154,14 @@ class Item extends reactts.ReactComponentBase<ItemProps, {}> {
 					top: (this.props.offsetTop).toString() + 'px'
 				}
 			},
-			new controls.InkRipple({
+			controls.InkRippleF({
 				color: {
 					r: 252,
 					g: 228,
 					b: 236
 				}
 			}),
-			new item_icons.IconControl({
+			item_icons.IconControlF({
 				location: this.props.item.primaryLocation(),
 				iconProvider: this.props.iconProvider,
 				isFocused: this.props.isFocused
@@ -171,6 +174,7 @@ class Item extends reactts.ReactComponentBase<ItemProps, {}> {
 		);
 	}
 }
+export var ItemF = reactutil.createFactory(Item);
 
 interface ItemListState {
 	// TODO - Remove selected item here
@@ -195,7 +199,7 @@ class ItemListProps {
 	iconProvider: item_icons.ItemIconProvider;
 }
 
-class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> {
+class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 
 	setSelectedItem(item: item_store.Item) {
 		var state = this.state;
@@ -217,8 +221,8 @@ class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> 
 		focused: boolean;
 		index: number;
 		offsetTop: number;
-	}) : Item {
-		return new Item({
+	}) : react.Descriptor<ItemProps> {
+		return ItemF({
 			key: item.uuid,
 			item: item,
 			domain: url_util.domain(url_util.normalize(item.primaryLocation())),
@@ -412,6 +416,8 @@ class ItemList extends reactts.ReactComponentBase<ItemListProps, ItemListState> 
 	}
 }
 
+export var ItemListF = reactutil.createFactory(ItemList);
+
 class ItemListToolbarProps {
 	onQueryChanged: (query: string) => void;
 	onMoveUp: () => void;
@@ -422,7 +428,7 @@ class ItemListToolbarProps {
 	onMenuClicked: () => void;
 }
 
-class ItemListToolbar extends reactts.ReactComponentBase<ItemListToolbarProps, {}> {
+class ItemListToolbar extends typed_react.Component<ItemListToolbarProps, {}> {
 	componentDidMount() {
 		var searchField = this.fieldInput();
 		var updateQuery = underscore.debounce(() => {
@@ -464,7 +470,7 @@ class ItemListToolbar extends reactts.ReactComponentBase<ItemListToolbarProps, {
 		};
 
 		return react.DOM.div({className: stringutil.truthyKeys({itemListToolbar: true, toolbar: true})},
-				new controls.SvgIcon({
+				controls.SvgIconF({
 					className: 'toolbarSearchIcon',
 					href: 'icons/icons.svg#search',
 					width: 20,
@@ -478,12 +484,12 @@ class ItemListToolbar extends reactts.ReactComponentBase<ItemListToolbarProps, {
 					ref: 'searchField'
 				}),
 				react.DOM.div({className: 'toolbarIconGroup'},
-					new controls.ToolbarButton({
+					controls.ToolbarButtonF({
 						className: 'toolbarLockIcon',
 						iconHref: 'icons/icons.svg#lock-outline',
 						onClick: () => this.props.onLockClicked()
 					}),
-					new controls.ToolbarButton({
+					controls.ToolbarButtonF({
 						className: 'toolbarMenuIcon',
 						iconHref: 'icons/icons.svg#menu',
 						onMouseDown: () => this.props.onMenuClicked()
@@ -492,3 +498,5 @@ class ItemListToolbar extends reactts.ReactComponentBase<ItemListToolbarProps, {
 			);
 	}
 }
+
+export var ItemListToolbarF = reactutil.createFactory(ItemListToolbar);

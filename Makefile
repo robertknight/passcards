@@ -17,7 +17,7 @@ nodemodule_marker=build/nodemodule_marker
 dropboxjs_lib=node_modules/dropbox/lib/dropbox.js
 xpi_file=addons/firefox/passcards@robertknight.github.io.xpi
 
-deps=$(submodule_marker) $(nodemodule_marker) $(dropboxjs_lib)
+deps=$(submodule_marker) $(nodemodule_marker) $(dropboxjs_lib) build/typings
 
 all: build/current webui-build
 
@@ -29,6 +29,11 @@ webui-build: $(webui_script_dir)/webui_bundle.js \
              $(webui_script_dir)/crypto_worker.js \
              $(webui_css_dir)/app.css \
              webui-icons
+
+build/typings: tsd.json
+	$(TSD) reinstall
+	@mkdir -p build
+	@touch build/typings
 
 $(webui_script_dir)/webui_bundle.js: build/current
 	mkdir -p $(webui_script_dir)

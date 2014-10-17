@@ -1,4 +1,4 @@
-/// <reference path="../node_modules/react-typescript/declarations/react.d.ts" />
+/// <reference path="../typings/react-0.12.d.ts" />
 
 import react = require('react');
 

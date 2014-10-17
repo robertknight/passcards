@@ -1,14 +1,13 @@
-/// <reference path="../node_modules/react-typescript/declarations/react-typescript.d.ts" />
-/// <reference path="../node_modules/react-typescript/declarations/react.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
+/// <reference path="../typings/react-0.12.d.ts" />
 /// <reference path="../typings/URIjs.d.ts" />
 /// <reference path="../typings/dom.d.ts" />
 
 import Q = require('q');
 import react = require('react');
-import reactts = require('react-typescript');
 import stringutil = require('../lib/base/stringutil');
+import typed_react = require('typed-react');
 import underscore = require('underscore');
 import urijs = require('URIjs');
 
@@ -16,6 +15,7 @@ import collectionutil = require('../lib/base/collectionutil');
 import err_util = require('../lib/base/err_util');
 import event_stream = require('../lib/base/event_stream');
 import key_value_store = require('../lib/base/key_value_store');
+import reactutil = require('./reactutil');
 import site_info = require('../lib/siteinfo/site_info');
 import url_util = require('../lib/base/url_util');
 
@@ -275,7 +275,7 @@ export class IconControlProps {
 	isFocused: boolean;
 }
 
-export class IconControl extends reactts.ReactComponentBase<IconControlProps, {}> {
+export class IconControl extends typed_react.Component<IconControlProps, {}> {
 	private iconUpdateListener: (url: string) => void;
 
 	private setupIconUpdateListener(iconProvider: ItemIconProvider) {
@@ -321,4 +321,6 @@ export class IconControl extends reactts.ReactComponentBase<IconControlProps, {}
 		);
 	}
 }
+
+export var IconControlF = reactutil.createFactory(IconControl);
 

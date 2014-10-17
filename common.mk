@@ -11,6 +11,7 @@ SILENCE_CMD=1>/dev/null 2>/dev/null
 SILENCE_STDOUT=1>/dev/null
 TMP_DIR_CMD=mktemp -d /tmp/onepass.XXXXX
 TSC=$(NODE_BIN_DIR)/tsc -m commonjs --noImplicitAny --sourcemap
+TSD=$(NODE_BIN_DIR)/tsd
 TSLINT=$(NODE_BIN_DIR)/tslint
 
 # CFX tool for building and testing Firefox addons
