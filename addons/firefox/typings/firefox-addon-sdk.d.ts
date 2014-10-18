@@ -79,6 +79,12 @@ declare module 'sdk/preferences/service' {
 	export function get(pref: string, defaultValue: any) : void;
 }
 
+declare module 'sdk/system/environment' {
+	export var env: {
+		[index: string] : string;
+	};
+}
+
 interface ButtonState {
 	label?: string;
 	checked?: boolean;

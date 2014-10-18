@@ -3,6 +3,7 @@
 import buttons = require('sdk/ui/button/toggle');
 import clipboard = require('sdk/clipboard');
 import hotkeys = require('sdk/hotkeys');
+import environment = require('sdk/system/environment');
 import panel = require('sdk/panel');
 import preferences_service = require('sdk/preferences/service');
 import self_ = require('sdk/self');
@@ -45,6 +46,12 @@ function onPanelHidden() {
 };
 
 function main() {
+	if (environment.env['PASSCARDS_ENV'] === 'development') {
+		// avoid dumping a large number of warnings to the console
+		// when browsing websites in development
+		preferences_service.set('javascript.options.strict', false);
+	}
+
 	// read internal settings
 	var PREF_ROOT = 'extensions.' + self_.id + '.';
 	var syncService = preferences_service.get(PREF_ROOT + '.syncService', 'dropbox');

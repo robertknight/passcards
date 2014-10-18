@@ -15,7 +15,7 @@ $(XPI_PACKAGE): build/xpi_content
 	mv passcards.update.rdf $(PKG_DIR)
 
 run: build/xpi_content
-	$(CFX) run
+	(export PASSCARDS_ENV='development' && $(CFX) run)
 
 build/xpi_content: lib/main.js data/index.html data/scripts/webui_bundle.js data/scripts/crypto_worker.js data/style/app.css data/panel.html data/scripts/panel_content.js data/scripts/page_bundle.js data/icons
 	@mkdir -p $@
