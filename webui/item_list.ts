@@ -492,7 +492,7 @@ class ItemListToolbar extends typed_react.Component<ItemListToolbarProps, {}> {
 					controls.ToolbarButtonF({
 						className: 'toolbarMenuIcon',
 						iconHref: 'icons/icons.svg#menu',
-						onMouseDown: () => this.props.onMenuClicked()
+						onClick: () => this.props.onMenuClicked()
 					})
 				)
 			);

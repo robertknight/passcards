@@ -18,9 +18,8 @@ export class ToolbarButtonProps {
 
 export class ToolbarButton extends typed_react.Component<ToolbarButtonProps,{}> {
 	render() {
-		return react.DOM.a(reactutil.mergeProps(this.props, {
+		return react.DOM.div(reactutil.mergeProps(this.props, {
 			className: 'toolbarIconButton',
-			href: '#',
 		}),
 		SvgIconF({
 			href: this.props.iconHref,

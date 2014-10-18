@@ -178,10 +178,8 @@ html, body {
 .toolbar {
 	.material-header;
 
-	padding-top: 7px;
-	padding-bottom: 7px;
 	border-bottom: 1px solid #bbbbbb;
-	height: 30px;
+	height: 40px;
 }
 
 .toolbarIconGroup {
@@ -189,6 +187,8 @@ html, body {
 	margin-right: 10px;
 	flex-shrink: 0;
 	flex-grow: 0;
+	display: flex;
+	height: 100%;
 }
 
 .itemListToolbar {
@@ -201,9 +201,11 @@ html, body {
 }
 
 .toolbarIconButton {
-	display: inline-block;
-	margin-left:5px;
-	margin-right:5px;
+	display: flex;
+	align-items: center;
+	margin-left:10px;
+	margin-right:10px;
+	height: 100%;
 }
 
 .searchFieldInput {
@@ -215,7 +217,7 @@ html, body {
 	border: 0px;
 	color: @material-color-header;
 	background-color: @material-color-primary;
-	font-size: 22px;
+	font-size: 20px;
 	outline: none;
 }
 
@@ -354,7 +356,6 @@ html, body {
 
 	.material-header;
 
-	height: 30px;
 	padding-left: 20px;
 }
 
