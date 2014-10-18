@@ -220,29 +220,38 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 		}
 	}
 
-	componentWillUpdate(nextProps: AppViewProps, changes: AppViewState) {
+	componentWillUpdate(nextProps: AppViewProps, nextState: AppViewState) {
 		var doRefresh = false;
-		if (changes.currentUrl && changes.currentUrl != this.state.currentUrl) {
-			changes.selectedItem = null;
+
+		if (nextState.currentUrl !== this.state.currentUrl) {
+			nextState.selectedItem = null;
 		}
-		if (this.state.isLocked && changes.isLocked === false) {
-			changes.selectedItem = null;
+
+		if (nextState.isLocked !== this.state.isLocked &&
+			nextState.isLocked === false) {
+			nextState.selectedItem = null;
 			doRefresh = true;
 		}
-		if (changes.syncer) {
+
+		if (nextState.syncer !== this.state.syncer) {
 			if (this.state.syncer) {
 				this.state.syncer.onProgress.ignore(this.state.syncListener);
 			}
-			changes.syncer.onProgress.listen(this.state.syncListener);
+			nextState.syncer.onProgress.listen(this.state.syncListener);
 		}
+
 		// listen for updates to items in the store
-		if (changes.store) {
+		if (nextState.store !== this.state.store) {
 			var debouncedRefresh = underscore.debounce(() => {
 				if (this.state.store && !this.state.isLocked) {
 					this.refreshItems()
 				}
 			}, 300);
-			changes.store.onItemUpdated.listen(debouncedRefresh);
+
+			if (this.state.store) {
+				this.state.store.onItemUpdated.ignoreContext(this);
+			}
+			nextState.store.onItemUpdated.listen(debouncedRefresh, this);
 		}
 
 		if (doRefresh) {
