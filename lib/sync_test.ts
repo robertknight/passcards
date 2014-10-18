@@ -142,23 +142,28 @@ testLib.addAsyncTest('sync progress', (assert) => {
 		assert.deepEqual(progressUpdates, [{
 			state: sync.SyncState.ListingItems,
 			updated: 0,
-			total: 0
+			total: 0,
+			active: 0
 		},{
 			state: sync.SyncState.SyncingItems,
+			active: 0,
 			updated: 0,
 			total: 1
 		},{
 			state: sync.SyncState.SyncingItems,
+			active: 0,
 			updated: 1,
 			total: 1
 		},{
 			state: sync.SyncState.Idle,
+			active: 0,
 			updated: 1,
 			total: 1
 		}], 'check that expected progress updates were received');
 
 		assert.deepEqual(finalState, {
 			state: sync.SyncState.Idle,
+			active: 0,
 			updated: 1,
 			total: 1
 		});
@@ -168,14 +173,17 @@ testLib.addAsyncTest('sync progress', (assert) => {
 	}).then(() => {
 		assert.deepEqual(progressUpdates, [{
 			state: sync.SyncState.ListingItems,
+			active: 0,
 			updated: 0,
 			total: 0
 		},{
 			state: sync.SyncState.SyncingItems,
+			active: 0,
 			updated: 0,
 			total: 0
 		},{
 			state: sync.SyncState.Idle,
+			active: 0,
 			updated: 0,
 			total: 0
 		}]);
