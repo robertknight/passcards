@@ -7,7 +7,6 @@
 import $ = require('jquery');
 import fastclick = require('fastclick');
 import react = require('react');
-import react_addons = require('react/addons');
 import typed_react = require('typed-react');
 import url = require('url');
 import underscore = require('underscore');
@@ -366,7 +365,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 			children.menu = this.renderMenu();
 		}
 
-		children.toaster = react_addons.addons.CSSTransitionGroup({transitionName: 'fade'},
+		children.toaster = reactutil.CSSTransitionGroupF({transitionName: 'fade'},
 		  toasters
 		);
 

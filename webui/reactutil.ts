@@ -1,7 +1,10 @@
 import react = require('react');
+import react_addons = require('react/addons');
 import typed_react = require('typed-react');
 
 import tsutil = require('../lib/base/tsutil');
+
+export var CSSTransitionGroupF = react.createFactory(react_addons.addons.CSSTransitionGroup);
 
 /** Merge props passed to a parent component with those set in a child
   * component.
