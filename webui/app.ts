@@ -301,17 +301,11 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 			return SetupViewF({});
 		}
 
-		var children : {
-			unlockPane?: react.Descriptor<UnlockPaneProps>;
-			itemList?: react.Descriptor<item_list.ItemListViewProps>;
-			itemDetails?: react.Descriptor<details_view.DetailsViewProps>;
-			statusView?: react.Descriptor<StatusViewProps>;
-			toaster?: react.Descriptor<any>;
-			menu?: react.Descriptor<controls.MenuProps>;
-		} = {};
+		var children: react.Descriptor<any>[] = [];
 
 		if (this.state.isLocked) {
-			children.unlockPane = UnlockPaneF({
+			children.push(UnlockPaneF({
+				key: 'unlockPane',
 				store: this.state.store,
 				isLocked: this.state.isLocked,
 				onUnlock: () => {
@@ -320,9 +314,10 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 				onUnlockErr: (err) => {
 					this.showError(err);
 				}
-			});
+			}));
 		} else {
-			children.itemList = item_list.ItemListViewF({
+			children.push(item_list.ItemListViewF({
+				key: 'itemList',
 				items: this.state.items,
 				selectedItem: this.state.selectedItem,
 				onSelectedItemChanged: (item) => { this.setState({selectedItem: item}); },
@@ -332,8 +327,9 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 				onMenuClicked: () => {
 					this.setState({showMenu: true});
 				}
-			});
-			children.itemDetails = details_view.DetailsViewF({
+			}));
+			children.push(details_view.DetailsViewF({
+				key: 'itemDetails',
 				item: this.state.selectedItem,
 				iconProvider: this.props.services.iconProvider,
 				onGoBack: () => {
@@ -343,7 +339,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 					this.autofill(this.state.selectedItem);
 				},
 				clipboard: this.props.services.clipboard
-			});
+			}));
 		}
 
 		var toasters: react.Descriptor<controls.ToasterProps>[] = [];
@@ -362,19 +358,19 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 		}
 
 		if (this.state.showMenu) {
-			children.menu = this.renderMenu();
+			children.push(this.renderMenu('menu'));
 		}
 
-		children.toaster = reactutil.CSSTransitionGroupF({transitionName: 'fade'},
+		children.push(reactutil.CSSTransitionGroupF({transitionName: 'fade', key: 'toasterList'},
 		  toasters
-		);
+		));
 
 		return react.DOM.div({className: 'appView', ref: 'app'},
-			reactutil.mapToComponentArray(children)
+			children
 		);
 	}
 
-	private renderMenu() {
+	private renderMenu(key: string) {
 		var menuItems: controls.MenuItem[] = [{
 			label: 'Clear Offline Storage',
 			onClick: () => {
@@ -395,6 +391,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 			}
 		}];
 		return controls.MenuF({
+			key: key,
 			items: menuItems,
 			   top: 5,
 			   right: 5,
