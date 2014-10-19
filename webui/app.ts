@@ -547,11 +547,9 @@ export class App {
 
 		// setup auto-lock
 		rootInputElement.addEventListener('keydown', (e) => {
-			console.log('reset key-down');
 			this.services.keyAgent.resetAutoLock();
 		});
 		rootInputElement.addEventListener('click', (e) => {
-			console.log('reset auto-lock click');
 			this.services.keyAgent.resetAutoLock();
 		});
 
