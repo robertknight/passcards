@@ -1,6 +1,8 @@
 import collectionutil = require('./collectionutil');
 import testLib = require('../test');
 
+import Q = require('q');
+
 testLib.addTest('add/fetch keys', (assert) => {
 	var map = new collectionutil.BiDiMap<number,string>();
 	map.add(1, 'one')
@@ -74,6 +76,28 @@ testLib.addTest('convert list to map', (assert) => {
 	assert.ok(map.has(2));
 	assert.ok(map.has(3));
 	assert.deepEqual(map.get(3), {k:3, v:3});
+});
+
+testLib.addAsyncTest('batched updates', (assert) => {
+	var savedItems = <{[index: string] : number}>{};
+
+	var queue = new collectionutil.BatchedUpdateQueue<KeyValue>((updates: KeyValue[]) => {
+		updates.forEach((pair) => {
+			savedItems[pair.key] = pair.value;
+		});
+		return Q<void>(null);
+	});
+
+	var update1 = queue.push({key: 'one', value: 1});
+	var update2 = queue.push({key: 'one', value: 2});
+	var update3 = queue.push({key: 'two', value: 3});
+
+	return Q.all([update1, update2, update3]).then(() => {
+		assert.deepEqual(savedItems, {
+			one: 2,
+			two: 3
+		});
+	});
 });
 
 testLib.start();

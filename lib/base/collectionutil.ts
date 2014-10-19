@@ -1,3 +1,5 @@
+import Q = require('q');
+
 interface BiDiMapEntry<T1,T2> {
 	key1: T1;
 	key2: T2;
@@ -233,5 +235,84 @@ export function listToMap<K,T>(list: T[], keyFunc: (item: T) => K) {
 		map.set(key, item);
 	});
 	return map;
+}
+
+/** BatchedUpdateQueue is a helper for batching updates.
+  *
+  * A queue is constructed with a processing function which
+  * takes a set of items to process and returns a promise
+  * for when the items have been processed.
+  *
+  * When items are added to the queue using push(), it is collected
+  * together with other updates and submitted to the processing function.
+  * 
+  * Only one batch of updates will be processed at a time.
+  *
+  * An example use would be for saving updates to a JSON key/value file.
+  * The processing function would take a list of key/value pairs to update,
+  * load the current data file, apply the updates and save the contents back.
+  * The push() function would be invoked with a key/value pair to save.
+  * 
+  * If a large number of updates were submitted consecutively, these would
+  * be collected into a small number of batches, so the data file would only
+  * be read/updated/written a small number of times instead of once per
+  * key/value pair submitted.
+  */
+export class BatchedUpdateQueue<T> {
+	// callback to invoke to process a batch of updates
+	private updateFn: (items: T[]) => Q.Promise<void>;
+
+	// next batch of pending updates. These will be
+	// passed to updateFn when the current batch
+	// has been processed
+	private pendingUpdates: T[];
+
+	// promise for the result of the active call to
+	// updateFn
+	private currentFlush: Q.Promise<void>;
+
+	// promise for the result of the next batch of
+	// updates which will be submitted once the current
+	// batch is complete
+	private nextFlush: Q.Deferred<void>;
+
+	/** Construct a new queue which calls @p updateFn with
+	  * batches of updates to process.
+	  *
+	  * @p updateFn should return a promise which resolves once
+	  * the updates are processed (eg. when the data has been
+	  * saved to disk). Only one batch of updates will be processed
+	  * at a time.
+	  */
+	constructor(updateFn: (items: T[]) => Q.Promise<void>) {
+		this.updateFn = updateFn;
+		this.currentFlush = Q<void>(null);
+		this.pendingUpdates = [];
+	}
+
+	/** Enqueue a new update to process. Returns a promise which is resolved
+	  * when the update has been processed.
+	  *
+	  * Updates are collected together and passed to the processing function
+	  * in batches.
+	  */
+	push(update: T) : Q.Promise<void> {
+		this.pendingUpdates.push(update);
+		if (this.nextFlush) {
+			return this.nextFlush.promise;
+		}
+
+		this.nextFlush = Q.defer<void>();
+		this.currentFlush.then(() => {
+			this.currentFlush = this.updateFn(this.pendingUpdates);
+			this.pendingUpdates = [];
+
+			// [TS 1.1] Q.Deferred.resolve() can be called with either a promise or
+			// a value but the typings only support a value.
+			this.nextFlush.resolve(<any>this.currentFlush);
+			this.nextFlush = null;
+		});
+		return this.nextFlush.promise;
+	}
 }
 

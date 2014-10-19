@@ -4,14 +4,15 @@ import Q = require('q');
 import underscore = require('underscore');
 
 import asyncutil = require('./base/asyncutil');
+import collectionutil = require('./base/collectionutil');
 import event_stream = require('./base/event_stream');
 import item_store = require('./item_store');
 import key_agent = require('./key_agent');
 import key_value_store = require('./base/key_value_store');
 import onepass_crypto = require('./onepass_crypto');
 
-interface EncryptedOverview {
-	data: string;
+interface OverviewMap {
+	[index: string] : ItemOverview;
 }
 
 interface EncryptedContent {
@@ -36,6 +37,7 @@ export class Store implements item_store.Store {
 	private keyAgent: key_agent.KeyAgent;
 	private keyStore: key_value_store.ObjectStore;
 	private itemStore: key_value_store.ObjectStore;
+	private indexUpdateQueue: collectionutil.BatchedUpdateQueue<item_store.Item>;
 
 	onItemUpdated: event_stream.EventStream<item_store.Item>;
 	onUnlock: event_stream.EventStream<void>;
@@ -49,6 +51,10 @@ export class Store implements item_store.Store {
 		this.onUnlock = new event_stream.EventStream<void>();
 		
 		this.initDatabase();
+
+		this.indexUpdateQueue = new collectionutil.BatchedUpdateQueue((updates: item_store.Item[]) => {
+			return this.updateIndex(updates);
+		});
 	}
 
 	private initDatabase() {
@@ -85,43 +91,92 @@ export class Store implements item_store.Store {
 	}
 
 	listItems(opts: item_store.ListItemsOptions = {}) : Q.Promise<item_store.Item[]> {
-		return this.itemStore.list('overview/').then((keys) => {
-			var items: Q.Promise<item_store.Item>[] = [];
-			keys.forEach((key) => {
-				var itemId = key.slice('overview/'.length);
-				items.push(this.loadItem(itemId));
-			});
-			return Q.all(items).then((items) => {
-				var filteredItems = items.filter((item) => {
-					return !item.isTombstone() || opts.includeTombstones;
-				});
-				return filteredItems;
-			});
-		});
-	}
-
-	loadItem(uuid: string) : Q.Promise<item_store.Item> {
 		var key: string;
 		return this.overviewKey().then((_key) => {
 			key = _key;
-			return this.itemStore.get<EncryptedOverview>('overview/' + uuid);
-		}).then((encryptedOverview) => {
-			return this.keyAgent.decrypt(key, encryptedOverview.data, {algo: key_agent.CryptoAlgorithm.AES128_OpenSSLKey});
-		}).then((decrypted) => {
-			var overview = <ItemOverview>JSON.parse(decrypted);
+			return this.itemStore.get<string>('index');
+		}).then((encryptedItemIndex) => {
+			if (encryptedItemIndex) {
+				return this.keyAgent.decrypt(key, encryptedItemIndex, {algo: key_agent.CryptoAlgorithm.AES128_OpenSSLKey});
+			} else {
+				return null;
+			}
+		}).then((decryptedItemIndex) => {
+			var overviewMap = <OverviewMap>JSON.parse(decryptedItemIndex) || {};
+			var items: item_store.Item[] = [];
+			Object.keys(overviewMap).forEach((key) => {
+				var overview = overviewMap[key];
+				var item = this.itemFromOverview(key, overview);
+				if (!item.isTombstone() || opts.includeTombstones) {
+					items.push(item);
+				}
+			});
 
-			var item = new item_store.Item(this, uuid);
-			item.title = overview.title;
-			item.updatedAt = new Date(overview.updatedAt);
-			item.createdAt = new Date(overview.createdAt);
-			item.trashed = overview.trashed;
-			item.typeName = overview.typeName;
-			item.openContents = overview.openContents;
-			
-			item.account = overview.account;
-			item.locations = overview.locations;
+			return items;
+		});
+	}
 
-			return item;
+	private updateIndex(updatedItems: item_store.Item[]) {
+		var cryptoParams = new key_agent.CryptoParams(key_agent.CryptoAlgorithm.AES128_OpenSSLKey);
+		var overviewMap = <OverviewMap>{};
+		return this.listItems({includeTombstones: true}).then((items) => {
+			var itemMap = collectionutil.listToMap(items, (item) => {
+				return item.uuid;
+			});
+			updatedItems.forEach((item) => {
+				itemMap.set(item.uuid, item);
+			});
+
+			itemMap.forEach((item, uuid) => {
+				overviewMap[uuid] = this.overviewFromItem(item);
+			});
+			return this.overviewKey();
+		}).then((key) => {
+			return this.keyAgent.encrypt(key, JSON.stringify(overviewMap), cryptoParams);
+		}).then((encrypted) => {
+			return this.itemStore.set('index', encrypted);
+		});
+	}
+
+	private itemFromOverview(uuid: string, overview: ItemOverview) {
+		var item = new item_store.Item(this, uuid);
+		item.title = overview.title;
+		item.updatedAt = new Date(overview.updatedAt);
+		item.createdAt = new Date(overview.createdAt);
+		item.trashed = overview.trashed;
+		item.typeName = overview.typeName;
+		item.openContents = overview.openContents;
+		
+		item.account = overview.account;
+		item.locations = overview.locations;
+
+		return item;
+	}
+
+	private overviewFromItem(item: item_store.Item) {
+		return <ItemOverview>{
+			title: item.title,
+			updatedAt: item.updatedAt.getTime(),
+			createdAt: item.createdAt.getTime(),
+			trashed: item.trashed,
+			typeName: <string>item.typeName,
+			openContents: item.openContents,
+
+			locations: item.locations,
+			account: item.account
+		};
+	}
+
+	loadItem(uuid: string) : Q.Promise<item_store.Item> {
+		return this.listItems().then((items) => {
+			var matches = items.filter((item) => {
+				return item.uuid == uuid;
+			});
+			if (matches.length > 0) {
+				return Q(matches[0]);
+			} else {
+				return Q.reject(new Error('No such item ' + uuid));
+			}
 		});
 	}
 
@@ -135,34 +190,13 @@ export class Store implements item_store.Store {
 			return item.getContent();
 		}).then((content) => {
 			item.updateOverviewFromContent(content);
-
-			var itemOverview: ItemOverview = {
-				title: item.title,
-				updatedAt: item.updatedAt.getTime(),
-				createdAt: item.createdAt.getTime(),
-				trashed: item.trashed,
-				typeName: <string>item.typeName,
-				openContents: item.openContents,
-
-				locations: item.locations,
-				account: item.account
-			};
-			var contentData = this.keyAgent.encrypt(key, JSON.stringify(content), cryptoParams);
-			var overviewData = this.keyAgent.encrypt(key, JSON.stringify(itemOverview), cryptoParams);
-			return Q.all([contentData, overviewData]);
-		}).then((encrypted) => {
-			var contentData = encrypted[0];
-			var overviewData = encrypted[1];
-
+			return this.keyAgent.encrypt(key, JSON.stringify(content), cryptoParams);
+		}).then((contentData) => {
 			var encryptedContent: EncryptedContent = {
 				data: contentData
 			};
 
-			var encryptedOverview: EncryptedOverview = {
-				data: overviewData
-			};
-
-			var overviewSaved = this.itemStore.set('overview/' + item.uuid, encryptedOverview);
+			var overviewSaved = this.indexUpdateQueue.push(item);
 			var contentSaved = this.itemStore.set('content/' + item.uuid, encryptedContent);
 			return asyncutil.eraseResult(Q.all([overviewSaved, contentSaved]));
 		}).then(() => {
