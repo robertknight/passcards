@@ -223,7 +223,9 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 		ctx.fill();
 
 		if (elapsed < duration) {
-			window.requestAnimationFrame(this.stepAnimation.bind(this));
+			window.requestAnimationFrame(() => {
+				this.stepAnimation();
+			});
 		}
 	}
 }
@@ -296,12 +298,17 @@ function toPixels(unit: number) {
 	}
 }
 
-var MENU_DISMISS_EVENTS = ['mousedown', 'touchstart'];
-var menuListener: EventListener;
+var MENU_DISMISS_EVENTS = ['mousedown', 'touchstart', 'click'];
 
 export class Menu extends typed_react.Component<MenuProps, MenuState> {
+	private menuListener: EventListener;
+
 	componentDidMount() {
-		menuListener = (e: MouseEvent) => {
+		this.menuListener = (e: MouseEvent) => {
+			if (!this.isMounted()) {
+				return;
+			}
+
 			var menuNode = <HTMLElement>this.refs['menu'].getDOMNode();
 			if (!menuNode.contains(<HTMLElement>e.target)) {
 				e.preventDefault();
@@ -310,7 +317,7 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 		};
 
 		MENU_DISMISS_EVENTS.forEach((event) => {
-			document.addEventListener(event, menuListener);
+			document.addEventListener(event, this.menuListener);
 		});
 
 		this.setState({showTime: new Date});
@@ -318,14 +325,16 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 
 	componentDidUnmount() {
 		MENU_DISMISS_EVENTS.forEach((event) => {
-			document.removeEventListener(event, menuListener);
+			document.removeEventListener(event, this.menuListener);
 		});
+		this.menuListener = null;
 	}
 
 	render() {
 		var menuItems = this.props.items.map((item) => {
 			return react.DOM.div({
 				className: 'menuItem',
+				key: item.label,
 				onClick: () => {
 					// when the menu is first opened, ignore any immediate taps that
 					// might still be events from the user tapping to open the menu
