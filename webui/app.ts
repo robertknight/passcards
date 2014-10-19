@@ -345,12 +345,14 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 		var toasters: react.Descriptor<controls.ToasterProps>[] = [];
 		if (this.state.status) {
 			toasters.push(controls.ToasterF({
+				key: 'status-toaster',
 				message: this.state.status.text
 			}));
 		}
 		if (this.state.syncState &&
 		    this.state.syncState.state !== sync.SyncState.Idle) {
 			toasters.push(controls.ToasterF({
+				key: 'sync-toaster',
 				message: 'Syncing...',
 				progressValue: this.state.syncState.updated,
 				progressMax: this.state.syncState.total

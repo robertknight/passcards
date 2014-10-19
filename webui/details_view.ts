@@ -161,11 +161,12 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, {}> {
 			var websites: react.Descriptor<any>[] = [];
 			var sections: react.Descriptor<any>[] = [];
 
-			this.itemContent.sections.forEach((section) => {
+			this.itemContent.sections.forEach((section, sectionIndex) => {
 				var fields: react.Descriptor<any>[] = [];
-				section.fields.forEach((field) => {
+				section.fields.forEach((field, fieldIndex) => {
 					if (field.value) {
 						fields.push(ItemFieldF({
+							key: sectionIndex + '.' + fieldIndex,
 							label: field.title,
 							value: field.value,
 							isPassword: field.kind == item_store.FieldType.Password,
@@ -178,8 +179,9 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, {}> {
 				);
 			});
 
-			this.itemContent.urls.forEach((url) => {
+			this.itemContent.urls.forEach((url, urlIndex) => {
 				websites.push(ItemFieldF({
+					key: urlIndex,
 					label: url.label,
 					value: url.url,
 					isPassword: false,
@@ -189,6 +191,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, {}> {
 
 			if (account) {
 				coreFields.push(ItemFieldF({
+					key: 'account',
 					label: 'Account',
 					value: account,
 					isPassword: false,
@@ -198,6 +201,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, {}> {
 
 			if (password) {
 				coreFields.push(ItemFieldF({
+					key: 'password',
 					label: 'Password',
 					value: password,
 					isPassword: true,
