@@ -1,7 +1,6 @@
 /// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
 /// <reference path="../typings/react-0.12.d.ts" />
 
-import $ = require('jquery');
 import react = require('react');
 import typed_react = require('typed-react');
 import underscore = require('underscore');
@@ -429,26 +428,6 @@ class ItemListToolbarProps {
 }
 
 class ItemListToolbar extends typed_react.Component<ItemListToolbarProps, {}> {
-	componentDidMount() {
-		var searchField = this.fieldInput();
-		var updateQuery = underscore.debounce(() => {
-			this.props.onQueryChanged($(searchField).val().toLowerCase());
-		}, 100);
-		$(searchField).bind('input', <(eventObject: JQueryEventObject) => any>updateQuery);
-		$(searchField).keydown((e) => {
-			if (e.which == keycodes.DownArrow) {
-				e.preventDefault();
-				this.props.onMoveDown();
-			} else if (e.which == keycodes.UpArrow) {
-				e.preventDefault();
-				this.props.onMoveUp();
-			} else if (e.which == keycodes.Enter) {
-				e.preventDefault();
-				this.props.onActivate();
-			}
-		});
-	}
-
 	focus() {
 		this.fieldInput().focus();
 	}
@@ -457,8 +436,8 @@ class ItemListToolbar extends typed_react.Component<ItemListToolbarProps, {}> {
 		this.fieldInput().blur();
 	}
 
-	private fieldInput() : HTMLElement {
-		return <HTMLElement>this.refs['searchField'].getDOMNode();
+	private fieldInput() {
+		return <HTMLInputElement>this.refs['searchField'].getDOMNode();
 	}
 
 	render() {
@@ -468,6 +447,10 @@ class ItemListToolbar extends typed_react.Component<ItemListToolbarProps, {}> {
 			width: 20,
 			height: 20
 		};
+
+		var updateQuery = underscore.debounce(() => {
+			this.props.onQueryChanged(this.fieldInput().value.toLowerCase());
+		}, 100);
 
 		return react.DOM.div({className: stringutil.truthyKeys({itemListToolbar: true, toolbar: true})},
 				controls.SvgIconF({
@@ -481,7 +464,13 @@ class ItemListToolbar extends typed_react.Component<ItemListToolbarProps, {}> {
 				react.DOM.input({className: 'searchFieldInput',
 					type: 'text',
 					placeholder: 'Search items...',
-					ref: 'searchField'
+					ref: 'searchField',
+					onKeyDown: (e) => {
+						this.handleSearchFieldKey(e);
+					},
+					onInput: (e) => {
+						updateQuery();
+					}
 				}),
 				react.DOM.div({className: 'toolbarIconGroup'},
 					controls.ToolbarButtonF({
@@ -496,6 +485,22 @@ class ItemListToolbar extends typed_react.Component<ItemListToolbarProps, {}> {
 					})
 				)
 			);
+	}
+
+	private handleSearchFieldKey(e: React.KeyboardEvent) {
+		var handled = true;
+		if (e.which == keycodes.DownArrow) {
+			this.props.onMoveDown();
+		} else if (e.which == keycodes.UpArrow) {
+			this.props.onMoveUp();
+		} else if (e.which == keycodes.Enter) {
+			this.props.onActivate();
+		} else {
+			handled = false;
+		}
+		if (handled) {
+			e.preventDefault();
+		}
 	}
 }
 

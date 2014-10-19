@@ -1,10 +1,8 @@
-/// <reference path="../typings/DefinitelyTyped/jquery/jquery.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
 /// <reference path="../typings/fastclick.d.ts" />
 /// <reference path="../typings/react-0.12.d.ts" />
 
-import $ = require('jquery');
 import fastclick = require('fastclick');
 import react = require('react');
 import typed_react = require('typed-react');
@@ -103,27 +101,8 @@ class UnlockPane extends typed_react.Component<UnlockPaneProps, UnlockPaneState>
 	}
 
 	componentDidMount() {
-		var unlockForm = this.refs['unlockPaneForm'].getDOMNode();
-		$(unlockForm).submit((e) => {
-			e.preventDefault();
-
-			var unlockField = this.refs['masterPassField'].getDOMNode();
-			var masterPass = $(unlockField).val();
-
-			this.setUnlockState(UnlockState.Unlocking);
-			this.props.store.unlock(masterPass).then(() => {
-				this.setUnlockState(UnlockState.Success);
-				this.props.onUnlock();
-			})
-			.catch((err) => {
-				console.log('Unlocking failed', err.message);
-				this.setUnlockState(UnlockState.Failed);
-				this.props.onUnlockErr(err);
-			});
-		});
-
-		var masterPassField = this.refs['masterPassField'].getDOMNode();
-		$(masterPassField).focus();
+		var masterPassField = <HTMLInputElement>this.refs['masterPassField'].getDOMNode();
+		masterPassField.focus();
 	}
 
 	setUnlockState(unlockState: UnlockState) {
@@ -146,7 +125,15 @@ class UnlockPane extends typed_react.Component<UnlockPaneProps, UnlockPaneState>
 
 		return react.DOM.div({className: 'unlockPane'},
 			react.DOM.div({className:'unlockPaneForm'},
-				react.DOM.form({className: 'unlockPaneInputs', ref:'unlockPaneForm'},
+				react.DOM.form({
+					className: 'unlockPaneInputs',
+					ref:'unlockPaneForm',
+					onSubmit: (e) => {
+						e.preventDefault();
+						var masterPass = (<HTMLInputElement>this.refs['masterPassField'].getDOMNode()).value;
+						this.tryUnlock(masterPass);
+					}
+				},
 					react.DOM.input({
 						className: 'masterPassField',
 						type: 'password',
@@ -158,6 +145,19 @@ class UnlockPane extends typed_react.Component<UnlockPaneProps, UnlockPaneState>
 				)
 			)
 		);
+	}
+
+	private tryUnlock(password: string) {
+		this.setUnlockState(UnlockState.Unlocking);
+		this.props.store.unlock(password).then(() => {
+			this.setUnlockState(UnlockState.Success);
+			this.props.onUnlock();
+		})
+		.catch((err) => {
+			console.log('Unlocking failed', err.message);
+			this.setUnlockState(UnlockState.Failed);
+			this.props.onUnlockErr(err);
+		});
 	}
 }
 
@@ -296,7 +296,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 		});
 	}
 
-	render() : react.Descriptor<any> {
+	render() {
 		if (!this.state.store) {
 			return SetupViewF({});
 		}
@@ -546,10 +546,12 @@ export class App {
 		fastclick.FastClick.attach(rootInputElement);
 
 		// setup auto-lock
-		$(rootInputElement).keydown((e) => {
+		rootInputElement.addEventListener('keydown', (e) => {
+			console.log('reset key-down');
 			this.services.keyAgent.resetAutoLock();
 		});
-		$(rootInputElement).mousedown((e) => {
+		rootInputElement.addEventListener('click', (e) => {
+			console.log('reset auto-lock click');
 			this.services.keyAgent.resetAutoLock();
 		});
 

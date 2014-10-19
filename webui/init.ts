@@ -1,7 +1,3 @@
-/// <reference path="../typings/DefinitelyTyped/jquery/jquery.d.ts" />
-
-import $ = require('jquery');
-
 import app = require('./app');
 import env = require('../lib/base/env');
 
@@ -9,7 +5,7 @@ interface AppWindow extends Window {
 	renderApp(element: HTMLElement) : void;
 }
 
-$(document).ready(() => {
+document.addEventListener('DOMContentLoaded', () => {
 	// redirect to a secure connection unless this copy of the app
 	// is being hosted locally
 	var location = document.location.href;
