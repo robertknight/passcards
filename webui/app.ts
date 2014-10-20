@@ -43,20 +43,17 @@ enum StatusType {
 class Status {
 	type: StatusType;
 	text: string;
-}
 
-class StatusViewProps {
-	status: Status;
-}
+	expired: event_stream.EventStream<void>;
 
-/** A status bar for showing app-wide notifications, such
-  * as syncing progress, connection errors etc.
-  */
-class StatusView extends typed_react.Component<StatusViewProps, {}> {
-	render() {
-		return react.DOM.div({className: 'statusView'},
-			this.props.status ? this.props.status.text : ''
-		);
+	constructor(type: StatusType, text: string) {
+		var DEFAULT_TIMEOUT = 2000;
+		this.type = type;
+		this.text = text;
+		this.expired = new event_stream.EventStream<void>();
+		setTimeout(() => {
+			this.expired.publish(null);
+		}, DEFAULT_TIMEOUT);
 	}
 }
 
@@ -120,7 +117,7 @@ class UnlockPane extends typed_react.Component<UnlockPaneProps, UnlockPaneState>
 		if (this.state.unlockState == UnlockState.Unlocking) {
 			unlockMessage = 'Unlocking...';
 		} else if (this.state.unlockState == UnlockState.Failed) {
-			unlockMessage = 'Unlocking failed';
+			unlockMessage = '';
 		}
 
 		return react.DOM.div({className: 'unlockPane'},
@@ -278,12 +275,14 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 	}
 
 	showError(error: string) {
-		this.setState({
-			status: {
-				type: StatusType.Error,
-				text: error
+		var status = new Status(StatusType.Error, error);
+		status.expired.listen(() => {
+			if (this.state.status == status) {
+				this.setState({status: null});
 			}
 		});
+
+		this.setState({status: status});
 	}
 
 	autofill(item: item_store.Item) {
