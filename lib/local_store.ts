@@ -31,6 +31,10 @@ interface ItemOverview {
 	account: string;
 }
 
+// prefix for encryption key entries in the encryption key
+// object store
+var KEY_ID_PREFIX = 'key/';
+
 export class Store implements item_store.Store {
 	private crypto: onepass_crypto.Crypto;
 	private database: key_value_store.Database;
@@ -225,7 +229,7 @@ export class Store implements item_store.Store {
 	}
 
 	listKeys() : Q.Promise<key_agent.Key[]> {
-		return this.keyStore.list().then((keyIds) => {
+		return this.keyStore.list(KEY_ID_PREFIX).then((keyIds) => {
 			var keys: Q.Promise<key_agent.Key>[] = [];
 			keyIds.forEach((id) => {
 				keys.push(this.keyStore.get<key_agent.Key>(id));
@@ -234,12 +238,17 @@ export class Store implements item_store.Store {
 		});
 	}
 
-	saveKeys(keys: key_agent.Key[]) : Q.Promise<void> {
+	saveKeys(keys: key_agent.Key[], hint: string) : Q.Promise<void> {
 		var keysSaved: Q.Promise<void>[] = [];
 		keys.forEach((key) => {
-			keysSaved.push(this.keyStore.set(key.identifier, key));
+			keysSaved.push(this.keyStore.set(KEY_ID_PREFIX + key.identifier, key));
 		});
+		keysSaved.push(this.keyStore.set('hint', hint));
 		return asyncutil.eraseResult(Q.all(keysSaved));
+	}
+
+	passwordHint() : Q.Promise<string> {
+		return this.keyStore.get<string>('hint');
 	}
 
 	// returns the key used to encrypt item overview data

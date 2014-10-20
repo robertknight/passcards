@@ -9,6 +9,7 @@ import sprintf = require('sprintf');
 import collectionutil = require('./base/collectionutil');
 import event_stream = require('./base/event_stream');
 import item_store = require('./item_store');
+import key_agent = require('./key_agent');
 import onepass = require('./onepass');
 
 export enum SyncState {
@@ -66,8 +67,13 @@ export class Syncer {
 	  * This does not require the vault to be unlocked.
 	  */
 	syncKeys() : Q.Promise<void> {
-		return this.vault.listKeys().then((keys) => {
-			return this.store.saveKeys(keys);
+		var keys = this.vault.listKeys();
+		var hint = this.vault.passwordHint();
+
+		return Q.all([keys, hint]).then((keysAndHint) => {
+			var keys = <key_agent.Key[]>keysAndHint[0];
+			var hint = <string>keysAndHint[1];
+			return this.store.saveKeys(keys, hint);
 		});
 	}
 

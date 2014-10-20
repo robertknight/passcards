@@ -343,7 +343,7 @@ export class Vault {
 		});
 	}
 
-	saveKeys(keys: key_agent.Key[]) {
+	saveKeys(keys: key_agent.Key[], hint: string) {
 		if (true) { // suppress TSLint warning about unreachable code
 			throw new Error('onepass.Vault.saveKeys() is not implemented');
 		}

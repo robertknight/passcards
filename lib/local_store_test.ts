@@ -131,18 +131,22 @@ function setupEnv() : Env {
 	};
 }
 
-testLib.addAsyncTest('save and load keys', (assert) => {
+testLib.addAsyncTest('save and load keys and hint', (assert) => {
 	var env = setupEnv();
 
 	var store = new local_store.Store(env.database, env.keyAgent);
 	var params: key_agent.CryptoParams = {
 		algo: key_agent.CryptoAlgorithm.AES128_OpenSSLKey
 	};
+	var passHint = 'password hint';
 
-	return store.saveKeys([env.masterKey]).then(() => {
-		return store.listKeys();
-	}).then((keys) => {
+	return store.saveKeys([env.masterKey], passHint).then(() => {
+		return Q.all([store.listKeys(), store.passwordHint()]);
+	}).then((keysAndHint) => {
+		var keys = <key_agent.Key[]>keysAndHint[0];
+		var hint = <string>keysAndHint[1];
 		assert.equal(keys.length, 1);
+		assert.equal(hint, passHint);
 		return store.unlock(env.masterPass);
 	}).then(() => {
 		return env.keyAgent.encrypt(env.masterKey.identifier, 'testcontent', params);
@@ -180,7 +184,7 @@ testLib.addAsyncTest('save and load items', (assert) => {
 	var store = new local_store.Store(env.database, env.keyAgent);
 	var item = makeItem();
 
-	return store.saveKeys([env.masterKey]).then(() => {
+	return store.saveKeys([env.masterKey],'').then(() => {
 		return store.unlock(env.masterPass);
 	}).then(() => {
 		return item.saveTo(store);
@@ -204,7 +208,7 @@ testLib.addAsyncTest('clear store', (assert) => {
 	var store = new local_store.Store(env.database, env.keyAgent);
 	var item = makeItem();
 
-	return store.saveKeys([env.masterKey]).then(() => {
+	return store.saveKeys([env.masterKey], '').then(() => {
 		return store.unlock(env.masterPass);
 	}).then(() => {
 		return item.saveTo(store);

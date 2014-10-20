@@ -548,12 +548,15 @@ export interface Store {
 	listKeys() : Q.Promise<key_agent.Key[]>;
 
 	/** Update the encryption keys in this store. */
-	saveKeys(keys: key_agent.Key[]) : Q.Promise<void>;
+	saveKeys(keys: key_agent.Key[], hint: string) : Q.Promise<void>;
 
 	/** Clear the store. This can be used to wipe stores
 	  * which cache data for offline use.
 	  */
 	clear() : Q.Promise<void>;
+
+	/** Return the user-provided password hint. */
+	passwordHint() : Q.Promise<string>;
 }
 
 /** A temporary store which keeps items only in-memory */
@@ -565,6 +568,7 @@ export class TempStore implements Store {
 	private items: Item[];
 	private content: collectionutil.PMap<string,ItemContent>;
 	private keyAgent: key_agent.KeyAgent;
+	private hint: string;
 
 	constructor(agent: key_agent.KeyAgent) {
 		this.onItemUpdated = new event_stream.EventStream<Item>();
@@ -590,8 +594,9 @@ export class TempStore implements Store {
 		return Q(this.keys);
 	}
 
-	saveKeys(keys: key_agent.Key[]) {
+	saveKeys(keys: key_agent.Key[], hint: string) {
 		this.keys = <key_agent.Key[]>clone(keys);
+		this.hint = hint;
 		return Q<void>(null);
 	}
 
@@ -652,5 +657,9 @@ export class TempStore implements Store {
 		this.items = [];
 		this.content = new collectionutil.PMap<string,ItemContent>();
 		return Q<void>(null);
+	}
+
+	passwordHint() {
+		return Q(this.hint);
 	}
 }

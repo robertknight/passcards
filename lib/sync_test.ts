@@ -65,7 +65,24 @@ function setupWithItem() : Q.Promise<{env: Env; item: item_store.Item}> {
 	});
 }
 
-testLib.addAsyncTest('sync vault', (assert) => {
+testLib.addAsyncTest('sync vault keys and password hint', (assert) => {
+	var env: Env;
+
+	return setup().then((_env) => {
+		env = _env;
+		return env.syncer.syncKeys();
+	}).then(() => {
+		return Q.all([env.store.listKeys(), env.store.passwordHint()]);
+	}).then((keyAndHint) => {
+		var keys = <key_agent.Key[]>keyAndHint[0];
+		var hint = <string>keyAndHint[1];
+
+		assert.equal(keys.length, 1);
+		assert.equal(hint, 'testhint');
+	});
+});
+
+testLib.addAsyncTest('sync vault items', (assert) => {
 	var env: Env;
 
 	// 1. save a new item to the vault
