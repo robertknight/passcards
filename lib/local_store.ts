@@ -82,7 +82,10 @@ export class Store implements item_store.Store {
 	unlock(pwd: string) : Q.Promise<void> {
 		// FIXME - This duplicates onepass.Vault.unlock()
 		return this.listKeys().then((keys) => {
-			return key_agent.decryptKeys(keys, pwd);
+			if (keys.length == 0) {
+				throw new Error('No encryption keys have been saved');
+			}
+			return Q(key_agent.decryptKeys(keys, pwd));
 		}).then((keys) => {
 			var savedKeys: Q.Promise<void>[] = [];
 			keys.forEach((key) => {

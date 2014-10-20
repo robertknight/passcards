@@ -224,5 +224,19 @@ testLib.addAsyncTest('clear store', (assert) => {
 	});
 });
 
+testLib.addAsyncTest('unlock store with no keys', (assert) => {
+	var env = setupEnv();
+	var store = new local_store.Store(env.database, env.keyAgent);
+	
+	return store.unlock(env.masterPass).then(() => {
+		return false;
+	}).catch((err) => {
+		return err;
+	}).then((result) => {
+		assert.ok(result instanceof Error);
+	});
+});
+
+
 testLib.start();
 

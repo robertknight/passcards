@@ -155,12 +155,15 @@ class UnlockPane extends typed_react.Component<UnlockPaneProps, UnlockPaneState>
 			});
 
 			if (this.state.failedUnlockCount < 3) {
-				this.props.onUnlockErr(err);
+				this.props.onUnlockErr(err.message);
 			} else {
 				this.props.store.passwordHint().then((hint) => {
+					if (!hint) {
+						hint = '(No password hint set)';
+					}
 					this.props.onUnlockErr(err + '. Hint: ' + hint);
 				}).catch((hintErr) => {
-					this.props.onUnlockErr(err + '. Hint: ' + hintErr);
+					this.props.onUnlockErr(err + '. Hint: ' + hintErr.message);
 				});
 			}
 		});
