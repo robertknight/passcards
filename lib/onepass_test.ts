@@ -185,9 +185,7 @@ testLib.addAsyncTest('Compare vaults against .1pif files', (assert) => {
 		}).done();
 	});
 
-	Q.all(done).then(() => {
-		testLib.continueTests();
-	});
+	return Q.all(done);
 });
 
 function createCryptos() : crypto.Crypto[] {
@@ -430,12 +428,11 @@ testLib.addAsyncTest('Encrypt/decrypt key (async)', (assert) => {
 	var salt = crypto.randomBytes(8);
 	var masterKey = crypto.randomBytes(1024);
 
-	key_agent.keyFromPassword(password, salt, iterations).then((derivedKey) => {
+	return key_agent.keyFromPassword(password, salt, iterations).then((derivedKey) => {
 		var encryptedKey = key_agent.encryptKey(derivedKey, masterKey);
 		var decryptedKey = key_agent.decryptKey(derivedKey, encryptedKey.key, encryptedKey.validation);
 		assert.equal(decryptedKey, masterKey);
-		testLib.continueTests();
-	}).done();
+	});
 });
 
 testLib.addAsyncTest('Create new vault', (assert) => {
@@ -445,7 +442,7 @@ testLib.addAsyncTest('Create new vault', (assert) => {
 	var vault : onepass.Vault;
 	var keyIterations = 100;
 
-	onepass.Vault.createVault(fs, '/new-vault', pass, hint, keyIterations)
+	return onepass.Vault.createVault(fs, '/new-vault', pass, hint, keyIterations)
 	.then((vault_) => {
 		vault = vault_;
 		return vault.unlock(pass)
@@ -476,8 +473,7 @@ testLib.addAsyncTest('Create new vault', (assert) => {
 		return vault.passwordHint();
 	}).then((savedHint) => {
 		assert.equal(savedHint, hint);
-		testLib.continueTests();
-	}).done();
+	});
 });
 
 testLib.addAsyncTest('Change vault password', (assert) => {
@@ -503,7 +499,7 @@ testLib.addAsyncTest('Save existing item to new vault', (assert) => {
 	var vault: onepass.Vault;
 	var item: item_store.Item;
 
-	createTestVault().then((vault_) => {
+	return createTestVault().then((vault_) => {
 		vault = vault_;
 		item = new item_store.Item();
 		item.title = 'Existing Item';
@@ -515,8 +511,7 @@ testLib.addAsyncTest('Save existing item to new vault', (assert) => {
 		return vault.loadItem(item.uuid);
 	}).then((loadedItem) => {
 		assert.equal(item.title, loadedItem.title);
-		testLib.continueTests();
-	}).done();
+	});
 });
 
 testLib.addTest('Item content account and password accessors', (assert) => {

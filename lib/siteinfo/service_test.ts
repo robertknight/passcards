@@ -233,37 +233,34 @@ function allocatePort() : number {
 
 testLib.addAsyncTest('fail to fetch icons', (assert) => {
 	var sitePath = path.join(TEST_SITE_PATH, 'wikipedia/no-icons');
-	serveAndFetchIcons(allocatePort(), sitePath, '').then((result) => {
+	return serveAndFetchIcons(allocatePort(), sitePath, '').then((result) => {
 		assert.equal(result.queryResult.state, site_info.QueryState.Ready);
 		assert.equal(result.queryResult.info.icons.length, 0);
 		result.server.close();
-		testLib.continueTests();
-	}).done();
+	});
 });
 
 testLib.addAsyncTest('fetch static links', (assert) => {
 	var sitePath = path.join(TEST_SITE_PATH, 'wikipedia/standard-icons');
-	serveAndFetchIcons(allocatePort(), sitePath,'/').then((result) => {
+	return serveAndFetchIcons(allocatePort(), sitePath,'/').then((result) => {
 		assert.equal(result.queryResult.state, site_info.QueryState.Ready);
 		assert.equal(result.queryResult.info.icons.length, 2);
 		result.server.close();
-		testLib.continueTests();
-	}).done();
+	});
 });
 
 testLib.addAsyncTest('fetch page links', (assert) => {
 	var sitePath = path.join(TEST_SITE_PATH, 'wikipedia/linked-icons');
-	serveAndFetchIcons(allocatePort(), sitePath,'/index.html').then((result) => {
+	return serveAndFetchIcons(allocatePort(), sitePath,'/index.html').then((result) => {
 		assert.equal(result.queryResult.state, site_info.QueryState.Ready);
 		assert.equal(result.queryResult.info.icons.length, 3);
 		result.server.close();
-		testLib.continueTests();
-	}).done();
+	});
 });
 
 testLib.addAsyncTest('forget site info', (assert) => {
 	var sitePath = path.join(TEST_SITE_PATH, 'wikipedia/linked-icons');
-	serveAndFetchIcons(allocatePort(), sitePath, '/index.html').then((result) => {
+	return serveAndFetchIcons(allocatePort(), sitePath, '/index.html').then((result) => {
 		var queryUrl = result.queryResult.info.url;
 		assert.equal(result.queryResult.state, site_info.QueryState.Ready);
 
@@ -273,8 +270,7 @@ testLib.addAsyncTest('forget site info', (assert) => {
 		assert.equal(uncachedLookup.state, site_info.QueryState.Updating);
 
 		result.server.close();
-		testLib.continueTests();
-	}).done();
+	});
 });
 
 testLib.addAsyncTest('fetch site icon with DuckDuckGo', (assert) => {
@@ -291,9 +287,8 @@ testLib.addAsyncTest('fetch site icon with DuckDuckGo', (assert) => {
 	};
 
 	var ddgClient = new site_info_service.DuckDuckGoClient(urlFetcher);
-	ddgClient.fetchIconUrl('http://www.admiral.com').then((icon) => {
+	return ddgClient.fetchIconUrl('http://www.admiral.com').then((icon) => {
 		assert.equal(icon, 'https://duckduckgo.com/i/img.png');
-		testLib.continueTests();
 	});
 });
 

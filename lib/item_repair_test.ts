@@ -29,12 +29,10 @@ testLib.addAsyncTest('fix location field', (assert) => {
 		return Q(false);
 	});
 
-	repaired.then(() => {
+	return repaired.then(() => {
 		assert.deepEqual(item.locations, [content.urls[0].url]);
 		assert.ok(reports.length > 0);
-
-		testLib.continueTests();
-	}).done();
+	});
 });
 
 testLib.start();

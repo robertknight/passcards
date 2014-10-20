@@ -26,53 +26,47 @@ function setup() : Q.Promise<void> {
 }
 
 testLib.addAsyncTest('list dir', (assert) => {
-	httpVfs.list('test-dir').then((files) => {
+	return httpVfs.list('test-dir').then((files) => {
 		assert.equal(files.length, 1);
 		return httpVfs.list('test-dir/');
 	}).then((files) => {
 		assert.equal(files.length, 1);
-		testLib.continueTests();
-	}).done();
+	});
 });
 
 testLib.addAsyncTest('read file', (assert) => {
-	httpVfs.read('test-file').then((content) => {
+	return httpVfs.read('test-file').then((content) => {
 		assert.equal(content, 'file-content');
-		testLib.continueTests();
-	}).done();
+	});
 });
 
 testLib.addAsyncTest('write file', (assert) => {
-	httpVfs.write('test-file-3', 'file3-content').then(() => {
+	return httpVfs.write('test-file-3', 'file3-content').then(() => {
 		assert.equal(fs.readFileSync(fsRoot + '/test-file-3').toString('binary'), 'file3-content');
-		testLib.continueTests();
-	}).done();
+	});
 });
 
 testLib.addAsyncTest('make path', (assert) => {
-	httpVfs.mkpath('test-dir-2/test-dir-3').then(() => {
+	return httpVfs.mkpath('test-dir-2/test-dir-3').then(() => {
 		assert.ok(fs.statSync(fsRoot + '/test-dir-2/test-dir-3').isDirectory());
-		testLib.continueTests();
-	}).done();
+	});
 });
 
 testLib.addAsyncTest('remove file', (assert) => {
 	fs.writeFileSync(fsRoot + '/test-remove-file', 'remove-me');
-	httpVfs.rm('test-remove-file').then(() => {
+	return httpVfs.rm('test-remove-file').then(() => {
 		assert.ok(!fs.existsSync(fsRoot + '/test-remove-file'));
-		testLib.continueTests();
-	}).done();
+	});
 });
 
 testLib.addAsyncTest('stat file', (assert) => {
-	httpVfs.stat('test-file').then((stat) => {
+	return httpVfs.stat('test-file').then((stat) => {
 		assert.equal(stat.isDir, false);
 		assert.equal(stat.name, 'test-file');
 		return httpVfs.stat('test-dir');
 	}).then((stat) => {
 		assert.equal(stat.isDir, true);
-		testLib.continueTests();
-	}).done();
+	});
 });
 
 setup().then(() => {

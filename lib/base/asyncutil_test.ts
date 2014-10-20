@@ -15,17 +15,16 @@ testLib.addAsyncTest('test run sequence', (assert) => {
 		});
 	});
 
-	asyncutil.series(funcs).then((result) => {
+	return asyncutil.series(funcs).then((result) => {
 		testLib.assertEqual(assert, result, values);
 		testLib.assertEqual(assert, runOrder, [1, 2, 3, 4, 5, 6, 7]);
-		testLib.continueTests();
 	});
 });
 
 testLib.addAsyncTest('async while loop', (assert) => {
 	var counter = 0;
 
-	asyncutil.until(() => {
+	return asyncutil.until(() => {
 		if (counter == 5) {
 			return Q(true);
 		} else {
@@ -35,8 +34,7 @@ testLib.addAsyncTest('async while loop', (assert) => {
 	}).then((done) => {
 		testLib.assertEqual(assert, done, true);
 		testLib.assertEqual(assert, counter, 5);
-		testLib.continueTests();
-	}).done();
+	});
 });
 
 testLib.start();

@@ -240,7 +240,7 @@ testLib.addAsyncTest('sync locked vault', (assert) => {
 	var env: Env;
 	var item: item_store.Item;
 
-	setupWithItem().then((_env) => {
+	return setupWithItem().then((_env) => {
 		env = _env.env;
 		item = _env.item;
 
@@ -249,7 +249,6 @@ testLib.addAsyncTest('sync locked vault', (assert) => {
 		return env.syncer.syncItems();
 	}).catch((err) => {
 		assert.ok(err.message.indexOf('No such key') != -1);
-		testLib.continueTests();
 	});
 });
 
