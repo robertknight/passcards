@@ -8,6 +8,7 @@ import assert = require('assert');
 import Q = require('q');
 
 import crypto = require('./onepass_crypto');
+import err_util = require('./base/err_util');
 import event_stream = require('./base/event_stream');
 
 var AES_128_KEY_LEN = 32; // 16 byte key + 16 byte IV
@@ -82,15 +83,9 @@ export interface DecryptedKey {
 	key: string;
 }
 
-export class DecryptionError {
-	context : string;
-
-	constructor(context?: string) {
-		this.context = context;
-	}
-
-	toString() : string {
-		return this.context || 'Decryption failed';
+export class DecryptionError extends err_util.BaseError {
+	constructor(message: string) {
+		super(message);
 	}
 }
 

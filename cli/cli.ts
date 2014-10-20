@@ -716,7 +716,7 @@ export class CLI {
 				exitStatus.resolve(1);
 			}
 		}, (err) => {
-			this.printf('Unlocking failed: %s', err);
+			this.printf('Unlocking failed: %s', err.message);
 			exitStatus.resolve(2);
 		})
 		.done();

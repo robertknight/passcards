@@ -21,6 +21,10 @@ export class BaseError implements Error {
 		this.name = (<ES6Function>this.constructor).name;
 		this.message = message;
 	}
+
+	toString() {
+		return this.name + ': ' + this.message;
+	}
 }
 
 /** Base class for errors when querying HTTP-based APIs
