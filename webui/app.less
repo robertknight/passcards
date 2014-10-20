@@ -219,6 +219,12 @@ html, body {
 	background-color: @material-color-primary;
 	font-size: 20px;
 	outline: none;
+
+	/* enable the search field to shrink
+	   when the width of the toolbar is collapsed
+	   in Firefox
+	*/
+	overflow: hidden;
 }
 
 .searchFieldInput::-webkit-input-placeholder {
