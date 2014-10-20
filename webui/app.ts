@@ -81,8 +81,9 @@ enum UnlockState {
 	Success
 }
 
-class UnlockPaneState {
-	unlockState: UnlockState;
+interface UnlockPaneState {
+	unlockState?: UnlockState;
+	failedUnlockCount?: number;
 }
 
 class UnlockPaneProps {
@@ -94,18 +95,15 @@ class UnlockPaneProps {
 
 class UnlockPane extends typed_react.Component<UnlockPaneProps, UnlockPaneState> {
 	getInitialState() {
-		return new UnlockPaneState();
+		return {
+			unlockState: UnlockState.Locked,
+			failedUnlockCount: 0
+		};
 	}
 
 	componentDidMount() {
 		var masterPassField = <HTMLInputElement>this.refs['masterPassField'].getDOMNode();
 		masterPassField.focus();
-	}
-
-	setUnlockState(unlockState: UnlockState) {
-		var state = this.state;
-		state.unlockState = unlockState;
-		this.setState(state);
 	}
 
 	render() {
@@ -145,15 +143,26 @@ class UnlockPane extends typed_react.Component<UnlockPaneProps, UnlockPaneState>
 	}
 
 	private tryUnlock(password: string) {
-		this.setUnlockState(UnlockState.Unlocking);
+		this.setState({unlockState: UnlockState.Unlocking});
 		this.props.store.unlock(password).then(() => {
-			this.setUnlockState(UnlockState.Success);
+			this.setState({unlockState: UnlockState.Success});
 			this.props.onUnlock();
 		})
 		.catch((err) => {
-			console.log('Unlocking failed', err.message);
-			this.setUnlockState(UnlockState.Failed);
-			this.props.onUnlockErr(err);
+			this.setState({
+				failedUnlockCount: this.state.failedUnlockCount + 1,
+				unlockState: UnlockState.Failed
+			});
+
+			if (this.state.failedUnlockCount < 3) {
+				this.props.onUnlockErr(err);
+			} else {
+				this.props.store.passwordHint().then((hint) => {
+					this.props.onUnlockErr(err + '. Hint: ' + hint);
+				}).catch((hintErr) => {
+					this.props.onUnlockErr(err + '. Hint: ' + hintErr);
+				});
+			}
 		});
 	}
 }
