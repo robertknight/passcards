@@ -98,9 +98,16 @@ export class DetailsViewProps {
 	autofill: () => void;
 }
 
-export class DetailsView extends typed_react.Component<DetailsViewProps, {}> {
-	private itemContent : item_store.ItemContent;
+interface DetailsViewState {
+	itemContent?: item_store.ItemContent
+}
+
+export class DetailsView extends typed_react.Component<DetailsViewProps, DetailsViewState> {
 	private shortcuts: shortcut.Shortcut[];
+
+	getInitialState() {
+		return {};
+	}
 
 	componentWillReceiveProps(nextProps: DetailsViewProps) {
 		if (!nextProps.item) {
@@ -109,19 +116,12 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, {}> {
 
 		if (!this.props.item || this.props.item != nextProps.item) {
 			// forget previous item content when switching items
-			this.itemContent = null;
+			this.setState({itemContent: null});
 		}
-
-		nextProps.item.getContent().then((content) => {
-			// TODO - Cache content and avoid using forceUpdate()
-			this.itemContent = content;
-			if (this.isMounted()) {
-				this.forceUpdate();
-			}
-		}).done();
 	}
 
 	componentDidUpdate() {
+		this.fetchContent();
 		this.updateShortcutState();
 	}
 
@@ -137,6 +137,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, {}> {
 			})
 		];
 		this.updateShortcutState();
+		this.fetchContent();
 	}
 
 	componentDidUnmount() {
@@ -152,16 +153,25 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, {}> {
 		});
 	}
 
+	private fetchContent() {
+		this.props.item.getContent().then((content) => {
+			if (!this.isMounted()) {
+				return;
+			}
+			this.setState({itemContent: content});
+		}).done();
+	}
+
 	render() {
 		var detailsContent : react.Descriptor<any>;
-		if (this.props.item && this.itemContent) {
-			var account = this.itemContent.account();
-			var password = this.itemContent.password();
+		if (this.props.item && this.state.itemContent) {
+			var account = this.state.itemContent.account();
+			var password = this.state.itemContent.password();
 			var coreFields: react.Descriptor<any>[] = [];
 			var websites: react.Descriptor<any>[] = [];
 			var sections: react.Descriptor<any>[] = [];
 
-			this.itemContent.sections.forEach((section, sectionIndex) => {
+			this.state.itemContent.sections.forEach((section, sectionIndex) => {
 				var fields: react.Descriptor<any>[] = [];
 				section.fields.forEach((field, fieldIndex) => {
 					if (field.value) {
@@ -179,7 +189,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, {}> {
 				);
 			});
 
-			this.itemContent.urls.forEach((url, urlIndex) => {
+			this.state.itemContent.urls.forEach((url, urlIndex) => {
 				websites.push(ItemFieldF({
 					key: urlIndex,
 					label: url.label,

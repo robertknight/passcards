@@ -339,18 +339,23 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 					this.setState({showMenu: true});
 				}
 			}));
-			children.push(details_view.DetailsViewF({
-				key: 'itemDetails',
-				item: this.state.selectedItem,
-				iconProvider: this.props.services.iconProvider,
-				onGoBack: () => {
-					this.setState({selectedItem: null});
-				},
-				autofill: () => {
-					this.autofill(this.state.selectedItem);
-				},
-				clipboard: this.props.services.clipboard
-			}));
+
+			var detailsView: react.Descriptor<any>;
+			if (this.state.selectedItem) {
+				detailsView = details_view.DetailsViewF({
+					key: 'itemDetails',
+					item: this.state.selectedItem,
+					iconProvider: this.props.services.iconProvider,
+					onGoBack: () => {
+						this.setState({selectedItem: null});
+					},
+					autofill: () => {
+						this.autofill(this.state.selectedItem);
+					},
+					clipboard: this.props.services.clipboard
+				});
+			}
+			children.push(detailsView);
 		}
 
 		var toasters: react.Descriptor<controls.ToasterProps>[] = [];
