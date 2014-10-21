@@ -117,12 +117,16 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		if (!this.props.item || this.props.item != nextProps.item) {
 			// forget previous item content when switching items
 			this.setState({itemContent: null});
+			this.fetchContent(nextProps.item);
 		}
 	}
 
 	componentDidUpdate() {
-		this.fetchContent();
 		this.updateShortcutState();
+	}
+
+	componentWillMount() {
+		this.fetchContent(this.props.item);
 	}
 
 	componentDidMount() {
@@ -137,7 +141,6 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			})
 		];
 		this.updateShortcutState();
-		this.fetchContent();
 	}
 
 	componentDidUnmount() {
@@ -153,8 +156,8 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		});
 	}
 
-	private fetchContent() {
-		this.props.item.getContent().then((content) => {
+	private fetchContent(item: item_store.Item) {
+		item.getContent().then((content) => {
 			if (!this.isMounted()) {
 				return;
 			}
