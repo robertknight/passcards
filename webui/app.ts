@@ -343,7 +343,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 			var detailsView: react.Descriptor<any>;
 			if (this.state.selectedItem) {
 				detailsView = details_view.DetailsViewF({
-					key: 'itemDetails',
+					key: 'detailsView',
 					item: this.state.selectedItem,
 					iconProvider: this.props.services.iconProvider,
 					onGoBack: () => {
@@ -355,7 +355,9 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 					clipboard: this.props.services.clipboard
 				});
 			}
-			children.push(detailsView);
+			children.push(reactutil.CSSTransitionGroupF({transitionName: 'slide-from-left', key: 'detailsViewContainer'},
+			  detailsView ? [detailsView] : []
+			));
 		}
 
 		var toasters: react.Descriptor<controls.ToasterProps>[] = [];

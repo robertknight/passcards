@@ -90,6 +90,10 @@ html, body {
 	color: @material-text-color;
 }
 
+body {
+	overflow-x: hidden;
+}
+
 .setupView {
 	width: 100%;
 	height: 100%;
@@ -335,7 +339,6 @@ html, body {
 }
 
 .detailsView {
-	display: none;
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -343,10 +346,6 @@ html, body {
 	height: 100%;
 
 	background-color: white;
-}
-
-.detailsView.hasSelectedItem {
-	display: block;
 }
 
 .detailsContent {
@@ -536,13 +535,33 @@ html, body {
 }
 
 /* animations */
+.slide-from-left-enter {
+	transform: translateX(100%);
+}
+
+.slide-from-left-enter.slide-from-left-enter-active {
+	transform: translateX(0px);
+	transition: transform .3s ease-out;
+	border-left: 1px solid @material-color-accent3;
+}
+
+.slide-from-left-leave {
+	transform: translateX(0px);
+	transition: transform .3s ease-out;
+}
+
+.slide-from-left-leave.slide-from-left-leave-active {
+	transform: translateX(100%);
+	border-left: 1px solid @material-color-accent3;
+}
+
 .fade-enter {
 	opacity: 0.01;
-	transition: opacity .5s ease-out;
 }
 
 .fade-enter.fade-enter-active {
 	opacity: 1.0;
+	transition: opacity .5s ease-out;
 }
 
 .fade-leave {
