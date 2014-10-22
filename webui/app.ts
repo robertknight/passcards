@@ -333,6 +333,11 @@ var AppViewF = reactutil.createFactory(AppView);
 
 declare var firefoxAddOn: page_access.ExtensionConnector;
 
+interface BrowserExtension {
+	pageAccess: page_access.PageAccess;
+	clipboard: page_access.ClipboardAccess;
+}
+
 export class App {
 	// a reference to the rendered AppView instance
 	private activeAppView: any;
@@ -343,80 +348,25 @@ export class App {
 	constructor() {
 		this.savedState = {};
 
-		// VFS setup
-		var fs: vfs.VFS;
-		if (env.isFirefoxAddon()) {
-			if (firefoxAddOn.syncService === 'dropbox') {
-				fs = new dropboxvfs.DropboxVFS({
-					authMode: dropboxvfs.AuthMode.Redirect,
-					authRedirectUrl: firefoxAddOn.oauthRedirectUrl,
-					disableLocationCleanup: true,
-					receiverPage: ''
-				});
-			} else if (firefoxAddOn.syncService === 'httpfs') {
-				fs = new http_vfs.Client('http://localhost:3030');
-			}
-		} else if (env.isChromeExtension()) {
-			fs = new dropboxvfs.DropboxVFS({
-				authMode: dropboxvfs.AuthMode.ChromeExtension,
-				authRedirectUrl: '',
-				disableLocationCleanup: true,
-				receiverPage: 'data/chrome_dropbox_oauth_receiver.html'
-			});
-		}
-
-		if (!fs) {
-			var opts = <any>url.parse(document.location.href, true /* parse query */).query;
-			if (opts.httpfs) {
-				fs = new http_vfs.Client(opts.httpfs);
-			} else {
-				fs = new dropboxvfs.DropboxVFS();
-			}
-		}
-
-		var pageAccess: page_access.PageAccess;
-		var clipboard: page_access.ClipboardAccess;
-
-		if (typeof firefoxAddOn != 'undefined') {
-			var extensionPageAccess = new page_access.ExtensionPageAccess(firefoxAddOn);
-			pageAccess = extensionPageAccess;
-			clipboard = extensionPageAccess;
-		} else if (env.isChromeExtension()) {
-			var chromePageAccess = new page_access.ChromeExtensionPageAccess();
-			pageAccess = chromePageAccess;
-			clipboard = chromePageAccess;
-		} else {
-			pageAccess = new page_access.ExtensionPageAccess(new page_access.FakeExtensionConnector());
-			clipboard = {
-				copy: (mimeType: string, data: string) => {
-					/* no-op */
-				},
-				clipboardAvailable : () => {
-					return false;
-				}
-			};
-		}
+		var fs = this.setupVfs();
+		var browserExt = this.setupBrowserExtension();
 
 		var keyAgent = new key_agent.SimpleKeyAgent();
 		keyAgent.setAutoLockTimeout(2 * 60 * 1000);
 
-		var siteInfoProvider = new siteinfo_client.PasscardsClient();
-		var iconDiskCache = new key_value_store.IndexedDBDatabase();
-		iconDiskCache.open('passcards', 1 /* version */, (schemaModifier) => {
-			schemaModifier.createStore('icon-cache');
-		});
-
+		var iconProvider = this.setupItemIconProvider();
+		
 		this.services = {
-			iconProvider: new item_icons.ItemIconProvider(iconDiskCache.store('icon-cache'), siteInfoProvider, 48),
-			autofiller: new autofill.AutoFiller(pageAccess),
-			pageAccess: pageAccess,
+			iconProvider: iconProvider,
+			autofiller: new autofill.AutoFiller(browserExt.pageAccess),
+			pageAccess: browserExt.pageAccess,
 			keyAgent: keyAgent,
-			clipboard: clipboard
+			clipboard: browserExt.clipboard
 		};
 
 		onepass_crypto.CryptoJsCrypto.initWorkers();
 
-		pageAccess.showEvents.listen(() => {
+		browserExt.pageAccess.showEvents.listen(() => {
 			// in the Firefox add-on the active element loses focus when dismissing the
 			// panel by focusing another UI element such as the URL input bar.
 			//
@@ -427,7 +377,7 @@ export class App {
 		});
 
 		// update the initial URL when the app is loaded
-		this.updateState({currentUrl: pageAccess.currentUrl});
+		this.updateState({currentUrl: browserExt.pageAccess.currentUrl});
 
 		fs.login().then(() => {
 			try {
@@ -454,7 +404,7 @@ export class App {
 					this.updateState({isLocked: true});
 				});
 
-				pageAccess.pageChanged.listen((url) => {
+				browserExt.pageAccess.pageChanged.listen((url) => {
 					this.updateState({currentUrl: url});
 				});
 			} catch (err) {
@@ -466,6 +416,17 @@ export class App {
 		});
 	}
 
+	/** Render the app into the given HTML element.
+	 *
+	 * In the web app and the Firefox extension this is only
+	 * invoked once when the app starts.
+	 *
+	 * In the Chrome extension
+	 * this is invoked each time the user opens the extension's
+	 * popup from the toolbar, since a new window is created
+	 * each time the popup is opened and terminated when the
+	 * popup is closed.
+	 */
 	renderInto(element: HTMLElement) {
 		var rootInputElement = element.ownerDocument.body;
 
@@ -498,6 +459,86 @@ export class App {
 		// so force a re-render when the window size changes
 		rootInputElement.onresize = () => {
 			this.activeAppView.forceUpdate();
+		};
+	}
+
+	// setup the site icon database and connection to
+	// the Passcards service for fetching site icons
+	private setupItemIconProvider() {
+		var siteInfoProvider = new siteinfo_client.PasscardsClient();
+		var iconDiskCache = new key_value_store.IndexedDBDatabase();
+		iconDiskCache.open('passcards', 1 /* version */, (schemaModifier) => {
+			schemaModifier.createStore('icon-cache');
+		});
+
+		var ICON_SIZE = 48;
+
+		return new item_icons.ItemIconProvider(iconDiskCache.store('icon-cache'),
+		  siteInfoProvider, ICON_SIZE);
+	}
+
+	// setup the connection to the cloud file system
+	private setupVfs() {
+		var fs: vfs.VFS;
+		if (env.isFirefoxAddon()) {
+			if (firefoxAddOn.syncService === 'dropbox') {
+				fs = new dropboxvfs.DropboxVFS({
+					authMode: dropboxvfs.AuthMode.Redirect,
+					authRedirectUrl: firefoxAddOn.oauthRedirectUrl,
+					disableLocationCleanup: true,
+					receiverPage: ''
+				});
+			} else if (firefoxAddOn.syncService === 'httpfs') {
+				fs = new http_vfs.Client('http://localhost:3030');
+			}
+		} else if (env.isChromeExtension()) {
+			fs = new dropboxvfs.DropboxVFS({
+				authMode: dropboxvfs.AuthMode.ChromeExtension,
+				authRedirectUrl: '',
+				disableLocationCleanup: true,
+				receiverPage: 'data/chrome_dropbox_oauth_receiver.html'
+			});
+		}
+
+		if (!fs) {
+			var opts = <any>url.parse(document.location.href, true /* parse query */).query;
+			if (opts.httpfs) {
+				fs = new http_vfs.Client(opts.httpfs);
+			} else {
+				fs = new dropboxvfs.DropboxVFS();
+			}
+		}
+		return fs;
+	}
+
+	// setup access to the system clipboard and
+	// browser tabs via browser extension APIs
+	private setupBrowserExtension() {
+		var pageAccess: page_access.PageAccess;
+		var clipboard: page_access.ClipboardAccess;
+
+		if (typeof firefoxAddOn != 'undefined') {
+			var extensionPageAccess = new page_access.ExtensionPageAccess(firefoxAddOn);
+			pageAccess = extensionPageAccess;
+			clipboard = extensionPageAccess;
+		} else if (env.isChromeExtension()) {
+			var chromePageAccess = new page_access.ChromeExtensionPageAccess();
+			pageAccess = chromePageAccess;
+			clipboard = chromePageAccess;
+		} else {
+			pageAccess = new page_access.ExtensionPageAccess(new page_access.FakeExtensionConnector());
+			clipboard = {
+				copy: (mimeType: string, data: string) => {
+					/* no-op */
+				},
+				clipboardAvailable : () => {
+					return false;
+				}
+			};
+		}
+		return <BrowserExtension>{
+			pageAccess: pageAccess,
+			clipboard: clipboard
 		};
 	}
 
