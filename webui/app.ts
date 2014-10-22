@@ -29,6 +29,7 @@ import reactutil = require('./reactutil');
 import siteinfo_client = require('../lib/siteinfo/client');
 import sync = require('../lib/sync');
 import vfs = require('../lib/vfs/vfs');
+import unlock_view = require('./unlock_view');
 
 enum ActiveView {
 	UnlockPane,
@@ -73,104 +74,10 @@ class SetupView extends typed_react.Component<{}, {}> {
 
 var SetupViewF = reactutil.createFactory(SetupView);
 
-// View for entering master password and unlocking the store
-enum UnlockState {
-	Locked,
-	Unlocking,
-	Failed,
-	Success
+enum ItemEditMode {
+	AddItem,
+	EditItem
 }
-
-interface UnlockPaneState {
-	unlockState?: UnlockState;
-	failedUnlockCount?: number;
-}
-
-class UnlockPaneProps {
-	store: item_store.Store;
-	isLocked: boolean;
-	onUnlock: () => void;
-	onUnlockErr: (error: string) => void;
-}
-
-class UnlockPane extends typed_react.Component<UnlockPaneProps, UnlockPaneState> {
-	getInitialState() {
-		return {
-			unlockState: UnlockState.Locked,
-			failedUnlockCount: 0
-		};
-	}
-
-	componentDidMount() {
-		var masterPassField = <HTMLInputElement>this.refs['masterPassField'].getDOMNode();
-		masterPassField.focus();
-	}
-
-	render() {
-		if (!this.props.isLocked) {
-			return react.DOM.div({});
-		}
-
-		var unlockMessage : string;
-		if (this.state.unlockState == UnlockState.Unlocking) {
-			unlockMessage = 'Unlocking...';
-		} else if (this.state.unlockState == UnlockState.Failed) {
-			unlockMessage = '';
-		}
-
-		return react.DOM.div({className: 'unlockPane'},
-			react.DOM.div({className:'unlockPaneForm'},
-				react.DOM.form({
-					className: 'unlockPaneInputs',
-					ref:'unlockPaneForm',
-					onSubmit: (e) => {
-						e.preventDefault();
-						var masterPass = (<HTMLInputElement>this.refs['masterPassField'].getDOMNode()).value;
-						this.tryUnlock(masterPass);
-					}
-				},
-					react.DOM.input({
-						className: 'masterPassField',
-						type: 'password',
-						placeholder: 'Master Password...',
-						ref: 'masterPassField',
-						autoFocus: true
-					}),
-					react.DOM.div({className: 'unlockLabel'}, unlockMessage)
-				)
-			)
-		);
-	}
-
-	private tryUnlock(password: string) {
-		this.setState({unlockState: UnlockState.Unlocking});
-		this.props.store.unlock(password).then(() => {
-			this.setState({unlockState: UnlockState.Success});
-			this.props.onUnlock();
-		})
-		.catch((err) => {
-			this.setState({
-				failedUnlockCount: this.state.failedUnlockCount + 1,
-				unlockState: UnlockState.Failed
-			});
-
-			if (this.state.failedUnlockCount < 3) {
-				this.props.onUnlockErr(err.message);
-			} else {
-				this.props.store.passwordHint().then((hint) => {
-					if (!hint) {
-						hint = '(No password hint set)';
-					}
-					this.props.onUnlockErr(err.message + '. Hint: ' + hint);
-				}).catch((hintErr) => {
-					this.props.onUnlockErr(err.message + '. Hint: ' + hintErr.message);
-				});
-			}
-		});
-	}
-}
-
-var UnlockPaneF = reactutil.createFactory(UnlockPane);
 
 interface AppViewState {
 	mainView?: ActiveView;
@@ -315,7 +222,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 		var children: react.Descriptor<any>[] = [];
 
 		if (this.state.isLocked) {
-			children.push(UnlockPaneF({
+			children.push(unlock_view.UnlockViewF({
 				key: 'unlockPane',
 				store: this.state.store,
 				isLocked: this.state.isLocked,
