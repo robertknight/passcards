@@ -209,4 +209,3 @@ testLib.addAsyncTest('rpc-promise bridge', (assert) => {
 	});
 });
 
-testLib.start();

@@ -562,4 +562,3 @@ testLib.addTest('Default item properties', (assert) => {
 	assert.notEqual(item.uuid, item2.uuid);
 });
 
-testLib.start();

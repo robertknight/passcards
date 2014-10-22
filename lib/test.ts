@@ -49,6 +49,15 @@ interface TestCase {
 }
 
 var testList : TestCase[] = [];
+var testStartTimer: number;
+
+function scheduleAutoStart() {
+	if (!testStartTimer) {
+		testStartTimer = global.setTimeout(() => {
+			start();
+		}, 10);
+	}
+}
 
 /** Add a test which completes synchronously.
   *
@@ -56,6 +65,7 @@ var testList : TestCase[] = [];
   */
 export function addTest(name : string, testFunc : (assert: Assert) => void) {
 	testList.push({name: name, testFunc: testFunc, async: false});
+	scheduleAutoStart();
 }
 
 /** Add a test which completes asynchronously. @p testFunc must
@@ -84,6 +94,7 @@ export function addAsyncTest(name: string, testFunc: (assert: Assert) => any) {
 		},
 		async: true
 	});
+	scheduleAutoStart();
 }
 
 /** Inform the test runner that an async test has finished. This must be called
@@ -149,6 +160,7 @@ export function start(args?: string[]) {
 	if (!args && env.isNodeJS()) {
 		args = process.argv.slice(2);
 	}
+	cancelAutoStart();
 
 	var parser = new argparse.ArgumentParser({
 		description: 'Unit test suite'
@@ -289,6 +301,17 @@ export function assertEqual(assert: Assert, a: any, b: any, properties?: string[
 		console.log(diff);
 	}
 	assert.equal(diff.length, 0, 'Check objects are equal');
+}
+
+/** Cancel any pending auto-start of the test suite.
+  * This will prevent tests auto-starting after being
+  * added with addTest() or addAsyncTest()
+  */
+export function cancelAutoStart() {
+	if (testStartTimer) {
+		clearTimeout(testStartTimer);
+		testStartTimer = null;
+	}
 }
 
 /** Set the global default timeout for individual test cases.

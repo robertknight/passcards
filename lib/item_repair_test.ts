@@ -35,4 +35,3 @@ testLib.addAsyncTest('fix location field', (assert) => {
 	});
 });
 
-testLib.start();

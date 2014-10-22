@@ -13,6 +13,7 @@ import asyncutil = require('./base/asyncutil');
 import crypto = require('./onepass_crypto');
 import collectionutil = require('./base/collectionutil');
 import dateutil = require('./base/dateutil');
+import err_util = require('./base/err_util');
 import event_stream = require('./base/event_stream');
 import key_agent = require('./key_agent');
 import stringutil = require('./base/stringutil');
@@ -154,6 +155,12 @@ export interface ItemTypeMap {
 	[index: string] : ItemTypeInfo;
 }
 
+export class UnsavedItemError extends err_util.BaseError {
+	constructor() {
+		super('Item has not been saved to a store');
+	}
+}
+
 /** Represents a single item in a 1Password vault. */
 export class Item {
 	// store which this item belongs to, or null
@@ -217,7 +224,11 @@ export class Item {
 	getContent() : Q.Promise<ItemContent> {
 		if (this.content) {
 			return Q(this.content);
+		} else if (!this.store) {
+			this.content = new ItemContent();
+			return Q(this.content);
 		}
+
 		return this.store.getContent(this);
 	}
 
@@ -229,13 +240,16 @@ export class Item {
 	  * This is only available for saved items.
 	  */
 	getRawDecryptedData() : Q.Promise<string> {
+		if (!this.store) {
+			return Q.reject(new UnsavedItemError());
+		}
 		return this.store.getRawDecryptedData(this);
 	}
 
 	/** Save this item to its associated store */
 	save() : Q.Promise<void> {
 		if (!this.store) {
-			return Q.reject('Item has no associated store');
+			return Q.reject(new UnsavedItemError());
 		}
 		return this.saveTo(this.store);
 	}
@@ -243,7 +257,7 @@ export class Item {
 	/** Save this item to the specified store */
 	saveTo(store: Store) : Q.Promise<void> {
 		if (!this.content && !this.isSaved()) {
-			return Q.reject('Unable to save new item, no content set');
+			return Q.reject(new Error('Unable to save new item, no content set'));
 		}
 		this.store = store;
 		return this.store.saveItem(this);
@@ -255,7 +269,7 @@ export class Item {
 	  */
 	remove() : Q.Promise<void> {
 		if (!this.store) {
-			return Q.reject('Item has no associated store');
+			return Q.reject(new UnsavedItemError());
 		}
 		this.typeName = ItemTypes.TOMBSTONE;
 		this.title = 'Unnamed';
@@ -305,7 +319,7 @@ export class Item {
 
 	/** Returns true if this item has been saved to a store. */
 	isSaved() : boolean {
-		return this.updatedAt != null;
+		return this.store && this.updatedAt != null;
 	}
 
 	/** Set the last-modified time for the item to the current time.

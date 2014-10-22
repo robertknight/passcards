@@ -292,4 +292,3 @@ testLib.addAsyncTest('fetch site icon with DuckDuckGo', (assert) => {
 	});
 });
 
-testLib.start();

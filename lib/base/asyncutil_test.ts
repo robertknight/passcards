@@ -37,5 +37,3 @@ testLib.addAsyncTest('async while loop', (assert) => {
 	});
 });
 
-testLib.start();
-

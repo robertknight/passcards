@@ -100,5 +100,3 @@ testLib.addAsyncTest('batched updates', (assert) => {
 	});
 });
 
-testLib.start();
-

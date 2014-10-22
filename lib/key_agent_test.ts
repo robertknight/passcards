@@ -35,4 +35,3 @@ testLib.addAsyncTest('auto-lock', (assert) => {
 	}, 21);
 });
 
-testLib.start();

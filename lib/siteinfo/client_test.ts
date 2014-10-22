@@ -37,5 +37,3 @@ testLib.addAsyncTest('fetch google.com icons', (assert) => {
 // remote calls
 testLib.setTimeout(15000);
 
-testLib.start();
-

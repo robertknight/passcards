@@ -12,4 +12,3 @@ testLib.addAsyncTest('read binary stream', (assert) => {
 	});
 });
 
-testLib.start();

@@ -237,6 +237,3 @@ testLib.addAsyncTest('unlock store with no keys', (assert) => {
 	});
 });
 
-
-testLib.start();
-

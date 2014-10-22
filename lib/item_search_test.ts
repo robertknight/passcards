@@ -105,4 +105,3 @@ testLib.addTest('item type patterns', (assert) => {
 	assert.deepEqual(types, [item_store.ItemTypes.LOGIN]);
 });
 
-testLib.start();

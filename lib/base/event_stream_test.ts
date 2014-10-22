@@ -44,5 +44,3 @@ testLib.addTest('event listener contexts', (assert) => {
 	assert.equal(receivedStrings.length, 3);
 });
 
-testLib.start();
-

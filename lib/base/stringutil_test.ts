@@ -65,5 +65,3 @@ testLib.addTest('extract suffix after delimiter', (assert) => {
 	assert.equal(stringutil.suffix(path, '?'), path);
 });
 
-testLib.start();
-

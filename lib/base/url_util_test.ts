@@ -11,4 +11,3 @@ testLib.addTest('URL domain', (assert) => {
 	assert.equal(url_util.domain('https://foo.acme.com/signin?a=foo&b=bar'), 'foo.acme.com');
 });
 
-testLib.start();

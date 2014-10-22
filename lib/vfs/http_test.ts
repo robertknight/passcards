@@ -69,6 +69,7 @@ testLib.addAsyncTest('stat file', (assert) => {
 	});
 });
 
+testLib.cancelAutoStart();
 setup().then(() => {
 	testLib.teardownSuite(() => {
 		httpVfsServer.close();

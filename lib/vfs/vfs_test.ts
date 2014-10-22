@@ -256,5 +256,3 @@ function addTests(fsName: string, createFs: () => Q.Promise<vfs.VFS>) {
 addTests('Node FS', createNodeFs);
 addTests('LocalStorage', createLocalStorageFs);
 
-testLib.start();
-

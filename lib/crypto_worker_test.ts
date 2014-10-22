@@ -21,5 +21,3 @@ testLib.addAsyncTest('worker test', (assert) => {
 	});
 });
 
-testLib.start();
-

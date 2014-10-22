@@ -290,4 +290,3 @@ testLib.addAsyncTest('sync many items', (assert) => {
 	});
 });
 
-testLib.start();
