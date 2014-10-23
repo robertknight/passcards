@@ -89,12 +89,19 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 
 var ItemFieldF = reactutil.createFactory(ItemField);
 
+export enum ItemEditMode {
+	AddItem,
+	EditItem
+}
+
 export class DetailsViewProps {
 	item: item_store.Item;
 	iconProvider: item_icons.ItemIconProvider;
 	clipboard: page_access.ClipboardAccess;
+	editMode: ItemEditMode;
 
 	onGoBack: () => any;
+	onSave: () => any;
 	autofill: () => void;
 }
 
@@ -257,6 +264,30 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			});
 		}
 
+		var toolbarControls: react.Descriptor<any>[] = [];
+		if (this.props.editMode == ItemEditMode.EditItem) {
+			toolbarControls.push(controls.ToolbarButtonF({
+				iconHref: 'icons/icons.svg#arrow-back',
+				onClick: () => this.props.onGoBack(),
+				key: 'back'
+			}));
+		} else {
+			toolbarControls.push(controls.ToolbarButtonF({
+				iconHref: 'icons/icons.svg#arrow-back',
+				onClick: () => this.props.onGoBack(),
+				key: 'cancel'
+			}));
+			toolbarControls.push(react.DOM.div({className:'toolbarSpacer'})),
+			toolbarControls.push(controls.ToolbarButtonF({
+				iconHref: 'icons/icons.svg#arrow-back',
+				onClick: () => {
+					this.props.onSave();
+					this.props.onGoBack();
+				},
+				key: 'save'
+			}));
+		}
+
 		return react.DOM.div({
 			className: stringutil.truthyKeys({
 					detailsView: true,
@@ -266,14 +297,12 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			tabIndex: 0
 			},
 			react.DOM.div({className: stringutil.truthyKeys({toolbar: true, detailsToolbar: true})},
-				controls.ToolbarButtonF({
-					iconHref: 'icons/icons.svg#arrow-back',
-					onClick: () => this.props.onGoBack()
-				})),
-				react.DOM.div({className: 'itemActionBar'},
-					autofillButton
-				),
-				detailsContent
+				toolbarControls
+			),
+			react.DOM.div({className: 'itemActionBar'},
+				autofillButton
+			),
+			detailsContent
 		);
 	}
 }

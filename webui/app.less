@@ -91,7 +91,7 @@ html, body {
 }
 
 body {
-	overflow-x: hidden;
+	overflow: hidden;
 }
 
 .setupView {
@@ -184,6 +184,10 @@ body {
 
 	border-bottom: 1px solid #bbbbbb;
 	height: 40px;
+}
+
+.toolbarSpacer {
+	flex-grow: 1;
 }
 
 .toolbarIconGroup {
@@ -553,6 +557,24 @@ body {
 .slide-from-left-leave.slide-from-left-leave-active {
 	transform: translateX(100%);
 	border-left: 1px solid @material-color-accent3;
+}
+
+.slide-from-bottom-enter {
+	transform: translateY(100%);
+}
+
+.slide-from-bottom-enter.slide-from-bottom-enter-active {
+	transform: translateY(0px);
+	transition: transform .3s ease-out;
+}
+
+.slide-from-bottom-leave {
+	transform: translateY(0px);
+	transition: transform .3s ease-out;
+}
+
+.slide-from-bottom-leave.slide-from-bottom-leave-active {
+	transform: translateY(100%);
 }
 
 .fade-enter {

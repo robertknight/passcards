@@ -1,3 +1,6 @@
+/// <reference path="../../typings/URIjs.d.ts" />
+
+import uri_js = require('URIjs');
 import urlLib = require('url');
 
 import stringutil = require('./stringutil');
@@ -44,5 +47,12 @@ export function domain(url: string) : string {
 	}
 	var parsedUrl = urlLib.parse(url);
 	return parsedUrl.host;
+}
+
+/** Returns the top-level domain for an item.
+  * eg. 'https://www.google.com' -> 'google.com'
+  */
+export function topLevelDomain(url: string) {
+	return uri_js(url).domain();
 }
 

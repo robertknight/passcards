@@ -16,6 +16,7 @@ import dropboxvfs = require('../lib/vfs/dropbox');
 import env = require('../lib/base/env');
 import event_stream = require('../lib/base/event_stream');
 import http_vfs = require('../lib/vfs/http');
+import item_builder = require('../lib/item_builder');
 import item_icons = require('./item_icons');
 import item_list = require('./item_list');
 import item_store = require('../lib/item_store');
@@ -30,6 +31,7 @@ import siteinfo_client = require('../lib/siteinfo/client');
 import sync = require('../lib/sync');
 import vfs = require('../lib/vfs/vfs');
 import unlock_view = require('./unlock_view');
+import url_util = require('../lib/base/url_util');
 
 enum ActiveView {
 	UnlockPane,
@@ -38,6 +40,7 @@ enum ActiveView {
 }
 
 enum StatusType {
+	Success,
 	Error
 }
 
@@ -74,11 +77,6 @@ class SetupView extends typed_react.Component<{}, {}> {
 
 var SetupViewF = reactutil.createFactory(SetupView);
 
-enum ItemEditMode {
-	AddItem,
-	EditItem
-}
-
 interface AppViewState {
 	mainView?: ActiveView;
 
@@ -87,6 +85,7 @@ interface AppViewState {
 	items?: item_store.Item[];
 
 	selectedItem?: item_store.Item;
+	itemEditMode?: details_view.ItemEditMode;
 	isLocked?: boolean;
 	currentUrl?: string;
 
@@ -120,7 +119,8 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 			mainView: ActiveView.UnlockPane,
 			items: <item_store.Item[]>[],
 			isLocked: true,
-			syncListener: syncListener
+			syncListener: syncListener,
+			itemEditMode: details_view.ItemEditMode.EditItem
 		};
 		return state;
 	}
@@ -219,6 +219,18 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 		});
 	}
 
+	private setSelectedItem(item: item_store.Item) {
+		var state = <AppViewState>{selectedItem: item};
+		if (item) {
+			if (item.isSaved()) {
+				state.itemEditMode = details_view.ItemEditMode.EditItem;
+			} else {
+				state.itemEditMode = details_view.ItemEditMode.AddItem;
+			}
+		}
+		this.setState(state);
+	}
+
 	render() {
 		if (!this.state.store) {
 			return SetupViewF({});
@@ -243,7 +255,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 				key: 'itemList',
 				items: this.state.items,
 				selectedItem: this.state.selectedItem,
-				onSelectedItemChanged: (item) => { this.setState({selectedItem: item}); },
+				onSelectedItemChanged: (item) => { this.setSelectedItem(item); },
 				currentUrl: this.state.currentUrl,
 				iconProvider: this.props.services.iconProvider,
 				onLockClicked: () => this.props.services.keyAgent.forgetKeys(),
@@ -252,14 +264,30 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 				}
 			}));
 
+			var detailsViewTransition: string;
+			if (this.state.itemEditMode == details_view.ItemEditMode.EditItem) {
+				detailsViewTransition = 'slide-from-left';
+			} else {
+				detailsViewTransition = 'slide-from-bottom';
+			}
+
 			var detailsView: react.Descriptor<any>;
 			if (this.state.selectedItem) {
 				detailsView = details_view.DetailsViewF({
 					key: 'detailsView',
 					item: this.state.selectedItem,
+					editMode: this.state.itemEditMode,
 					iconProvider: this.props.services.iconProvider,
 					onGoBack: () => {
-						this.setState({selectedItem: null});
+						this.setSelectedItem(null);
+					},
+					onSave: () => {
+						this.state.selectedItem.saveTo(this.state.store);
+						this.state.syncer.syncItems().then(() => {
+							this.showStatus(new Status(StatusType.Success, 'Details saved and synced!'))
+						}).catch((err) => {
+							this.showError(err.message);
+						});
 					},
 					autofill: () => {
 						this.autofill(this.state.selectedItem);
@@ -267,8 +295,11 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 					clipboard: this.props.services.clipboard
 				});
 			}
-			children.push(reactutil.CSSTransitionGroupF({transitionName: 'slide-from-left', key: 'detailsViewContainer'},
-			  detailsView ? [detailsView] : []
+			children.push(reactutil.CSSTransitionGroupF({
+				transitionName: detailsViewTransition,
+				key: 'detailsViewContainer'
+			},
+				detailsView ? [detailsView] : []
 			));
 		}
 
@@ -302,8 +333,52 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 		);
 	}
 
+	private createNewItemTemplate() {
+		// use the most common account (very likely the user's email address)
+		// as the default account login for new items
+		var accountFreq: {[id:string]: number} = {};
+		this.state.items.forEach((item) => {
+			if (!accountFreq.hasOwnProperty(item.account)) {
+				accountFreq[item.account] = 1;
+			} else {
+				++accountFreq[item.account];
+			}
+		});
+
+		var defaultAccount: string;
+		Object.keys(accountFreq).forEach((account) => {
+			if (!defaultAccount || accountFreq[account] > accountFreq[defaultAccount]) {
+				defaultAccount = account;
+			}
+		});
+		if (!defaultAccount) {
+			// TODO - Use the user's Dropbox login if there is no
+			// default account set
+			defaultAccount = '';
+		}
+
+		var randomPassword = onepass_crypto.generatePassword(12);
+		var builder = new item_builder.Builder(item_store.ItemTypes.LOGIN)
+		  .addLogin(defaultAccount)
+		  .addPassword(randomPassword);
+
+		if (this.state.currentUrl) {
+			builder.setTitle(url_util.topLevelDomain(this.state.currentUrl));
+			builder.addUrl(this.state.currentUrl);
+		} else {
+			builder.setTitle('New Login');
+		}
+
+		return builder.item();
+	}
+
 	private renderMenu(key: string) {
 		var menuItems: controls.MenuItem[] = [{
+			label: 'Add Item',
+			onClick: () => {
+				this.setSelectedItem(this.createNewItemTemplate());
+			},
+		},{
 			label: 'Clear Offline Storage',
 			onClick: () => {
 				return this.props.services.keyAgent.forgetKeys().then(() => {
