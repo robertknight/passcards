@@ -273,13 +273,13 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			}));
 		} else {
 			toolbarControls.push(controls.ToolbarButtonF({
-				iconHref: 'icons/icons.svg#arrow-back',
+				iconHref: 'icons/icons.svg#clear',
 				onClick: () => this.props.onGoBack(),
 				key: 'cancel'
 			}));
 			toolbarControls.push(react.DOM.div({className:'toolbarSpacer'})),
 			toolbarControls.push(controls.ToolbarButtonF({
-				iconHref: 'icons/icons.svg#arrow-back',
+				iconHref: 'icons/icons.svg#done',
 				onClick: () => {
 					this.props.onSave();
 					this.props.onGoBack();
