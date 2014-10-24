@@ -4,6 +4,7 @@
 /// <reference path="../typings/react-0.12.d.ts" />
 
 import fastclick = require('fastclick');
+import Q = require('q');
 import react = require('react');
 import typed_react = require('typed-react');
 import url = require('url');
@@ -282,9 +283,19 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 						this.setSelectedItem(null);
 					},
 					onSave: () => {
-						this.state.selectedItem.saveTo(this.state.store);
-						this.state.syncer.syncItems().then(() => {
-							this.showStatus(new Status(StatusType.Success, 'Details saved and synced!'))
+						var item = this.state.selectedItem;
+						var saveDelay = 0;
+						if (this.state.itemEditMode == details_view.ItemEditMode.AddItem) {
+							// defer saving the item until the 'Add Item' view has
+							// transitioned out of view
+							saveDelay = 1000;
+						}
+						Q.delay(saveDelay).then(() => {
+							return item.saveTo(this.state.store);
+						}).then(() => {
+							return this.state.syncer.syncItems();
+						}).then(() => {
+							this.showStatus(new Status(StatusType.Success, 'Changes saved and synced'))
 						}).catch((err) => {
 							this.showError(err.message);
 						});
