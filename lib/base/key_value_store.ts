@@ -145,34 +145,51 @@ export class IndexedDBDatabase implements Database {
 class IndexedDBStore implements ObjectStore {
 	private db: Q.Promise<IDBDatabase>;
 
+	// the active transaction, if any.
+	// Transactions are started automatically when any
+	// operation occurs. This field is cleared when
+	// the transaction becomes closed for new requests,
+	// which happens when control returns to the event loop
+	private transaction: IDBTransaction;
+
 	constructor(database: Q.Promise<IDBDatabase>, public storeName: string) {
 		this.db = database;
 	}
 
+	private getStore(db: IDBDatabase) {
+		if (!this.transaction) {
+			// start a new transaction. As per the IDB spec, this transaction
+			// remains active until control returns to the event loop, at which
+			// point it becomes closed for new requests
+			this.transaction = db.transaction(this.storeName, 'readwrite');
+			Q(true).then(() => {
+				this.transaction = null;
+			});
+		}
+		return this.transaction.objectStore(this.storeName);
+	}
+
 	set<T>(key: string, value: T) : Q.Promise<void> {
 		return this.db.then((db) => {
-			var store = db.transaction(this.storeName, 'readwrite').objectStore(this.storeName);
-			return promisify<void>(store.put(value, key));
+			return promisify<void>(this.getStore(db).put(value, key));
 		});
 	}
 
 	get<T>(key: string) : Q.Promise<T> {
 		return this.db.then((db) => {
-			var store = db.transaction(this.storeName, 'readonly').objectStore(this.storeName);
-			return promisify<T>(store.get(key));
+			return promisify<T>(this.getStore(db).get(key));
 		});
 	}
 
 	remove(key: string) : Q.Promise<void> {
 		return this.db.then((db) => {
-			var store = db.transaction(this.storeName, 'readwrite').objectStore(this.storeName);
-			return promisify<void>(store.delete(key));
+			return promisify<void>(this.getStore(db).delete(key));
 		});
 	}
 
 	list(prefix: string = '') : Q.Promise<string[]> {
 		return this.db.then((db) => {
-			var store = db.transaction(this.storeName, 'readwrite').objectStore(this.storeName);
+			var store = this.getStore(db);
 			var req = store.openCursor(IDBKeyRange.lowerBound(prefix));
 			var keys: string[] = [];
 			var result = Q.defer<string[]>();
