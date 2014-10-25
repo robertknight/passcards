@@ -219,7 +219,7 @@ class IconFetcher {
 			queueItem.status = 0;
 			this.fetchedUrls.set(url, 0);
 		}).finally(() => {
-			this.queue.splice(this.queue.indexOf(queueItem, 1));
+			this.queue.splice(this.queue.indexOf(queueItem), 1);
 			this.done.publish(queueItem);
 		});
 	}
