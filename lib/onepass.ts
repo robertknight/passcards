@@ -248,7 +248,7 @@ function fromAgileKeychainFormField(keychainField: agilekeychain.WebFormField) :
 }
 
 /** Represents an Agile Keychain-format 1Password vault. */
-export class Vault {
+export class Vault implements item_store.Store {
 	private fs: vfs.VFS;
 	private path: string;
 	private keyAgent: key_agent.KeyAgent;

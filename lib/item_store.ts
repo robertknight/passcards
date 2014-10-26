@@ -145,6 +145,14 @@ export var ITEM_TYPES : ItemTypeMap = {
 	},
 };
 
+/** A convenience interface for passing around an item
+  * and its contents together.
+  */
+export interface ItemAndContent {
+	item: Item;
+	content: ItemContent;
+}
+
 export interface ItemTypeInfo {
 	name : string;
 	shortAlias : string;
@@ -172,11 +180,13 @@ export class Item {
 
 	// item ID and sync metadata
 	uuid: string;
-	updatedAt: Date;
-	createdAt: Date;
 	folderUuid: string;
 	faveIndex: number;
 	trashed: boolean;
+
+	updatedAt: Date;
+	createdAt: Date;
+	lastSyncedAt: Date;
 
 	// overview metadata fields
 	typeName: ItemType;
@@ -528,7 +538,19 @@ export enum FieldType {
 }
 
 export interface ListItemsOptions {
+	/** Include 'tombstone' items which are left in the store
+	  * when an item is removed.
+	  */
 	includeTombstones?: boolean;
+}
+
+/** Specifies where an update came from when saving an item.
+  */
+export enum ChangeSource {
+	/** Indicates a change resulting from a sync with another store. */
+	Sync,
+	/** Indicates a local change. */
+	Local
 }
 
 export interface Store {
@@ -544,13 +566,18 @@ export interface Store {
 	/** List all of the items in the store */
 	listItems(opts?: ListItemsOptions) : Q.Promise<Item[]>;
 
-	/** Load the item with a specific ID */
-	loadItem(uuid: string) : Q.Promise<Item>;
+	/** Load the item with a specific ID.
+	  * If a revision is specified, load a specific version of an item,
+	  * otherwise load the current version of the item.
+	  */
+	loadItem(uuid: string, revision?: string) : Q.Promise<Item>;
 
 	/** Save changes to the overview data and item content
-	  * back to the store.
+	  * back to the store. The @p source specifies whether
+	  * this update is a result of syncing changes
+	  * with another store or a local modification.
 	  */
-	saveItem(item: Item) : Q.Promise<void>;
+	saveItem(item: Item, source?: ChangeSource) : Q.Promise<void>;
 
 	/** Fetch and decrypt the item's secure contents. */
 	getContent(item: Item) : Q.Promise<ItemContent>;
@@ -576,8 +603,13 @@ export interface Store {
 	passwordHint() : Q.Promise<string>;
 }
 
+export interface SyncableStore extends Store {
+	/** Returns the last-synced revision of an item. */
+	lastSyncedRevision(item: Item) : Q.Promise<Item>;
+}
+
 /** A temporary store which keeps items only in-memory */
-export class TempStore implements Store {
+export class TempStore implements SyncableStore {
 	onItemUpdated: event_stream.EventStream<Item>;
 	onUnlock: event_stream.EventStream<void>;
 
@@ -679,5 +711,27 @@ export class TempStore implements Store {
 	passwordHint() {
 		return Q(this.hint);
 	}
+	
+	lastSyncedRevision(item: Item) : Q.Promise<Item> {
+		throw new Error('TODO - Implement me');
+	}
+}
+
+export function cloneItem(itemAndContent: ItemAndContent, uuid?: string) {
+	var item = itemAndContent.item;
+
+	var clonedItem = new Item(null /* store */, uuid);
+	clonedItem.folderUuid = item.uuid;
+	clonedItem.faveIndex = item.faveIndex;
+	clonedItem.trashed = item.trashed;
+	clonedItem.updatedAt = item.updatedAt;
+	clonedItem.createdAt = item.createdAt;
+	clonedItem.typeName = item.typeName;
+	clonedItem.title = item.title;
+	clonedItem.openContents = item.openContents;
+	clonedItem.locations = <string[]>clone(item.locations);
+	clonedItem.account = item.account;
+	clonedItem.setContent(<ItemContent>clone(itemAndContent.content));
+	return clonedItem;
 }
 

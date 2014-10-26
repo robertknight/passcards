@@ -5,6 +5,7 @@
 import clone = require('clone');
 import Q = require('q');
 import sprintf = require('sprintf');
+import underscore = require('underscore');
 
 import collectionutil = require('./base/collectionutil');
 import event_stream = require('./base/event_stream');
@@ -42,7 +43,7 @@ interface SyncItem {
 }
 
 export class Syncer {
-	private store: item_store.Store;
+	private store: item_store.SyncableStore;
 	private vault: onepass.Vault;
 
 	// queue of items left to sync
@@ -56,7 +57,7 @@ export class Syncer {
 
 	onProgress: event_stream.EventStream<SyncProgress>;
 
-	constructor(store: item_store.Store, vault: onepass.Vault) {
+	constructor(store: item_store.SyncableStore, vault: onepass.Vault) {
 		this.store = store;
 		this.vault = vault;
 		this.onProgress = new event_stream.EventStream<SyncProgress>();
@@ -124,13 +125,22 @@ export class Syncer {
 			var storeItemMap = collectionutil.listToMap(storeItems, (item) => {
 				return item.uuid;
 			});
+			var vaultItemMap = collectionutil.listToMap(vaultItems, (item) => {
+				return item.uuid;
+			});
 
-			vaultItems.forEach((item) => {
+			storeItems.concat(vaultItems).forEach((item) => {
+				var vaultItem = vaultItemMap.get(item.uuid);
 				var storeItem = storeItemMap.get(item.uuid);
-				if (!storeItem || item.updatedAt.getTime() > storeItem.updatedAt.getTime()) {
+				if (!storeItem || // item added in cloud
+					!vaultItem || // item added locally
+					 // item updated in cloud
+				     vaultItem.updatedAt.getTime() > storeItem.lastSyncedAt.getTime() ||
+					 // item updated locally
+					 storeItem.updatedAt.getTime() > storeItem.lastSyncedAt.getTime()) {
 					this.syncQueue.push({
 						localItem: storeItem,
-						vaultItem: item
+						vaultItem: vaultItem
 					});
 					++this.syncProgress.total;
 				}
@@ -179,37 +189,82 @@ export class Syncer {
 			++this.syncProgress.updated;
 			this.onProgress.publish(this.syncProgress);
 		};
-		vaultItem.getContent().then((content) => {
-			if (!localItem) {
-				localItem = new item_store.Item();
-			}
-			this.updateItem(vaultItem, localItem).then(() => {
+
+		var localItemContent: Q.Promise<item_store.ItemAndContent>;
+		var vaultItemContent: Q.Promise<item_store.ItemAndContent>;
+		var lastSyncedItemContent: Q.Promise<item_store.ItemAndContent>;
+
+		if (localItem) {
+			// fetch local item content
+			localItemContent = localItem.getContent().then((content) => {
+				return { item: localItem, content: content };
+			});
+
+			// fetch last-synced revision of item
+			var lastSyncedItem: item_store.Item;
+			lastSyncedItemContent = this.store.lastSyncedRevision(localItem).then((item) => {
+				if (!item) {
+					return null;
+				} else {
+					lastSyncedItem = item;
+					return item.getContent();
+				}
+			}).then((content) => {
+				if (!content) {
+					return null;
+				} else {
+					return { item: lastSyncedItem, content: content };
+				}
+			});
+		}
+
+		if (vaultItem) {
+			// fetch vault item content
+			vaultItemContent = vaultItem.getContent().then((content) => {
+				return { item: vaultItem, content: content };
+			});
+		}
+
+		var contents = Q.all([localItemContent, vaultItemContent, lastSyncedItemContent]);
+		contents.then((contents: any[]) => {
+			this.updateItem(contents[0] /* local item */,
+			                contents[1] /* vault item */,
+			                contents[2] /* last synced item */)
+			.then(() => {
 				itemDone();
-			}).catch((err) => {
+			}).catch((err: Error) => {
 				this.currentSync.reject(new Error(sprintf('Failed to save updates for item %s: %s', vaultItem.uuid, err)));
 				itemDone();
 			});
 		}).catch((err) => {
+			console.log(err.stack);
 			this.currentSync.reject(new Error(sprintf('Failed to retrieve updated item %s: %s', vaultItem.uuid, err)));
 			itemDone();
 		});
 	}
 
-	private updateItem(vaultItem: item_store.Item, storeItem: item_store.Item) {
-		storeItem.uuid = vaultItem.uuid;
-		storeItem.updatedAt = vaultItem.updatedAt;
-		storeItem.title = vaultItem.title;
-		storeItem.typeName = vaultItem.typeName;
-		storeItem.createdAt = vaultItem.createdAt;
-		storeItem.folderUuid = vaultItem.folderUuid;
-		storeItem.faveIndex = vaultItem.faveIndex;
-		storeItem.trashed = vaultItem.trashed;
-		storeItem.openContents = <item_store.ItemOpenContents>clone(vaultItem.openContents);
-
-		return vaultItem.getContent().then((content) => {
-			storeItem.setContent(<item_store.ItemContent>clone(content));
-			return this.store.saveItem(storeItem);
-		});
+	private updateItem(vaultItem: item_store.ItemAndContent,
+	                   storeItem: item_store.ItemAndContent,
+	                   lastSynced: item_store.ItemAndContent) {
+		if (!vaultItem) {
+			// new item in local store
+			var clonedItem = item_store.cloneItem(storeItem, storeItem.item.uuid);
+			return this.vault.saveItem(clonedItem);
+		} else if (!storeItem) {
+			// new item in vault
+			var clonedItem = item_store.cloneItem(vaultItem, vaultItem.item.uuid);
+			return this.store.saveItem(clonedItem, item_store.ChangeSource.Sync);
+		} else if (vaultItem.item.updatedAt == lastSynced.item.updatedAt) {
+			// item updated in local store
+			var clonedItem = item_store.cloneItem(storeItem, storeItem.item.uuid);
+			return this.vault.saveItem(clonedItem);
+		} else if (storeItem.item.updatedAt == lastSynced.item.updatedAt) {
+			// item updated in vault
+			var clonedItem = item_store.cloneItem(vaultItem, vaultItem.item.uuid);
+			return this.vault.saveItem(clonedItem);
+		} else {
+			return Q.reject(new Error('Merging of item changes in store and vault is not implemented'));
+		}
 	}
 }
 

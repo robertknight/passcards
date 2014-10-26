@@ -41,7 +41,7 @@ interface ItemOverview {
 // object store
 var KEY_ID_PREFIX = 'key/';
 
-export class Store implements item_store.Store {
+export class Store implements item_store.SyncableStore {
 	private crypto: onepass_crypto.Crypto;
 	private database: key_value_store.Database;
 	private keyAgent: key_agent.KeyAgent;
@@ -211,11 +211,17 @@ export class Store implements item_store.Store {
 		}
 	}
 
-	saveItem(item: item_store.Item) : Q.Promise<void> {
+	saveItem(item: item_store.Item, source: item_store.ChangeSource) : Q.Promise<void> {
+		if (source === item_store.ChangeSource.Sync) {
+			// use the last-modified timestamps from the sync source
+			// and update the last-synced timestamp
+			item.lastSyncedAt = item.updatedAt;
+		} else {
+			// set last-modified time to current time
+			item.updateTimestamps();
+		}
+
 		var parentRevision = item.revision;
-
-		item.updateTimestamps();
-
 		var cryptoParams = new key_agent.CryptoParams(key_agent.CryptoAlgorithm.AES128_OpenSSLKey);
 		var key: string;
 		return this.keyForItem(item).then((_key) => {
@@ -283,6 +289,10 @@ export class Store implements item_store.Store {
 
 	passwordHint() : Q.Promise<string> {
 		return this.keyStore.get<string>('hint');
+	}
+
+	lastSyncedRevision(item: item_store.Item) : Q.Promise<item_store.Item> {
+		throw new Error('local_store.Store.lastSyncedRevision() not implemented');
 	}
 
 	// returns the key used to encrypt item overview data

@@ -21,6 +21,13 @@ export class Builder {
 		return this._content;
 	}
 
+	itemAndContent() : item_store.ItemAndContent {
+		return {
+			item: this._item,
+			content: this._content
+		};
+	}
+
 	setTitle(title: string) : Builder {
 		this._item.title = title;
 		return this;
