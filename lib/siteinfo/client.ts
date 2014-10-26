@@ -113,7 +113,7 @@ export class PasscardsClient implements site_info.SiteInfoProvider {
 	private queryDomainInfo(domain: string) : Q.Promise<client_api.LookupResponse> {
 		var response: client_api.LookupResponse;
 		return asyncutil.until(() => {
-			return http_client.get(this.rootUrl + '/siteinfo/' + domain).then((reply) => {
+			return http_client.get(this.rootUrl + '/siteinfo/' + domain + '?timeout=3000').then((reply) => {
 				if (reply.status != 200) {
 					console.log('siteinfo service query for %s failed: %d %s', domain, reply.status, reply.body);
 					return Q(true);
