@@ -10,7 +10,7 @@ ROOT_DIR=$(dir $(abspath package.json))
 SILENCE_CMD=1>/dev/null 2>/dev/null
 SILENCE_STDOUT=1>/dev/null
 TMP_DIR_CMD=mktemp -d /tmp/onepass.XXXXX
-TSC=$(NODE_BIN_DIR)/tsc -m commonjs --noImplicitAny --sourcemap
+TSC=$(NODE_BIN_DIR)/tsc -m commonjs --noImplicitAny --sourcemap --target es5
 TSD=$(NODE_BIN_DIR)/tsd
 TSLINT=$(NODE_BIN_DIR)/tslint
 

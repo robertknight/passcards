@@ -50,3 +50,8 @@ interface Window {
 	crypto: Crypto;
 }
 
+// [TS/1.1]
+interface Error {
+	stack?: Object
+}
+

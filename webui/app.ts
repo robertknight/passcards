@@ -193,8 +193,13 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 		});
 	}
 
-	showError(error: string) {
-		var status = new Status(StatusType.Error, error);
+	showError(error: Error) {
+		var status = new Status(StatusType.Error, error.message);
+		this.showStatus(status);
+		console.log('App error:', error.message, error.stack);
+	}
+
+	showStatus(status: Status) {
 		status.expired.listen(() => {
 			if (this.state.status == status) {
 				this.setState({status: null});
@@ -411,7 +416,7 @@ export class App {
 				console.log('vault setup failed', err, err.stack);
 			}
 		}).catch((err) => {
-			this.activeAppView.showError(err.toString());
+			this.activeAppView.showError(err);
 			console.log('Failed to setup vault', err.toString());
 		});
 	}

@@ -24,7 +24,7 @@ export class UnlockViewProps {
 	store: item_store.Store;
 	isLocked: boolean;
 	onUnlock: () => void;
-	onUnlockErr: (error: string) => void;
+	onUnlockErr: (error: Error) => void;
 }
 
 export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockViewState> {
@@ -89,15 +89,15 @@ export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockVie
 			});
 
 			if (this.state.failedUnlockCount < 3) {
-				this.props.onUnlockErr(err.message);
+				this.props.onUnlockErr(err);
 			} else {
 				this.props.store.passwordHint().then((hint) => {
 					if (!hint) {
 						hint = '(No password hint set)';
 					}
-					this.props.onUnlockErr(err.message + '. Hint: ' + hint);
+					this.props.onUnlockErr(new Error(err.message + '. Hint: ' + hint));
 				}).catch((hintErr) => {
-					this.props.onUnlockErr(err.message + '. Hint: ' + hintErr.message);
+					this.props.onUnlockErr(new Error(err.message + '. Hint: ' + hintErr.message));
 				});
 			}
 		});

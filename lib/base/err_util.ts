@@ -10,16 +10,31 @@ export class BaseError implements Error {
 	  * this is used to store the original error.
 	  */
 	public sourceErr: Error;
-
 	private err: Error;
 
-	name: string;
-	message: string;
+	get name() {
+		return this.name;
+	}
+
+	set name(name: string) {
+		this.err.name = name;
+	}
+
+	get stack() {
+		return this.err.stack;
+	}
+
+	get message() {
+		return this.err.message;
+	}
+
+	set message(message: string) {
+		this.err.message = message;
+	}
 
 	constructor(message: string) {
 		this.err = new Error(message);
 		this.name = (<ES6Function>this.constructor).name;
-		this.message = message;
 	}
 
 	toString() {
