@@ -34,6 +34,7 @@ interface ItemOverview {
 	account: string;
 
 	revision: string;
+	parentRevision: string;
 }
 
 // prefix for encryption key entries in the encryption key
@@ -162,6 +163,7 @@ export class Store implements item_store.Store {
 		item.locations = overview.locations;
 
 		item.revision = overview.revision;
+		item.parentRevision = overview.parentRevision;
 
 		return item;
 	}
@@ -178,7 +180,8 @@ export class Store implements item_store.Store {
 			locations: item.locations,
 			account: item.account,
 
-			revision: item.revision
+			revision: item.revision,
+			parentRevision: item.parentRevision
 		};
 	}
 

@@ -191,6 +191,13 @@ testLib.addAsyncTest('save and load items', (assert) => {
 	}).then(() => {
 		return store.listItems();
 	}).then((items) => {
+		// FIXME testLib.assertEqual() uses xdiff.diff() which
+		// has a bug that incorrectly reports a property
+		// deletion if two objects have a key with
+		// value undefined
+		item.parentRevision = item.parentRevision || null;
+		items[0].parentRevision = items[0].parentRevision || null;
+
 		assert.equal(items.length, 1);
 		testLib.assertEqual(assert, items[0], item, null, ['store', 'content', 'openContents']);
 		return items[0].getContent();
@@ -211,6 +218,8 @@ testLib.addAsyncTest('save and load item revisions', (assert) => {
 	item.title = 'Initial Title';
 
 	var firstRevision = '';
+	var secondRevision = '';
+	var thirdRevision = '';
 
 	assert.equal(item.revision, null);
 	return store.saveKeys([env.masterKey], '').then(() => {
@@ -231,9 +240,22 @@ testLib.addAsyncTest('save and load item revisions', (assert) => {
 		assert.equal(firstItemRevision.title, 'Initial Title');
 		return store.loadItem(item.uuid, item.revision);
 	}).then((secondItemRevision) => {
+		secondRevision = secondItemRevision.revision;
 		assert.equal(secondItemRevision.parentRevision, firstRevision);
 		assert.equal(secondItemRevision.revision, item.revision);
 		assert.equal(secondItemRevision.title, 'Updated Title');
+
+		item.trashed = true;
+		return item.saveTo(store);
+	}).then(() => {
+		thirdRevision = item.revision;
+		assert.equal(item.parentRevision, secondRevision);
+		assert.notEqual(item.revision, secondRevision);
+		return store.listItems();
+	}).then((items) => {
+		assert.equal(items.length, 1);
+		assert.equal(items[0].revision, thirdRevision);
+		assert.equal(items[0].parentRevision, secondRevision);
 	});
 });
 
