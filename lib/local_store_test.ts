@@ -203,6 +203,40 @@ testLib.addAsyncTest('save and load items', (assert) => {
 	});
 });
 
+testLib.addAsyncTest('save and load item revisions', (assert) => {
+	var env = setupEnv();
+	var store = new local_store.Store(env.database, env.keyAgent);
+	var item = makeItem();
+
+	item.title = 'Initial Title';
+
+	var firstRevision = '';
+
+	assert.equal(item.revision, null);
+	return store.saveKeys([env.masterKey], '').then(() => {
+		return store.unlock(env.masterPass);
+	}).then(() => {
+		return item.saveTo(store);
+	}).then(() => {
+		firstRevision = item.revision;
+		assert.notEqual(item.revision, null);
+		item.title = 'Updated Title';
+		return item.saveTo(store);
+	}).then(() => {
+		assert.notEqual(item.revision, firstRevision);
+		return store.loadItem(item.uuid, firstRevision);
+	}).then((firstItemRevision) => {
+		assert.equal(firstItemRevision.parentRevision, null);
+		assert.equal(firstItemRevision.revision, firstRevision);
+		assert.equal(firstItemRevision.title, 'Initial Title');
+		return store.loadItem(item.uuid, item.revision);
+	}).then((secondItemRevision) => {
+		assert.equal(secondItemRevision.parentRevision, firstRevision);
+		assert.equal(secondItemRevision.revision, item.revision);
+		assert.equal(secondItemRevision.title, 'Updated Title');
+	});
+});
+
 testLib.addAsyncTest('clear store', (assert) => {
 	var env = setupEnv();
 	var store = new local_store.Store(env.database, env.keyAgent);

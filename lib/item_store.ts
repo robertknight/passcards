@@ -167,6 +167,9 @@ export class Item {
 	// if the item has not yet been saved
 	private store: Store;
 
+	revision: string;
+	parentRevision: string;
+
 	// item ID and sync metadata
 	uuid: string;
 	updatedAt: Date;
@@ -677,3 +680,4 @@ export class TempStore implements Store {
 		return Q(this.hint);
 	}
 }
+

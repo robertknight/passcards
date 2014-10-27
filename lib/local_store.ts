@@ -10,13 +10,16 @@ import item_store = require('./item_store');
 import key_agent = require('./key_agent');
 import key_value_store = require('./base/key_value_store');
 import onepass_crypto = require('./onepass_crypto');
+import sha1 = require('./crypto/sha1');
 
 interface OverviewMap {
 	[index: string] : ItemOverview;
 }
 
-interface EncryptedContent {
-	data: string;
+interface ItemRevision {
+	parentRevision: string;
+	overview: ItemOverview;
+	content: item_store.ItemContent;
 }
 
 interface ItemOverview {
@@ -29,6 +32,8 @@ interface ItemOverview {
 
 	locations: string[];
 	account: string;
+
+	revision: string;
 }
 
 // prefix for encryption key entries in the encryption key
@@ -104,12 +109,12 @@ export class Store implements item_store.Store {
 			return this.itemStore.get<string>('index');
 		}).then((encryptedItemIndex) => {
 			if (encryptedItemIndex) {
-				return this.keyAgent.decrypt(key, encryptedItemIndex, {algo: key_agent.CryptoAlgorithm.AES128_OpenSSLKey});
+				return this.decrypt<OverviewMap>(key, encryptedItemIndex);
 			} else {
-				return null;
+				return Q(<OverviewMap>null);
 			}
-		}).then((decryptedItemIndex) => {
-			var overviewMap = <OverviewMap>JSON.parse(decryptedItemIndex) || {};
+		}).then((overviewMap) => {
+			var overviewMap = overviewMap || {};
 			var items: item_store.Item[] = [];
 			Object.keys(overviewMap).forEach((key) => {
 				var overview = overviewMap[key];
@@ -124,7 +129,6 @@ export class Store implements item_store.Store {
 	}
 
 	private updateIndex(updatedItems: item_store.Item[]) {
-		var cryptoParams = new key_agent.CryptoParams(key_agent.CryptoAlgorithm.AES128_OpenSSLKey);
 		var overviewMap = <OverviewMap>{};
 		return this.listItems({includeTombstones: true}).then((items) => {
 			var itemMap = collectionutil.listToMap(items, (item) => {
@@ -139,7 +143,7 @@ export class Store implements item_store.Store {
 			});
 			return this.overviewKey();
 		}).then((key) => {
-			return this.keyAgent.encrypt(key, JSON.stringify(overviewMap), cryptoParams);
+			return this.encrypt(key, overviewMap);
 		}).then((encrypted) => {
 			return this.itemStore.set('index', encrypted);
 		});
@@ -157,6 +161,8 @@ export class Store implements item_store.Store {
 		item.account = overview.account;
 		item.locations = overview.locations;
 
+		item.revision = overview.revision;
+
 		return item;
 	}
 
@@ -170,24 +176,41 @@ export class Store implements item_store.Store {
 			openContents: item.openContents,
 
 			locations: item.locations,
-			account: item.account
+			account: item.account,
+
+			revision: item.revision
 		};
 	}
 
-	loadItem(uuid: string) : Q.Promise<item_store.Item> {
-		return this.listItems().then((items) => {
-			var matches = items.filter((item) => {
-				return item.uuid == uuid;
+	loadItem(uuid: string, revision?: string) : Q.Promise<item_store.Item> {
+		if (revision) {
+			return Q.all([this.overviewKey(), this.itemStore.get<string>('revisions/' + revision)])
+			.then((keyAndRevision) => {
+				var key = <string>keyAndRevision[0];
+				var revisionData = <string>keyAndRevision[1];
+				return this.decrypt<ItemRevision>(key, revisionData);
+			}).then((revision) => {
+				var item = this.itemFromOverview(uuid, revision.overview);
+				item.parentRevision = revision.parentRevision;
+				return item;
 			});
-			if (matches.length > 0) {
-				return Q(matches[0]);
-			} else {
-				return Q.reject(new Error('No such item ' + uuid));
-			}
-		});
+		} else {
+			return this.listItems().then((items) => {
+				var matches = items.filter((item) => {
+					return item.uuid == uuid;
+				});
+				if (matches.length > 0) {
+					return Q(matches[0]);
+				} else {
+					return Q.reject(new Error('No such item ' + uuid));
+				}
+			});
+		}
 	}
 
 	saveItem(item: item_store.Item) : Q.Promise<void> {
+		var parentRevision = item.revision;
+
 		item.updateTimestamps();
 
 		var cryptoParams = new key_agent.CryptoParams(key_agent.CryptoAlgorithm.AES128_OpenSSLKey);
@@ -197,15 +220,20 @@ export class Store implements item_store.Store {
 			return item.getContent();
 		}).then((content) => {
 			item.updateOverviewFromContent(content);
-			return this.keyAgent.encrypt(key, JSON.stringify(content), cryptoParams);
-		}).then((contentData) => {
-			var encryptedContent: EncryptedContent = {
-				data: contentData
-			};
+			item.parentRevision = item.revision;
+			item.revision = generateRevisionId(item);
 
-			var overviewSaved = this.indexUpdateQueue.push(item);
-			var contentSaved = this.itemStore.set('content/' + item.uuid, encryptedContent);
-			return asyncutil.eraseResult(Q.all([overviewSaved, contentSaved]));
+			var overview = this.overviewFromItem(item);
+			var revision = {
+				parentRevision: item.parentRevision,
+				overview: overview,
+				content: content
+			};
+			return this.encrypt(key, revision);
+		}).then((revisionData) => {
+			var indexUpdated = this.indexUpdateQueue.push(item);
+			var revisionSaved = this.itemStore.set('revisions/' + item.revision, revisionData);
+			return asyncutil.eraseResult(Q.all([indexUpdated, revisionSaved]));
 		}).then(() => {
 			this.onItemUpdated.publish(item);
 		});
@@ -215,14 +243,14 @@ export class Store implements item_store.Store {
 		var key: string;
 		return this.keyForItem(item).then((_key) => {
 			key = _key;
-			return this.itemStore.get<EncryptedContent>('content/' + item.uuid);
-		}).then((encryptedContent) => {
-			return this.keyAgent.decrypt(key, encryptedContent.data, {algo: key_agent.CryptoAlgorithm.AES128_OpenSSLKey});
-		}).then((decrypted) => {
+			return this.itemStore.get<string>('revisions/' + item.revision);
+		}).then((revisionData) => {
+			return this.decrypt<ItemRevision>(key, revisionData);
+		}).then((revision) => {
 			// TODO - Split item_store.ItemContent into data which can
 			// be serialized directly and methods related to that data
 			var content = new item_store.ItemContent();
-			underscore.extend(content, JSON.parse(decrypted));
+			underscore.extend(content, revision.content);
 			return content;
 		});
 	}
@@ -268,5 +296,26 @@ export class Store implements item_store.Store {
 	private keyForItem(item: item_store.Item) {
 		return this.overviewKey();
 	}
+
+	private encrypt<T>(key: string, data: T) {
+		var cryptoParams = new key_agent.CryptoParams(key_agent.CryptoAlgorithm.AES128_OpenSSLKey);
+		return this.keyAgent.encrypt(key, JSON.stringify(data), cryptoParams);
+	}
+
+	private decrypt<T>(key: string, data: string) : Q.Promise<T> {
+		var cryptoParams = new key_agent.CryptoParams(key_agent.CryptoAlgorithm.AES128_OpenSSLKey);
+		return this.keyAgent.decrypt(key, data, cryptoParams).then((decrypted) => {
+			return <T>JSON.parse(decrypted);
+		});
+	}
+}
+
+export function generateRevisionId(item: item_store.Item) {
+	var contentString = [item.uuid, item.parentRevision, JSON.stringify(item)].join('\n');
+	var hasher = new sha1.SHA1();
+	var srcBuf = collectionutil.bufferFromString(contentString);
+	var digest = new Int32Array(5);
+	hasher.hash(srcBuf, digest);
+	return collectionutil.hexlify(digest);
 }
 
