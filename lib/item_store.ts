@@ -605,7 +605,8 @@ export interface Store {
 
 export interface SyncableStore extends Store {
 	/** Returns the last-synced revision of an item. */
-	lastSyncedRevision(item: Item) : Q.Promise<Item>;
+	getLastSyncedRevision(item: Item) : Q.Promise<string>;
+	setLastSyncedRevision(item: Item, revision: string) : Q.Promise<void>;
 }
 
 /** A temporary store which keeps items only in-memory */
@@ -618,6 +619,7 @@ export class TempStore implements SyncableStore {
 	private content: collectionutil.PMap<string,ItemContent>;
 	private keyAgent: key_agent.KeyAgent;
 	private hint: string;
+	private lastSyncedRevisions: collectionutil.PMap<string,string>;
 
 	constructor(agent: key_agent.KeyAgent) {
 		this.onItemUpdated = new event_stream.EventStream<Item>();
@@ -705,6 +707,7 @@ export class TempStore implements SyncableStore {
 		this.keys = [];
 		this.items = [];
 		this.content = new collectionutil.PMap<string,ItemContent>();
+		this.lastSyncedRevisions = new collectionutil.PMap<string,string>();
 		return Q<void>(null);
 	}
 
@@ -712,8 +715,13 @@ export class TempStore implements SyncableStore {
 		return Q(this.hint);
 	}
 	
-	lastSyncedRevision(item: Item) : Q.Promise<Item> {
-		throw new Error('TODO - Implement me');
+	getLastSyncedRevision(item: Item) : Q.Promise<string> {
+		return Q(this.lastSyncedRevisions.get(item.uuid));
+	}
+
+	setLastSyncedRevision(item: Item, revision: string) {
+		this.lastSyncedRevisions.set(item.uuid, revision);
+		return Q<void>(null);
 	}
 }
 

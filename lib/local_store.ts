@@ -291,8 +291,12 @@ export class Store implements item_store.SyncableStore {
 		return this.keyStore.get<string>('hint');
 	}
 
-	lastSyncedRevision(item: item_store.Item) : Q.Promise<item_store.Item> {
-		throw new Error('local_store.Store.lastSyncedRevision() not implemented');
+	getLastSyncedRevision(item: item_store.Item) {
+		return this.itemStore.get<string>('lastSynced/' + item.uuid);
+	}
+
+	setLastSyncedRevision(item: item_store.Item, revision: string) {
+		return this.itemStore.set('lastSynced/' + item.uuid, revision);
 	}
 
 	// returns the key used to encrypt item overview data

@@ -293,3 +293,25 @@ testLib.addAsyncTest('unlock store with no keys', (assert) => {
 	});
 });
 
+testLib.addAsyncTest('get/set last synced revision', (assert) => {
+	var env = setupEnv();
+	var store = new local_store.Store(env.database, env.keyAgent);
+	var item = makeItem();
+
+	return store.saveKeys([env.masterKey], '').then(() => {
+		return store.unlock(env.masterPass);
+	}).then(() => {
+		return item.saveTo(store);
+	}).then(() => {
+		assert.notEqual(item.revision, null);
+		return store.getLastSyncedRevision(item);
+	}).then((revision) => {
+		assert.equal(revision, null);
+		return store.setLastSyncedRevision(item, item.revision);
+	}).then(() => {
+		return store.getLastSyncedRevision(item);
+	}).then((revision) => {
+		assert.equal(revision, item.revision);
+	});
+});
+
