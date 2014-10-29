@@ -82,7 +82,7 @@ testLib.addAsyncTest('sync vault keys and password hint', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('sync vault items', (assert) => {
+testLib.addAsyncTest('sync vault items to store', (assert) => {
 	var env: Env;
 
 	// 1. save a new item to the vault
@@ -133,6 +133,54 @@ testLib.addAsyncTest('sync vault items', (assert) => {
 	}).then((storeItems) => {
 		assert.equal(storeItems.length, 1);
 		assert.equal(storeItems[0].title, item.title);
+	});
+});
+
+testLib.addAsyncTest('sync store items to vault', (assert) => {
+	var env: Env;
+
+	// 1. Save a new item to the store
+	var item = new item_builder.Builder(item_store.ItemTypes.LOGIN)
+	  .setTitle('store item')
+	  .addLogin('testuser2@gmail.com')
+	  .addUrl('acme.org')
+	  .item();
+
+	return setup().then((_env) => {
+		env = _env;
+		return item.saveTo(env.store);
+	}).then(() => {
+		// 2. Sync and verify that item was added to vault
+		return env.syncer.syncItems();
+	}).then((syncStats) => {
+		assert.equal(syncStats.updated, 1);
+		assert.equal(syncStats.total, 1);
+		return env.vault.listItems();
+	}).then((vaultItems) => {
+		assert.equal(vaultItems.length, 1);
+		assert.equal(vaultItems[0].title, item.title);
+		assert.deepEqual(vaultItems[0].locations, item.locations);
+		return vaultItems[0].getContent();
+	}).then((content) => {
+		testLib.assertEqual(assert, content.formFields, [{
+			id: '',
+			name: 'username',
+			type: item_store.FormFieldType.Text,
+			designation: 'username',
+			value: 'testuser2@gmail.com'
+		}]);
+
+		// 3. Update item in store, sync and verify that
+		// vault item is updated
+		item.title = 'store item - updated';
+		return item.save();
+	}).then(() => {
+		return env.syncer.syncItems();
+	}).then(() => {
+		return env.vault.listItems();
+	}).then((vaultItems) => {
+		assert.equal(vaultItems.length, 1);
+		assert.equal(vaultItems[0].title, item.title);
 	});
 });
 
