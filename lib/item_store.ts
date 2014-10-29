@@ -756,7 +756,11 @@ export function cloneItem(itemAndContent: ItemAndContent, uuid?: string) {
 }
 
 export function generateRevisionId(item: Item) {
-	var contentString = [item.uuid, item.parentRevision, JSON.stringify(item)].join('\n');
+	var contentMetadata = {
+		title: item.title,
+		updatedAt: item.updatedAt,
+	};
+	var contentString = [item.uuid, item.parentRevision, contentMetadata].join('\n');
 	var hasher = new sha1.SHA1();
 	var srcBuf = collectionutil.bufferFromString(contentString);
 	var digest = new Int32Array(5);
