@@ -16,6 +16,7 @@ import dateutil = require('./base/dateutil');
 import err_util = require('./base/err_util');
 import event_stream = require('./base/event_stream');
 import key_agent = require('./key_agent');
+import sha1 = require('./crypto/sha1');
 import stringutil = require('./base/stringutil');
 
 // typedef for item type codes
@@ -186,7 +187,6 @@ export class Item {
 
 	updatedAt: Date;
 	createdAt: Date;
-	lastSyncedAt: Date;
 
 	// overview metadata fields
 	typeName: ItemType;
@@ -616,10 +616,12 @@ export class TempStore implements SyncableStore {
 
 	private keys: key_agent.Key[];
 	private items: Item[];
-	private content: collectionutil.PMap<string,ItemContent>;
 	private keyAgent: key_agent.KeyAgent;
 	private hint: string;
-	private lastSyncedRevisions: collectionutil.PMap<string,string>;
+	
+	// map of (revision -> item and content)
+	private content: Map<string,ItemAndContent>;
+	private lastSyncedRevisions: Map<string,string>;
 
 	constructor(agent: key_agent.KeyAgent) {
 		this.onItemUpdated = new event_stream.EventStream<Item>();
@@ -675,25 +677,35 @@ export class TempStore implements SyncableStore {
 		}
 		return item.getContent().then((content) => {
 			item.updateOverviewFromContent(content);
-			this.content.set(item.uuid, content);
+			
+			var prevRevision = item.revision;
+			item.revision = generateRevisionId(item);
+			item.parentRevision = prevRevision;
+
+			this.content.set(item.revision, {
+				item: item,
+				content: content
+			});
 			this.onItemUpdated.publish(item);
 		});
 	}
 
-	loadItem(uuid: string) {
+	loadItem(uuid: string, revision?: string) {
 		var items = this.items.filter((item) => {
 			return item.uuid == uuid;
 		});
 		if (items.length == 0) {
 			return Q.reject(new Error('No such item'));
-		} else {
-			return Q(item);
 		}
+		if (!revision) {
+			revision = items[0].revision;
+		}
+		return Q(this.content.get(revision).item);
 	}
 
 	getContent(item: Item) {
-		if (this.content.has(item.uuid)) {
-			return Q(this.content.get(item.uuid));
+		if (this.content.has(item.revision)) {
+			return Q(this.content.get(item.revision).content);
 		} else {
 			return Q.reject(new Error('No such item'));
 		}
@@ -706,7 +718,7 @@ export class TempStore implements SyncableStore {
 	clear() {
 		this.keys = [];
 		this.items = [];
-		this.content = new collectionutil.PMap<string,ItemContent>();
+		this.content = new collectionutil.PMap<string,ItemAndContent>();
 		this.lastSyncedRevisions = new collectionutil.PMap<string,string>();
 		return Q<void>(null);
 	}
@@ -741,5 +753,14 @@ export function cloneItem(itemAndContent: ItemAndContent, uuid?: string) {
 	clonedItem.account = item.account;
 	clonedItem.setContent(<ItemContent>clone(itemAndContent.content));
 	return clonedItem;
+}
+
+export function generateRevisionId(item: Item) {
+	var contentString = [item.uuid, item.parentRevision, JSON.stringify(item)].join('\n');
+	var hasher = new sha1.SHA1();
+	var srcBuf = collectionutil.bufferFromString(contentString);
+	var digest = new Int32Array(5);
+	hasher.hash(srcBuf, digest);
+	return collectionutil.hexlify(digest);
 }
 

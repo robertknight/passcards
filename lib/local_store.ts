@@ -10,7 +10,6 @@ import item_store = require('./item_store');
 import key_agent = require('./key_agent');
 import key_value_store = require('./base/key_value_store');
 import onepass_crypto = require('./onepass_crypto');
-import sha1 = require('./crypto/sha1');
 
 interface OverviewMap {
 	[index: string] : ItemOverview;
@@ -212,11 +211,7 @@ export class Store implements item_store.SyncableStore {
 	}
 
 	saveItem(item: item_store.Item, source: item_store.ChangeSource) : Q.Promise<void> {
-		if (source === item_store.ChangeSource.Sync) {
-			// use the last-modified timestamps from the sync source
-			// and update the last-synced timestamp
-			item.lastSyncedAt = item.updatedAt;
-		} else {
+		if (source !== item_store.ChangeSource.Sync) {
 			// set last-modified time to current time
 			item.updateTimestamps();
 		}
@@ -230,7 +225,7 @@ export class Store implements item_store.SyncableStore {
 		}).then((content) => {
 			item.updateOverviewFromContent(content);
 			item.parentRevision = item.revision;
-			item.revision = generateRevisionId(item);
+			item.revision = item_store.generateRevisionId(item);
 
 			var overview = this.overviewFromItem(item);
 			var revision = {
@@ -325,14 +320,5 @@ export class Store implements item_store.SyncableStore {
 			return <T>JSON.parse(decrypted);
 		});
 	}
-}
-
-export function generateRevisionId(item: item_store.Item) {
-	var contentString = [item.uuid, item.parentRevision, JSON.stringify(item)].join('\n');
-	var hasher = new sha1.SHA1();
-	var srcBuf = collectionutil.bufferFromString(contentString);
-	var digest = new Int32Array(5);
-	hasher.hash(srcBuf, digest);
-	return collectionutil.hexlify(digest);
 }
 
