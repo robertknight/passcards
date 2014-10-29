@@ -2,6 +2,7 @@
 /// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
 /// <reference path="../typings/sprintf.d.ts" />
 
+import assert = require('assert');
 import clone = require('clone');
 import Q = require('q');
 import sprintf = require('sprintf');
@@ -12,6 +13,10 @@ import event_stream = require('./base/event_stream');
 import item_store = require('./item_store');
 import key_agent = require('./key_agent');
 import onepass = require('./onepass');
+
+function syncLog(...args: any[]) {
+	console.log.apply(null, args);
+}
 
 export enum SyncState {
 	/** Sync is not currently in progress */
@@ -84,6 +89,7 @@ export class Syncer {
 	  * Syncing items requires the vault to be unlocked.
 	  */
 	syncItems() : Q.Promise<SyncProgress> {
+		syncLog('starting sync');
 		if (this.currentSync) {
 			return this.currentSync.promise;
 		}
@@ -122,22 +128,24 @@ export class Syncer {
 			var storeItems: item_store.Item[] = itemLists[0];
 			var vaultItems: item_store.Item[] = itemLists[1];
 
+			var allItems: {[index: string]: boolean} = {};
+
 			var storeItemMap = collectionutil.listToMap(storeItems, (item) => {
+				allItems[item.uuid] = true;
 				return item.uuid;
 			});
 			var vaultItemMap = collectionutil.listToMap(vaultItems, (item) => {
+				allItems[item.uuid] = true;
 				return item.uuid;
 			});
 
-			storeItems.concat(vaultItems).forEach((item) => {
-				var vaultItem = vaultItemMap.get(item.uuid);
-				var storeItem = storeItemMap.get(item.uuid);
+			Object.keys(allItems).forEach((uuid) => {
+				var vaultItem = vaultItemMap.get(uuid);
+				var storeItem = storeItemMap.get(uuid);
 				if (!storeItem || // item added in cloud
 					!vaultItem || // item added locally
-					 // item updated in cloud
-				     vaultItem.updatedAt.getTime() > storeItem.lastSyncedAt.getTime() ||
-					 // item updated locally
-					 storeItem.updatedAt.getTime() > storeItem.lastSyncedAt.getTime()) {
+					// item updated either in cloud or locally
+					vaultItem.updatedAt.getTime() != storeItem.updatedAt.getTime()) {
 					this.syncQueue.push({
 						localItem: storeItem,
 						vaultItem: vaultItem
@@ -149,7 +157,7 @@ export class Syncer {
 			this.syncProgress.state = SyncState.SyncingItems;
 			this.onProgress.publish(this.syncProgress);
 		}).catch((err) => {
-			console.log('Failed to list items in vault or store');
+			syncLog('Failed to list items in vault or store');
 			result.reject(err);
 
 			this.syncProgress.state = SyncState.Idle;
@@ -202,18 +210,24 @@ export class Syncer {
 
 			// fetch last-synced revision of item
 			var lastSyncedItem: item_store.Item;
-			lastSyncedItemContent = this.store.lastSyncedRevision(localItem).then((item) => {
-				if (!item) {
-					return null;
+			lastSyncedItemContent = this.store.getLastSyncedRevision(localItem).then((revision) => {
+				if (revision) {
+					return this.store.loadItem(localItem.uuid, revision);
 				} else {
+					return null;
+				}
+			}).then((item) => {
+				if (item) {
 					lastSyncedItem = item;
 					return item.getContent();
+				} else {
+					return null;
 				}
 			}).then((content) => {
-				if (!content) {
-					return null;
-				} else {
+				if (content) {
 					return { item: lastSyncedItem, content: content };
+				} else {
+					return null;
 				}
 			});
 		}
@@ -237,34 +251,61 @@ export class Syncer {
 				itemDone();
 			});
 		}).catch((err) => {
-			console.log(err.stack);
+			syncLog(err.stack);
 			this.currentSync.reject(new Error(sprintf('Failed to retrieve updated item %s: %s', vaultItem.uuid, err)));
 			itemDone();
 		});
 	}
 
-	private updateItem(vaultItem: item_store.ItemAndContent,
-	                   storeItem: item_store.ItemAndContent,
+	private updateItem(storeItem: item_store.ItemAndContent,
+	                   vaultItem: item_store.ItemAndContent,
 	                   lastSynced: item_store.ItemAndContent) {
+
+		var updatedStoreItem: item_store.Item;
+		var saved: Q.Promise<void>;
+		var revision: string;
+
 		if (!vaultItem) {
+			syncLog('syncing new item %s from store -> vault', storeItem.item.uuid);
+
 			// new item in local store
 			var clonedItem = item_store.cloneItem(storeItem, storeItem.item.uuid);
-			return this.vault.saveItem(clonedItem);
+			revision = storeItem.item.revision;
+			updatedStoreItem = storeItem.item;
+			saved = this.vault.saveItem(clonedItem);
 		} else if (!storeItem) {
+			syncLog('syncing new item %s from vault -> store', vaultItem.item.uuid);
+
 			// new item in vault
 			var clonedItem = item_store.cloneItem(vaultItem, vaultItem.item.uuid);
-			return this.store.saveItem(clonedItem, item_store.ChangeSource.Sync);
+			saved = this.store.saveItem(clonedItem, item_store.ChangeSource.Sync).then(() => {
+				revision = clonedItem.revision;
+				updatedStoreItem = clonedItem;
+			});
 		} else if (vaultItem.item.updatedAt == lastSynced.item.updatedAt) {
+			syncLog('syncing updated item %s from store -> vault', storeItem.item.uuid);
+
 			// item updated in local store
 			var clonedItem = item_store.cloneItem(storeItem, storeItem.item.uuid);
-			return this.vault.saveItem(clonedItem);
+			revision = storeItem.item.revision;
+			updatedStoreItem = storeItem.item;
+			saved = this.vault.saveItem(clonedItem);
 		} else if (storeItem.item.updatedAt == lastSynced.item.updatedAt) {
+			syncLog('syncing updated item %s from vault -> store', vaultItem.item.uuid);
+
 			// item updated in vault
 			var clonedItem = item_store.cloneItem(vaultItem, vaultItem.item.uuid);
-			return this.vault.saveItem(clonedItem);
+			saved = this.store.saveItem(clonedItem).then(() => {
+				revision = clonedItem.revision;
+				updatedStoreItem = clonedItem;
+			});
 		} else {
-			return Q.reject(new Error('Merging of item changes in store and vault is not implemented'));
+			saved = Q.reject(new Error('Merging of item changes in store and vault is not implemented'));
 		}
+		return saved.then(() => {
+			assert(revision, 'saved item does not have a revision');
+			this.store.setLastSyncedRevision(updatedStoreItem, revision);
+		});
 	}
 }
 
