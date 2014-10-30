@@ -315,3 +315,32 @@ testLib.addAsyncTest('get/set last synced revision', (assert) => {
 	});
 });
 
+testLib.addAsyncTest('item revision updates on save', (assert) => {
+	var env = setupEnv();
+	var store = new local_store.Store(env.database, env.keyAgent);
+	var item = makeItem();
+
+	var revisions: string[] = [];
+
+	// the item revision should change on each save and the parent
+	// revision should be equal to the previous revision
+	assert.equal(item.revision, null);
+	return store.saveKeys([env.masterKey], '').then(() => {
+		return store.unlock(env.masterPass);
+	}).then(() => {
+		return item.saveTo(store);
+	}).then(() => {
+		revisions.push(item.revision);
+		assert.notEqual(item.revision, null);
+		return item.saveTo(store);
+	}).then(() => {
+		revisions.push(item.revision);
+		assert.notEqual(item.revision, revisions[0]);
+		assert.equal(item.parentRevision, revisions[0]);
+		return item.saveTo(store);
+	}).then(() => {
+		revisions.push(item.revision);
+		assert.notEqual(item.revision, revisions[1]);
+		assert.equal(item.parentRevision, revisions[1]);
+	});
+});

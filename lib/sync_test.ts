@@ -159,6 +159,7 @@ testLib.addAsyncTest('sync store items to vault', (assert) => {
 	}).then((vaultItems) => {
 		assert.equal(vaultItems.length, 1);
 		assert.equal(vaultItems[0].title, item.title);
+		assert.ok(sync.itemUpdateTimesEqual(vaultItems[0].updatedAt, item.updatedAt));
 		assert.deepEqual(vaultItems[0].locations, item.locations);
 		return vaultItems[0].getContent();
 	}).then((content) => {
@@ -181,6 +182,7 @@ testLib.addAsyncTest('sync store items to vault', (assert) => {
 	}).then((vaultItems) => {
 		assert.equal(vaultItems.length, 1);
 		assert.equal(vaultItems[0].title, item.title);
+		assert.ok(sync.itemUpdateTimesEqual(vaultItems[0].updatedAt, item.updatedAt));
 	});
 });
 

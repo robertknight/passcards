@@ -402,8 +402,10 @@ export class Vault implements item_store.Store {
 		});
 	}
 
-	saveItem(item: item_store.Item) : Q.Promise<void> {
-		item.updateTimestamps();
+	saveItem(item: item_store.Item, source?: item_store.ChangeSource) : Q.Promise<void> {
+		if (source !== item_store.ChangeSource.Sync) {
+			item.updateTimestamps();
+		}
 
 		// update the '<item ID>.1password' file
 		var itemSaved = item.getContent().then((content) => {

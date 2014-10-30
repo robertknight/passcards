@@ -9,13 +9,28 @@ import sprintf = require('sprintf');
 import underscore = require('underscore');
 
 import collectionutil = require('./base/collectionutil');
+import dateutil = require('./base/dateutil');
 import event_stream = require('./base/event_stream');
 import item_store = require('./item_store');
 import key_agent = require('./key_agent');
 import onepass = require('./onepass');
 
 function syncLog(...args: any[]) {
-	console.log.apply(null, args);
+	//console.log.apply(null, args);
+}
+
+/** Returns true if two date/times from Item.updatedAt should
+  * be considered equal for the purpose of sync.
+  *
+  * This function accounts for the fact that the resolution
+  * of timestamps varies depending on the store - eg.
+  * the Agile Keychain format uses timestamps with only
+  * second-level resolution whereas local_store.Store supports
+  * millisecond-resolution timestamps.
+  */
+export function itemUpdateTimesEqual(a: Date, b: Date) {
+	return dateutil.unixTimestampFromDate(a) ==
+	       dateutil.unixTimestampFromDate(b);
 }
 
 export enum SyncState {
@@ -145,7 +160,7 @@ export class Syncer {
 				if (!storeItem || // item added in cloud
 					!vaultItem || // item added locally
 					// item updated either in cloud or locally
-					vaultItem.updatedAt.getTime() != storeItem.updatedAt.getTime()) {
+					!itemUpdateTimesEqual(vaultItem.updatedAt, storeItem.updatedAt)) {
 					this.syncQueue.push({
 						localItem: storeItem,
 						vaultItem: vaultItem
@@ -265,37 +280,39 @@ export class Syncer {
 		var saved: Q.Promise<void>;
 		var revision: string;
 
+		var uuid = storeItem ? storeItem.item.uuid : vaultItem.item.uuid;
+
 		if (!vaultItem) {
 			syncLog('syncing new item %s from store -> vault', storeItem.item.uuid);
 
 			// new item in local store
-			var clonedItem = item_store.cloneItem(storeItem, storeItem.item.uuid);
+			var clonedItem = item_store.cloneItem(storeItem, storeItem.item.uuid).item;
 			revision = storeItem.item.revision;
 			updatedStoreItem = storeItem.item;
-			saved = this.vault.saveItem(clonedItem);
+			saved = this.vault.saveItem(clonedItem, item_store.ChangeSource.Sync);
 		} else if (!storeItem) {
 			syncLog('syncing new item %s from vault -> store', vaultItem.item.uuid);
 
 			// new item in vault
-			var clonedItem = item_store.cloneItem(vaultItem, vaultItem.item.uuid);
+			var clonedItem = item_store.cloneItem(vaultItem, vaultItem.item.uuid).item;
 			saved = this.store.saveItem(clonedItem, item_store.ChangeSource.Sync).then(() => {
 				revision = clonedItem.revision;
 				updatedStoreItem = clonedItem;
 			});
-		} else if (vaultItem.item.updatedAt == lastSynced.item.updatedAt) {
+		} else if (itemUpdateTimesEqual(vaultItem.item.updatedAt, lastSynced.item.updatedAt)) {
 			syncLog('syncing updated item %s from store -> vault', storeItem.item.uuid);
 
 			// item updated in local store
-			var clonedItem = item_store.cloneItem(storeItem, storeItem.item.uuid);
+			var clonedItem = item_store.cloneItem(storeItem, storeItem.item.uuid).item;
 			revision = storeItem.item.revision;
 			updatedStoreItem = storeItem.item;
-			saved = this.vault.saveItem(clonedItem);
-		} else if (storeItem.item.updatedAt == lastSynced.item.updatedAt) {
+			saved = this.vault.saveItem(clonedItem, item_store.ChangeSource.Sync);
+		} else if (itemUpdateTimesEqual(storeItem.item.updatedAt, lastSynced.item.updatedAt)) {
 			syncLog('syncing updated item %s from vault -> store', vaultItem.item.uuid);
 
 			// item updated in vault
-			var clonedItem = item_store.cloneItem(vaultItem, vaultItem.item.uuid);
-			saved = this.store.saveItem(clonedItem).then(() => {
+			var clonedItem = item_store.cloneItem(vaultItem, vaultItem.item.uuid).item;
+			saved = this.store.saveItem(clonedItem, item_store.ChangeSource.Sync).then(() => {
 				revision = clonedItem.revision;
 				updatedStoreItem = clonedItem;
 			});

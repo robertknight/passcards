@@ -176,7 +176,19 @@ export class Item {
 	// if the item has not yet been saved
 	private store: Store;
 
+	/** Identifies the version of an item. This is an opaque
+	  * string which is set when an item is saved to a store
+	  * which supports item history. It will be updated
+	  * each time an item is saved.
+	  */
 	revision: string;
+
+	/** Identifies the previous version of an item. This is
+	  * an opaque string which is set to the current revision
+	  * just prior to a new version being saved to a store
+	  * which supports item history. It will be updated
+	  * each time an item is saved.
+	  */
 	parentRevision: string;
 
 	// item ID and sync metadata
@@ -664,7 +676,11 @@ export class TempStore implements SyncableStore {
 		return Q(matches);
 	}
 
-	saveItem(item: Item) {
+	saveItem(item: Item, source: ChangeSource) {
+		if (source !== ChangeSource.Sync) {
+			item.updateTimestamps();
+		}
+
 		var saved = false;
 		for (var i=0; i < this.items.length; i++) {
 			if (this.items[i].uuid == item.uuid) {
@@ -672,19 +688,21 @@ export class TempStore implements SyncableStore {
 				saved = true;
 			}
 		}
+
+		var prevRevision = item.revision;
+		item.revision = generateRevisionId(item);
+		item.parentRevision = prevRevision;
+
 		if (!saved) {
 			this.items.push(item);
 		}
 		return item.getContent().then((content) => {
 			item.updateOverviewFromContent(content);
-			
-			var prevRevision = item.revision;
-			item.revision = generateRevisionId(item);
-			item.parentRevision = prevRevision;
+			var itemRevision = cloneItem({item: item, content: content}, item.uuid);
 
 			this.content.set(item.revision, {
-				item: item,
-				content: content
+				item: itemRevision.item,
+				content: itemRevision.content
 			});
 			this.onItemUpdated.publish(item);
 		});
@@ -751,8 +769,11 @@ export function cloneItem(itemAndContent: ItemAndContent, uuid?: string) {
 	clonedItem.openContents = item.openContents;
 	clonedItem.locations = <string[]>clone(item.locations);
 	clonedItem.account = item.account;
-	clonedItem.setContent(<ItemContent>clone(itemAndContent.content));
-	return clonedItem;
+
+	var clonedContent = <ItemContent>clone(itemAndContent.content);
+	clonedItem.setContent(clonedContent);
+
+	return {item: clonedItem, content: clonedContent};
 }
 
 export function generateRevisionId(item: Item) {
@@ -760,7 +781,7 @@ export function generateRevisionId(item: Item) {
 		title: item.title,
 		updatedAt: item.updatedAt,
 	};
-	var contentString = [item.uuid, item.parentRevision, contentMetadata].join('\n');
+	var contentString = [item.uuid, item.revision, contentMetadata].join('\n');
 	var hasher = new sha1.SHA1();
 	var srcBuf = collectionutil.bufferFromString(contentString);
 	var digest = new Int32Array(5);
