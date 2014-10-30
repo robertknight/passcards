@@ -213,42 +213,20 @@ export class Syncer {
 			this.onProgress.publish(this.syncProgress);
 		};
 
+		// fetch content for local and vault items and the last-synced
+		// version of the item in order to perform a 3-way merge
 		var localItemContent: Q.Promise<item_store.ItemAndContent>;
 		var vaultItemContent: Q.Promise<item_store.ItemAndContent>;
 		var lastSyncedItemContent: Q.Promise<item_store.ItemAndContent>;
 
 		if (localItem) {
-			// fetch local item content
 			localItemContent = localItem.getContent().then((content) => {
 				return { item: localItem, content: content };
 			});
-
-			// fetch last-synced revision of item
-			var lastSyncedItem: item_store.Item;
-			lastSyncedItemContent = this.store.getLastSyncedRevision(localItem).then((revision) => {
-				if (revision) {
-					return this.store.loadItem(localItem.uuid, revision);
-				} else {
-					return null;
-				}
-			}).then((item) => {
-				if (item) {
-					lastSyncedItem = item;
-					return item.getContent();
-				} else {
-					return null;
-				}
-			}).then((content) => {
-				if (content) {
-					return { item: lastSyncedItem, content: content };
-				} else {
-					return null;
-				}
-			});
+			lastSyncedItemContent = this.getLastSyncedItemRevision(localItem);
 		}
 
 		if (vaultItem) {
-			// fetch vault item content
 			vaultItemContent = vaultItem.getContent().then((content) => {
 				return { item: vaultItem, content: content };
 			});
@@ -256,9 +234,11 @@ export class Syncer {
 
 		var contents = Q.all([localItemContent, vaultItemContent, lastSyncedItemContent]);
 		contents.then((contents: any[]) => {
-			this.updateItem(contents[0] /* local item */,
-			                contents[1] /* vault item */,
-			                contents[2] /* last synced item */)
+			// merge changes between store and vault items and update the
+			// last-synced revision
+			this.mergeAndSyncItem(contents[0] /* local item */,
+			                      contents[1] /* vault item */,
+			                      contents[2] /* last synced item */)
 			.then(() => {
 				itemDone();
 			}).catch((err: Error) => {
@@ -266,18 +246,51 @@ export class Syncer {
 				itemDone();
 			});
 		}).catch((err) => {
-			syncLog(err.stack);
 			this.currentSync.reject(new Error(sprintf('Failed to retrieve updated item %s: %s', vaultItem.uuid, err)));
 			itemDone();
 		});
 	}
 
-	private updateItem(storeItem: item_store.ItemAndContent,
-	                   vaultItem: item_store.ItemAndContent,
-	                   lastSynced: item_store.ItemAndContent) {
+	// returns the item and content for the last-synced version of an item,
+	// or null if the item has not been synced before
+	private getLastSyncedItemRevision(item: item_store.Item) : Q.Promise<item_store.ItemAndContent> {
+		var lastSyncedItem: item_store.Item;
+		return this.store.getLastSyncedRevision(item).then((revision) => {
+			if (revision) {
+				return this.store.loadItem(item.uuid, revision);
+			} else {
+				return null;
+			}
+		}).then((item) => {
+			if (item) {
+				lastSyncedItem = item;
+				return item.getContent();
+			} else {
+				return null;
+			}
+		}).then((content) => {
+			if (content) {
+				return { item: lastSyncedItem, content: content };
+			} else {
+				return null;
+			}
+		});
+	}
+
+	// given a store item and a vault item, one or both of which have changed
+	// since the last sync, and the last-synced version of the item, merge
+	// changes and save the result to the store and/or vault as necessary.
+	//
+	// When the save completes, the last-synced revision is updated in
+	// the local store
+	private mergeAndSyncItem(storeItem: item_store.ItemAndContent,
+	                         vaultItem: item_store.ItemAndContent,
+	                         lastSynced: item_store.ItemAndContent) {
 
 		var updatedStoreItem: item_store.Item;
 		var saved: Q.Promise<void>;
+
+		// revision of the item which was saved
 		var revision: string;
 
 		var uuid = storeItem ? storeItem.item.uuid : vaultItem.item.uuid;
