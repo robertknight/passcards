@@ -110,6 +110,7 @@ testLib.addAsyncTest('sync vault items to store', (assert) => {
 		//    to the local store
 		assert.equal(storeItems.length, 1);
 		assert.equal(storeItems[0].title, item.title);
+		assert.ok(sync.itemUpdateTimesEqual(storeItems[0].createdAt, item.createdAt));
 		assert.deepEqual(storeItems[0].locations, item.locations);
 		return storeItems[0].getContent();
 	}).then((content) => {

@@ -505,6 +505,15 @@ export class Vault implements item_store.Store {
 
 	/** Returns a list of overview data for all items in the vault,
 	  * except tombstone markers for deleted items.
+	  *
+	  * Note: The items returned by listItems() are from the index
+	  * file and only contain the item's UUID, title, last-update date,
+	  * type name and primary location.
+	  *
+	  * The createdAt, faveIndex, openContents, locations and account
+	  * fields are not set.
+	  *
+	  * FIXME: Use the type system to represent the above
 	  */
 	listItems(opts: item_store.ListItemsOptions = {}) : Q.Promise<item_store.Item[]> {
 		var items = Q.defer<item_store.Item[]>();

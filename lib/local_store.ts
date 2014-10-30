@@ -1,5 +1,7 @@
+/// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
 
+import assert = require('assert');
 import Q = require('q');
 import underscore = require('underscore');
 
@@ -11,16 +13,22 @@ import key_agent = require('./key_agent');
 import key_value_store = require('./base/key_value_store');
 import onepass_crypto = require('./onepass_crypto');
 
+// JSON structure that stores the current overview
+// data and revision IDs for all items in the database
 interface OverviewMap {
 	[index: string] : ItemOverview;
 }
 
+// JSON structure used to store item revisions
+// in the database
 interface ItemRevision {
 	parentRevision: string;
 	overview: ItemOverview;
 	content: item_store.ItemContent;
 }
 
+// JSON structure used to store item overview
+// data in the database
 interface ItemOverview {
 	title: string;
 	updatedAt: number;
@@ -214,6 +222,11 @@ export class Store implements item_store.SyncableStore {
 		if (source !== item_store.ChangeSource.Sync) {
 			// set last-modified time to current time
 			item.updateTimestamps();
+		} else {
+			// when syncing an item from another store, it
+			// must already have been saved
+			assert(item.createdAt);
+			assert(item.updatedAt);
 		}
 
 		var parentRevision = item.revision;

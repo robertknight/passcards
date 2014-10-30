@@ -16,7 +16,7 @@ import key_agent = require('./key_agent');
 import onepass = require('./onepass');
 
 function syncLog(...args: any[]) {
-	//console.log.apply(null, args);
+	console.log.apply(console, args);
 }
 
 /** Returns true if two date/times from Item.updatedAt should
@@ -227,11 +227,18 @@ export class Syncer {
 		}
 
 		if (vaultItem) {
-			vaultItemContent = vaultItem.getContent().then((content) => {
+			vaultItemContent = this.vault.loadItem(vaultItem.uuid).then((item) => {
+				// load the full item overview data from the vault.
+				// The overview data returned by Vault.listItems() only includes
+				// the core overview metadata fields
+				vaultItem = item;
+				return vaultItem.getContent();
+			}).then((content) => {
 				return { item: vaultItem, content: content };
 			});
 		}
 
+		var uuid = localItem ? localItem.uuid : vaultItem.uuid;
 		var contents = Q.all([localItemContent, vaultItemContent, lastSyncedItemContent]);
 		contents.then((contents: any[]) => {
 			// merge changes between store and vault items and update the
@@ -242,11 +249,13 @@ export class Syncer {
 			.then(() => {
 				itemDone();
 			}).catch((err: Error) => {
-				this.currentSync.reject(new Error(sprintf('Failed to save updates for item %s: %s', vaultItem.uuid, err)));
+				syncLog('Syncing item %s failed:', uuid, err);
+				this.currentSync.reject(new Error(sprintf('Failed to save updates for item %s: %s', uuid, err)));
 				itemDone();
 			});
 		}).catch((err) => {
-			this.currentSync.reject(new Error(sprintf('Failed to retrieve updated item %s: %s', vaultItem.uuid, err)));
+			syncLog('Retrieving updates for %s failed:', uuid, err);
+			this.currentSync.reject(new Error(sprintf('Failed to retrieve updated item %s: %s', uuid, err)));
 			itemDone();
 		});
 	}
@@ -330,6 +339,7 @@ export class Syncer {
 				updatedStoreItem = clonedItem;
 			});
 		} else {
+			// item updated in both local store and vault
 			saved = Q.reject(new Error('Merging of item changes in store and vault is not implemented'));
 		}
 		return saved.then(() => {
