@@ -10,11 +10,12 @@ import item_store = require('./item_store');
 import key_agent = require('./key_agent');
 import onepass = require('./onepass');
 import sync = require('./sync');
+import temp_store = require('./temp_store');
 import testLib = require('./test');
 import vfs_node = require('./vfs/node');
 
 interface Env {
-	store: item_store.TempStore;
+	store: temp_store.Store;
 	syncer: sync.Syncer;
 	vault: onepass.Vault;
 }
@@ -31,7 +32,7 @@ function setup() : Q.Promise<Env> {
 		vault = _vault;
 		return vault.unlock(VAULT_PASS);
 	}).then(() => {
-		var store = new item_store.TempStore(new key_agent.SimpleKeyAgent());
+		var store = new temp_store.Store(new key_agent.SimpleKeyAgent());
 		var syncer = new sync.Syncer(store, vault);
 
 		return {
