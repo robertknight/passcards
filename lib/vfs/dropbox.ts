@@ -127,7 +127,7 @@ export class DropboxVFS implements vfs.VFS {
 
 	write(path: string, content: string, options: vfs.WriteOptions = {}) : Q.Promise<void> {
 		var result = Q.defer<void>();
-		var dropboxWriteOpts: dropbox.WriteFileOptions;
+		var dropboxWriteOpts: dropbox.WriteFileOptions = {};
 
 		if (options && options.parentRevision) {
 			dropboxWriteOpts.parentRev = options.parentRevision;
