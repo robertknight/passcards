@@ -57,6 +57,13 @@ testLib.addTest('extract page links', (assert) => {
 			rel: 'shortcut icon',
 			url: 'favicon.png'
 		}]
+	},{
+		content:'<link\nrel="shortcut icon" href="ico.png">',
+		links: [{
+			type: site_info_service.MetaTagType.Link,
+			rel: 'shortcut icon',
+			url: 'ico.png'
+		}]
 	}];
 
 	testCases.forEach((testCase) => {

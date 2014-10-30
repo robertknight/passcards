@@ -369,6 +369,11 @@ interface ParsedTag {
 	text: string;
 }
 
+function isSpace(ch: string) {
+	// taken from http://stackoverflow.com/questions/1496826
+	return ch.length === 1 && /\s/.test(ch);
+}
+
 /** PageLinkFetcher retrieves an HTML page and
   * extracts links to related resources from <meta> and <link> tags
   */
@@ -470,6 +475,11 @@ export class PageLinkFetcher {
 		return parsed;
 	}
 
+	// removes surrounding quotes and unescapes any quotes
+	// within a string.
+	//
+	// unquote('foo') => 'foo'
+	// unquote('"foo\"bar"') => 'foo"bar'
 	private unquote(text: string) : string {
 		var quoteCh = text[0];
 		if (quoteCh != '"' && quoteCh != '\'') {
@@ -491,6 +501,9 @@ export class PageLinkFetcher {
 		return unquoted;
 	}
 
+	// split an HTML tag into tokens, eg.
+	//   tokenizeTag('<link rel="foo" href="bar">') =>
+	//     ['<','link','rel','=','foo','href','bar','>']
 	private tokenizeTag(content: string) : Token[] {
 		var tagDepth = 0;
 		var quoteChar: string = null;
@@ -532,11 +545,11 @@ export class PageLinkFetcher {
 					next(i);
 				} else if (ch === '=') {
 					next(i);
-				} else if (ch === ' ') {
-					if (prevCh !== ' ') {
+				} else if (isSpace(ch)) {
+					if (!isSpace(prevCh)) {
 						next(i);
 					}
-				} else if (prevCh === ' ' || prevCh === '<' || prevCh === '=') {
+				} else if (isSpace(prevCh) || prevCh === '<' || prevCh === '=') {
 					next(i);
 				}
 			} else if (ch === quoteChar) {
