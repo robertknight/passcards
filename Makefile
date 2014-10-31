@@ -1,11 +1,11 @@
 include common.mk
 
-lib_srcs=$(shell find lib/ -name '*.ts')
-cli_srcs=$(shell find cli/ -name '*.ts')
-webui_srcs=$(shell find webui/ -name '*.ts')
+lib_srcs=$(shell find lib -name '*.ts')
+cli_srcs=$(shell find cli -name '*.ts')
+webui_srcs=$(shell find webui -name '*.ts')
 firefox_addon_srcs=$(shell find addons/firefox/src -name '*.ts')
 all_srcs=$(lib_srcs) $(cli_srcs) $(webui_srcs) $(addon_srcs)
-test_files=$(shell find build/ -name '*_test.js')
+test_files=$(shell find build -name '*_test.js')
 webui_script_dir=webui/scripts
 webui_css_dir=webui/style
 webui_icon_dir=webui/icons
