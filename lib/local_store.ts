@@ -44,6 +44,8 @@ interface ItemOverview {
 	parentRevision: string;
 }
 
+var SCHEMA_VERSION = 2;
+
 // prefix for encryption key entries in the encryption key
 // object store
 var KEY_ID_PREFIX = 'key/';
@@ -75,15 +77,18 @@ export class Store implements item_store.SyncableStore {
 	}
 
 	private initDatabase() {
-		this.database.open('passcards-items', 1, (schemaUpdater) => {
-			if (schemaUpdater.currentVersion() < 1) {
-				schemaUpdater.createStore('key-store');
-				schemaUpdater.createStore('item-store');
+		this.database.open('passcards-items', SCHEMA_VERSION, (schemaUpdater) => {
+			if (schemaUpdater.currentVersion() < 2) {
+				schemaUpdater.storeNames().forEach((name) => {
+					schemaUpdater.deleteStore(name);
+				});
+				schemaUpdater.createStore('keys');
+				schemaUpdater.createStore('items');
 			}
 		});
 
-		this.keyStore = this.database.store('key-store');
-		this.itemStore = this.database.store('item-store');
+		this.keyStore = this.database.store('keys');
+		this.itemStore = this.database.store('items');
 	}
 
 	clear() {

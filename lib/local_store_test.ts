@@ -24,10 +24,20 @@ class FakeKeyValueDatabase implements key_value_store.Database {
 	open(name: string, version: number, schemaUpdateCallback: (schemaUpdater: key_value_store.DatabaseSchemaModifier) => void) {
 		if (version > this.version) {
 			schemaUpdateCallback({
-				createStore : (name: string) => {
+				createStore: (name: string) => {
 					if (!this.stores.get(name)) {
 						this.stores.set(name, new FakeKeyValueStore);
 					}
+				},
+				deleteStore: (name: string) => {
+					this.stores.delete(name);
+				},
+				storeNames: () => {
+					var keys: string[] = [];
+					this.stores.forEach((_, k) => {
+						keys.push(k);
+					});
+					return keys;
 				},
 				currentVersion : () => {
 					return this.version;

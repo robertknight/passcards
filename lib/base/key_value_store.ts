@@ -25,6 +25,8 @@ function promisify<T>(req: IDBRequest) : Q.Promise<T> {
 
 export interface DatabaseSchemaModifier {
 	createStore(name: string) : void;
+	deleteStore(name: string) : void;
+	storeNames() : string[];
 	currentVersion(): number;
 }
 
@@ -76,6 +78,16 @@ export class IndexedDBDatabase implements Database {
 			schemaUpdateCallback({
 				createStore: (name: string) => {
 					db.createObjectStore(name);
+				},
+				deleteStore: (name: string) => {
+					db.deleteObjectStore(name);
+				},
+				storeNames: () => {
+					var names: string[] = [];
+					for (var i=0; i < db.objectStoreNames.length; i++) {
+						names.push(db.objectStoreNames.item(i));
+					}
+					return names;
 				},
 				currentVersion : () => {
 					// [WORKAROUND / iOS 8.0 / Bug #136888] - the initial current
