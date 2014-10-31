@@ -1,6 +1,23 @@
 /// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
 
+// local_store.Store implements an IndexedDB-based store
+// of encryption keys and encrypted item data.
+
+// Local Store Schema (v2)
+//
+// keys: // encryption key and password hint storage
+//   hint: string // password hint as plain text
+//   key/<ID>: key_agent.Key // encrypted encryption key, plus metadata
+//                           // for PBKDF2
+//
+//
+// items: // encrypted item content and sync metadata
+//   index: OverviewMap // current overview and revision data for all items
+//   lastSynced/<Item ID>: string // last-synced revision of item <Item ID>
+//   revision/<rev ID>: ItemRevision // item overview and content (both encrypted) for
+//                                   // a particular revision of an item
+
 import assert = require('assert');
 import Q = require('q');
 import underscore = require('underscore');
