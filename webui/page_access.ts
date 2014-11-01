@@ -10,6 +10,7 @@ import forms = require('./forms');
 import rpc = require('../lib/net/rpc');
 import site_info = require('../lib/siteinfo/site_info');
 import site_info_service = require('../lib/siteinfo/service');
+import stringutil = require('../lib/base/stringutil');
 
 class ExtensionUrlFetcher {
 	private rpc: rpc.RpcHandler;
@@ -205,12 +206,24 @@ export class ChromeExtensionPageAccess implements PageAccess, ClipboardAccess {
 		// to notify the extension when the URL for the active tab changes
 		var chromeExtBackgroundWindow = <ChromeExtBackgroundWindow>window;
 		chromeExtBackgroundWindow.notifyPageChanged = (tab: chrome.tabs.Tab) => {
-			this.currentUrl = tab.url;
-			this.pageChanged.publish(tab.url);
+			var currentUrl = tab.url;
 
-			chrome.tabs.executeScript(null, {
-				file: 'data/scripts/page_bundle.js'
-			});
+			// the extension does not have permission to inspect or
+			// modify chrome:// pages, so treat them as empty tabs
+			if (stringutil.startsWith(tab.url, 'chrome://')) {
+				currentUrl = '';
+			}
+
+			this.currentUrl = currentUrl;
+			this.pageChanged.publish(currentUrl);
+
+			if (currentUrl != '') {
+				// if URL is non-empty, load page script for
+				// form discovery and autofill
+				chrome.tabs.executeScript(null, {
+					file: 'data/scripts/page_bundle.js'
+				});
+			}
 			
 			this.showEvents.publish(null);
 		};
