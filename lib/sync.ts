@@ -145,6 +145,8 @@ export class Syncer {
 			var storeItems = <item_store.Item[]>itemLists[0];
 			var vaultItems = <item_store.Item[]>itemLists[1];
 			var lastSyncTimes = <Map<string,Date>>(itemLists[2]);
+		
+			syncLog('%d items in vault, %d in store', storeItems.length, vaultItems.length);
 
 			var allItems: {[index: string]: boolean} = {};
 
@@ -178,12 +180,14 @@ export class Syncer {
 			this.syncProgress.state = SyncState.SyncingItems;
 			this.onProgress.publish(this.syncProgress);
 		}).catch((err) => {
-			syncLog('Failed to list items in vault or store');
+			syncLog('Failed to list items in vault or store', err.stack);
 			result.reject(err);
 
 			this.syncProgress.state = SyncState.Idle;
 			this.onProgress.publish(this.syncProgress);
 		});
+
+		syncLog('found %d items to sync', this.syncQueue.length);
 
 		this.syncNextBatch();
 
