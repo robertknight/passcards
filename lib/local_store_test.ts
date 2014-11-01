@@ -303,7 +303,7 @@ testLib.addAsyncTest('unlock store with no keys', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('get/set last synced revision', (assert) => {
+testLib.addAsyncTest('get/set last sync data', (assert) => {
 	var env = setupEnv();
 	var store = new local_store.Store(env.database, env.keyAgent);
 	var item = makeItem();
@@ -322,6 +322,10 @@ testLib.addAsyncTest('get/set last synced revision', (assert) => {
 		return store.getLastSyncedRevision(item);
 	}).then((revision) => {
 		assert.equal(revision, item.revision);
+		return store.lastSyncTimestamps();
+	}).then((timestamps) => {
+		assert.equal(timestamps.size, 1);
+		assert.equal(timestamps.get(item.uuid).getTime(), item.updatedAt.getTime());
 	});
 });
 

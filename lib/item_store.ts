@@ -619,6 +619,11 @@ export interface SyncableStore extends Store {
 	/** Returns the last-synced revision of an item. */
 	getLastSyncedRevision(item: Item) : Q.Promise<string>;
 	setLastSyncedRevision(item: Item, revision: string) : Q.Promise<void>;
+
+	/** Retrieve a map of (item ID -> last-sync timestamp) for
+	  * each item.
+	  */
+	lastSyncTimestamps() : Q.Promise<Map<string,Date>>;
 }
 
 export function cloneItem(itemAndContent: ItemAndContent, uuid?: string) {

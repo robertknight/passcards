@@ -33,7 +33,7 @@ import onepass_crypto = require('./onepass_crypto');
 // JSON structure that stores the current overview
 // data and revision IDs for all items in the database
 interface OverviewMap {
-	[index: string] : ItemOverview;
+	[index: string] : ItemIndexEntry;
 }
 
 // JSON structure used to store item revisions
@@ -59,6 +59,18 @@ interface ItemOverview {
 
 	revision: string;
 	parentRevision: string;
+}
+
+// JSON structure used to store entries in the item
+// index. This consists of item overview data
+// plus the last-sync timestamp
+interface ItemIndexEntry extends ItemOverview {
+	lastSyncedAt?: number;
+}
+
+interface LastSyncEntry {
+	timestamp: number;
+	revision: string;
 }
 
 var SCHEMA_VERSION = 2;
@@ -133,17 +145,7 @@ export class Store implements item_store.SyncableStore {
 	}
 
 	listItems(opts: item_store.ListItemsOptions = {}) : Q.Promise<item_store.Item[]> {
-		var key: string;
-		return this.overviewKey().then((_key) => {
-			key = _key;
-			return this.itemStore.get<string>('index');
-		}).then((encryptedItemIndex) => {
-			if (encryptedItemIndex) {
-				return this.decrypt<OverviewMap>(key, encryptedItemIndex);
-			} else {
-				return Q(<OverviewMap>null);
-			}
-		}).then((overviewMap) => {
+		return this.readItemIndex().then((overviewMap) => {
 			var overviewMap = overviewMap || {};
 			var items: item_store.Item[] = [];
 			Object.keys(overviewMap).forEach((key) => {
@@ -158,18 +160,32 @@ export class Store implements item_store.SyncableStore {
 		});
 	}
 
+	private getLastSyncEntries(ids: string[]) : Q.Promise<LastSyncEntry[]> {
+		return Q.all(ids.map((id) => {
+			return this.itemStore.get<LastSyncEntry>('lastSynced/' + id);
+		}));
+	}
+
 	private updateIndex(updatedItems: item_store.Item[]) {
 		var overviewMap = <OverviewMap>{};
-		return this.listItems({includeTombstones: true}).then((items) => {
-			var itemMap = collectionutil.listToMap(items, (item) => {
-				return item.uuid;
-			});
-			updatedItems.forEach((item) => {
-				itemMap.set(item.uuid, item);
-			});
+		var updatedItemIds = updatedItems.map((item) => {
+			return item.uuid;
+		});
 
-			itemMap.forEach((item, uuid) => {
-				overviewMap[uuid] = this.overviewFromItem(item);
+		return Q.all([this.readItemIndex(), this.getLastSyncEntries(updatedItemIds)])
+		  .then((result) => {
+			overviewMap = <OverviewMap>result[0];
+			if (!overviewMap) {
+				overviewMap = {};
+			}
+			var lastSyncTimes = (<LastSyncEntry[]>result[1]).map((entry) => {
+				return entry ? entry.timestamp : 0;
+			});
+			updatedItems.forEach((item, index) => {
+				var entry: ItemIndexEntry = this.overviewFromItem(item);
+				entry.lastSyncedAt = lastSyncTimes[index];
+				assert(entry.lastSyncedAt !== null);
+				overviewMap[item.uuid] = entry;
 			});
 			return this.overviewKey();
 		}).then((key) => {
@@ -322,11 +338,49 @@ export class Store implements item_store.SyncableStore {
 	}
 
 	getLastSyncedRevision(item: item_store.Item) {
-		return this.itemStore.get<string>('lastSynced/' + item.uuid);
+		return this.itemStore.get<LastSyncEntry>('lastSynced/' + item.uuid)
+		  .then((entry) => {
+			  if (entry) {
+				  return entry.revision;
+			  } else {
+				  return null;
+			  }
+		  });
 	}
 
 	setLastSyncedRevision(item: item_store.Item, revision: string) {
-		return this.itemStore.set('lastSynced/' + item.uuid, revision);
+		assert(item.revision === revision);
+		return this.itemStore.set('lastSynced/' + item.uuid, {
+			revision: revision,
+			timestamp: item.updatedAt
+		}).then(() => {
+			return this.indexUpdateQueue.push(item);
+		});
+	}
+
+	lastSyncTimestamps() {
+		var timestamps: Map<string,Date> = new collectionutil.PMap<string,Date>();
+		return this.readItemIndex().then((itemIndex) => {
+			Object.keys(itemIndex).forEach((id) => {
+				var lastSyncedAt = itemIndex[id].lastSyncedAt;
+				timestamps.set(id, new Date(lastSyncedAt));
+			});
+			return timestamps;
+		});
+	}
+
+	private readItemIndex() {
+		var key: string;
+		return this.overviewKey().then((_key) => {
+			key = _key;
+			return this.itemStore.get<string>('index');
+		}).then((encryptedItemIndex) => {
+			if (encryptedItemIndex) {
+				return this.decrypt<OverviewMap>(key, encryptedItemIndex);
+			} else {
+				return Q(<OverviewMap>null);
+			}
+		});
 	}
 
 	// returns the key used to encrypt item overview data

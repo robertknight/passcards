@@ -139,5 +139,18 @@ export class Store implements item_store.SyncableStore {
 		this.lastSyncedRevisions.set(item.uuid, revision);
 		return Q<void>(null);
 	}
+
+	lastSyncTimestamps() {
+		var timestampMap = new collectionutil.PMap<string,Date>();
+		this.items.forEach((item) => {
+			var lastSyncedRev = this.lastSyncedRevisions.get(item.uuid);
+			if (!lastSyncedRev) {
+				return;
+			}
+			var lastSyncedAt = this.content.get(lastSyncedRev).item.updatedAt;
+			timestampMap.set(item.uuid, lastSyncedAt);
+		});
+		return Q(timestampMap);
+	}
 }
 
