@@ -138,10 +138,12 @@ export class Syncer {
 		var listOpts = { includeTombstones: true };
 		var storeItems = this.store.listItems(listOpts);
 		var vaultItems = this.vault.listItems(listOpts);
+		var lastSyncTimes = this.store.lastSyncTimestamps();
 
-		Q.all([storeItems, vaultItems]).then((itemLists) => {
-			var storeItems: item_store.Item[] = itemLists[0];
-			var vaultItems: item_store.Item[] = itemLists[1];
+		Q.all([storeItems, vaultItems, lastSyncTimes]).then((itemLists) => {
+			var storeItems = <item_store.Item[]>itemLists[0];
+			var vaultItems = <item_store.Item[]>itemLists[1];
+			var lastSyncTimes = <Map<string,Date>>(itemLists[2]);
 
 			var allItems: {[index: string]: boolean} = {};
 
@@ -157,10 +159,13 @@ export class Syncer {
 			Object.keys(allItems).forEach((uuid) => {
 				var vaultItem = vaultItemMap.get(uuid);
 				var storeItem = storeItemMap.get(uuid);
+				var lastSyncedAt = lastSyncTimes.get(uuid);
+
 				if (!storeItem || // item added in cloud
 					!vaultItem || // item added locally
 					// item updated either in cloud or locally
-					!itemUpdateTimesEqual(vaultItem.updatedAt, storeItem.updatedAt)) {
+					!itemUpdateTimesEqual(vaultItem.updatedAt, lastSyncedAt) ||
+				    !itemUpdateTimesEqual(storeItem.updatedAt, lastSyncedAt)) {
 					this.syncQueue.push({
 						localItem: storeItem,
 						vaultItem: vaultItem
@@ -303,7 +308,7 @@ export class Syncer {
 		var revision: string;
 
 		var uuid = storeItem ? storeItem.item.uuid : vaultItem.item.uuid;
-
+		
 		if (!vaultItem) {
 			syncLog('syncing new item %s from store -> vault', storeItem.item.uuid);
 
@@ -339,6 +344,8 @@ export class Syncer {
 				updatedStoreItem = clonedItem;
 			});
 		} else {
+			syncLog('merging store and vault changes for item %s', storeItem.item.uuid);
+
 			// item updated in both local store and vault
 			saved = Q.reject(new Error('Merging of item changes in store and vault is not implemented'));
 		}
