@@ -304,12 +304,13 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 	private menuListener: EventListener;
 
 	componentDidMount() {
+		var menuNode = <HTMLElement>this.refs['menu'].getDOMNode();
+
 		this.menuListener = (e: MouseEvent) => {
 			if (!this.isMounted()) {
 				return;
 			}
 
-			var menuNode = <HTMLElement>this.refs['menu'].getDOMNode();
 			if (!menuNode.contains(<HTMLElement>e.target)) {
 				e.preventDefault();
 				this.props.onDismiss();
@@ -317,15 +318,16 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 		};
 
 		MENU_DISMISS_EVENTS.forEach((event) => {
-			document.addEventListener(event, this.menuListener);
+			menuNode.ownerDocument.addEventListener(event, this.menuListener);
 		});
 
 		this.setState({showTime: new Date});
 	}
 
-	componentDidUnmount() {
+	componentWillUnmount() {
+		var menuNode = <HTMLElement>this.refs['menu'].getDOMNode();
 		MENU_DISMISS_EVENTS.forEach((event) => {
-			document.removeEventListener(event, this.menuListener);
+			menuNode.ownerDocument.removeEventListener(event, this.menuListener);
 		});
 		this.menuListener = null;
 	}
