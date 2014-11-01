@@ -17,7 +17,7 @@ import key_agent = require('./key_agent');
 import onepass = require('./onepass');
 
 function syncLog(...args: any[]) {
-	console.log.apply(console, args);
+//	console.log.apply(console, args);
 }
 
 /** Returns true if two date/times from Item.updatedAt should
