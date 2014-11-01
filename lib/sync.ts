@@ -11,6 +11,7 @@ import underscore = require('underscore');
 import collectionutil = require('./base/collectionutil');
 import dateutil = require('./base/dateutil');
 import event_stream = require('./base/event_stream');
+import item_merge = require('./item_merge');
 import item_store = require('./item_store');
 import key_agent = require('./key_agent');
 import onepass = require('./onepass');
@@ -344,10 +345,21 @@ export class Syncer {
 				updatedStoreItem = clonedItem;
 			});
 		} else {
+			// item updated in both local store and vault
 			syncLog('merging store and vault changes for item %s', storeItem.item.uuid);
 
-			// item updated in both local store and vault
-			saved = Q.reject(new Error('Merging of item changes in store and vault is not implemented'));
+			var mergedStoreItem = item_merge.merge(storeItem, vaultItem, lastSynced);
+			mergedStoreItem.item.updateTimestamps();
+
+			var mergedVaultItem = item_store.cloneItem(mergedStoreItem, mergedStoreItem.item.uuid);
+
+			saved = Q.all([
+			  this.store.saveItem(mergedStoreItem.item, item_store.ChangeSource.Sync),
+			  this.vault.saveItem(mergedVaultItem.item, item_store.ChangeSource.Sync)
+			]).then(() => {
+				revision = mergedStoreItem.item.revision;
+				updatedStoreItem = mergedStoreItem.item;
+			});
 		}
 		return saved.then(() => {
 			assert(revision, 'saved item does not have a revision');
