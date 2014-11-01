@@ -146,7 +146,6 @@ export class Store implements item_store.SyncableStore {
 
 	listItems(opts: item_store.ListItemsOptions = {}) : Q.Promise<item_store.Item[]> {
 		return this.readItemIndex().then((overviewMap) => {
-			var overviewMap = overviewMap || {};
 			var items: item_store.Item[] = [];
 			Object.keys(overviewMap).forEach((key) => {
 				var overview = overviewMap[key];
@@ -378,7 +377,7 @@ export class Store implements item_store.SyncableStore {
 			if (encryptedItemIndex) {
 				return this.decrypt<OverviewMap>(key, encryptedItemIndex);
 			} else {
-				return Q(<OverviewMap>null);
+				return Q(<OverviewMap>{});
 			}
 		});
 	}

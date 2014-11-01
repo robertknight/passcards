@@ -311,6 +311,9 @@ testLib.addAsyncTest('get/set last sync data', (assert) => {
 	return store.saveKeys([env.masterKey], '').then(() => {
 		return store.unlock(env.masterPass);
 	}).then(() => {
+		return store.lastSyncTimestamps();
+	}).then((timestamps) => {
+		assert.equal(timestamps.size, 0);
 		return item.saveTo(store);
 	}).then(() => {
 		assert.notEqual(item.revision, null);
