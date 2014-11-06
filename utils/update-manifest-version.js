@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+var exec = require('./exec');
+
 // Update the 'version' field in a JSON manifest
 // file based on the number of commits since
 // the initial commit in the repository.
@@ -14,26 +16,6 @@
 // repository. The script will convert the current
 // repository from a shallow to full clone if necessary
 // before upating the manifest.
-
-var child_process = require('child_process');
-var fs = require('fs');
-var Q = require('q');
-
-function exec() {
-	var result = Q.defer();
-	var proc = child_process.spawn(arguments[0], Array.prototype.slice.call(arguments,1));
-	var stdout = '';
-	proc.stdout.on('data', function(data) {
-		stdout += data.toString();
-	});
-	proc.stderr.on('data', function(data) {
-		console.log(data.toString());
-	});
-	proc.on('close', function(status) {
-		result.resolve([status, stdout]);
-	});
-	return result.promise;
-}
 
 function convertToFullRepo() {
 	if (fs.existsSync('.git/shallow')) {

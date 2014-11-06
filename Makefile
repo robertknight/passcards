@@ -24,7 +24,8 @@ all: build/current webui-build
 build/current: $(lib_srcs) $(cli_srcs) $(webui_srcs) $(deps)
 	@$(TSC) --outDir build $(lib_srcs) $(cli_srcs) $(webui_srcs) && touch $@
 
-webui-build: $(webui_script_dir)/webui_bundle.js \
+webui-build: $(webui_script_dir)/platform_bundle.js \
+             $(webui_script_dir)/webui_bundle.js \
              $(webui_script_dir)/page_bundle.js \
              $(webui_script_dir)/crypto_worker.js \
              $(webui_css_dir)/app.css \
@@ -35,9 +36,13 @@ build/typings: tsd.json
 	@mkdir -p build
 	@touch build/typings
 
+$(webui_script_dir)/platform_bundle.js: package.json utils/create-external-modules-bundle.js
+	mkdir -p $(webui_script_dir)
+	./utils/create-external-modules-bundle.js build/webui/app.js > $@
+
 $(webui_script_dir)/webui_bundle.js: build/current
 	mkdir -p $(webui_script_dir)
-	$(BROWSERIFY) --entry build/webui/init.js --outfile $@
+	$(BROWSERIFY) --no-builtins --no-bundle-external --entry build/webui/init.js --outfile $@
 
 $(webui_script_dir)/page_bundle.js: build/current
 	mkdir -p $(webui_script_dir)
