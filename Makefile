@@ -32,30 +32,36 @@ webui-build: $(webui_script_dir)/platform_bundle.js \
              webui-icons
 
 build/typings: tsd.json
-	$(TSD) reinstall
+	@echo "Installing TypeScript type definitions"
+	@$(TSD) reinstall
 	@mkdir -p build
 	@touch build/typings
 
 $(webui_script_dir)/platform_bundle.js: package.json utils/create-external-modules-bundle.js
-	mkdir -p $(webui_script_dir)
-	./utils/create-external-modules-bundle.js build/webui/app.js > $@
+	@echo "Building external modules bundle"
+	@mkdir -p $(webui_script_dir)
+	@./utils/create-external-modules-bundle.js build/webui/app.js > $@
 
 $(webui_script_dir)/webui_bundle.js: build/current
-	mkdir -p $(webui_script_dir)
-	$(BROWSERIFY) --no-builtins --no-bundle-external --entry build/webui/init.js --outfile $@
+	@echo "Building web app bundle"
+	@mkdir -p $(webui_script_dir)
+	@$(BROWSERIFY) --no-builtins --no-bundle-external --entry build/webui/init.js --outfile $@
 
 $(webui_script_dir)/page_bundle.js: build/current
-	mkdir -p $(webui_script_dir)
-	$(BROWSERIFY) build/webui/page.js --outfile $@
+	@echo "Building page autofill bundle"
+	@mkdir -p $(webui_script_dir)
+	@$(BROWSERIFY) build/webui/page.js --outfile $@
 
 $(webui_script_dir)/crypto_worker.js: build/current
-	mkdir -p $(webui_script_dir)
-	$(BROWSERIFY) --entry build/lib/crypto_worker.js --outfile $@
+	@echo "Building crypto bundle"
+	@mkdir -p $(webui_script_dir)
+	@$(BROWSERIFY) --entry build/lib/crypto_worker.js --outfile $@
 
 $(webui_css_dir)/app.css: webui/app.less
-	mkdir -p $(webui_css_dir)
-	$(NODE_BIN_DIR)/lessc webui/app.less > $@
-	$(NODE_BIN_DIR)/autoprefixer $@
+	@echo "Preprocessing web app stylesheet"
+	@mkdir -p $(webui_css_dir)
+	@$(NODE_BIN_DIR)/lessc webui/app.less > $@
+	@$(NODE_BIN_DIR)/autoprefixer $@
 
 webui-icons:
 	@mkdir -p ${webui_icon_dir}
@@ -84,15 +90,15 @@ $(submodule_marker): .gitmodules
 
 $(nodemodule_marker): package.json
 	@mkdir -p build && touch $(nodemodule_marker)
-	@echo "Installing package dependencies..."
-	# --ignore-scripts is used to prevent running of the 'prepublish'
-	# script here, since that runs 'make all' and is intended to
-	# be used before actually publishing the app
+	@echo "Installing npm dependencies..."
+	@# --ignore-scripts is used to prevent running of the 'prepublish'
+	@# script here, since that runs 'make all' and is intended to
+	@# be used before actually publishing the app
 	@npm install --ignore-scripts
 	
 node_modules/dropbox/lib/dropbox.js: node_modules/dropbox/package.json
-	# Build dropbox-js. As long as we are using a fork of dropbox-js,
-	# we'll need to run this to build Dropbox before using it
+	@# Build dropbox-js. As long as we are using a fork of dropbox-js,
+	@# we'll need to run this to build Dropbox before using it
 	@echo "Building dropbox-js..."
 	@(cd ./node_modules/dropbox && npm install --quiet . $(SILENCE_STDOUT))
 
@@ -103,10 +109,10 @@ test-package: all
 	&& echo npm package OK
 	
 clean:
-	rm -rf build/*
-	rm -rf webui/scripts/*
-	cd addons/firefox && make clean
-	cd addons/chrome && make clean
+	@rm -rf build/*
+	@rm -rf webui/scripts/*
+	@cd addons/firefox && make clean
+	@cd addons/chrome && make clean
 
 firefox-addon: webui-build
 	cd addons/firefox && make
