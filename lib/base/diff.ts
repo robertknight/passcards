@@ -153,23 +153,6 @@ export function diffSets<T>(a: T[], b: T[]) : DiffOp<T>[] {
 	return diffSetOps;
 }
 
-function sortPatch<T>(patch: DiffOp<T>[]) {
-	patch.sort((a, b) => {
-		if (a.pos === b.pos) {
-			// sort removals before insertions
-			if (a.type === OpType.Remove && b.type !== OpType.Remove) {
-				return -1;
-			} else if (b.type === OpType.Remove && a.type !== OpType.Remove) {
-				return 1;
-			} else {
-				return 0;
-			}
-		} else {
-			return a.pos - b.pos;
-		}
-	});
-}
-
 // transform a patch operation against a set of patches which have already been
 // applied. This adjusts the position and other attributes to account
 // for the changes which have already been made to the list/set
@@ -224,7 +207,9 @@ export function patch<T>(base: T[], patch_: DiffOp<T>[]) : T[] {
 	}
 
 	// sort patch operations by index
-	sortPatch(patch);
+	patch.sort((a, b) => {
+		return a.pos - b.pos;
+	});
 
 	// apply changes
 	var applied: DiffOp<T>[] = [];
