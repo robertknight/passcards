@@ -2,10 +2,10 @@
 /// <reference path="../../typings/es6-collections.d.ts" />
 
 // 'diff' provides a set of functions for diffing, merging
-// and patching lists and sets.
+// and patching ordered lists and sets.
 //
 // It is built on the 'adiff' package but extends it with support
-// for sets.
+// for ordered sets and control over merge resolution.
 //
 // See also: The 'xdiff' package which is built on 'adiff' and adds
 // support for (almost) arbitrary JSON documents. That currently lacks
@@ -91,7 +91,7 @@ export function diffLists<T>(a: T[], b: T[]) : DiffOp<T>[] {
 			diffOps.push({
 				type: OpType.Insert,
 				pos: index,
-				value: b[index+i]
+				value: inserted[i]
 			});
 		}
 	});

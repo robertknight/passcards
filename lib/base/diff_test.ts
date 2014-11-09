@@ -56,13 +56,26 @@ testLib.addTest('patch list', (assert) => {
 	});
 });
 
-testLib.addTest('patchSet', (assert) => {
-	var a = [1, 2, 3];
-	var b = [1, 4, 2];
+interface PatchTestCase {
+	a: number[];
+	b: number[];
+}
 
-	var delta = diff.diffSets(a, b);
-	var patched = diff.patch(a, delta);
-	assert.deepEqual(patched, b);
+testLib.addTest('patchSet', (assert) => {
+	var testCases: PatchTestCase[] = [
+	  {a: [], b: [1,2,3]},
+	  {a: [1, 2, 3], b: [1,4,2]},
+	  {a: [1,2], b: [2,1]},
+	  {a: [1, 2, 3, 4, 5], b: [5, 4, 3, 2, 1]},
+	  {a: [1,2,3], b: []},
+	  {a: [1,2,5,6,8,9], b: [1,2,3,4,5,6,7,8,9]}
+	];
+
+	testCases.forEach((test) => {
+		var delta = diff.diffSets(test.a, test.b);
+		var patched = diff.patch(test.a, delta);
+		assert.deepEqual(patched, test.b);
+	});
 });
 
 interface MergeTestCase {
