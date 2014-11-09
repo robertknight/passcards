@@ -170,8 +170,9 @@ function sortPatch<T>(patch: DiffOp<T>[]) {
 	});
 }
 
-// transform a patch against a set of patches which have already been
-// applied
+// transform a patch operation against a set of patches which have already been
+// applied. This adjusts the position and other attributes to account
+// for the changes which have already been made to the list/set
 function transformPatch<T>(patch: DiffOp<T>, applied: DiffOp<T>[]) {
 	var transformed = {
 		type: patch.type,
@@ -204,7 +205,10 @@ function transformPatch<T>(patch: DiffOp<T>, applied: DiffOp<T>[]) {
 	return transformed;
 }
 
-/** Apply a patch to a set and return the patched set. */
+/** Apply a patch to a list or set and return the patched
+  * version. The patches can be created using the diffSets()
+  * or diffLists() functions.
+  */
 export function patch<T>(base: T[], patch_: DiffOp<T>[]) : T[] {
 	var patched = base.slice(0);
 
@@ -242,9 +246,16 @@ export function patch<T>(base: T[], patch_: DiffOp<T>[]) : T[] {
 	return patched;
 }
 
-/** Combine two diffs into a single diff.
+/** Combine two set diffs into a single diff.
   *
-  * This can be used to implement a 3-way merge
+  * In the event of a conflict between a move on one side and a move/insert/remove
+  * on the other, the change from 'a' wins.
+  *
+  * This can be used to implement a 3-way merge using:
+  *
+  *  patch(base, mergeSetDiffs(diffSets(base, a), diffSets(base, b)))
+  *
+  * Where 'base' is the common ancestor of 'a' and 'b'.
   */
 export function mergeSetDiffs<T>(a: DiffOp<T>[], b: DiffOp<T>[]) : DiffOp<T>[] {
 	// annotate diff ops with the source diff they came from
