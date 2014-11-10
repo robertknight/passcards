@@ -12,7 +12,8 @@
     "sort-stream": "^1.0.0",
     "tsd": "^0.5.7",
     "tslint": ">=0.4.8",
-    "typescript": "^1.1.0-1"
+    "typescript": "^1.1.0-1",
+    "xdiff": "^0.2.11"
   },
   "dependencies": {
     "URIjs": "^1.14.1",
