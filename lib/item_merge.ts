@@ -3,14 +3,15 @@
 
 import assert = require('assert');
 import clone = require('clone');
+import e6c = require('es6-collections');
+typeof e6c;
 import underscore = require('underscore');
 
 import diff = require('./base/diff');
 import item_store = require('./item_store');
 
-/** Performs a 3-way merge of ordered sets.
-  */
-export function mergeOrderedSets<T>(base: T[], a: T[], b: T[]) : T[] {
+// perform a 3-way merge of ordered sets
+function mergeOrderedSets<T>(base: T[], a: T[], b: T[]) : T[] {
 	var deltaA = diff.diffSets(base, a);
 	var deltaB = diff.diffSets(base, b);
 	var merged = diff.mergeSetDiffs(deltaA, deltaB);
@@ -53,6 +54,27 @@ export function mergeObject<T>(base: T, first: T, second: T) {
 	return <T>result;
 }
 
+// returns an array of unique keys for items in 'array', where each
+// key is keyFunc(array[i])
+//
+// If keyFunc() returns the same key for more than one item then
+// a disambiguating suffix is added consisting of 'suffix' plus
+// a number.
+// 
+function uniqueKeys<T>(array: T[], keyFunc: (entry: T) => string, suffix: string) {
+	var uniqueKeys = new Set();
+	return array.map((e) => {
+		var baseKey = keyFunc(e);
+		var key = baseKey;
+		var n = 2;
+		while (uniqueKeys.has(key)) {
+			key = baseKey + '-' + suffix + '-' + n;
+		}
+		uniqueKeys.add(key);
+		return key;
+	});
+}
+
 /** Merge an array of values from a field of two items.
   * Items in the three arrays are matched up using a key returned
   * by keyFunc and matched elements are then merged using mergeField()
@@ -63,19 +85,13 @@ export function mergeObject<T>(base: T, first: T, second: T) {
   * @param keyFunc A function which returns a key to match up elements
   *                from the three arrays.
   */
-export function mergeArrays<T,Key>(baseArray: T[], firstArray: T[], secondArray: T[],
-                                   keyFunc: (entry: T) => Key) {
-	var keyMapper = (elt: T[]) => {
-		return elt.map((e) => {
-			return keyFunc(e);
-		});
-	};
-
-	var baseKeys = keyMapper(baseArray);
-	var firstKeys = keyMapper(firstArray);
-	var secondKeys = keyMapper(secondArray);
-
+export function mergeSets<T>(baseArray: T[], firstArray: T[], secondArray: T[],
+                                   keyFunc: (entry: T) => string) {
+	var baseKeys = uniqueKeys(baseArray, keyFunc, 'base');
+	var firstKeys = uniqueKeys(firstArray, keyFunc, 'first');
+	var secondKeys = uniqueKeys(secondArray, keyFunc, 'second');
 	var mergedKeys = mergeOrderedSets(baseKeys, firstKeys, secondKeys);
+
 	var mergedArray: T[] = [];
 
 	mergedKeys.forEach((key) => {
@@ -115,12 +131,12 @@ export function merge(a: item_store.ItemAndContent,
 			return mergeField(baseValue, firstValue, secondValue);
 		};
 
-		var mergeItemArray = <T,Key>(getter: (item: item_store.ItemAndContent) => T[],
-		                             keyFunc: (element: T) => Key) => {
+		var mergeFieldSets = <T>(getter: (item: item_store.ItemAndContent) => T[],
+		                             keyFunc: (element: T) => string) => {
 			var baseValue = getter(base);
 			var firstValue = getter(a);
 			var secondValue = getter(b);
-			return mergeArrays(baseValue, firstValue, secondValue, keyFunc);
+			return mergeSets(baseValue, firstValue, secondValue, keyFunc);
 		};
 
 		// merge overview data
@@ -144,20 +160,20 @@ export function merge(a: item_store.ItemAndContent,
 		});
 
 		// merge content
-		merged.content.sections = mergeItemArray((item) => {
+		merged.content.sections = mergeFieldSets((item) => {
 			return item.content.sections;
 		}, (section) => {
 			return section.name;
 		});
-		merged.content.urls = mergeItemArray((item) => {
+		merged.content.urls = mergeFieldSets((item) => {
 			return item.content.urls;
 		}, (url) => {
-			return url.label;
+			return url.label + url.url;
 		});
 		merged.content.notes = mergeItemField((item) => {
 			return item.content.notes;
 		});
-		merged.content.formFields = mergeItemArray((item) => {
+		merged.content.formFields = mergeFieldSets((item) => {
 			return item.content.formFields;
 		}, (field) => {
 			return field.name;
