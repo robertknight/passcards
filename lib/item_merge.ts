@@ -1,10 +1,21 @@
 /// <reference path="../typings/DefinitelyTyped/clone/clone.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
 
+import assert = require('assert');
 import clone = require('clone');
 import underscore = require('underscore');
 
+import diff = require('./base/diff');
 import item_store = require('./item_store');
+
+/** Performs a 3-way merge of ordered sets.
+  */
+export function mergeOrderedSets<T>(base: T[], a: T[], b: T[]) : T[] {
+	var deltaA = diff.diffSets(base, a);
+	var deltaB = diff.diffSets(base, b);
+	var merged = diff.mergeSetDiffs(deltaA, deltaB);
+	return diff.patch(base, merged);
+}
 
 /** Merge the values from a field of two items.
   *
@@ -24,6 +35,22 @@ export function mergeField<T>(baseValue: T, firstValue: T, secondValue: T) {
 		// for the moment.
 		return firstValue;
 	}
+}
+
+export function mergeObject<T>(base: T, first: T, second: T) {
+	assert(base);
+	assert(first);
+	assert(second);
+
+	var base_: any = base;
+	var first_: any = first;
+	var second_: any = second;
+	
+	var result: any = {};
+	Object.keys(base_).forEach((key) => {
+		result[key] = mergeField(base_[key], first_[key], second_[key]);
+	});
+	return <T>result;
 }
 
 /** Merge an array of values from a field of two items.
@@ -48,11 +75,10 @@ export function mergeArrays<T,Key>(baseArray: T[], firstArray: T[], secondArray:
 	var firstKeys = keyMapper(firstArray);
 	var secondKeys = keyMapper(secondArray);
 
-	var allKeys = underscore.uniq(firstKeys.concat(secondKeys));
-
+	var mergedKeys = mergeOrderedSets(baseKeys, firstKeys, secondKeys);
 	var mergedArray: T[] = [];
 
-	allKeys.forEach((key) => {
+	mergedKeys.forEach((key) => {
 		var baseIndex = baseKeys.indexOf(key);
 		var firstIndex = firstKeys.indexOf(key);
 		var secondIndex = secondKeys.indexOf(key);
@@ -61,15 +87,13 @@ export function mergeArrays<T,Key>(baseArray: T[], firstArray: T[], secondArray:
 		if (firstIndex != -1 && secondIndex != -1) {
 			// element added in both items or updated in one or both items
 			mergedEntry = mergeField(baseArray[baseIndex], firstArray[firstIndex], secondArray[secondIndex]);
-		} else if (baseIndex != -1) {
+		} else if (baseIndex == -1) {
 			// entry added in first or second item
 			mergedEntry = firstArray[firstIndex] || secondArray[secondIndex];
-		} // else entry removed in first or second item
+		} 
 
-		if (mergedEntry) {
-			// TODO - Pick an index to insert the resulting key at
-			mergedArray.push(mergedEntry);
-		}
+		assert(mergedEntry);
+		mergedArray.push(mergedEntry);
 	});
 
 	return mergedArray;
