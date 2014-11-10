@@ -99,10 +99,15 @@ testLib.addTest('merge diffs', (assert) => {
 		{base: [1], a: [1,2], b: [1,2], merged: [1,2]},
 		// move element on one side
 		{base: [1,2], a: [2,1], b: [1,2], merged: [2,1]},
+		{base: [1,2,3,4,5], a: [1,2,3,4,5], b: [5,1,2,3,4], merged: [5,1,2,3,4]},
+		{base: [1,2,3,4,5], a: [5,1,2,3,4], b: [1,2,3,4,5], merged: [5,1,2,3,4]},
 		// move elements on both sides
 		{base: [1,2], a: [2,1], b: [2,1], merged: [2,1]},
+		{base: [1,2,3,4,5], a: [5,2,3,4,1], b: [1,4,3,2,5], merged: [5,4,3,2,1]},
 		// conflicting move on both sides
-		{base: [1,2,3], a: [2,1,3], b: [1,3,2], merged: [2,3,1]}
+		{base: [1,2,3], a: [2,1,3], b: [1,3,2], merged: [2,3,1]},
+		// move + remove
+		{base: [1,2,3], a: [2,1,3], b: [1,2], merged: [2,1]}
 	];
 	testCases.forEach((test,i) => {
 		var deltaA = diff.diffSets(test.base, test.a);
