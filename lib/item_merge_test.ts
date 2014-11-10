@@ -73,3 +73,73 @@ testLib.addTest('merge URL changes with duplicate labels', (assert) => {
 	]);
 });
 
+testLib.addTest('merge form fields', (assert) => {
+	var baseItem = new item_builder.Builder(item_store.ItemTypes.LOGIN)
+	  .addUrl('google.com')
+	  .itemAndContent();
+
+	var itemA = item_store.cloneItem(baseItem, baseItem.item.uuid);
+	var itemB = item_store.cloneItem(baseItem, baseItem.item.uuid);
+
+	itemA.content.formFields.push({
+		id:'',
+		name: 'username',
+		designation: 'username',
+		type: item_store.FormFieldType.Text,
+		value: 'jimsmith@gmail.com'
+	});
+	itemB.content.formFields.push({
+		id:'',
+		name: 'password',
+		designation: 'password',
+		type: item_store.FormFieldType.Password,
+		value: 'secret'
+	});
+
+	var mergedItem = item_merge.merge(itemA, itemB, baseItem);
+	assert.deepEqual(mergedItem.content.formFields, [{
+		id:'',
+		name: 'username',
+		designation: 'username',
+		type: item_store.FormFieldType.Text,
+		value: 'jimsmith@gmail.com'
+	},{
+		id:'',
+		name: 'password',
+		designation: 'password',
+		type: item_store.FormFieldType.Password,
+		value: 'secret'
+	}]);
+});
+
+testLib.addTest('update form fields', (assert) => {
+	var baseItem = new item_builder.Builder(item_store.ItemTypes.LOGIN)
+	  .addUrl('google.com')
+	  .addLogin('jimsmith@gmail.com')
+	  .addPassword('secret')
+	  .itemAndContent();
+
+	var itemA = item_store.cloneItem(baseItem, baseItem.item.uuid);
+	var itemB = item_store.cloneItem(baseItem, baseItem.item.uuid);
+
+	// in the event of a conflict, the local item currently always
+	// wins
+	itemA.content.formFields[1].value = 'secret2';
+	itemB.content.formFields[1].value = 'secret2-conflict';
+
+	var mergedItem = item_merge.merge(itemA, itemB, baseItem);
+	assert.deepEqual(mergedItem.content.formFields, [{
+		id:'',
+		name: 'username',
+		designation: 'username',
+		type: item_store.FormFieldType.Text,
+		value: 'jimsmith@gmail.com'
+	},{
+		id:'',
+		name: 'password',
+		designation: 'password',
+		type: item_store.FormFieldType.Password,
+		value: 'secret2'
+	}]);
+});
+
