@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+var fs = require('fs');
+var Q = require('q');
+
 var exec = require('./exec');
 
 // Update the 'version' field in a JSON manifest
