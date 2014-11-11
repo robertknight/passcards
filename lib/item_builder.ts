@@ -61,3 +61,27 @@ export class Builder {
 		return this;
 	}
 }
+
+export class SectionBuilder {
+	private _section: item_store.ItemSection;
+
+	constructor(name: string, title: string) {
+		this._section = new item_store.ItemSection();
+		this._section.name = name;
+		this._section.title = title;
+	}
+
+	addField(kind: item_store.FieldType, title: string, value: any) : SectionBuilder {
+		var field = new item_store.ItemField();
+		field.kind = kind;
+		field.title = title;
+		field.value = value;
+		this._section.fields.push(field);
+		return this;
+	}
+
+	section() : item_store.ItemSection {
+		return this._section;
+	}
+}
+

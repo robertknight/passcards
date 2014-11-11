@@ -1,3 +1,4 @@
+import clone = require('clone');
 import underscore = require('underscore');
 
 import item_builder = require('./item_builder');
@@ -141,5 +142,60 @@ testLib.addTest('update form fields', (assert) => {
 		type: item_store.FormFieldType.Password,
 		value: 'secret2'
 	}]);
+});
+
+testLib.addTest('merge sections', (assert) => {
+	var baseItem = new item_builder.Builder(item_store.ItemTypes.ROUTER)
+	  .itemAndContent();
+
+	var sectionA = new item_builder.SectionBuilder('a', 'WiFi')
+	  .addField(item_store.FieldType.Text, 'Name', 'Cafe WiFi')
+	  .addField(item_store.FieldType.Password, 'Password', 'secret')
+	  .section();
+	baseItem.content.sections.push(sectionA);
+
+	var itemA = item_store.cloneItem(baseItem, baseItem.item.uuid);
+	var itemB = item_store.cloneItem(baseItem, baseItem.item.uuid);
+
+	var updatedSectionA = <item_store.ItemSection>clone(sectionA);
+	updatedSectionA.fields[1].value = 'updated-secret';
+
+	itemA.content.sections[0] = updatedSectionA;
+
+	var sectionB = new item_builder.SectionBuilder('b', 'Admin')
+	  .addField(item_store.FieldType.Password, 'Admin Password', 'secret3')
+	  .section();
+	itemB.content.sections.push(sectionB);
+
+	var mergedItem = item_merge.merge(itemA, itemB, baseItem);
+	assert.equal(mergedItem.content.sections.length, 2);
+
+	var expectedSectionA = {
+		fields: [{
+			kind: item_store.FieldType.Text,
+			title: 'Name',
+			value: 'Cafe Wifi'
+		},{
+			kind: item_store.FieldType.Password,
+			title: 'Password',
+			value: 'secret'
+		}],
+		title: 'WiFi',
+		name: 'a'
+	};
+	assert.deepEqual(testLib.compareObjects(mergedItem.content.sections[0],
+	  expectedSectionA), []);
+
+	var expectedSectionB = {
+		fields: [{
+			kind: item_store.FieldType.Password,
+			title: 'Admin Password',
+			value: 'secret3'
+		}],
+		title: 'Admin',
+		name: 'b'
+	};
+	assert.deepEqual(testLib.compareObjects(mergedItem.content.sections[1],
+	  expectedSectionB), []);
 });
 
