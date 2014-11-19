@@ -34,11 +34,13 @@ export class Builder {
 	}
 
 	addLogin(username: string) : Builder {
-		return this.addFormField('username', 'username', item_store.FormFieldType.Text, username);
+		this._content.formFields.push(Builder.createLoginField(username));
+		return this;
 	}
 
 	addPassword(password: string) : Builder {
-		return this.addFormField('password', 'password', item_store.FormFieldType.Password, password);
+		this._content.formFields.push(Builder.createPasswordField(password));
+		return this;
 	}
 
 	addFormField(name: string, designation: string, type: item_store.FormFieldType, value: string) : Builder {
@@ -59,6 +61,26 @@ export class Builder {
 			url: url
 		});
 		return this;
+	}
+
+	static createLoginField(account: string) : item_store.WebFormField {
+		return {
+			id: '',
+			name: 'username',
+			designation: 'username',
+			type: item_store.FormFieldType.Text,
+			value: account
+		};
+	}
+
+	static createPasswordField(password: string) : item_store.WebFormField {
+		return {
+			id: '',
+			name: 'password',
+			designation: 'password',
+			type: item_store.FormFieldType.Password,
+			value: password
+		};
 	}
 }
 

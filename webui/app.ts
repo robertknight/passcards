@@ -2,10 +2,13 @@
 /// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
 /// <reference path="../typings/fastclick.d.ts" />
 /// <reference path="../typings/react-0.12.d.ts" />
+/// <reference path="../typings/react-style.d.ts" />
 
+import assert = require('assert');
 import fastclick = require('fastclick');
 import Q = require('q');
 import react = require('react');
+import react_style = require('react-style');
 import typed_react = require('typed-react');
 import url = require('url');
 import underscore = require('underscore');
@@ -195,6 +198,8 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 	}
 
 	showError(error: Error) {
+		assert(error.message);
+
 		var status = new Status(StatusType.Error, error.message);
 		this.showStatus(status);
 		console.log('App error:', error.message, error.stack);
@@ -282,22 +287,18 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 					onGoBack: () => {
 						this.setSelectedItem(null);
 					},
-					onSave: () => {
-						var item = this.state.selectedItem;
-						var saveDelay = 0;
-						if (this.state.itemEditMode == details_view.ItemEditMode.AddItem) {
-							// defer saving the item until the 'Add Item' view has
-							// transitioned out of view
-							saveDelay = 1000;
-						}
-						Q.delay(saveDelay).then(() => {
-							return item.saveTo(this.state.store);
+					onSave: (updatedItem) => {
+						// defer saving the item until the details view has
+						// transitioned out
+						var SAVE_DELAY = 1000;
+						Q.delay(SAVE_DELAY).then(() => {
+							return updatedItem.item.saveTo(this.state.store);
 						}).then(() => {
 							return this.state.syncer.syncItems();
 						}).then(() => {
 							this.showStatus(new Status(StatusType.Success, 'Changes saved and synced'))
 						}).catch((err) => {
-							this.showError(err.message);
+							this.showError(err);
 						});
 					},
 					autofill: () => {
@@ -520,6 +521,7 @@ export class App {
 	 */
 	renderInto(element: HTMLElement) {
 		var rootInputElement = element.ownerDocument.body;
+		react_style.inject();
 
 		// setup touch input
 		fastclick.FastClick.attach(rootInputElement);

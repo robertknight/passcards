@@ -5,8 +5,10 @@ import typed_react = require('typed-react');
 
 import controls = require('./controls');
 import env = require('../lib/base/env');
+import item_builder = require('../lib/item_builder');
 import item_icons = require('./item_icons');
 import item_store = require('../lib/item_store');
+import material_ui = require('./material_ui');
 import keycodes = require('./base/keycodes');
 import page_access = require('./page_access');
 import reactutil = require('./reactutil');
@@ -14,16 +16,20 @@ import shortcut = require('./base/shortcut');
 import stringutil = require('../lib/base/stringutil');
 import url_util = require('../lib/base/url_util');
 
+var TextField = require('react-material/components/TextField');
+
 interface ItemFieldState {
 	selected?: boolean;
 	revealed?: boolean;
 }
 
-class ItemFieldProps {
+interface ItemFieldProps {
 	label: string;
 	value: string;
 	isPassword: boolean;
 	clipboard: page_access.ClipboardAccess;
+
+	onChange(newValue: string) : boolean;
 }
 
 class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
@@ -36,8 +42,10 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 
 	render() {
 		var displayValue = this.props.value;
+		var inputType = 'text';
 		if (this.props.isPassword && !this.state.revealed) {
 			displayValue = stringutil.repeat('•', this.props.value.length);
+			inputType = 'password';
 		}
 
 		var fieldActions: react.Descriptor<any>;
@@ -71,17 +79,21 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 		}
 
 		return react.DOM.div({className: 'detailsField'},
-			react.DOM.div({className: 'detailsFieldLabel'}, this.props.label),
-			react.DOM.div({
-				className: stringutil.truthyKeys({
-					detailsFieldValue: true,
-					concealedFieldValue: this.props.isPassword
-				}),
-				onClick: (e) => {
-					e.preventDefault();
-					this.setState({selected: !this.state.selected})
+			material_ui.TextFieldF({
+				floatingLabel: true,
+				placeHolder: this.props.label,
+				defaultValue: displayValue,
+				type: inputType,
+				onChange: (e: Event) => {
+					this.props.onChange((<HTMLInputElement>e.target).value);
+				},
+				onFocus: () => {
+					this.setState({selected: true});
+				},
+				onBlur: () => {
+					this.setState({selected: false});
 				}
-			}, displayValue),
+			}),
 			fieldActions
 		);
 	}
@@ -101,12 +113,13 @@ export class DetailsViewProps {
 	editMode: ItemEditMode;
 
 	onGoBack: () => any;
-	onSave: () => any;
+	onSave: (updates: item_store.ItemAndContent) => any;
 	autofill: () => void;
 }
 
 interface DetailsViewState {
-	itemContent?: item_store.ItemContent
+	itemContent?: item_store.ItemContent;
+	editedItem?: item_store.ItemAndContent;
 }
 
 export class DetailsView extends typed_react.Component<DetailsViewProps, DetailsViewState> {
@@ -123,7 +136,10 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 
 		if (!this.props.item || this.props.item != nextProps.item) {
 			// forget previous item content when switching items
-			this.setState({itemContent: null});
+			this.setState({
+				itemContent: null,
+				editedItem: null
+			});
 			this.fetchContent(nextProps.item);
 		}
 	}
@@ -168,20 +184,29 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			if (!this.isMounted()) {
 				return;
 			}
-			this.setState({itemContent: content});
+
+			var editedItem = item_store.cloneItem({
+				item: this.props.item,
+				content: content
+			}, this.props.item.uuid);
+			this.setState({
+				itemContent: content,
+				editedItem: editedItem
+			});
 		}).done();
 	}
 
 	render() {
 		var detailsContent : react.Descriptor<any>;
-		if (this.props.item && this.state.itemContent) {
-			var account = this.state.itemContent.account();
-			var password = this.state.itemContent.password();
+		var updatedItem = this.state.editedItem;
+		if (updatedItem) {
+			var accountField = updatedItem.content.accountField();
+			var passwordField = updatedItem.content.passwordField();
 			var coreFields: react.Descriptor<any>[] = [];
 			var websites: react.Descriptor<any>[] = [];
 			var sections: react.Descriptor<any>[] = [];
 
-			this.state.itemContent.sections.forEach((section, sectionIndex) => {
+			updatedItem.content.sections.forEach((section, sectionIndex) => {
 				var fields: react.Descriptor<any>[] = [];
 				section.fields.forEach((field, fieldIndex) => {
 					if (field.value) {
@@ -190,7 +215,11 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 							label: field.title,
 							value: field.value,
 							isPassword: field.kind == item_store.FieldType.Password,
-							clipboard: this.props.clipboard
+							clipboard: this.props.clipboard,
+							onChange: (newValue) => {
+								field.value = newValue;
+								return true;
+							}
 						}));
 					}
 				});
@@ -199,33 +228,53 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				);
 			});
 
-			this.state.itemContent.urls.forEach((url, urlIndex) => {
+			updatedItem.content.urls.forEach((url, urlIndex) => {
 				websites.push(ItemFieldF({
 					key: urlIndex,
 					label: url.label,
 					value: url.url,
 					isPassword: false,
-					clipboard: this.props.clipboard
+					clipboard: this.props.clipboard,
+					onChange: (newValue) => {
+						url.url = newValue;
+						return true;
+					}
 				}));
 			});
 
-			if (account) {
+			if (accountField) {
 				coreFields.push(ItemFieldF({
 					key: 'account',
 					label: 'Account',
-					value: account,
+					value: accountField ? accountField.value : '',
 					isPassword: false,
-					clipboard: this.props.clipboard
+					clipboard: this.props.clipboard,
+					onChange: (newValue) => {
+						if (accountField) {
+							accountField.value = newValue;
+						} else {
+							updatedItem.content.formFields.push(item_builder.Builder.createLoginField(newValue));
+						}
+						return true;
+					}
 				}));
 			}
 
-			if (password) {
+			if (passwordField) {
 				coreFields.push(ItemFieldF({
 					key: 'password',
 					label: 'Password',
-					value: password,
+					value: passwordField ? passwordField.value : '',
 					isPassword: true,
-					clipboard: this.props.clipboard
+					clipboard: this.props.clipboard,
+					onChange: (newValue) => {
+						if (passwordField) {
+							passwordField.value = newValue;
+						} else {
+							updatedItem.content.formFields.push(item_builder.Builder.createPasswordField(newValue));
+						}
+						return true;
+					}
 				}));
 			}
 
@@ -238,10 +287,10 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 						isFocused: false
 					}),
 					react.DOM.div({className: 'detailsOverview'},
-						react.DOM.div({className: 'detailsTitle'}, this.props.item.title),
+						react.DOM.div({className: 'detailsTitle'}, updatedItem.item.title),
 						react.DOM.div({className: 'detailsLocation'},
-							react.DOM.a({href: this.props.item.primaryLocation()},
-								url_util.domain(this.props.item.primaryLocation())
+							react.DOM.a({href: updatedItem.item.primaryLocation()},
+								url_util.domain(updatedItem.item.primaryLocation())
 							)
 						)
 					)
@@ -277,16 +326,16 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				onClick: () => this.props.onGoBack(),
 				key: 'cancel'
 			}));
-			toolbarControls.push(react.DOM.div({className:'toolbarSpacer'})),
-			toolbarControls.push(controls.ToolbarButtonF({
-				iconHref: 'icons/icons.svg#done',
-				onClick: () => {
-					this.props.onSave();
-					this.props.onGoBack();
-				},
-				key: 'save'
-			}));
 		}
+		toolbarControls.push(react.DOM.div({className:'toolbarSpacer'})),
+		toolbarControls.push(controls.ToolbarButtonF({
+			iconHref: 'icons/icons.svg#done',
+			onClick: () => {
+				this.props.onSave(this.state.editedItem);
+				this.props.onGoBack();
+			},
+			key: 'save'
+		}));
 
 		return react.DOM.div({
 			className: stringutil.truthyKeys({

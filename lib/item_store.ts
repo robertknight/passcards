@@ -426,13 +426,15 @@ export class ItemContent {
 	  * Returns an empty string if the item has no associated account.
 	  */
 	account() : string {
+		var field = this.accountField();
+		return field ? field.value : '';
+	}
+
+	accountField() : WebFormField {
 		var accountFields = underscore.filter(this.formFields, (field) => {
 			return field.designation == 'username';
 		});
-		if (accountFields.length > 0) {
-			return accountFields[0].value;
-		}
-		return '';
+		return accountFields.length > 0 ? accountFields[0] : null;
 	}
 
 	/** Returns the primary password associated with this item.
@@ -444,13 +446,15 @@ export class ItemContent {
 	  * account.
 	  */
 	password() : string {
+		var field = this.passwordField();
+		return field ? field.value : '';
+	}
+
+	passwordField() : WebFormField {
 		var passFields = underscore.filter(this.formFields, (field) => {
 			return field.designation == 'password';
 		});
-		if (passFields.length > 0) {
-			return passFields[0].value;
-		}
-		return '';
+		return passFields.length > 0 ? passFields[0] : null;
 	}
 }
 
