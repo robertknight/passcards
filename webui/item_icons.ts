@@ -74,6 +74,10 @@ export class ItemIconProvider {
 		this.iconSize = iconSize;
 		this.updated = new event_stream.EventStream<string>();
 
+		// increase the number of max listeners since we will have
+		// one listener for each visible icon
+		this.updated.maxListeners = 100;
+
 		this.provider.updated.listen((url) => {
 			var entry = this.provider.status(url);
 
