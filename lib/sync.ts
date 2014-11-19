@@ -113,6 +113,10 @@ export class Syncer {
 		var result = Q.defer<SyncProgress>();
 		this.currentSync = result;
 		this.currentSync.promise.then(() => {
+			syncLog('sync completed');
+			this.currentSync = null;
+		}).catch((err) => {
+			syncLog('sync failed');
 			this.currentSync = null;
 		});
 
