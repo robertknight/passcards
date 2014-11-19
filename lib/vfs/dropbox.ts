@@ -4,6 +4,7 @@
 import dropbox = require('dropbox');
 import Q = require('q');
 
+import err_util = require('../base/err_util');
 import vfs = require('./vfs');
 
 export enum AuthMode {
@@ -29,6 +30,10 @@ export interface Options {
 	  * page when using the Chrome auth driver.
 	  */
 	receiverPage: string;
+}
+
+function convertError(error: dropbox.ApiError) : err_util.ApiError {
+	return new err_util.ApiError(error.url, error.status, error.responseText);
 }
 
 export class DropboxVFS implements vfs.VFS {
@@ -78,8 +83,7 @@ export class DropboxVFS implements vfs.VFS {
 		var account = Q.defer<string>();
 		this.client.authenticate((err, accountID) => {
 			if (err) {
-				console.log('Dropbox login failed:', err);
-				account.reject(err);
+				account.reject(convertError(err));
 				return;
 			}
 			account.resolve(accountID);
@@ -95,7 +99,7 @@ export class DropboxVFS implements vfs.VFS {
 		var result = Q.defer<vfs.FileInfo>();
 		this.client.stat(path, {}, (err, stat) => {
 			if (err) {
-				result.reject(err);
+				result.reject(convertError(err));
 				return;
 			}
 			result.resolve(this.toVfsFile(stat));
@@ -105,6 +109,9 @@ export class DropboxVFS implements vfs.VFS {
 
 	search(namePattern: string, cb: (files: vfs.FileInfo[]) => any) {
 		this.client.search('/', namePattern, {}, (err, files) => {
+			if (err) {
+				console.log('searching Dropbox failed', convertError(err));
+			}
 			var fileList : vfs.FileInfo[] = [];
 			files.forEach((file) => {
 				fileList.push(this.toVfsFile(file));
@@ -117,7 +124,7 @@ export class DropboxVFS implements vfs.VFS {
 		var result = Q.defer<string>();
 		this.client.readFile(path, {}, (error, content) => {
 			if (error) {
-				result.reject(error);
+				result.reject(convertError(error));
 				return;
 			}
 			result.resolve(content);
@@ -137,7 +144,7 @@ export class DropboxVFS implements vfs.VFS {
 
 		this.client.writeFile(path, content, dropboxWriteOpts, (error) => {
 			if (error) {
-				result.reject(error);
+				result.reject(convertError(error));
 				return;
 			}
 			result.resolve(null);
@@ -149,7 +156,7 @@ export class DropboxVFS implements vfs.VFS {
 		var result = Q.defer<vfs.FileInfo[]>();
 		this.client.readdir(path, {}, (error, names, folderInfo, files) => {
 			if (error) {
-				result.reject(error);
+				result.reject(convertError(error));
 				return;
 			}
 			var fileList : vfs.FileInfo[] = [];
@@ -165,7 +172,7 @@ export class DropboxVFS implements vfs.VFS {
 		var result = Q.defer<void>();
 		this.client.remove(path, (error) => {
 			if (error) {
-				result.reject(error);
+				result.reject(convertError(error));
 				return;
 			}
 			result.resolve(null);
@@ -185,7 +192,7 @@ export class DropboxVFS implements vfs.VFS {
 		var result = Q.defer<void>();
 		this.client.mkdir(path, (err, stat) => {
 			if (err) {
-				result.reject(err);
+				result.reject(convertError(err));
 				return;
 			}
 			result.resolve(null);
