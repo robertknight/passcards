@@ -17,7 +17,7 @@ import key_agent = require('./key_agent');
 import onepass = require('./onepass');
 
 function syncLog(...args: any[]) {
-//	console.log.apply(console, args);
+	//console.log.apply(console, args);
 }
 
 /** Returns true if two date/times from Item.updatedAt should
@@ -50,6 +50,9 @@ export interface SyncProgress {
 
 	/** Count of items that have been synced. */
 	updated: number;
+
+	/** Count of items that failed to sync. */
+	failed: number;
 
 	/** Total number of changed items to sync. */
 	total: number;
@@ -124,12 +127,14 @@ export class Syncer {
 			state: SyncState.ListingItems,
 			active: 0,
 			updated: 0,
+			failed: 0,
 			total: 0
 		};
 
 		this.onProgress.listen(() => {
 			if (this.syncProgress.state == SyncState.SyncingItems) {
-				if (this.syncProgress.updated == this.syncProgress.total) {
+				var processed = this.syncProgress.updated + this.syncProgress.failed;
+				if (processed == this.syncProgress.total) {
 					this.syncProgress.state = SyncState.Idle;
 					this.onProgress.publish(this.syncProgress);
 					result.resolve(this.syncProgress);
@@ -181,6 +186,7 @@ export class Syncer {
 				}
 			});
 
+			syncLog('found %d items to sync', this.syncQueue.length);
 			this.syncProgress.state = SyncState.SyncingItems;
 			this.onProgress.publish(this.syncProgress);
 		}).catch((err) => {
@@ -190,8 +196,6 @@ export class Syncer {
 			this.syncProgress.state = SyncState.Idle;
 			this.onProgress.publish(this.syncProgress);
 		});
-
-		syncLog('found %d items to sync', this.syncQueue.length);
 
 		this.syncNextBatch();
 
@@ -221,9 +225,16 @@ export class Syncer {
 	private syncItem(localItem: item_store.Item, vaultItem: item_store.Item) {
 		++this.syncProgress.active;
 
-		var itemDone = () => {
+		var itemDone = (err?: Error) => {
 			--this.syncProgress.active;
-			++this.syncProgress.updated;
+			if (err) {
+				++this.syncProgress.failed;
+			} else {
+				++this.syncProgress.updated;
+			}
+			if (err) {
+				this.currentSync.reject(err);
+			}
 			this.onProgress.publish(this.syncProgress);
 		};
 
@@ -264,13 +275,13 @@ export class Syncer {
 				itemDone();
 			}).catch((err: Error) => {
 				syncLog('Syncing item %s failed:', uuid, err);
-				this.currentSync.reject(new Error(sprintf('Failed to save updates for item %s: %s', uuid, err)));
-				itemDone();
+				var itemErr = new Error(sprintf('Failed to save updates for item %s: %s', uuid, err));
+				itemDone(itemErr);
 			});
 		}).catch((err) => {
 			syncLog('Retrieving updates for %s failed:', uuid, err);
-			this.currentSync.reject(new Error(sprintf('Failed to retrieve updated item %s: %s', uuid, err)));
-			itemDone();
+			var itemErr = new Error(sprintf('Failed to retrieve updated item %s: %s', uuid, err));
+			itemDone(itemErr);
 		});
 	}
 
@@ -317,7 +328,7 @@ export class Syncer {
 		var revision: string;
 
 		var uuid = storeItem ? storeItem.item.uuid : vaultItem.item.uuid;
-		
+
 		if (!vaultItem) {
 			syncLog('syncing new item %s from store -> vault', storeItem.item.uuid);
 
@@ -349,6 +360,8 @@ export class Syncer {
 			// item updated in vault
 			var clonedItem = item_store.cloneItem(vaultItem, vaultItem.item.uuid).item;
 			saved = this.store.saveItem(clonedItem, item_store.ChangeSource.Sync).then(() => {
+				assert.notEqual(clonedItem.revision, storeItem.item.revision);
+
 				revision = clonedItem.revision;
 				updatedStoreItem = clonedItem;
 			});
@@ -365,6 +378,8 @@ export class Syncer {
 			  this.store.saveItem(mergedStoreItem.item, item_store.ChangeSource.Sync),
 			  this.vault.saveItem(mergedVaultItem.item, item_store.ChangeSource.Sync)
 			]).then(() => {
+				assert.notEqual(mergedStoreItem.item.revision, storeItem.item.revision);
+
 				revision = mergedStoreItem.item.revision;
 				updatedStoreItem = mergedStoreItem.item;
 			});
