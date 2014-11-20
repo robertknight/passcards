@@ -275,7 +275,7 @@ export class Store implements item_store.SyncableStore {
 		}).then((content) => {
 			item.updateOverviewFromContent(content);
 			item.parentRevision = item.revision;
-			item.revision = item_store.generateRevisionId(item);
+			item.revision = item_store.generateRevisionId({item: item, content: content});
 
 			var overview = this.overviewFromItem(item);
 			var revision = {

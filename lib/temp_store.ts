@@ -76,20 +76,21 @@ export class Store implements item_store.SyncableStore {
 		}
 
 		var prevRevision = item.revision;
-		item.revision = item_store.generateRevisionId(item);
-		item.parentRevision = prevRevision;
-
-		if (!saved) {
-			this.items.push(item);
-		}
 		return item.getContent().then((content) => {
 			item.updateOverviewFromContent(content);
+			item.revision = item_store.generateRevisionId({item: item, content: content});
+			item.parentRevision = prevRevision;
 			var itemRevision = item_store.cloneItem({item: item, content: content}, item.uuid);
 
 			this.content.set(item.revision, {
 				item: itemRevision.item,
 				content: itemRevision.content
 			});
+
+			if (!saved) {
+				this.items.push(item);
+			}
+
 			this.onItemUpdated.publish(item);
 		});
 	}

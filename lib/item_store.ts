@@ -637,7 +637,11 @@ export interface SyncableStore extends Store {
 export function cloneItem(itemAndContent: ItemAndContent, uuid?: string) {
 	var item = itemAndContent.item;
 
+	// item ID and sync data
 	var clonedItem = new Item(null /* store */, uuid);
+	clonedItem.parentRevision = item.revision;
+
+	// core metadata
 	clonedItem.folderUuid = item.uuid;
 	clonedItem.faveIndex = item.faveIndex;
 	clonedItem.trashed = item.trashed;
@@ -649,18 +653,34 @@ export function cloneItem(itemAndContent: ItemAndContent, uuid?: string) {
 	clonedItem.locations = <string[]>clone(item.locations);
 	clonedItem.account = item.account;
 
+	// item content
 	var clonedContent = <ItemContent>clone(itemAndContent.content);
 	clonedItem.setContent(clonedContent);
 
 	return {item: clonedItem, content: clonedContent};
 }
 
-export function generateRevisionId(item: Item) {
+/** Generate a content-based revision ID for an item.
+  * Revision IDs are a hash of the item's parent revision,
+  * plus all of its current content.
+  */
+export function generateRevisionId(item: ItemAndContent) {
 	var contentMetadata = {
-		title: item.title,
-		updatedAt: item.updatedAt,
+		uuid: item.item.uuid,
+		parentRevision: item.item.parentRevision,
+
+		title: item.item.title,
+		updatedAt: item.item.updatedAt,
+		createdAt: item.item.createdAt,
+		typeName: item.item.typeName,
+		openContents: item.item.openContents,
+		folderUuid: item.item.folderUuid,
+		faveIndex: item.item.faveIndex,
+		trashed: item.item.trashed,
+
+		content: item.content
 	};
-	var contentString = [item.uuid, item.revision, contentMetadata].join('\n');
+	var contentString = JSON.stringify(contentMetadata);
 	var hasher = new sha1.SHA1();
 	var srcBuf = collectionutil.bufferFromString(contentString);
 	var digest = new Int32Array(5);
