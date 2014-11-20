@@ -21,6 +21,7 @@ var TextField = require('react-material/components/TextField');
 interface ItemFieldState {
 	selected?: boolean;
 	revealed?: boolean;
+	value?: string;
 }
 
 interface ItemFieldProps {
@@ -36,15 +37,15 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 	getInitialState() {
 		return {
 			selected: false,
-			revealed: false
+			revealed: false,
+			value: this.props.value
 		};
 	}
 
 	render() {
-		var displayValue = this.props.value;
+		var displayValue = this.state.value;
 		var inputType = 'text';
 		if (this.props.isPassword && !this.state.revealed) {
-			displayValue = stringutil.repeat('•', this.props.value.length);
 			inputType = 'password';
 		}
 
@@ -82,16 +83,15 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 			material_ui.TextFieldF({
 				floatingLabel: true,
 				placeHolder: this.props.label,
-				defaultValue: displayValue,
+				value: displayValue,
 				type: inputType,
 				onChange: (e: Event) => {
-					this.props.onChange((<HTMLInputElement>e.target).value);
+					var newValue = (<HTMLInputElement>e.target).value;
+					this.setState({value: newValue});
+					this.props.onChange(newValue);
 				},
 				onFocus: () => {
 					this.setState({selected: true});
-				},
-				onBlur: () => {
-					this.setState({selected: false});
 				}
 			}),
 			fieldActions
