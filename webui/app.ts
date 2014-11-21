@@ -523,6 +523,20 @@ export class App {
 		var rootInputElement = element.ownerDocument.body;
 		react_style.inject();
 
+		// react_style.inject() will add CSS for compiled styles to
+		// a <style> element for 'document'.
+		//
+		// In a Chrome extension, the app is rendered into an element
+		// in a popup view which belongs to a different document (element.ownerDocument)
+		// than the background page (document). In this case, copy the <style>
+		// from the background page document to the popup view document.
+		if (element.ownerDocument !== document) {
+			var styleNode = document.querySelector('style');
+			var styleNodeCopy = styleNode.cloneNode(true /* deep copy */);
+			element.ownerDocument.adoptNode(styleNodeCopy);
+			element.ownerDocument.querySelector('head').appendChild(styleNodeCopy);
+		}
+
 		// setup touch input
 		fastclick.FastClick.attach(rootInputElement);
 
