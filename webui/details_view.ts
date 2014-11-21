@@ -34,12 +34,29 @@ interface ItemFieldProps {
 }
 
 class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
+	private focusListener: EventListener;
+
 	getInitialState() {
 		return {
 			selected: false,
 			revealed: false,
 			value: this.props.value
 		};
+	}
+
+	componentDidMount() {
+		var field = <HTMLElement>this.refs['itemField'].getDOMNode();
+		this.focusListener = (e: FocusEvent) => {
+			this.setState({selected: field.contains(<HTMLElement>e.target)});
+		};
+		field.ownerDocument.addEventListener('focus', this.focusListener,
+		  true /* useCapture - non-capture focus events do not bubble */);
+	}
+
+	componentWillUnmount() {
+		var field = this.refs['itemField'].getDOMNode();
+		field.ownerDocument.removeEventListener('focus', this.focusListener, true /* useCapture */);
+		this.focusListener = null;
 	}
 
 	render() {
@@ -79,7 +96,10 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 			);
 		}
 
-		return react.DOM.div({className: 'detailsField'},
+		return react.DOM.div({
+			className: 'detailsField',
+			ref: 'itemField'
+		},
 			material_ui.TextFieldF({
 				floatingLabel: true,
 				placeHolder: this.props.label,
@@ -89,9 +109,6 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 					var newValue = (<HTMLInputElement>e.target).value;
 					this.setState({value: newValue});
 					this.props.onChange(newValue);
-				},
-				onFocus: () => {
-					this.setState({selected: true});
 				}
 			}),
 			fieldActions
