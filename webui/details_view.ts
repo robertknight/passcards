@@ -217,6 +217,11 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		var detailsContent : react.Descriptor<any>;
 		var updatedItem = this.state.editedItem;
 		if (updatedItem) {
+			var onChangeItem = () => {
+				updatedItem.item.updateOverviewFromContent(updatedItem.content);
+				this.setState({editedItem: updatedItem});
+			};
+
 			var accountField = updatedItem.content.accountField();
 			var passwordField = updatedItem.content.passwordField();
 			var coreFields: react.Descriptor<any>[] = [];
@@ -235,6 +240,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 							clipboard: this.props.clipboard,
 							onChange: (newValue) => {
 								field.value = newValue;
+								onChangeItem();
 								return true;
 							}
 						}));
@@ -254,6 +260,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 					clipboard: this.props.clipboard,
 					onChange: (newValue) => {
 						url.url = newValue;
+						onChangeItem();
 						return true;
 					}
 				}));
@@ -272,6 +279,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 						} else {
 							updatedItem.content.formFields.push(item_builder.Builder.createLoginField(newValue));
 						}
+						onChangeItem();
 						return true;
 					}
 				}));
@@ -290,6 +298,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 						} else {
 							updatedItem.content.formFields.push(item_builder.Builder.createPasswordField(newValue));
 						}
+						onChangeItem();
 						return true;
 					}
 				}));
