@@ -183,12 +183,12 @@ class CLITest {
 	}
 
 	/** Run a CLI command, expecting it to exit successfully. */
-	run(...args: any[]) : Q.Promise<number> {
-		return this.runExpectingStatus.apply(this, [0].concat(args));
+	run(...args: string[]) : Q.Promise<number> {
+		return this.runExpectingStatus.apply(this, (<any>[0]).concat(args));
 	}
 
 	/** Run a CLI command, expecting a given exit status */
-	runExpectingStatus(expectedStatus: number, ...args: any[]) : Q.Promise<number> {
+	runExpectingStatus(expectedStatus: number, ...args: string[]) : Q.Promise<number> {
 		var vaultArgs = ['--vault', this.vaultPath];
 		return this.app.exec(vaultArgs.concat(args)).then((status) => {
 			if (status != expectedStatus) {
@@ -517,7 +517,7 @@ testLib.addAsyncTest('create new vault with relative path', (assert) => {
 		assert.ok(env.fakeTerm.didPrint(/New vault created/));
 
 		var fs = new nodefs.FileVFS('/');
-		return vfs.VFSUtil.rmrf(fs, path.resolve(relativePath));
+		return vfs.VFSUtil.rmrf(fs, path.resolve(relativePath + '.agilekeychain'));
 	});
 });
 
