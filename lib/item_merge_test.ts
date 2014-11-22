@@ -1,5 +1,4 @@
 import clone = require('clone');
-import underscore = require('underscore');
 
 import item_builder = require('./item_builder');
 import item_merge = require('./item_merge');

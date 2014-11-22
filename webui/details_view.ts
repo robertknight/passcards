@@ -16,8 +16,6 @@ import shortcut = require('./base/shortcut');
 import stringutil = require('../lib/base/stringutil');
 import url_util = require('../lib/base/url_util');
 
-var TextField = require('react-material/components/TextField');
-
 interface ItemFieldState {
 	selected?: boolean;
 	revealed?: boolean;
@@ -353,7 +351,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				key: 'cancel'
 			}));
 		}
-		toolbarControls.push(react.DOM.div({className:'toolbarSpacer'})),
+		toolbarControls.push(react.DOM.div({className:'toolbarSpacer'}));
 		toolbarControls.push(controls.ToolbarButtonF({
 			iconHref: 'icons/icons.svg#done',
 			onClick: () => {

@@ -1,7 +1,5 @@
 /// <reference path="../typings/react-0.12.d.ts" />
 
-import react = require('react');
-
 import reactutil = require('./reactutil');
 import testLib = require('../lib/test');
 

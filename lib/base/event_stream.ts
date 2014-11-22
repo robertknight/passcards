@@ -1,7 +1,5 @@
 /// <reference path="../../typings/DefinitelyTyped/underscore/underscore.d.ts" />
 
-import underscore = require('underscore');
-
 export interface EventListener<T> {
 	(event?: T) : void;
 }

@@ -266,8 +266,6 @@ export class Store implements item_store.SyncableStore {
 			assert(item.updatedAt);
 		}
 
-		var parentRevision = item.revision;
-		var cryptoParams = new key_agent.CryptoParams(key_agent.CryptoAlgorithm.AES128_OpenSSLKey);
 		var key: string;
 		return this.keyForItem(item).then((_key) => {
 			key = _key;

@@ -9,7 +9,6 @@ import Q = require('q');
 import sprintf = require('sprintf');
 import underscore = require('underscore');
 
-import asyncutil = require('./base/asyncutil');
 import crypto = require('./onepass_crypto');
 import collectionutil = require('./base/collectionutil');
 import dateutil = require('./base/dateutil');

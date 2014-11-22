@@ -3,10 +3,8 @@
 /// <reference path="../typings/sprintf.d.ts" />
 
 import assert = require('assert');
-import clone = require('clone');
 import Q = require('q');
 import sprintf = require('sprintf');
-import underscore = require('underscore');
 
 import collectionutil = require('./base/collectionutil');
 import dateutil = require('./base/dateutil');
@@ -327,13 +325,13 @@ export class Syncer {
 		// revision of the item which was saved
 		var revision: string;
 
-		var uuid = storeItem ? storeItem.item.uuid : vaultItem.item.uuid;
+		var clonedItem: item_store.Item;
 
 		if (!vaultItem) {
 			syncLog('syncing new item %s from store -> vault', storeItem.item.uuid);
 
 			// new item in local store
-			var clonedItem = item_store.cloneItem(storeItem, storeItem.item.uuid).item;
+			clonedItem = item_store.cloneItem(storeItem, storeItem.item.uuid).item;
 			revision = storeItem.item.revision;
 			updatedStoreItem = storeItem.item;
 			saved = this.vault.saveItem(clonedItem, item_store.ChangeSource.Sync);
@@ -341,7 +339,7 @@ export class Syncer {
 			syncLog('syncing new item %s from vault -> store', vaultItem.item.uuid);
 
 			// new item in vault
-			var clonedItem = item_store.cloneItem(vaultItem, vaultItem.item.uuid).item;
+			clonedItem = item_store.cloneItem(vaultItem, vaultItem.item.uuid).item;
 			saved = this.store.saveItem(clonedItem, item_store.ChangeSource.Sync).then(() => {
 				revision = clonedItem.revision;
 				updatedStoreItem = clonedItem;
@@ -350,7 +348,7 @@ export class Syncer {
 			syncLog('syncing updated item %s from store -> vault', storeItem.item.uuid);
 
 			// item updated in local store
-			var clonedItem = item_store.cloneItem(storeItem, storeItem.item.uuid).item;
+			clonedItem = item_store.cloneItem(storeItem, storeItem.item.uuid).item;
 			revision = storeItem.item.revision;
 			updatedStoreItem = storeItem.item;
 			saved = this.vault.saveItem(clonedItem, item_store.ChangeSource.Sync);
@@ -358,7 +356,7 @@ export class Syncer {
 			syncLog('syncing updated item %s from vault -> store', vaultItem.item.uuid);
 
 			// item updated in vault
-			var clonedItem = item_store.cloneItem(vaultItem, vaultItem.item.uuid).item;
+			clonedItem = item_store.cloneItem(vaultItem, vaultItem.item.uuid).item;
 			saved = this.store.saveItem(clonedItem, item_store.ChangeSource.Sync).then(() => {
 				assert.notEqual(clonedItem.revision, storeItem.item.revision);
 

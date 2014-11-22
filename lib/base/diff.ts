@@ -17,7 +17,9 @@ import adiff = require('adiff');
 import assert = require('assert');
 
 import e6c = require('es6-collections');
+/* tslint:disable */
 typeof e6c;
+/* tslint:enable */
 
 export enum OpType {
 	Insert,
