@@ -13,7 +13,6 @@ import item_search = require('../lib/item_search');
 import item_store = require('../lib/item_store');
 import reactutil = require('./reactutil');
 import stringutil = require('../lib/base/stringutil');
-import url_util = require('../lib/base/url_util');
 
 export class ItemListViewState {
 	filter: string;
@@ -123,7 +122,6 @@ export var ItemListViewF = reactutil.createFactory(ItemListView);
 class ItemProps {
 	key: string;
 	item: item_store.Item;
-	domain: string;
 	onSelected: () => void;
 	isFocused: boolean;
 	iconProvider: item_icons.ItemIconProvider;
@@ -134,6 +132,13 @@ class ItemProps {
 class Item extends typed_react.Component<ItemProps, {}> {
 	getInitialState() {
 		return {};
+	}
+
+	shouldComponentUpdate(nextProps: ItemProps, nextState: {}) {
+		// onSelected() is a closure that changes on every render
+		// (see createListItem())
+		return reactutil.objectChanged(this.props, nextProps, 'onSelected') ||
+		       reactutil.objectChanged(this.state, nextState);
 	}
 
 	render() {
@@ -224,7 +229,6 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 		return ItemF({
 			key: item.uuid,
 			item: item,
-			domain: url_util.domain(url_util.normalize(item.primaryLocation())),
 			onSelected: () => {
 				this.setSelectedItem(item);
 			},
@@ -365,7 +369,6 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 			if (!this.state.visibleIndexes ||
 			     topIndex != this.state.visibleIndexes.first ||
 				 bottomIndex != this.state.visibleIndexes.last) {
-
 				this.setState({
 					visibleIndexes: {
 						first: topIndex,

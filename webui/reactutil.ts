@@ -35,3 +35,48 @@ export function createFactory<P,S>(component: {new() : typed_react.Component<P,S
 	return typed_react.createFactory(factoryGenerator, component);
 }
 
+/** Performs a shallow comparison of the properties of two objects and returns
+  * a list of property names of properties which differ between the two.
+  *
+  * Adapted from the 'shallowEqual' module in react
+  */
+function changedFields(objA: any, objB: any) {
+	if (objA === objB) {
+		return [];
+	}
+	var changed: string[] = [];
+	var key: string;
+	// Test for A's keys different from B.
+	for (key in objA) {
+		if (objA.hasOwnProperty(key) &&
+				(!objB.hasOwnProperty(key) || objA[key] !== objB[key])) {
+					changed.push(key);
+				}
+	}
+	// Test for B's keys missing from A.
+	for (key in objB) {
+		if (objB.hasOwnProperty(key) && !objA.hasOwnProperty(key)) {
+			changed.push(key);
+		}
+	}
+
+	return changed;
+}
+
+/** Returns true if any properties changed between objects 'a' and 'b',
+  * using a shallow comparison of property values and ignoring any properties
+  * listed in ignoredFields.
+  */
+export function objectChanged(a: any, b: any, ...ignoredFields: string[]) {
+	var changed = changedFields(a, b);
+	if (changed.length != ignoredFields.length) {
+		return true;
+	}
+	for (var i=0; i < changed.length; i++) {
+		if (ignoredFields.indexOf(changed[i]) == -1) {
+			return true;
+		}
+	}
+	return false;
+}
+

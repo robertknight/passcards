@@ -1,7 +1,6 @@
 /// <reference path="../../typings/URIjs.d.ts" />
 
 import uri_js = require('URIjs');
-import urlLib = require('url');
 
 import stringutil = require('./stringutil');
 
@@ -45,8 +44,16 @@ export function domain(url: string) : string {
 	if (!url) {
 		return '';
 	}
-	var parsedUrl = urlLib.parse(url);
-	return parsedUrl.host;
+	var schemePos = url.indexOf('://');
+	if (schemePos == -1) {
+		return '';
+	}
+	var hostStart = schemePos + 3;
+	var hostEnd = url.indexOf('/', hostStart);
+	if (hostEnd == -1) {
+		hostEnd = url.length;
+	}
+	return url.slice(hostStart, hostEnd);
 }
 
 /** Returns the top-level domain for an item.
