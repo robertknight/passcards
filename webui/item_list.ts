@@ -328,9 +328,16 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 				// scrolling the list.
 				//
 				// Use of rAF() does not appear to be necessary in Firefox and Chrome.
-				window.requestAnimationFrame(() => {
+				if (env.isChromeExtension()) {
+					// rAF() is not needed in Chrome and is not invoked
+					// when called in the context of a background page of a Chrome
+					// extension, so just call updateVisibleItems() directly.
 					this.updateVisibleItems();
-				});
+				} else {
+					window.requestAnimationFrame(() => {
+						this.updateVisibleItems();
+					});
+				}
 			}
 		},
 			listItems,
