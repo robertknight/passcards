@@ -80,3 +80,20 @@ export function objectChanged(a: any, b: any, ...ignoredFields: string[]) {
 	return false;
 }
 
+export interface StyleMap {
+	[property: string] : any;
+}
+
+/** Add vendor prefix to inline property style names. */
+export function prefix(style: StyleMap) : StyleMap {
+	// TODO - Find a suitable existing implementation of this
+	var result: StyleMap = {};
+	for (var key in style) {
+		result[key] = style[key];
+		if (key == 'transform') {
+			result['WebkitTransform'] = style[key];
+		}
+	}
+	return result;
+}
+

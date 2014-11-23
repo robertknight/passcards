@@ -147,6 +147,15 @@ class Item extends typed_react.Component<ItemProps, {}> {
 			focusIndicator = react.DOM.div({className: 'itemFocusIndicator'}, '>');
 		}
 
+		// positioning a rendered item within its parent list could be
+		// done via either 'top' or 'transform'.
+		//
+		// Testing in iOS 8 WebKit/Chrome 39/Firefox 36, both perform
+		// similarly in WebKit and Firefox but using translate3d() results
+		// in much less pop-in when new items appear in Chrome.
+		var offset = this.props.offsetTop.toString() + 'px';
+		var translation = 'translate3d(0px,' + offset + ',0px)';
+
 		return react.DOM.div({
 				className: stringutil.truthyKeys({
 					itemOverview: true,
@@ -154,9 +163,7 @@ class Item extends typed_react.Component<ItemProps, {}> {
 				}),
 				ref: 'itemOverview',
 				onClick: () => this.props.onSelected(),
-				style: {
-					top: (this.props.offsetTop).toString() + 'px'
-				}
+				style: reactutil.prefix({transform: translation})
 			},
 			controls.InkRippleF({
 				color: {
@@ -286,11 +293,6 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 
 	componentDidMount() {
 		this.updateMatchingItems(this.props);
-		this.updateVisibleItems();
-	}
-
-	componentDidUpdate() {
-		this.updateVisibleItems();
 	}
 
 	componentWillReceiveProps(nextProps: ItemListProps) {
@@ -298,12 +300,10 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 	}
 
 	render() {
+		var renderedIndexes = this.renderedIndexes();
 		var listItems = this.state.matchingItems.map((item, index) => {
-			var isVisible = false;
-			if (this.state.visibleIndexes) {
-				isVisible = index >= this.state.visibleIndexes.first &&
-				            index <= this.state.visibleIndexes.last;
-			}
+			var isVisible = index >= renderedIndexes.first &&
+				            index <= renderedIndexes.last;
 			if (isVisible) {
 				return this.createListItem(item, {
 					focused: index == this.state.focusedIndex,
@@ -313,6 +313,8 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 			} else {
 				return null;
 			}
+		}).filter((item) => {
+			return item != null;
 		});
 
 		var listHeight = this.state.matchingItems.length * this.state.itemHeight;
@@ -320,7 +322,15 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 			className: 'itemList',
 			ref: 'itemList',
 			onScroll: (e) => {
-				this.updateVisibleItems()
+				// In iOS 8 multiple scroll events may be delivered
+				// in a single animation frame. Aside from avoiding unnecessary
+				// updates, buffering these avoids flicker in Mobile Safari when
+				// scrolling the list.
+				//
+				// Use of rAF() does not appear to be necessary in Firefox and Chrome.
+				window.requestAnimationFrame(() => {
+					this.updateVisibleItems();
+				});
 			}
 		},
 			listItems,
@@ -379,6 +389,25 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 		}
 	}
 
+	// returns the range of indexes of items to render in the list,
+	// given the currently visible indexes.
+	//
+	// We render more items than are visible to reducing 'popping in'
+	// of items into the view after scrolling in browsers which
+	// do asynchronous scrolling (iOS Safari, Chrome, likely future
+	// Firefox)
+	private renderedIndexes() {
+		if (!this.state.visibleIndexes) {
+			return { first: 0, last: 0 };
+		}
+
+		var runway = 10;
+		return {
+			first: Math.max(0, this.state.visibleIndexes.first - runway),
+			last: Math.min(this.state.matchingItems.length-1, this.state.visibleIndexes.last + runway)
+		};
+	}
+
 	private updateMatchingItems(props: ItemListProps) {
 		var prevFocusedIndex = this.focusedItem();
 		var matchingItems: item_store.Item[] = [];
@@ -415,6 +444,8 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 		this.state.focusedIndex = nextFocusedIndex;
 		this.state.matchingItems = matchingItems;
 		this.setState(this.state);
+
+		this.updateVisibleItems();
 	}
 }
 
