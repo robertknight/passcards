@@ -120,7 +120,7 @@ firefox-addon: webui-build
 chrome-extension: webui-build
 	cd addons/chrome && make
 
-publish-chrome-extension: chrome-extension-zip
+publish-chrome-extension: chrome-extension
 	./utils/publish-chrome-extension.js pkg/passcards.zip
 
 update-manifest-versions:
