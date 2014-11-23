@@ -5,8 +5,8 @@ node_js:
 - '0.10'
 before_script:
 - export PATH=$PWD/node_modules/.bin:$PATH
-after_success:
 - make update-manifest-versions
+after_success:
 - make firefox-addon
 - make publish-chrome-extension
 before_deploy:
