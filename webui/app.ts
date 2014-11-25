@@ -163,7 +163,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 		if (nextState.store !== this.state.store) {
 			var debouncedRefresh = underscore.debounce(() => {
 				if (this.state.store && !this.state.isLocked) {
-					this.refreshItems()
+					this.refreshItems();
 				}
 			}, 300);
 
@@ -244,77 +244,32 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 
 		var children: react.Descriptor<any>[] = [];
 
-		if (this.state.isLocked) {
-			children.push(unlock_view.UnlockViewF({
-				key: 'unlockPane',
-				store: this.state.store,
-				isLocked: this.state.isLocked,
-				onUnlock: () => {
-					this.setState({isLocked: false});
-				},
-				onUnlockErr: (err) => {
-					this.showError(err);
-				}
-			}));
-		} else {
-			children.push(item_list.ItemListViewF({
-				key: 'itemList',
-				items: this.state.items,
-				selectedItem: this.state.selectedItem,
-				onSelectedItemChanged: (item) => { this.setSelectedItem(item); },
-				currentUrl: this.state.currentUrl,
-				iconProvider: this.props.services.iconProvider,
-				onLockClicked: () => this.props.services.keyAgent.forgetKeys(),
-				onMenuClicked: () => {
-					this.setState({showMenu: true});
-				}
-			}));
-
-			var detailsViewTransition: string;
-			if (this.state.itemEditMode == details_view.ItemEditMode.EditItem) {
-				detailsViewTransition = 'slide-from-left';
-			} else {
-				detailsViewTransition = 'slide-from-bottom';
-			}
-
-			var detailsView: react.Descriptor<any>;
-			if (this.state.selectedItem) {
-				detailsView = details_view.DetailsViewF({
-					key: 'detailsView',
-					item: this.state.selectedItem,
-					editMode: this.state.itemEditMode,
-					iconProvider: this.props.services.iconProvider,
-					onGoBack: () => {
-						this.setSelectedItem(null);
-					},
-					onSave: (updatedItem) => {
-						// defer saving the item until the details view has
-						// transitioned out
-						var SAVE_DELAY = 1000;
-						Q.delay(SAVE_DELAY).then(() => {
-							return updatedItem.item.saveTo(this.state.store);
-						}).then(() => {
-							return this.state.syncer.syncItems();
-						}).then(() => {
-							this.showStatus(new Status(StatusType.Success, 'Changes saved and synced'))
-						}).catch((err) => {
-							this.showError(err);
-						});
-					},
-					autofill: () => {
-						this.autofill(this.state.selectedItem);
-					},
-					clipboard: this.props.services.clipboard
-				});
-			}
-			children.push(reactutil.CSSTransitionGroupF({
-				transitionName: detailsViewTransition,
-				key: 'detailsViewContainer'
+		children.push(unlock_view.UnlockViewF({
+			key: 'unlockPane',
+			store: this.state.store,
+			isLocked: this.state.isLocked,
+			onUnlock: () => {
+				this.setState({isLocked: false});
 			},
-				detailsView ? [detailsView] : []
-			));
+			onUnlockErr: (err) => {
+				this.showError(err);
+			}
+		}));
+
+		children.push(this.renderItemList());
+		children.push(this.renderItemDetails());
+		children.push(this.renderToasters());
+
+		if (this.state.showMenu) {
+			children.push(this.renderMenu('menu'));
 		}
 
+		return react.DOM.div({className: 'appView', ref: 'app'},
+			children
+		);
+	}
+
+	private renderToasters() {
 		var toasters: react.Descriptor<controls.ToasterProps>[] = [];
 		if (this.state.status) {
 			toasters.push(controls.ToasterF({
@@ -331,17 +286,69 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 				progressMax: this.state.syncState.total
 			}));
 		}
+		return reactutil.CSSTransitionGroupF({transitionName: 'fade', key: 'toasterList'},
+		  toasters
+		);
+	}
 
-		if (this.state.showMenu) {
-			children.push(this.renderMenu('menu'));
+	private renderItemList() {
+		return item_list.ItemListViewF({
+			key: 'itemList',
+			items: this.state.items,
+			selectedItem: this.state.selectedItem,
+			onSelectedItemChanged: (item) => { this.setSelectedItem(item); },
+			currentUrl: this.state.currentUrl,
+			iconProvider: this.props.services.iconProvider,
+			onLockClicked: () => this.props.services.keyAgent.forgetKeys(),
+			onMenuClicked: () => {
+				this.setState({showMenu: true});
+			}
+		});
+	}
+
+	private renderItemDetails() {
+		var detailsViewTransition: string;
+		if (this.state.itemEditMode == details_view.ItemEditMode.EditItem) {
+			detailsViewTransition = 'slide-from-left';
+		} else {
+			detailsViewTransition = 'slide-from-bottom';
 		}
 
-		children.push(reactutil.CSSTransitionGroupF({transitionName: 'fade', key: 'toasterList'},
-		  toasters
-		));
-
-		return react.DOM.div({className: 'appView', ref: 'app'},
-			children
+		var detailsView: react.Descriptor<any>;
+		if (this.state.selectedItem) {
+			detailsView = details_view.DetailsViewF({
+				key: 'detailsView',
+				item: this.state.selectedItem,
+				editMode: this.state.itemEditMode,
+				iconProvider: this.props.services.iconProvider,
+				onGoBack: () => {
+					this.setSelectedItem(null);
+				},
+				onSave: (updatedItem) => {
+					// defer saving the item until the details view has
+					// transitioned out
+					var SAVE_DELAY = 1000;
+					Q.delay(SAVE_DELAY).then(() => {
+						return updatedItem.item.saveTo(this.state.store);
+					}).then(() => {
+						return this.state.syncer.syncItems();
+					}).then(() => {
+						this.showStatus(new Status(StatusType.Success, 'Changes saved and synced'))
+					}).catch((err) => {
+						this.showError(err);
+					});
+				},
+				autofill: () => {
+					this.autofill(this.state.selectedItem);
+				},
+				clipboard: this.props.services.clipboard
+			});
+		}
+		return reactutil.CSSTransitionGroupF({
+			transitionName: detailsViewTransition,
+			key: 'detailsViewContainer'
+		},
+			detailsView ? [detailsView] : []
 		);
 	}
 

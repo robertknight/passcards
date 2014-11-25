@@ -41,10 +41,6 @@ export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockVie
 	}
 
 	render() {
-		if (!this.props.isLocked) {
-			return react.DOM.div({});
-		}
-
 		var unlockMessage : string;
 		if (this.state.unlockState == UnlockState.Unlocking) {
 			unlockMessage = 'Unlocking...';
@@ -52,27 +48,42 @@ export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockVie
 			unlockMessage = '';
 		}
 
-		return react.DOM.div({className: 'unlockPane'},
-			react.DOM.div({className:'unlockPaneForm'},
-				react.DOM.form({
-					className: 'unlockPaneInputs',
-					ref:'unlockPaneForm',
-					onSubmit: (e) => {
-						e.preventDefault();
-						var masterPass = (<HTMLInputElement>this.refs['masterPassField'].getDOMNode()).value;
-						this.tryUnlock(masterPass);
-					}
-				},
-					react.DOM.input({
-						className: 'masterPassField',
-						type: 'password',
-						placeholder: 'Master Password...',
-						ref: 'masterPassField',
-						autoFocus: true
-					}),
-					react.DOM.div({className: 'unlockLabel'}, unlockMessage)
+		var unlockPaneUpper: react.Descriptor<any>;
+		var unlockPaneLower: react.Descriptor<any>;
+
+		if (this.props.isLocked) {
+			unlockPaneUpper = react.DOM.div({className:'unlockPane upper'},
+				react.DOM.div({className:'unlockPaneForm'},
+					react.DOM.form({
+						className: 'unlockPaneInputs',
+						ref:'unlockPaneForm',
+						onSubmit: (e) => {
+							e.preventDefault();
+							var masterPass = (<HTMLInputElement>this.refs['masterPassField'].getDOMNode()).value;
+							this.tryUnlock(masterPass);
+						}
+					},
+						react.DOM.input({
+							className: 'masterPassField',
+							type: 'password',
+							placeholder: 'Master Password...',
+							ref: 'masterPassField',
+							autoFocus: true
+						}),
+						react.DOM.div({className: 'unlockLabel'}, unlockMessage)
+					)
 				)
-			)
+			);
+			unlockPaneLower = react.DOM.div({className:'unlockPane lower'});
+		}
+
+		return react.DOM.div({className: 'unlockPane'},
+			reactutil.CSSTransitionGroupF({
+				transitionName: 'slide-from-top'
+			}, unlockPaneUpper),
+			reactutil.CSSTransitionGroupF({
+				transitionName: 'slide-from-bottom'
+			}, unlockPaneLower)
 		);
 	}
 
