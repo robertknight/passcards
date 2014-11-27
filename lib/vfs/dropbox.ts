@@ -58,7 +58,7 @@ export class DropboxVFS implements vfs.VFS {
 		}
 
 		this.client.onError.addListener((error) => {
-			console.log(error);
+			console.log('Dropbox API Error:', convertError(error).message);
 		});
 
 		if (options && options.disableLocationCleanup) {

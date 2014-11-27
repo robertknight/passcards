@@ -136,6 +136,11 @@ export interface KeyAgent {
 	  * Returns a promise for the encrypted text.
 	  */
 	encrypt(id: string, plainText: string, params: CryptoParams) : Q.Promise<string>;
+
+	/** Optional event stream which emits events when forgetKeys() is
+	  * called. Some key agents may not support this.
+	  */
+	onLock?() : event_stream.EventStream<void>;
 }
 
 /** A simple key agent which just stores keys in memory */

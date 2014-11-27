@@ -23,6 +23,7 @@ import Q = require('q');
 import underscore = require('underscore');
 
 import asyncutil = require('./base/asyncutil');
+import cached = require('./base/cached');
 import collectionutil = require('./base/collectionutil');
 import event_stream = require('./base/event_stream');
 import item_store = require('./item_store');
@@ -86,6 +87,7 @@ export class Store implements item_store.SyncableStore {
 	private keyStore: key_value_store.ObjectStore;
 	private itemStore: key_value_store.ObjectStore;
 	private indexUpdateQueue: collectionutil.BatchedUpdateQueue<item_store.Item>;
+	private itemIndex: cached.Cached<OverviewMap>;
 
 	onItemUpdated: event_stream.EventStream<item_store.Item>;
 	onUnlock: event_stream.EventStream<void>;
@@ -102,6 +104,14 @@ export class Store implements item_store.SyncableStore {
 
 		this.indexUpdateQueue = new collectionutil.BatchedUpdateQueue((updates: item_store.Item[]) => {
 			return this.updateIndex(updates);
+		});
+
+		this.itemIndex = new cached.Cached<OverviewMap>(
+			() => { return this.readItemIndex() },
+			(update) => { return this.writeItemIndex(update) }
+		);
+		this.keyAgent.onLock().listen(() => {
+			this.itemIndex.clear();
 		});
 	}
 
@@ -121,6 +131,7 @@ export class Store implements item_store.SyncableStore {
 	}
 
 	clear() {
+		this.itemIndex.clear();
 		return this.database.delete().then(() => {
 			this.initDatabase();
 		});
@@ -145,7 +156,7 @@ export class Store implements item_store.SyncableStore {
 	}
 
 	listItems(opts: item_store.ListItemsOptions = {}) : Q.Promise<item_store.Item[]> {
-		return this.readItemIndex().then((overviewMap) => {
+		return this.itemIndex.get().then((overviewMap) => {
 			var items: item_store.Item[] = [];
 			Object.keys(overviewMap).forEach((key) => {
 				var overview = overviewMap[key];
@@ -171,7 +182,7 @@ export class Store implements item_store.SyncableStore {
 			return item.uuid;
 		});
 
-		return Q.all([this.readItemIndex(), this.getLastSyncEntries(updatedItemIds)])
+		return Q.all([this.itemIndex.get(), this.getLastSyncEntries(updatedItemIds)])
 		  .then((result) => {
 			overviewMap = <OverviewMap>result[0];
 			if (!overviewMap) {
@@ -186,11 +197,7 @@ export class Store implements item_store.SyncableStore {
 				assert(entry.lastSyncedAt !== null);
 				overviewMap[item.uuid] = entry;
 			});
-			return this.overviewKey();
-		}).then((key) => {
-			return this.encrypt(key, overviewMap);
-		}).then((encrypted) => {
-			return this.itemStore.set('index', encrypted);
+			return this.itemIndex.set(overviewMap);
 		});
 	}
 
@@ -357,7 +364,7 @@ export class Store implements item_store.SyncableStore {
 
 	lastSyncTimestamps() {
 		var timestamps: Map<string,Date> = new collectionutil.PMap<string,Date>();
-		return this.readItemIndex().then((itemIndex) => {
+		return this.itemIndex.get().then((itemIndex) => {
 			Object.keys(itemIndex).forEach((id) => {
 				var lastSyncedAt = itemIndex[id].lastSyncedAt;
 				timestamps.set(id, new Date(lastSyncedAt));
@@ -366,6 +373,20 @@ export class Store implements item_store.SyncableStore {
 		});
 	}
 
+	// encrypt and write the item overview index.
+	// Use this.itemIndex.set() instead of this method directly.
+	private writeItemIndex(index: OverviewMap) {
+		var key: string;
+		return this.overviewKey().then((_key) => {
+			key = _key;
+			return this.encrypt(key, index);
+		}).then((encrypted) => {
+			return this.itemStore.set('index', encrypted);
+		});
+	}
+
+	// fetch and decrypt the item overview index.
+	// Use this.itemIndex.get() instead of this method directly.
 	private readItemIndex() {
 		var key: string;
 		return this.overviewKey().then((_key) => {
