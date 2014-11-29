@@ -6,43 +6,43 @@
   "bundle": "typings/tsd.d.ts",
   "installed": {
     "react/react.d.ts": {
-      "commit": "4dd796bb15c51e5bc0efd74605fbc9de46773ca5"
+      "commit": "16fc1fb8b440e55e88bd1bbb393dcf2e9fb07d22"
     },
     "react-addons/react-addons.d.ts": {
-      "commit": "4dd796bb15c51e5bc0efd74605fbc9de46773ca5"
+      "commit": "16fc1fb8b440e55e88bd1bbb393dcf2e9fb07d22"
     },
     "node/node.d.ts": {
-      "commit": "4dd796bb15c51e5bc0efd74605fbc9de46773ca5"
+      "commit": "16fc1fb8b440e55e88bd1bbb393dcf2e9fb07d22"
     },
     "q/Q.d.ts": {
-      "commit": "4dd796bb15c51e5bc0efd74605fbc9de46773ca5"
+      "commit": "16fc1fb8b440e55e88bd1bbb393dcf2e9fb07d22"
     },
     "chrome/chrome.d.ts": {
-      "commit": "4dd796bb15c51e5bc0efd74605fbc9de46773ca5"
+      "commit": "16fc1fb8b440e55e88bd1bbb393dcf2e9fb07d22"
     },
     "jquery/jquery.d.ts": {
-      "commit": "4dd796bb15c51e5bc0efd74605fbc9de46773ca5"
+      "commit": "16fc1fb8b440e55e88bd1bbb393dcf2e9fb07d22"
     },
     "urlrouter/urlrouter.d.ts": {
-      "commit": "4dd796bb15c51e5bc0efd74605fbc9de46773ca5"
+      "commit": "16fc1fb8b440e55e88bd1bbb393dcf2e9fb07d22"
     },
     "promptly/promptly.d.ts": {
-      "commit": "4dd796bb15c51e5bc0efd74605fbc9de46773ca5"
+      "commit": "16fc1fb8b440e55e88bd1bbb393dcf2e9fb07d22"
     },
     "mkdirp/mkdirp.d.ts": {
-      "commit": "4dd796bb15c51e5bc0efd74605fbc9de46773ca5"
+      "commit": "16fc1fb8b440e55e88bd1bbb393dcf2e9fb07d22"
     },
     "underscore/underscore.d.ts": {
-      "commit": "4dd796bb15c51e5bc0efd74605fbc9de46773ca5"
+      "commit": "16fc1fb8b440e55e88bd1bbb393dcf2e9fb07d22"
     },
     "clone/clone.d.ts": {
-      "commit": "4dd796bb15c51e5bc0efd74605fbc9de46773ca5"
+      "commit": "16fc1fb8b440e55e88bd1bbb393dcf2e9fb07d22"
     },
     "node-uuid/node-uuid.d.ts": {
-      "commit": "4dd796bb15c51e5bc0efd74605fbc9de46773ca5"
+      "commit": "16fc1fb8b440e55e88bd1bbb393dcf2e9fb07d22"
     },
     "webrtc/MediaStream.d.ts": {
-      "commit": "4dd796bb15c51e5bc0efd74605fbc9de46773ca5"
+      "commit": "16fc1fb8b440e55e88bd1bbb393dcf2e9fb07d22"
     }
   }
 }

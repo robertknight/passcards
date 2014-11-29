@@ -57,7 +57,7 @@ class FakeKeyValueDatabase implements key_value_store.Database {
 
 	delete() {
 		if (this.version < 1) {
-			return Q.reject(new Error('Database is not open'));
+			return Q.reject<void>(new Error('Database is not open'));
 		}
 		this.reset();
 		return Q<void>(null);

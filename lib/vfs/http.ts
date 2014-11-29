@@ -73,7 +73,7 @@ export class Client implements vfs.VFS {
 				return file.name == name;
 			});
 			if (matches.length == 0) {
-				return Q.reject(sprintf('No file %s found in %s', name, path));
+				return Q.reject<vfs.FileInfo>(sprintf('No file %s found in %s', name, path));
 			} else {
 				return Q(matches[0]);
 			}
@@ -86,7 +86,7 @@ export class Client implements vfs.VFS {
 
 	read(path: string) : Q.Promise<string> {
 		if (stringutil.endsWith(path, '/')) {
-			return Q.reject(sprintf('Cannot read file. %s is a directory', path));
+			return Q.reject<string>(new Error(sprintf('Cannot read file. %s is a directory', path)));
 		}
 		return http_client.expect(this.request('GET', path), 200).then((content) => {
 			return content;
@@ -95,7 +95,7 @@ export class Client implements vfs.VFS {
 
 	write(path: string, content: string) : Q.Promise<void> {
 		if (stringutil.endsWith(path, '/')) {
-			return Q.reject(sprintf('Cannot write file. %s is a directory', path));
+			return Q.reject<void>(new Error(sprintf('Cannot write file. %s is a directory', path)));
 		}
 		return http_client.expect(this.request('PUT', path, content), 200).then(() => {
 			return <void>null;

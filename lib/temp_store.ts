@@ -100,7 +100,7 @@ export class Store implements item_store.SyncableStore {
 			return item.uuid == uuid;
 		});
 		if (items.length == 0) {
-			return Q.reject(new Error('No such item'));
+			return Q.reject<item_store.Item>(new Error('No such item'));
 		}
 		if (!revision) {
 			revision = items[0].revision;
@@ -112,12 +112,12 @@ export class Store implements item_store.SyncableStore {
 		if (this.content.has(item.revision)) {
 			return Q(this.content.get(item.revision).content);
 		} else {
-			return Q.reject(new Error('No such item'));
+			return Q.reject<item_store.ItemContent>(new Error('No such item'));
 		}
 	}
 
 	getRawDecryptedData(item: item_store.Item) {
-		return Q.reject(new Error('Not implemented in TempStore'));
+		return Q.reject<string>(new Error('Not implemented in TempStore'));
 	}
 
 	clear() {

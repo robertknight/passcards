@@ -59,7 +59,7 @@ export class FS implements vfs.VFS {
 	stat(path: string) : Q.Promise<vfs.FileInfo> {
 		var entry = this.entryForPath(path);
 		if (!entry) {
-			return Q.reject('No such path');
+			return Q.reject<vfs.FileInfo>(new Error('No such path'));
 		} else {
 			return Q(FS.fsEntryToFileInfo(entry));
 		}
@@ -72,13 +72,13 @@ export class FS implements vfs.VFS {
 	read(path: string) : Q.Promise<string> {
 		var entry = this.entryForPath(path);
 		if (!entry) {
-			return Q.reject('No such path');
+			return Q.reject<string>(new Error('No such path'));
 		}
 		if (entry.isDir) {
-			return Q.reject('Entry is a directory');
+			return Q.reject<string>(new Error('Entry is a directory'));
 		}
 		if (!entry.key) {
-			return Q.reject('Entry has no content');
+			return Q.reject<string>(new Error('Entry has no content'));
 		}
 		return Q(this.storage.getItem(entry.key));
 	}
@@ -94,7 +94,7 @@ export class FS implements vfs.VFS {
 			}
 			var parentDirEntry = this.entryForPath(Path.dirname(path));
 			if (!parentDirEntry) {
-				return Q.reject('Directory does not exist');
+				return Q.reject<void>(new Error('Directory does not exist'));
 			}
 			entry.parent = parentDirEntry;
 			parentDirEntry.entries.push(entry);
@@ -106,7 +106,7 @@ export class FS implements vfs.VFS {
 		}
 
 		if (options.parentRevision && entry.mtime && entry.mtime !== parentRev) {
-			return Q.reject(new vfs.ConflictError(path));
+			return Q.reject<void>(new vfs.ConflictError(path));
 		}
 
 		assert(entry.parent);
@@ -128,10 +128,10 @@ export class FS implements vfs.VFS {
 	list(path: string) : Q.Promise<vfs.FileInfo[]> {
 		var entry = this.entryForPath(path);
 		if (!entry) {
-			return Q.reject('No such directory: ' + path);
+			return Q.reject<vfs.FileInfo[]>(new Error('No such directory: ' + path));
 		}
 		if (!entry.isDir) {
-			return Q.reject('Entry is not a directory');
+			return Q.reject<vfs.FileInfo[]>(new Error('Entry is not a directory'));
 		}
 		return Q(underscore.map(entry.entries, (entry) => {
 			return FS.fsEntryToFileInfo(entry);

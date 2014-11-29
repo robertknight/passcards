@@ -18,7 +18,7 @@ export interface Importer {
 /** Exporter for 1Password's .1pif format */
 export class PIFExporter implements Exporter {
 	exportItems(fs: vfs.VFS, path: string, items: item_store.Item[]) : Q.Promise<boolean> {
-		return Q.reject("not implemented");
+		return Q.reject<boolean>("not implemented");
 	}
 };
 

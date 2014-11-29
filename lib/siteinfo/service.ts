@@ -585,14 +585,14 @@ export class DuckDuckGoClient {
 					if (queryResult.Image && queryResult.ImageIsLogo) {
 						return Q(queryResult.Image);
 					} else {
-						return Q.reject(new err_util.ApiError(url, result.status, 'DDG query did not return an icon'));
+						return Q.reject<string>(new err_util.ApiError(url, result.status, 'DDG query did not return an icon'));
 					}
 				} else {
-					Q.reject(new err_util.ApiError(url, result.status, 'DDG query failed'));
+					Q.reject<string>(new err_util.ApiError(url, result.status, 'DDG query failed'));
 				}
 			});
 		} else {
-			return Q.reject(new err_util.BaseError('Could not extract domain for URL: ' + url));
+			return Q.reject<string>(new err_util.BaseError('Could not extract domain for URL: ' + url));
 		}
 	}
 }

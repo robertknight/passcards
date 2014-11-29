@@ -256,7 +256,7 @@ export class Store implements item_store.SyncableStore {
 				if (matches.length > 0) {
 					return Q(matches[0]);
 				} else {
-					return Q.reject(new Error('No such item ' + uuid));
+					return Q.reject<item_store.Item>(new Error('No such item ' + uuid));
 				}
 			});
 		}
@@ -315,7 +315,7 @@ export class Store implements item_store.SyncableStore {
 	}
 
 	getRawDecryptedData(item: item_store.Item) : Q.Promise<string> {
-		return Q.reject(new Error('getRawDecryptedData() is not implemented'));
+		return Q.reject<string>(new Error('getRawDecryptedData() is not implemented'));
 	}
 
 	listKeys() : Q.Promise<key_agent.Key[]> {

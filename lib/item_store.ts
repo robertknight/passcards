@@ -265,7 +265,7 @@ export class Item {
 	  */
 	getRawDecryptedData() : Q.Promise<string> {
 		if (!this.store) {
-			return Q.reject(new UnsavedItemError());
+			return Q.reject<string>(new UnsavedItemError());
 		}
 		return this.store.getRawDecryptedData(this);
 	}
@@ -273,7 +273,7 @@ export class Item {
 	/** Save this item to its associated store */
 	save() : Q.Promise<void> {
 		if (!this.store) {
-			return Q.reject(new UnsavedItemError());
+			return Q.reject<void>(new UnsavedItemError());
 		}
 		return this.saveTo(this.store);
 	}
@@ -281,7 +281,7 @@ export class Item {
 	/** Save this item to the specified store */
 	saveTo(store: Store) : Q.Promise<void> {
 		if (!this.content && !this.isSaved()) {
-			return Q.reject(new Error('Unable to save new item, no content set'));
+			return Q.reject<void>(new Error('Unable to save new item, no content set'));
 		}
 		this.store = store;
 		return this.store.saveItem(this);
@@ -293,7 +293,7 @@ export class Item {
 	  */
 	remove() : Q.Promise<void> {
 		if (!this.store) {
-			return Q.reject(new UnsavedItemError());
+			return Q.reject<void>(new UnsavedItemError());
 		}
 		this.typeName = ItemTypes.TOMBSTONE;
 		this.title = 'Unnamed';

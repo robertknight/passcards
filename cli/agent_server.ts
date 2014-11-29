@@ -253,7 +253,7 @@ export function stopAgent() : Q.Promise<void> {
 			// no such process
 			return Q<void>(null);
 		}
-		return Q.reject('Failed to stop agent:' + ex);
+		return Q.reject<void>('Failed to stop agent:' + ex);
 	}
 	return Q<void>(null);
 }

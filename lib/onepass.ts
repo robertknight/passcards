@@ -563,7 +563,7 @@ export class Vault implements item_store.Store {
 			if (result) {
 				return result;
 			} else {
-				return Q.reject('No key ' + level + ' found');
+				return Q.reject<string>('No key ' + level + ' found');
 			}
 		});
 	}
@@ -581,7 +581,7 @@ export class Vault implements item_store.Store {
 			if (result) {
 				return result;
 			} else {
-				return Q.reject('No key ' + level + ' found');
+				return Q.reject<string>('No key ' + level + ' found');
 			}
 		});
 	}
@@ -600,8 +600,7 @@ export class Vault implements item_store.Store {
 	changePassword(oldPass: string, newPass: string, newPassHint: string, iterations?: number) : Q.Promise<void> {
 		return this.isLocked().then((locked) => {
 			if (locked) {
-				return <Q.Promise<agilekeychain.EncryptionKeyEntry[]>>
-					Q.reject('Vault must be unlocked before changing the password');
+				return Q.reject<agilekeychain.EncryptionKeyEntry[]>(new Error('Vault must be unlocked before changing the password'));
 			}
 			return this.getKeys();
 		}).then((keys) => {
@@ -630,7 +629,7 @@ export class Vault implements item_store.Store {
 					keyList[newKeyEntry.level] = newKeyEntry.identifier;
 				});
 			} catch (err) {
-				return Q.reject(err);
+				return Q.reject<void>(err);
 			}
 
 			this.keys = null;
@@ -708,7 +707,7 @@ export class Vault implements item_store.Store {
 	clear() {
 		// not implemented for onepass.Vault since this is the user's
 		// primary data source.
-		return Q.reject(new Error('Primary vault does not support being cleared'));
+		return Q.reject<void>(new Error('Primary vault does not support being cleared'));
 	}
 }
 

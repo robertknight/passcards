@@ -44,7 +44,7 @@ class FakeIO implements consoleio.TermIO {
 		if (reply) {
 			return Q(reply.response);
 		} else {
-			return Q.reject('No pattern matched the prompt: "' + prompt + '"');
+			return Q.reject<string>('No pattern matched the prompt: "' + prompt + '"');
 		}
 	}
 

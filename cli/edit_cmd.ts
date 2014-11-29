@@ -138,7 +138,7 @@ export class EditCommand {
 	  value: string) : Q.Promise<void> {
 		var sections = item_search.matchSection(content, sectionName);
 		if (sections.length == 0) {
-			return Q.reject(NO_SUCH_SECTION_ERROR);
+			return Q.reject<void>(NO_SUCH_SECTION_ERROR);
 		}
 
 		var fieldTypes : { [index: string] : item_store.FieldType } = {
@@ -146,7 +146,7 @@ export class EditCommand {
 			'password' : item_store.FieldType.Password
 		};
 		if (fieldTypes[typeName] === undefined) {
-			return Q.reject(UNKNOWN_FIELD_TYPE_ERROR);
+			return Q.reject<void>(UNKNOWN_FIELD_TYPE_ERROR);
 		}
 
 		var section = sections[0];
@@ -161,7 +161,7 @@ export class EditCommand {
 	}
 
 	private renameSection(content: item_store.ItemContent, section: string, newName: string) : Q.Promise<void> {
-		return Q.reject(null);
+		return Q.reject<void>(null);
 	}
 
 	private setField(content: item_store.ItemContent, field: string, newValue: string) : Q.Promise<void> {
@@ -183,14 +183,14 @@ export class EditCommand {
 				});
 			}
 		} else {
-			return Q.reject(NO_SUCH_FIELD_ERROR);
+			return Q.reject<void>(NO_SUCH_FIELD_ERROR);
 		}
 	}
 
 	private removeField(content: item_store.ItemContent, field: string) : Q.Promise<void> {
 		var match = this.selectField(content, field);
 		if (!match) {
-			return Q.reject(NO_SUCH_FIELD_ERROR);
+			return Q.reject<void>(NO_SUCH_FIELD_ERROR);
 		}
 		match.section.fields = underscore.filter(match.section.fields, (field) => {
 			return field != match.field;

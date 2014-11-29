@@ -57,7 +57,7 @@ export class IndexedDBDatabase implements Database {
 	}
 
 	private reset() {
-		this.database = Q.reject(new Error('Database not opened'));
+		this.database = Q.reject<IDBDatabase>(new Error('Database not opened'));
 		this.stores = new collectionutil.PMap<string,IndexedDBStore>();
 	}
 
@@ -136,7 +136,7 @@ export class IndexedDBDatabase implements Database {
 
 	delete() {
 		if (!this.database) {
-			return Q.reject(new Error('Database is not open'));
+			return Q.reject<void>(new Error('Database is not open'));
 		}
 
 		return this.database.then((db) => {

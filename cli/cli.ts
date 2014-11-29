@@ -322,7 +322,7 @@ export class CLI {
 	private select<T>(items: T[], plural: string, singular: string, pattern: string, captionFunc: (item: T) => string) : Q.Promise<T> {
 		if (items.length < 1) {
 			this.printf('No %s matching pattern "%s"', plural, pattern);
-			return Q.reject(NO_SUCH_ITEM_ERR);
+			return Q.reject<T>(NO_SUCH_ITEM_ERR);
 		}
 		else if (items.length == 1) {
 			return Q(items[0]);
@@ -640,7 +640,7 @@ export class CLI {
 				format = ShowItemFormat.ShowJSON;
 				break;
 			default:
-				return Q.reject('Unsupported output format: ' + args.format[0]);
+				return Q.reject<void>(new Error('Unsupported output format: ' + args.format[0]));
 			}
 			return this.showItemCommand(currentVault, args.pattern, format);
 		};
