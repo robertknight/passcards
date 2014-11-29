@@ -1,6 +1,7 @@
 /// <reference path="../typings/react-0.12.d.ts" />
 
 import react = require('react');
+import style = require('ts-style');
 import typed_react = require('typed-react');
 
 import controls = require('./controls');
@@ -219,7 +220,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		}).done();
 	}
 
-	private renderSections(item: item_store.ItemAndContent, onSave: () => void) {
+	private renderSections(item: item_store.ItemAndContent, onSave: () => void, editing: boolean) {
 		var sections: React.ReactElement<any>[] = [];
 		item.content.sections.forEach((section, sectionIndex) => {
 			var fields: React.ComponentElement<any>[] = [];
@@ -236,7 +237,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 							onSave();
 							return true;
 						},
-						readOnly: !this.state.isEditing
+						readOnly: !editing
 					}));
 				}
 			});
@@ -247,7 +248,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		return sections;
 	}
 
-	private renderWebsites(item: item_store.ItemAndContent, onSave: () => void) {
+	private renderWebsites(item: item_store.ItemAndContent, onSave: () => void, editing: boolean) {
 		var websites: React.ComponentElement<any>[] = [];
 		item.content.urls.forEach((url, urlIndex) => {
 			websites.push(ItemFieldF({
@@ -261,13 +262,13 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 					onSave();
 					return true;
 				},
-				readOnly: !this.state.isEditing
+				readOnly: !editing
 			}));
 		});
 		return websites;
 	}
 
-	private renderCoreFields(item: item_store.ItemAndContent, onSave: () => void) {
+	private renderCoreFields(item: item_store.ItemAndContent, onSave: () => void, editing: boolean) {
 		var coreFields: React.ComponentElement<any>[] = [];
 
 		var accountField = item.content.accountField();
@@ -289,7 +290,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 					onSave();
 					return true;
 				},
-				readOnly: !this.state.isEditing
+				readOnly: !editing
 			}));
 		}
 
@@ -309,7 +310,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 					onSave();
 					return true;
 				},
-				readOnly: !this.state.isEditing
+				readOnly: !editing
 			}));
 		}
 		
@@ -341,7 +342,10 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 						this.props.onSave(this.state.editedItem);
 					}
 
-					this.setState({isEditing:false});
+					this.setState({
+						isEditing: false,
+						didEditItem: false
+					});
 
 					// go back to main item list after adding a new item
 					if (this.props.editMode == ItemEditMode.AddItem) {
@@ -365,7 +369,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		);
 	}
 
-	render() {
+	private renderFields(editing: boolean) {
 		var detailsContent : React.ReactElement<any>;
 		var updatedItem = this.state.editedItem;
 		if (updatedItem) {
@@ -378,7 +382,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			};
 
 			var titleField: React.ReactElement<any>;
-			if (this.state.isEditing) {
+			if (editing) {
 				titleField = ItemFieldF({
 					label: 'Title',
 					value: updatedItem.item.title,
@@ -395,11 +399,16 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				titleField = div(theme.detailsView.overview.title, {}, updatedItem.item.title);
 			}
 
-			var coreFields = this.renderCoreFields(updatedItem, onChangeItem);
-			var sections = this.renderSections(updatedItem, onChangeItem);
-			var websites = this.renderWebsites(updatedItem, onChangeItem);
+			var coreFields = this.renderCoreFields(updatedItem, onChangeItem, editing);
+			var sections = this.renderSections(updatedItem, onChangeItem, editing);
+			var websites = this.renderWebsites(updatedItem, onChangeItem, editing);
 
-			detailsContent = div(theme.detailsView.content, {},
+			var contentKey = 'content';
+			if (editing) {
+				contentKey += '-editing';
+			}
+
+			detailsContent = div(theme.detailsView.content, {key: contentKey},
 				div(theme.detailsView.header, {},
 					item_icons.IconControlF({
 						location: this.props.item.primaryLocation(),
@@ -422,6 +431,10 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			);
 		}
 
+		return detailsContent;
+	}
+
+	render() {
 		var autofillButton: React.ComponentElement<any>;
 		if (env.isFirefoxAddon() || env.isChromeExtension()) {
 			autofillButton = controls.ActionButtonF({
@@ -437,7 +450,11 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			div(theme.detailsView.itemActionBar, {},
 				autofillButton
 			),
-			detailsContent
+			react.DOM.div({style: {position: 'relative'}},
+				reactutil.CSSTransitionGroupF({transitionName: style.classes(theme.animations.fade)},
+					this.renderFields(this.state.isEditing)
+				)
+			)
 		);
 	}
 }

@@ -505,7 +505,8 @@ var styles = style.create({
 		content: {
 			paddingLeft: 16,
 			flexGrow: 1,
-			overflowY: 'auto'
+			overflowY: 'auto',
+			position: 'absolute'
 		},
 
 		header: {
