@@ -7,6 +7,7 @@ import underscore = require('underscore');
 
 import controls = require('./controls');
 import env = require('../lib/base/env');
+import focus_mixin = require('./base/focus_mixin');
 import keycodes = require('./base/keycodes');
 import item_icons = require('./item_icons');
 import item_search = require('../lib/item_search');
@@ -24,6 +25,7 @@ export class ItemListViewProps {
 	onSelectedItemChanged: (item: item_store.Item) => void;
 	currentUrl: string;
 	iconProvider: item_icons.ItemIconProvider;
+	focus: boolean;
 
 	onLockClicked: () => void;
 	onMenuClicked: () => void;
@@ -36,30 +38,24 @@ export class ItemListView extends typed_react.Component<ItemListViewProps, ItemL
 	}
 
 	componentDidMount() {
+		if (this.props.focus) {
+			this.setFocus();
+		}
+	}
+
+	componentDidUpdate(prevProps: ItemListViewProps) {
+		if (!prevProps.focus && this.props.focus) {
+			this.setFocus();
+		}
+	}
+
+	private setFocus() {
 		// on the desktop, focus the search field to allow instant searching
 		// via the keyboard. On mobile/touch devices we don't do this to avoid
 		// immediately obscuring most of the list content with a popup
 		// keyboard
 		if (!env.isTouchDevice()) {
 			this.focusSearchField();
-		}
-	}
-
-	componentWillReceiveProps(nextProps: ItemListViewProps) {
-		if (this.refs['searchField']) {
-			if (nextProps.selectedItem) {
-				// blur search field to allow keyboard navigation of selected
-				// item
-				setTimeout(() => {
-					this.blurSearchField();
-				}, 0);
-			} else {
-				// no item selected, focus search field to allow item list navigation
-				// via keyboard
-				if (!env.isTouchDevice()) {
-					this.focusSearchField();
-				}
-			}
 		}
 	}
 
@@ -75,7 +71,13 @@ export class ItemListView extends typed_react.Component<ItemListViewProps, ItemL
 			filterUrl = this.props.currentUrl;
 		}
 
-		return react.DOM.div({className: 'itemListView'},
+		return react.DOM.div({
+				className: 'itemListView',
+				tabIndex: 0,
+				onFocus: () => {
+					this.setFocus();
+				}
+			},
 			ItemListToolbarF({
 				onQueryChanged: (query) => {
 					this.updateFilter(query)
@@ -117,7 +119,8 @@ export class ItemListView extends typed_react.Component<ItemListViewProps, ItemL
 		searchField.blur();
 	}
 }
-export var ItemListViewF = reactutil.createFactory(ItemListView);
+
+export var ItemListViewF = reactutil.createFactory(ItemListView, focus_mixin.FocusMixinM);
 
 class ItemProps {
 	key: string;

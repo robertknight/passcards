@@ -294,6 +294,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 	private renderItemList() {
 		return item_list.ItemListViewF({
 			key: 'itemList',
+			ref: 'itemList',
 			items: this.state.items,
 			selectedItem: this.state.selectedItem,
 			onSelectedItemChanged: (item) => { this.setSelectedItem(item); },
@@ -302,7 +303,8 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 			onLockClicked: () => this.props.services.keyAgent.forgetKeys(),
 			onMenuClicked: () => {
 				this.setState({showMenu: true});
-			}
+			},
+			focus: !this.state.isLocked && !this.state.selectedItem
 		});
 	}
 
@@ -341,7 +343,8 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 				autofill: () => {
 					this.autofill(this.state.selectedItem);
 				},
-				clipboard: this.props.services.clipboard
+				clipboard: this.props.services.clipboard,
+				focus: this.state.selectedItem != null
 			});
 		}
 		return reactutil.CSSTransitionGroupF({

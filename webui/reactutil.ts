@@ -28,8 +28,9 @@ export function mergeProps<P,C>(parentProps: P, childProps: C) : C {
 	return childProps;
 }
 
-export function createFactory<P,S>(component: {new() : typed_react.Component<P,S>}) : react.ReactComponentFactory<P> {
-	return react.createFactory(typed_react.createClass(component));
+export function createFactory<P,S>(component: {new() : typed_react.Component<P,S>}, ...mixins: react.Mixin<any,any>[])
+  : react.ReactComponentFactory<P> {
+	return react.createFactory(typed_react.createClass(component, mixins));
 }
 
 /** Performs a shallow comparison of the properties of two objects and returns

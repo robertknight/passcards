@@ -5,6 +5,7 @@ import typed_react = require('typed-react');
 
 import controls = require('./controls');
 import env = require('../lib/base/env');
+import focus_mixin = require('./base/focus_mixin');
 import item_builder = require('../lib/item_builder');
 import item_icons = require('./item_icons');
 import item_store = require('../lib/item_store');
@@ -127,6 +128,7 @@ export class DetailsViewProps {
 	iconProvider: item_icons.ItemIconProvider;
 	clipboard: page_access.ClipboardAccess;
 	editMode: ItemEditMode;
+	focus: boolean;
 
 	onGoBack: () => any;
 	onSave: (updates: item_store.ItemAndContent) => any;
@@ -171,26 +173,20 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		}
 	}
 
-	componentDidUpdate() {
-		this.updateShortcutState();
-	}
-
 	componentWillMount() {
 		this.fetchContent(this.props.item);
 	}
 
 	componentDidMount() {
-		var componentDoc = this.getDOMNode().ownerDocument;
-
+		var elt = <HTMLElement>this.getDOMNode();
 		this.shortcuts = [
-			new shortcut.Shortcut(componentDoc, keycodes.Backspace, () => {
+			new shortcut.Shortcut(elt, keycodes.Backspace, () => {
 				this.props.onGoBack();
 			}),
-			new shortcut.Shortcut(componentDoc, keycodes.a, () => {
+			new shortcut.Shortcut(elt, keycodes.a, () => {
 				this.props.autofill();
 			})
 		];
-		this.updateShortcutState();
 	}
 
 	componentDidUnmount() {
@@ -198,12 +194,6 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			shortcut.remove();
 		});
 		this.shortcuts = [];
-	}
-
-	private updateShortcutState() {
-		this.shortcuts.forEach((shortcut) => {
-			shortcut.setEnabled(this.props.item != null);
-		});
 	}
 
 	private fetchContent(item: item_store.Item) {
@@ -456,5 +446,5 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 	}
 }
 
-export var DetailsViewF = reactutil.createFactory(DetailsView);
+export var DetailsViewF = reactutil.createFactory(DetailsView, focus_mixin.FocusMixinM);
 

@@ -4,7 +4,7 @@
   * Shortcuts remain in effect until disabled via remove()
   */
 export class Shortcut {
-	private document: Document;
+	private element: HTMLElement;
 	private listener: (ev: KeyboardEvent) => any;
 	private enabled: boolean;
 
@@ -14,10 +14,10 @@ export class Shortcut {
 	  * remove() must be called to uninstall the shortcut if it
 	  * is no longer needed.
 	  */
-	constructor(document: Document, keyCode: number, handler: () => void) {
-		this.document = document;
+	constructor(element: HTMLElement, keyCode: number, handler: () => void) {
+		this.element = element;
 		this.listener = (e) => {
-			if (e.target == this.document.body && e.keyCode == keyCode) {
+			if (e.target == this.element && e.keyCode == keyCode) {
 				e.preventDefault();
 				handler();
 			}
@@ -36,9 +36,9 @@ export class Shortcut {
 		}
 		this.enabled = enable;
 		if (enable) {
-			this.document.addEventListener('keydown', this.listener);
+			this.element.addEventListener('keydown', this.listener);
 		} else {
-			this.document.removeEventListener('keydown', this.listener);
+			this.element.removeEventListener('keydown', this.listener);
 		}
 	}
 }
