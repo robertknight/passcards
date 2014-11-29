@@ -10,12 +10,8 @@ import style = require('ts-style');
   * @param children Children passed to react.DOM.div()
   */
 function div(styles: any, props: React.HTMLAttributes, ...children: any[]) {
-	if (Array.isArray(styles)) {
-		props.className = style.classes.apply(style, styles);
-	} else if (styles) {
-		props.className = style.classes(styles);
-	}
-	return react.DOM.div.apply(react.DOM, [props].concat(<any>children));
+	var mergedProps = style.mixin(styles, props);
+	return react.DOM.div.apply(react.DOM, [mergedProps].concat(<any>children));
 }
 
 export = div;

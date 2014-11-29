@@ -334,8 +334,9 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		}
 		toolbarControls.push(div(theme.detailsView.toolbarSpacer,{}));
 
+		var editOrSave: React.ComponentElement<controls.ToolbarButtonProps>;
 		if (this.state.isEditing) {
-			toolbarControls.push(controls.ToolbarButtonF({
+			editOrSave = controls.ToolbarButtonF({
 				iconHref: 'icons/icons.svg#done',
 				onClick: () => {
 					if (this.state.didEditItem) {
@@ -352,17 +353,28 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 						this.props.onGoBack();
 					}
 				},
-				key: 'save'
-			}));
+				key: 'save',
+				style: { position: 'absolute', top: 0 }
+			});
 		} else {
-			toolbarControls.push(controls.ToolbarButtonF({
+			editOrSave = controls.ToolbarButtonF({
 				iconHref: 'icons/icons.svg#edit',
 				onClick: () => {
 					this.setState({isEditing:true});
 				},
-				key: 'edit'
-			}));
+				key: 'edit',
+				style: { position: 'absolute', top: 0 }
+			});
 		}
+		toolbarControls.push(react.DOM.div(style.mixin([theme.itemList.toolbar.iconGroup, {
+				position: 'relative',
+				width: 45,
+				overflow: 'hidden'
+			}]),
+			reactutil.CSSTransitionGroupF({transitionName: style.classes(theme.animations.slideFromBottom)},
+				editOrSave
+			)
+		));
 
 		return div([theme.toolbar, theme.detailsView.toolbar], {},
 			toolbarControls
