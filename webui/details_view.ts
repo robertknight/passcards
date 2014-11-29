@@ -27,6 +27,7 @@ interface ItemFieldProps {
 	value: string;
 	isPassword: boolean;
 	clipboard: page_access.ClipboardAccess;
+	readOnly: boolean;
 
 	onChange(newValue: string) : boolean;
 }
@@ -135,13 +136,18 @@ export class DetailsViewProps {
 interface DetailsViewState {
 	itemContent?: item_store.ItemContent;
 	editedItem?: item_store.ItemAndContent;
+	isEditing?: boolean;
+	didEditItem?: boolean;
 }
 
 export class DetailsView extends typed_react.Component<DetailsViewProps, DetailsViewState> {
 	private shortcuts: shortcut.Shortcut[];
 
 	getInitialState() {
-		return {};
+		return {
+			isEditing: this.props.editMode === ItemEditMode.AddItem,
+			didEditItem: false
+		};
 	}
 
 	componentWillReceiveProps(nextProps: DetailsViewProps) {
@@ -153,7 +159,13 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			// forget previous item content when switching items
 			this.setState({
 				itemContent: null,
-				editedItem: null
+				editedItem: null,
+
+				// start in 'view details' mode initially unless
+				// adding a new item
+				isEditing: nextProps.editMode == ItemEditMode.AddItem,
+
+				didEditItem: false
 			});
 			this.fetchContent(nextProps.item);
 		}
@@ -211,96 +223,185 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		}).done();
 	}
 
+	private renderSections(item: item_store.ItemAndContent, onSave: () => void) {
+		var sections: react.Descriptor<any>[] = [];
+		item.content.sections.forEach((section, sectionIndex) => {
+			var fields: react.Descriptor<any>[] = [];
+			section.fields.forEach((field, fieldIndex) => {
+				if (field.value) {
+					fields.push(ItemFieldF({
+						key: sectionIndex + '.' + fieldIndex,
+						label: field.title,
+						value: field.value,
+						isPassword: field.kind == item_store.FieldType.Password,
+						clipboard: this.props.clipboard,
+						onChange: (newValue) => {
+							field.value = newValue;
+							onSave();
+							return true;
+						},
+						readOnly: !this.state.isEditing
+					}));
+				}
+			});
+			sections.push(react.DOM.div({className: 'detailsSection'},
+				fields)
+			);
+		});
+		return sections;
+	}
+
+	private renderWebsites(item: item_store.ItemAndContent, onSave: () => void) {
+		var websites: react.Descriptor<any>[] = [];
+		item.content.urls.forEach((url, urlIndex) => {
+			websites.push(ItemFieldF({
+				key: urlIndex,
+				label: url.label,
+				value: url.url,
+				isPassword: false,
+				clipboard: this.props.clipboard,
+				onChange: (newValue) => {
+					url.url = newValue;
+					onSave();
+					return true;
+				},
+				readOnly: !this.state.isEditing
+			}));
+		});
+		return websites;
+	}
+
+	private renderCoreFields(item: item_store.ItemAndContent, onSave: () => void) {
+		var coreFields: react.Descriptor<any>[] = [];
+
+		var accountField = item.content.accountField();
+		var passwordField = item.content.passwordField();
+
+		if (accountField) {
+			coreFields.push(ItemFieldF({
+				key: 'account',
+				label: 'Account',
+				value: accountField ? accountField.value : '',
+				isPassword: false,
+				clipboard: this.props.clipboard,
+				onChange: (newValue) => {
+					if (accountField) {
+						accountField.value = newValue;
+					} else {
+						item.content.formFields.push(item_builder.Builder.createLoginField(newValue));
+					}
+					onSave();
+					return true;
+				},
+				readOnly: !this.state.isEditing
+			}));
+		}
+
+		if (passwordField) {
+			coreFields.push(ItemFieldF({
+				key: 'password',
+				label: 'Password',
+				value: passwordField ? passwordField.value : '',
+				isPassword: true,
+				clipboard: this.props.clipboard,
+				onChange: (newValue) => {
+					if (passwordField) {
+						passwordField.value = newValue;
+					} else {
+						item.content.formFields.push(item_builder.Builder.createPasswordField(newValue));
+					}
+					onSave();
+					return true;
+				},
+				readOnly: !this.state.isEditing
+			}));
+		}
+		
+		return coreFields;
+	}
+
+	private renderToolbar() {
+		var toolbarControls: react.Descriptor<any>[] = [];
+		if (this.props.editMode == ItemEditMode.EditItem) {
+			toolbarControls.push(controls.ToolbarButtonF({
+				iconHref: 'icons/icons.svg#arrow-back',
+				onClick: () => this.props.onGoBack(),
+				key: 'back'
+			}));
+		} else {
+			toolbarControls.push(controls.ToolbarButtonF({
+				iconHref: 'icons/icons.svg#clear',
+				onClick: () => this.props.onGoBack(),
+				key: 'cancel'
+			}));
+		}
+		toolbarControls.push(react.DOM.div({className:'toolbarSpacer'}));
+
+		if (this.state.isEditing) {
+			toolbarControls.push(controls.ToolbarButtonF({
+				iconHref: 'icons/icons.svg#done',
+				onClick: () => {
+					if (this.state.didEditItem) {
+						this.props.onSave(this.state.editedItem);
+					}
+
+					this.setState({isEditing:false});
+
+					// go back to main item list after adding a new item
+					if (this.props.editMode == ItemEditMode.AddItem) {
+						this.props.onGoBack();
+					}
+				},
+				key: 'save'
+			}));
+		} else {
+			toolbarControls.push(controls.ToolbarButtonF({
+				iconHref: 'icons/icons.svg#edit',
+				onClick: () => {
+					this.setState({isEditing:true});
+				},
+				key: 'edit'
+			}));
+		}
+
+		return react.DOM.div({className: stringutil.truthyKeys({toolbar: true, detailsToolbar: true})},
+			toolbarControls
+		);
+	}
+
 	render() {
 		var detailsContent : react.Descriptor<any>;
 		var updatedItem = this.state.editedItem;
 		if (updatedItem) {
 			var onChangeItem = () => {
 				updatedItem.item.updateOverviewFromContent(updatedItem.content);
-				this.setState({editedItem: updatedItem});
+				this.setState({
+					editedItem: updatedItem,
+					didEditItem: true
+				});
 			};
 
-			var accountField = updatedItem.content.accountField();
-			var passwordField = updatedItem.content.passwordField();
-			var coreFields: react.Descriptor<any>[] = [];
-			var websites: react.Descriptor<any>[] = [];
-			var sections: react.Descriptor<any>[] = [];
-
-			updatedItem.content.sections.forEach((section, sectionIndex) => {
-				var fields: react.Descriptor<any>[] = [];
-				section.fields.forEach((field, fieldIndex) => {
-					if (field.value) {
-						fields.push(ItemFieldF({
-							key: sectionIndex + '.' + fieldIndex,
-							label: field.title,
-							value: field.value,
-							isPassword: field.kind == item_store.FieldType.Password,
-							clipboard: this.props.clipboard,
-							onChange: (newValue) => {
-								field.value = newValue;
-								onChangeItem();
-								return true;
-							}
-						}));
-					}
+			var titleField: react.Descriptor<any>;
+			if (this.state.isEditing) {
+				titleField = ItemFieldF({
+					label: 'Title',
+					value: updatedItem.item.title,
+					isPassword: false,
+					clipboard: this.props.clipboard,
+					onChange: (newValue) => {
+						updatedItem.item.title = newValue;
+						onChangeItem();
+						return true;
+					},
+					readOnly: false
 				});
-				sections.push(react.DOM.div({className: 'detailsSection'},
-					fields)
-				);
-			});
-
-			updatedItem.content.urls.forEach((url, urlIndex) => {
-				websites.push(ItemFieldF({
-					key: urlIndex,
-					label: url.label,
-					value: url.url,
-					isPassword: false,
-					clipboard: this.props.clipboard,
-					onChange: (newValue) => {
-						url.url = newValue;
-						onChangeItem();
-						return true;
-					}
-				}));
-			});
-
-			if (accountField) {
-				coreFields.push(ItemFieldF({
-					key: 'account',
-					label: 'Account',
-					value: accountField ? accountField.value : '',
-					isPassword: false,
-					clipboard: this.props.clipboard,
-					onChange: (newValue) => {
-						if (accountField) {
-							accountField.value = newValue;
-						} else {
-							updatedItem.content.formFields.push(item_builder.Builder.createLoginField(newValue));
-						}
-						onChangeItem();
-						return true;
-					}
-				}));
+			} else {
+				titleField = react.DOM.div({className: 'detailsTitle'}, updatedItem.item.title);
 			}
 
-			if (passwordField) {
-				coreFields.push(ItemFieldF({
-					key: 'password',
-					label: 'Password',
-					value: passwordField ? passwordField.value : '',
-					isPassword: true,
-					clipboard: this.props.clipboard,
-					onChange: (newValue) => {
-						if (passwordField) {
-							passwordField.value = newValue;
-						} else {
-							updatedItem.content.formFields.push(item_builder.Builder.createPasswordField(newValue));
-						}
-						onChangeItem();
-						return true;
-					}
-				}));
-			}
+			var coreFields = this.renderCoreFields(updatedItem, onChangeItem);
+			var sections = this.renderSections(updatedItem, onChangeItem);
+			var websites = this.renderWebsites(updatedItem, onChangeItem);
 
 			detailsContent = react.DOM.div({className: 'detailsContent'},
 				react.DOM.div({className: 'detailsHeader'},
@@ -311,7 +412,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 						isFocused: false
 					}),
 					react.DOM.div({className: 'detailsOverview'},
-						react.DOM.div({className: 'detailsTitle'}, updatedItem.item.title),
+						titleField,
 						react.DOM.div({className: 'detailsLocation'},
 							react.DOM.a({href: updatedItem.item.primaryLocation()},
 								url_util.domain(updatedItem.item.primaryLocation())
@@ -337,41 +438,16 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			});
 		}
 
-		var toolbarControls: react.Descriptor<any>[] = [];
-		if (this.props.editMode == ItemEditMode.EditItem) {
-			toolbarControls.push(controls.ToolbarButtonF({
-				iconHref: 'icons/icons.svg#arrow-back',
-				onClick: () => this.props.onGoBack(),
-				key: 'back'
-			}));
-		} else {
-			toolbarControls.push(controls.ToolbarButtonF({
-				iconHref: 'icons/icons.svg#clear',
-				onClick: () => this.props.onGoBack(),
-				key: 'cancel'
-			}));
-		}
-		toolbarControls.push(react.DOM.div({className:'toolbarSpacer'}));
-		toolbarControls.push(controls.ToolbarButtonF({
-			iconHref: 'icons/icons.svg#done',
-			onClick: () => {
-				this.props.onSave(this.state.editedItem);
-				this.props.onGoBack();
-			},
-			key: 'save'
-		}));
-
 		return react.DOM.div({
-			className: stringutil.truthyKeys({
+				className: stringutil.truthyKeys({
 					detailsView: true,
 					hasSelectedItem: this.props.item
 				}),
-			ref: 'detailsView',
-			tabIndex: 0
+				ref: 'detailsView',
+				tabIndex: 0
 			},
-			react.DOM.div({className: stringutil.truthyKeys({toolbar: true, detailsToolbar: true})},
-				toolbarControls
-			),
+				this.renderToolbar()
+			,
 			react.DOM.div({className: 'itemActionBar'},
 				autofillButton
 			),
