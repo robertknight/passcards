@@ -248,6 +248,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 			key: 'unlockPane',
 			store: this.state.store,
 			isLocked: this.state.isLocked,
+			focus: this.state.isLocked,
 			onUnlock: () => {
 				this.setState({isLocked: false});
 			},

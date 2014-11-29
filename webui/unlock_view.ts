@@ -5,6 +5,7 @@
 import react = require('react');
 import typed_react = require('typed-react');
 
+import focus_mixin = require('./base/focus_mixin');
 import item_store = require('../lib/item_store');
 import reactutil = require('./reactutil');
 
@@ -25,6 +26,7 @@ export class UnlockViewProps {
 	isLocked: boolean;
 	onUnlock: () => void;
 	onUnlockErr: (error: Error) => void;
+	focus: boolean;
 }
 
 export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockViewState> {
@@ -35,9 +37,11 @@ export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockVie
 		};
 	}
 
-	componentDidMount() {
-		var masterPassField = <HTMLInputElement>this.refs['masterPassField'].getDOMNode();
-		masterPassField.focus();
+	private setFocus() {
+		if (this.props.isLocked) {
+			var masterPassField = this.refs['masterPassField'];
+			(<HTMLElement>masterPassField.getDOMNode()).focus();
+		}
 	}
 
 	render() {
@@ -115,5 +119,5 @@ export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockVie
 	}
 }
 
-export var UnlockViewF = reactutil.createFactory(UnlockView);
+export var UnlockViewF = reactutil.createFactory(UnlockView, focus_mixin.FocusMixinM);
 
