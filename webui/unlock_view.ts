@@ -48,8 +48,8 @@ export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockVie
 			unlockMessage = '';
 		}
 
-		var unlockPaneUpper: react.Descriptor<any>;
-		var unlockPaneLower: react.Descriptor<any>;
+		var unlockPaneUpper: react.ReactElement<any,any>;
+		var unlockPaneLower: react.ReactElement<any,any>;
 
 		if (this.props.isLocked) {
 			unlockPaneUpper = react.DOM.div({className:'unlockPane upper'},

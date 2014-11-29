@@ -10,4 +10,4 @@ export interface TextFieldProps {
 }
 
 var TextField = require('react-material/components/TextField');
-export var TextFieldF: react.Factory<TextFieldProps> = react.createFactory(TextField);
+export var TextFieldF: react.ReactComponentFactory<TextFieldProps> = react.createFactory(TextField);

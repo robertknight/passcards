@@ -245,7 +245,7 @@ export class Toaster extends typed_react.Component<ToasterProps, {}> {
 		var PROGRESS_WIDTH = 200;
 		var meterWidth = (this.props.progressValue / this.props.progressMax) * PROGRESS_WIDTH;
 
-		var progressBar: react.Descriptor<any>;
+		var progressBar: react.ReactElement<any,any>;
 		if (this.props.progressMax) {
 			progressBar = react.DOM.div({
 					className: 'toasterProgress',

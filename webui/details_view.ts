@@ -65,9 +65,9 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 			inputType = 'password';
 		}
 
-		var fieldActions: react.Descriptor<any>;
+		var fieldActions: react.ReactElement<any,any>;
 
-		var revealButton: react.Descriptor<controls.ActionButtonProps>;
+		var revealButton: react.ReactComponentElement<controls.ActionButtonProps>;
 		if (this.props.isPassword) {
 			revealButton = controls.ActionButtonF({
 				value: this.state.revealed ? 'Hide' : 'Reveal',
@@ -79,7 +79,7 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 		}
 
 		if (this.state.selected) {
-			var copyButton: react.Descriptor<controls.ActionButtonProps>;
+			var copyButton: react.ReactComponentElement<controls.ActionButtonProps>;
 			if (this.props.clipboard.clipboardAvailable()) {
 				copyButton = controls.ActionButtonF({
 					value: 'Copy',
@@ -224,9 +224,9 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 	}
 
 	private renderSections(item: item_store.ItemAndContent, onSave: () => void) {
-		var sections: react.Descriptor<any>[] = [];
+		var sections: react.ReactElement<any,any>[] = [];
 		item.content.sections.forEach((section, sectionIndex) => {
-			var fields: react.Descriptor<any>[] = [];
+			var fields: react.ReactComponentElement<any>[] = [];
 			section.fields.forEach((field, fieldIndex) => {
 				if (field.value) {
 					fields.push(ItemFieldF({
@@ -252,7 +252,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 	}
 
 	private renderWebsites(item: item_store.ItemAndContent, onSave: () => void) {
-		var websites: react.Descriptor<any>[] = [];
+		var websites: react.ReactComponentElement<any>[] = [];
 		item.content.urls.forEach((url, urlIndex) => {
 			websites.push(ItemFieldF({
 				key: urlIndex,
@@ -272,7 +272,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 	}
 
 	private renderCoreFields(item: item_store.ItemAndContent, onSave: () => void) {
-		var coreFields: react.Descriptor<any>[] = [];
+		var coreFields: react.ReactComponentElement<any>[] = [];
 
 		var accountField = item.content.accountField();
 		var passwordField = item.content.passwordField();
@@ -321,7 +321,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 	}
 
 	private renderToolbar() {
-		var toolbarControls: react.Descriptor<any>[] = [];
+		var toolbarControls: react.ReactElement<any,any>[] = [];
 		if (this.props.editMode == ItemEditMode.EditItem) {
 			toolbarControls.push(controls.ToolbarButtonF({
 				iconHref: 'icons/icons.svg#arrow-back',
@@ -370,7 +370,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 	}
 
 	render() {
-		var detailsContent : react.Descriptor<any>;
+		var detailsContent : react.ReactElement<any,any>;
 		var updatedItem = this.state.editedItem;
 		if (updatedItem) {
 			var onChangeItem = () => {
@@ -381,7 +381,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				});
 			};
 
-			var titleField: react.Descriptor<any>;
+			var titleField: react.ReactElement<any,any>;
 			if (this.state.isEditing) {
 				titleField = ItemFieldF({
 					label: 'Title',
@@ -429,7 +429,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			);
 		}
 
-		var autofillButton: react.Descriptor<any>;
+		var autofillButton: react.ReactComponentElement<any>;
 		if (env.isFirefoxAddon() || env.isChromeExtension()) {
 			autofillButton = controls.ActionButtonF({
 				accessKey:'a',

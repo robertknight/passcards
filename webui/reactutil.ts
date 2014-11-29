@@ -28,11 +28,8 @@ export function mergeProps<P,C>(parentProps: P, childProps: C) : C {
 	return childProps;
 }
 
-export function createFactory<P,S>(component: {new() : typed_react.Component<P,S>}) : react.Factory<P> {
-	var factoryGenerator = (spec: react.Specification<P,S>) => {
-		return react.createFactory(react.createClass(spec));
-	};
-	return typed_react.createFactory(factoryGenerator, component);
+export function createFactory<P,S>(component: {new() : typed_react.Component<P,S>}) : react.ReactComponentFactory<P> {
+	return react.createFactory(typed_react.createClass(component));
 }
 
 /** Performs a shallow comparison of the properties of two objects and returns

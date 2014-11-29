@@ -267,7 +267,7 @@ class Cache {
 	private withKey<T>(url: string, f: (key: string) => Q.Promise<T>) : Q.Promise<T> {
 		var key = urijs(url_util.normalize(url)).hostname();
 		if (!key) {
-			return Q.reject(new err_util.BaseError('Invalid URL'));
+			return Q.reject<T>(new err_util.BaseError('Invalid URL'));
 		}
 		return f(key);
 	}

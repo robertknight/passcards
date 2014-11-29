@@ -142,7 +142,7 @@ class Item extends typed_react.Component<ItemProps, {}> {
 	}
 
 	render() {
-		var focusIndicator: react.Descriptor<any>;
+		var focusIndicator: react.ReactElement<any,any>;
 		if (this.props.isFocused) {
 			focusIndicator = react.DOM.div({className: 'itemFocusIndicator'}, '>');
 		}
@@ -232,7 +232,7 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 		focused: boolean;
 		index: number;
 		offsetTop: number;
-	}) : react.Descriptor<ItemProps> {
+	}) : react.ReactComponentElement<ItemProps> {
 		return ItemF({
 			key: item.uuid,
 			item: item,

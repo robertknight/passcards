@@ -197,7 +197,7 @@ export class ChromeExtensionPageAccess implements PageAccess, ClipboardAccess {
 		this.pageChanged = new event_stream.EventStream<string>();
 		this.siteInfoService = new site_info_service.SiteInfoService({
 			fetch: (url) => {
-				return Q.reject(new Error('URL fetching not implemented in Chrome extension'));
+				return Q.reject<site_info_service.UrlResponse>(new Error('URL fetching not implemented in Chrome extension'));
 			}
 		});
 		this.tabPorts = {};
