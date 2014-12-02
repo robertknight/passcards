@@ -44,16 +44,6 @@
 	-webkit-tap-highlight-color: rgba(0,0,0,0);
 }
 
-/* force an element to be given its own
- * compositor layer.
- *
- * This can be used to reduce the amount of
- * repainting work for animated elements
- */
-.force-new-layer {
-	transform: translate3d(0,0,0);
-}
-
 /* mixins - material */
 .material-header {
 	background-color: @material-color-primary;
@@ -224,24 +214,6 @@ body {
 	.flex-cross-center;
 }
 
-.toolbarIconButton {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-
-	margin-left:2px;
-	margin-right:2px;
-
-	width: 40px;
-	height: 40px;
-
-	border-radius: 50%;
-}
-
-.toolbarIconButton:active {
-	background-color: rgba(255, 255, 255, 0.3);
-}
-
 .searchFieldInput {
 	.flex-stretch;
 
@@ -409,20 +381,6 @@ body {
 	margin-bottom:10px;
 }
 
-.itemActionButton {
-	.material-button-raised;
-}
-
-.itemActionButton:active {
-	.material-button-raised;
-	background-color:@material-color-accent2;
-}
-
-.itemActionButtonContainer {
-	position: relative;
-	width: fit-content;
-}
-
 .detailsHeader {
 	display: flex;
 	flex-direction: row;
@@ -507,22 +465,6 @@ body {
 	position: fixed;
 	z-index: 10;
 	width: 100%;
-}
-
-.inkRipple {
-	.force-new-layer;
-
-	overflow: hidden;
-	position: absolute;
-	left: 0px;
-	top: 0px;
-
-	-webkit-tap-highlight-color: transparent;
-
-	/* the ripple listens for mouse events on the parent
-	 * element itself.
-	 */
-	pointer-events: none;
 }
 
 /* Notification toaster component */
@@ -641,29 +583,3 @@ body {
 	opacity: 0.01;
 }
 
-/* menu control
-   http://www.google.co.uk/design/spec/components/menus.html
-*/
-.menu {
-	position: absolute;
-	padding-top: 8px;
-	padding-bottom: 8px;
-
-	box-shadow: rgba(0, 0, 0, 0.26) 0px 1px 2px 2px;
-	z-index: 10;
-	background-color: white;
-}
-
-.menuItem {
-	position: relative;
-
-	padding-left: 16px;
-	padding-right: 16px;
-
-	font-size: 16px;
-	cursor: pointer;
-	user-select: none;
-
-	vertical-align:middle;
-	line-height:48px;
-}
