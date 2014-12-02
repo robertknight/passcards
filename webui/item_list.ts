@@ -14,6 +14,68 @@ import item_search = require('../lib/item_search');
 import item_store = require('../lib/item_store');
 import reactutil = require('./reactutil');
 import stringutil = require('../lib/base/stringutil');
+import style = require('./base/style');
+
+var styles = style.create({
+	itemListView: {
+		display: 'flex',
+		flexDirection: 'column',
+		height: '100%'
+	},
+
+	itemList: {
+		marginTop: 50,
+		height: '100%',
+		backgroundColor: 'white',
+		position: 'relative',
+
+		overflow: 'auto',
+		overflowScrolling: 'auto',
+		WebkitOverflowScrolling: 'touch',
+
+		footer: {
+			position: 'absolute',
+			color: 'rgba(0,0,0,0)'
+		}
+	},
+
+	item: {
+		display: 'flex',
+		flexDirection: 'row',
+		alignItems: 'center',
+		cursor: 'pointer',
+		paddingLeft: 16,
+		paddingRight: 5,
+		position: 'absolute',
+		width: '100%',
+		boxSizing: 'border-box',
+
+		focusIndicator: {
+			position: 'absolute',
+			left: 3,
+			top: '50%',
+			transform: 'translateY(-50%)',
+			fontSize: 10,
+			opacity: '0.3'
+		},
+
+		details: {
+			padding: 5,
+			marginLeft: 5,
+
+			title: {
+				opacity: '0.7',
+				fontSize: 13,
+				fontWeight: 'bold'
+			},
+
+			account: {
+				fontSize: 12,
+				color: '#888888'
+			}
+		}
+	}
+});
 
 export class ItemListViewState {
 	filter: string;
@@ -72,7 +134,7 @@ export class ItemListView extends typed_react.Component<ItemListViewProps, ItemL
 		}
 
 		return react.DOM.div({
-				className: 'itemListView',
+				className: style.classes(styles.itemListView),
 				tabIndex: 0,
 				onFocus: () => {
 					this.setFocus();
@@ -147,7 +209,7 @@ class Item extends typed_react.Component<ItemProps, {}> {
 	render() {
 		var focusIndicator: react.ReactElement<any,any>;
 		if (this.props.isFocused) {
-			focusIndicator = react.DOM.div({className: 'itemFocusIndicator'}, '>');
+			focusIndicator = react.DOM.div({className: style.classes(styles.item.focusIndicator)}, '>');
 		}
 
 		// positioning a rendered item within its parent list could be
@@ -160,10 +222,7 @@ class Item extends typed_react.Component<ItemProps, {}> {
 		var translation = 'translate3d(0px,' + offset + ',0px)';
 
 		return react.DOM.div({
-				className: stringutil.truthyKeys({
-					itemOverview: true,
-					itemFocused: this.props.isFocused,
-				}),
+				className: style.classes(styles.item),
 				ref: 'itemOverview',
 				onClick: () => this.props.onSelected(),
 				style: reactutil.prefix({transform: translation})
@@ -180,9 +239,9 @@ class Item extends typed_react.Component<ItemProps, {}> {
 				iconProvider: this.props.iconProvider,
 				isFocused: this.props.isFocused
 			}),
-			react.DOM.div({className: 'itemDetails'},
-				react.DOM.div({className: 'itemTitle'}, this.props.item.title),
-				react.DOM.div({className: 'itemAccount'}, this.props.item.account)
+			react.DOM.div({className: style.classes(styles.item.details)},
+				react.DOM.div({className: style.classes(styles.item.details.title)}, this.props.item.title),
+				react.DOM.div({className: style.classes(styles.item.details.account)}, this.props.item.account)
 			),
 			focusIndicator
 		);
@@ -322,7 +381,7 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 
 		var listHeight = this.state.matchingItems.length * this.state.itemHeight;
 		return react.DOM.div({
-			className: 'itemList',
+			className: style.classes(styles.itemList),
 			ref: 'itemList',
 			onScroll: (e) => {
 				// In iOS 8 multiple scroll events may be delivered
@@ -349,7 +408,7 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 			// that the scrollbar has a suitable range to allow the user
 			// to scroll the whole list
 			react.DOM.div({
-				className: 'itemListFooter',
+				className: style.classes(styles.itemList.footer),
 				style: {
 					top: listHeight.toString() + 'px'
 				}

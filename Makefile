@@ -59,7 +59,7 @@ $(webui_script_dir)/crypto_worker.js: build/current
 
 build/webui/controls.css: build/current
 	@echo "Generating control CSS"
-	@./utils/cssgen.js build/webui/controls.js > $@
+	@./utils/cssgen.js build/webui/controls.js build/webui/item_list.js > $@
 	@$(NODE_BIN_DIR)/autoprefixer $@
 
 $(webui_css_dir)/app.css: webui/app.less build/webui/controls.css
