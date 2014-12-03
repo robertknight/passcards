@@ -39,7 +39,7 @@ export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockVie
 		};
 	}
 
-	private setFocus() {
+	setFocus() {
 		if (this.props.isLocked) {
 			var masterPassField = this.refs['masterPassField'];
 			(<HTMLElement>masterPassField.getDOMNode()).focus();

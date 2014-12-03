@@ -115,11 +115,6 @@ export class ItemListView extends typed_react.Component<ItemListViewProps, ItemL
 		var searchField: ItemListToolbar = <any>this.refs['searchField'];
 		searchField.focus();
 	}
-
-	private blurSearchField() {
-		var searchField: ItemListToolbar = <any>this.refs['searchField'];
-		searchField.blur();
-	}
 }
 
 export var ItemListViewF = reactutil.createFactory(ItemListView, focus_mixin.FocusMixinM);

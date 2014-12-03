@@ -6,7 +6,6 @@
 
 import Q = require('q');
 import react = require('react');
-import stringutil = require('../lib/base/stringutil');
 import typed_react = require('typed-react');
 import underscore = require('underscore');
 import urijs = require('URIjs');
