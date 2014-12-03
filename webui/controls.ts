@@ -10,6 +10,7 @@ import typed_react = require('typed-react');
 import sprintf = require('sprintf');
 import underscore = require('underscore');
 
+import div = require('./base/div');
 import reactutil = require('./reactutil');
 import style = require('./base/style');
 import theme = require('./theme');
@@ -28,9 +29,9 @@ export class ToolbarButton extends typed_react.Component<ToolbarButtonProps,Tool
 	}
 
 	render() {
-		return react.DOM.div(reactutil.mergeProps(this.props, {
-			className: style.classes(theme.toolbarButton.icon,
-			  this.state.pressed ? theme.toolbarButton.active : null),
+		return div([theme.toolbarButton.icon,
+			        this.state.pressed ? theme.toolbarButton.active : null],	
+			reactutil.mergeProps(this.props, {
 			onMouseDown: () => {
 				this.setState({pressed: true});
 			},
@@ -98,9 +99,7 @@ export class ActionButton extends typed_react.Component<ActionButtonProps,{}> {
 	}
 
 	render() {
-		return react.DOM.div({
-			className: style.classes(theme.actionButton.container)
-		},
+		return div(theme.actionButton.container, {},
 			react.DOM.input(reactutil.mergeProps(this.props, {
 				className: style.classes(theme.actionButton.button),
 				type: 'button',
@@ -198,8 +197,7 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 	}
 
 	render() {
-		return react.DOM.div({
-			className: style.classes(theme.inkRipple),
+		return div(theme.inkRipple, {
 			ref: 'container',
 			style : {
 				width: '100%',
@@ -264,20 +262,18 @@ export class Toaster extends typed_react.Component<ToasterProps, {}> {
 
 		var progressBar: react.ReactElement<any,any>;
 		if (this.props.progressMax) {
-			progressBar = react.DOM.div({
-					className: style.classes(theme.toaster.progressBar.outline),
+			progressBar = div(theme.toaster.progressBar.outline, {
 					style: {
 						width: PROGRESS_WIDTH + 'px'
 					}
 				},
-				react.DOM.div({
-					className: style.classes(theme.toaster.progressBar.meter),
+				div(theme.toaster.progressBar.meter, {
 					style: { width: meterWidth + 'px' }
 				})
 			);
 		}
 
-		return react.DOM.div({className: style.classes(theme.toaster)},
+		return div(theme.toaster, {},
 			react.DOM.div({},
 				this.props.message
 			),
@@ -351,8 +347,7 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 
 	render() {
 		var menuItems = this.props.items.map((item) => {
-			return react.DOM.div({
-				className: style.classes(theme.menu.item),
+			return div(theme.menu.item, {
 				key: item.label,
 				onClick: () => {
 					// when the menu is first opened, ignore any immediate taps that
@@ -372,8 +367,7 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 				item.label
 			);
 		});
-		return react.DOM.div({
-			className: style.classes(theme.menu),
+		return div(theme.menu, {
 			ref: 'menu',
 			style: {
 				top: toPixels(this.props.top),

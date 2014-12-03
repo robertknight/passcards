@@ -6,6 +6,7 @@ import typed_react = require('typed-react');
 import underscore = require('underscore');
 
 import controls = require('./controls');
+import div = require('./base/div');
 import env = require('../lib/base/env');
 import focus_mixin = require('./base/focus_mixin');
 import keycodes = require('./base/keycodes');
@@ -73,8 +74,7 @@ export class ItemListView extends typed_react.Component<ItemListViewProps, ItemL
 			filterUrl = this.props.currentUrl;
 		}
 
-		return react.DOM.div({
-				className: style.classes(theme.itemListView),
+		return div(theme.itemListView, {
 				tabIndex: 0,
 				onFocus: () => {
 					this.setFocus();
@@ -144,7 +144,7 @@ class Item extends typed_react.Component<ItemProps, {}> {
 	render() {
 		var focusIndicator: react.ReactElement<any,any>;
 		if (this.props.isFocused) {
-			focusIndicator = react.DOM.div({className: style.classes(theme.item.focusIndicator)}, '>');
+			focusIndicator = div(theme.item.focusIndicator, {}, '>');
 		}
 
 		// positioning a rendered item within its parent list could be
@@ -156,8 +156,7 @@ class Item extends typed_react.Component<ItemProps, {}> {
 		var offset = this.props.offsetTop.toString() + 'px';
 		var translation = 'translate3d(0px,' + offset + ',0px)';
 
-		return react.DOM.div({
-				className: style.classes(theme.item),
+		return div(theme.item, {
 				ref: 'itemOverview',
 				onClick: () => this.props.onSelected(),
 				style: reactutil.prefix({transform: translation})
@@ -174,9 +173,9 @@ class Item extends typed_react.Component<ItemProps, {}> {
 				iconProvider: this.props.iconProvider,
 				isFocused: this.props.isFocused
 			}),
-			react.DOM.div({className: style.classes(theme.item.details)},
-				react.DOM.div({className: style.classes(theme.item.details.title)}, this.props.item.title),
-				react.DOM.div({className: style.classes(theme.item.details.account)}, this.props.item.account)
+			div(theme.item.details, {},
+				div(theme.item.details.title, {}, this.props.item.title),
+				div(theme.item.details.account, {}, this.props.item.account)
 			),
 			focusIndicator
 		);
@@ -315,8 +314,7 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 		});
 
 		var listHeight = this.state.matchingItems.length * this.state.itemHeight;
-		return react.DOM.div({
-			className: style.classes(theme.itemList),
+		return div(theme.itemList, {
 			ref: 'itemList',
 			onScroll: (e) => {
 				// In iOS 8 multiple scroll events may be delivered
@@ -342,8 +340,7 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 			// add placeholder item at the bottom of the list to ensure
 			// that the scrollbar has a suitable range to allow the user
 			// to scroll the whole list
-			react.DOM.div({
-				className: style.classes(theme.itemList.footer),
+			div(theme.itemList.footer, {
 				style: {
 					top: listHeight.toString() + 'px'
 				}
@@ -490,7 +487,7 @@ class ItemListToolbar extends typed_react.Component<ItemListToolbarProps, {}> {
 			this.props.onQueryChanged(this.fieldInput().value.toLowerCase());
 		}, 100);
 
-		return react.DOM.div({className: stringutil.truthyKeys({itemListToolbar: true, toolbar: true})},
+		return div(null, {className: stringutil.truthyKeys({itemListToolbar: true, toolbar: true})},
 				controls.SvgIconF({
 					className: 'toolbarSearchIcon',
 					href: 'icons/icons.svg#search',
@@ -510,7 +507,7 @@ class ItemListToolbar extends typed_react.Component<ItemListToolbarProps, {}> {
 						updateQuery();
 					}
 				}),
-				react.DOM.div({className: 'toolbarIconGroup'},
+				div(null, {className: 'toolbarIconGroup'},
 					controls.ToolbarButtonF({
 						className: 'toolbarLockIcon',
 						iconHref: 'icons/icons.svg#lock-outline',

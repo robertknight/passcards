@@ -183,7 +183,7 @@ var styles = style.create({
 		paddingLeft: 10,
 		paddingRight: 10,
 		left: '50%',
-		transform: 'translate(-50)',
+		transform: 'translate(-50%)',
 
 		progressBar: {
 			outline: {
@@ -197,6 +197,11 @@ var styles = style.create({
 				height: 4
 			}
 		},
+	},
+
+	'toaster > *' : {
+		marginLeft: 2,
+		marginRight: 2
 	},
 
 	/* menu control
