@@ -57,17 +57,17 @@ $(webui_script_dir)/crypto_worker.js: build/current
 	@mkdir -p $(webui_script_dir)
 	@$(BROWSERIFY) --entry build/lib/crypto_worker.js --outfile $@
 
-build/webui/controls.css: build/current
+build/webui/theme.css: build/current
 	@echo "Generating control CSS"
-	@./utils/cssgen.js build/webui/controls.js build/webui/item_list.js build/webui/unlock_view.js > $@
+	@./utils/cssgen.js build/webui/theme.js > $@
 	@$(NODE_BIN_DIR)/autoprefixer $@
 
-$(webui_css_dir)/app.css: webui/app.less build/webui/controls.css
+$(webui_css_dir)/app.css: webui/app.less build/webui/theme.css
 	@echo "Preprocessing web app stylesheet"
 	@mkdir -p $(webui_css_dir)
 	@$(NODE_BIN_DIR)/lessc webui/app.less > $@
 	@$(NODE_BIN_DIR)/autoprefixer $@
-	@cat build/webui/controls.css >> $@
+	@cat build/webui/theme.css >> $@
 
 webui-icons:
 	@mkdir -p ${webui_icon_dir}

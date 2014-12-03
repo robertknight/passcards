@@ -10,124 +10,13 @@ import typed_react = require('typed-react');
 import sprintf = require('sprintf');
 import underscore = require('underscore');
 
-import colors = require('./colors');
 import reactutil = require('./reactutil');
 import style = require('./base/style');
+import theme = require('./theme');
 
 export class ToolbarButtonProps {
 	iconHref: string;
 }
-
-var styles = style.create({
-	toolbarButton: {
-		icon: {
-			display: 'flex',
-			alignItems: 'center',
-			justifyContent: 'center',
-			marginLeft: 2,
-			marginRight: 2,
-			width: 40,
-			height: 40,
-			borderRadius: '50%'
-		},
-		active: {
-			backgroundColor: 'rgba(255, 255, 255, 0.3)'
-		}
-	},
-
-	actionButton: {
-		container: {
-			position: 'relative',
-			width: 'fit-content'
-		},
-		button: {
-			paddingTop: 5,
-			paddingBottom: 5,
-			paddingLeft: 15,
-			paddingRight: 15,
-			border: 0,
-			backgroundColor: colors.MATERIAL_COLOR_PRIMARY,
-			boxShadow: 'rgba(0, 0, 0, 0.26) 0px 2px 5px 0px',
-			color: '#fff',
-			fontWeight: 400,
-			textTransform: 'uppercase'
-		}
-	},
-
-	inkRipple: {
-		/* force an element to be given its own
-		 * compositor layer.
-		 *
-		 * This can be used to reduce the amount of
-		 * repainting work for animated elements
-		 */
-		transform: 'translate3d(0,0,0)',
-		overflow: 'hidden',
-		position: 'absolute',
-		left: 0,
-		top: 0,
-		WebkitTapHighlightColor: 'transparent',
-		/* the ripple listens for mouse events on the parent
-		 * element itself.
-		 */
-		pointerEvents: 'none'
-	},
-
-	toaster: {
-		fontSize: 12,
-		position: 'fixed',
-		zIndex: 10,
-		bottom: 5,
-		backgroundColor: 'rgba(0,0,0,0.85)',
-		color: 'white',
-		borderRadius: 5,
-		display: 'flex',
-		flexDirection: 'row',
-		justifyContent: 'center',
-		alignItems: 'center',
-		padding: 4,
-		paddingLeft: 10,
-		paddingRight: 10,
-		left: '50%',
-		transform: 'translate(-50)',
-
-		progressBar: {
-			outline: {
-				border: '1px solid white',
-				borderRadius: 5,
-				height: 4
-			},
-			meter: {
-				backgroundColor: 'white',
-				borderRadius: 5,
-				height: 4
-			}
-		},
-	},
-
-	/* menu control
-	   http://www.google.co.uk/design/spec/components/menus.html
-	*/
-	menu: {
-		position: 'absolute',
-		paddingTop: 8,
-		paddingBottom: 8,
-		boxShadow: 'rgba(0, 0, 0, 0.26) 0px 1px 2px 2px',
-		zIndex: 10,
-		backgroundColor: 'white',
-
-		item: {
-			position: 'relative',
-			paddingLeft: 16,
-			paddingRight: 16,
-			fontSize: 16,
-			cursor: 'pointer',
-			userSelect: 'none',
-			verticalAlign: 'middle',
-			lineHeight: 48
-		}
-	}
-});
 
 interface ToolbarButtonState {
 	pressed?: boolean;
@@ -140,8 +29,8 @@ export class ToolbarButton extends typed_react.Component<ToolbarButtonProps,Tool
 
 	render() {
 		return react.DOM.div(reactutil.mergeProps(this.props, {
-			className: style.classes(styles.toolbarButton.icon,
-			  this.state.pressed ? styles.toolbarButton.active : null),
+			className: style.classes(theme.toolbarButton.icon,
+			  this.state.pressed ? theme.toolbarButton.active : null),
 			onMouseDown: () => {
 				this.setState({pressed: true});
 			},
@@ -210,10 +99,10 @@ export class ActionButton extends typed_react.Component<ActionButtonProps,{}> {
 
 	render() {
 		return react.DOM.div({
-			className: style.classes(styles.actionButton.container)
+			className: style.classes(theme.actionButton.container)
 		},
 			react.DOM.input(reactutil.mergeProps(this.props, {
-				className: style.classes(styles.actionButton.button),
+				className: style.classes(theme.actionButton.button),
 				type: 'button',
 				ref: 'button'
 			})),
@@ -310,7 +199,7 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 
 	render() {
 		return react.DOM.div({
-			className: style.classes(styles.inkRipple),
+			className: style.classes(theme.inkRipple),
 			ref: 'container',
 			style : {
 				width: '100%',
@@ -319,7 +208,7 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 			}
 		},
 			react.DOM.canvas({
-				className: style.classes(styles.inkRipple),
+				className: style.classes(theme.inkRipple),
 				ref: 'canvas',
 				width: this.state.width,
 				height: this.state.height
@@ -376,19 +265,19 @@ export class Toaster extends typed_react.Component<ToasterProps, {}> {
 		var progressBar: react.ReactElement<any,any>;
 		if (this.props.progressMax) {
 			progressBar = react.DOM.div({
-					className: style.classes(styles.toaster.progressBar.outline),
+					className: style.classes(theme.toaster.progressBar.outline),
 					style: {
 						width: PROGRESS_WIDTH + 'px'
 					}
 				},
 				react.DOM.div({
-					className: style.classes(styles.toaster.progressBar.meter),
+					className: style.classes(theme.toaster.progressBar.meter),
 					style: { width: meterWidth + 'px' }
 				})
 			);
 		}
 
-		return react.DOM.div({className: style.classes(styles.toaster)},
+		return react.DOM.div({className: style.classes(theme.toaster)},
 			react.DOM.div({},
 				this.props.message
 			),
@@ -463,7 +352,7 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 	render() {
 		var menuItems = this.props.items.map((item) => {
 			return react.DOM.div({
-				className: style.classes(styles.menu.item),
+				className: style.classes(theme.menu.item),
 				key: item.label,
 				onClick: () => {
 					// when the menu is first opened, ignore any immediate taps that
@@ -484,7 +373,7 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 			);
 		});
 		return react.DOM.div({
-			className: style.classes(styles.menu),
+			className: style.classes(theme.menu),
 			ref: 'menu',
 			style: {
 				top: toPixels(this.props.top),

@@ -141,48 +141,6 @@ body {
 	flex-grow: 0;
 }
 
-.itemIconContainer {
-	width: 48px;
-	height: 48px;
-
-	background-color: white;
-
-	border: 1px solid #bbb;
-
-	/* make icon circular */
-	border-radius: 50%;
-	overflow: hidden;
-}
-
-.itemIconContainer.focused {
-	box-shadow: 0px 0px 2px 2px rgba(0,0,0,0.2);
-}
-
-.itemIcon {
-	/* horizontally center icon in outline.
-	 * limit to max size of 48x48 but prefer
-	 * intrinsic size
-	 */
-	max-width: 48px;
-	max-height: 48px;
-
-	margin-left: auto;
-	margin-right: auto;
-
-	/* vertically center icon in outline */
-	display: block;
-	position: relative;
-	top: 50%;
-
-	transform: translateY(-50%);
-
-	/* make image circular. Even if the image is too small
-	 * to fill the circular container, it looks better if
-	 * the image and the container have the same shape.
-	 */
-	border-radius: 50%;
-}
-
 .detailsView {
 	position: absolute;
 	top: 0;

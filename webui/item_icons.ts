@@ -17,6 +17,8 @@ import event_stream = require('../lib/base/event_stream');
 import key_value_store = require('../lib/base/key_value_store');
 import reactutil = require('./reactutil');
 import site_info = require('../lib/siteinfo/site_info');
+import style = require('./base/style');
+import theme = require('./theme');
 import url_util = require('../lib/base/url_util');
 
 /** Fetch state for an icon returned by ItemIconProvider query.
@@ -317,11 +319,9 @@ export class IconControl extends typed_react.Component<IconControlProps, {}> {
 	render() {
 		var iconUrl = this.props.iconProvider.query(this.props.location).iconUrl;
 
-		return react.DOM.div({className: stringutil.truthyKeys({
-			  itemIconContainer: true,
-			  focused: this.props.isFocused
-			})},
-			react.DOM.img({className: 'itemIcon', src: iconUrl})
+		return react.DOM.div({className: style.classes(theme.itemIcon.container,
+			  this.props.isFocused ? theme.itemIcon.container.focused : null)},
+			react.DOM.img({className: style.classes(theme.itemIcon.icon), src: iconUrl})
 		);
 	}
 }
