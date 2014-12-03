@@ -69,7 +69,10 @@ export function classes<T>(...objects: T[]) : string {
 			return;
 		}
 		var compiled = <Style>object;
-		classNames += ' ' + className(compiled);
+		if (classNames.length > 0) {
+			classNames += ' ';
+		}
+		classNames += className(compiled);
 	});
 	return classNames;
 }
