@@ -1,5 +1,12 @@
 #!/usr/bin/env node
 
+// Generates CSS from styles defined using style.create()
+// cssgen.js loads each of the modules specified on the command
+// line and then compiles all of the styles defined by
+// style.create() calls to CSS which is written to stdout.
+//
+// Usage: cssgen.js [<entry points...>]
+
 var path = require('path');
 
 var style = require('../build/webui/base/style');
