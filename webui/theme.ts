@@ -143,7 +143,7 @@ var styles = style.create({
 		}
 	},
 
-	// Toolbar
+	// Controls - Toolbar
 	toolbar: assign(mixins.materialDesign.header, {
 		borderBottom: '1px solid #bbb',
 		paddingRight: 20,
@@ -166,6 +166,7 @@ var styles = style.create({
 		}
 	},
 
+	// Controls - Button
 	actionButton: {
 		container: {
 			position: 'relative',
@@ -185,6 +186,7 @@ var styles = style.create({
 		}
 	},
 
+	// Controls - Ink Ripple effect
 	inkRipple: {
 		/* force an element to be given its own
 		 * compositor layer.
@@ -204,6 +206,7 @@ var styles = style.create({
 		pointerEvents: 'none'
 	},
 
+	// Controls - Toaster
 	toaster: {
 		fontSize: 12,
 		position: 'fixed',
@@ -241,9 +244,8 @@ var styles = style.create({
 		marginRight: 2
 	},
 
-	/* menu control
-	   http://www.google.co.uk/design/spec/components/menus.html
-	*/
+	// Controls - Menu
+	// http://www.google.co.uk/design/spec/components/menus.html
 	menu: {
 		position: 'absolute',
 		paddingTop: 8,
