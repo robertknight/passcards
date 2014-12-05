@@ -1,5 +1,17 @@
+import assign = require('../lib/base/assign');
 import colors = require('./colors');
 import style = require('./base/style');
+
+var mixins = style.create({
+	materialDesign: {
+		header: {
+			backgroundColor: colors.MATERIAL_COLOR_PRIMARY,
+			boxShadow: 'rgba(0, 0, 0, 0.26) 0px 2px 5px 0px',
+			color: '#fff',
+			fontWeight: 400
+		}
+	}
+});
 
 var styles = style.create({
 	// Item Icons
@@ -113,6 +125,12 @@ var styles = style.create({
 	},
 
 	// Toolbar
+	toolbar: assign(mixins.materialDesign.header, {
+		borderBottom: '1px solid #bbb',
+		paddingRight: 20,
+		height: 40
+	}),
+
 	toolbarButton: {
 		icon: {
 			display: 'flex',
@@ -284,6 +302,89 @@ var styles = style.create({
 				fontSize: 12,
 				color: '#888888'
 			}
+		}
+	},
+
+	// Details View
+	detailsView: {
+		position: 'absolute',
+		top: 0,
+		left: 0,
+		width: '100%',
+		height: '100%',
+		backgroundColor: 'white',
+		display: 'flex',
+		flexDirection: 'column',
+
+		toolbar: assign(mixins.materialDesign.header, {
+			display: 'flex',
+			flexDirection: 'row',
+			alignItems: 'center',
+		}),
+
+		toolbarSpacer: {
+			flexGrow: '1'
+		},
+
+		overview: {
+			display: 'flex',
+			flexDirection: 'column',
+			justifyContent: 'center',
+			marginLeft: 10,
+
+			title: {
+				fontSize: 16
+			},
+
+			location: {
+				color: '#666',
+				textOverflow: 'ellipsis',
+				overflow: 'hidden'
+			},
+
+			'location a': {
+				textDecoration: 'none'
+			}
+		},
+
+		content: {
+			paddingLeft: 16,
+			flexGrow: 1,
+			overflowY: 'auto'
+		},
+
+		header: {
+			display: 'flex',
+			flexDirection: 'row',
+			paddingBottom: 5,
+			marginBottom: 15
+		},
+
+		coreFields: {
+			paddingTop: 5,
+			paddingBottom: 5
+		},
+
+		field: {
+			display: 'flex',
+			flexDirection: 'column',
+			paddingLeft: 20,
+			paddingRight: 20,
+
+			actions: {
+				display: 'flex',
+				flexDirection: 'row',
+				order: 3,
+				justifyContent: 'center'
+			}
+		},
+
+		itemActionBar: {
+			paddingLeft: 10,
+			paddingRight: 10,
+			paddingTop: 10,
+			paddingBottom: 5,
+			marginBottom: 10
 		}
 	}
 });

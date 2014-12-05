@@ -29,7 +29,10 @@ export var registry: StyleRegistry = new StyleRegistryImpl();
 function addKeys(tree: any) {
 	Object.keys(tree).forEach((k) => {
 		var prop = tree[k];
-		if (typeof prop === 'object' && prop !== tree) {
+		if (typeof prop === 'object' &&
+		    prop !== tree &&
+			prop.key === undefined &&
+			prop.parent === undefined) {
 			addKeys(prop);
 
 			prop.key = k;

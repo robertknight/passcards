@@ -4,6 +4,7 @@ import react = require('react');
 import typed_react = require('typed-react');
 
 import controls = require('./controls');
+import div = require('./base/div');
 import env = require('../lib/base/env');
 import focus_mixin = require('./base/focus_mixin');
 import item_builder = require('../lib/item_builder');
@@ -15,6 +16,7 @@ import page_access = require('./page_access');
 import reactutil = require('./reactutil');
 import shortcut = require('./base/shortcut');
 import stringutil = require('../lib/base/stringutil');
+import theme = require('./theme');
 import url_util = require('../lib/base/url_util');
 
 interface ItemFieldState {
@@ -90,16 +92,13 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 				});
 			}
 
-			fieldActions = react.DOM.div({className: 'detailsFieldActions'},
+			fieldActions = div(theme.detailsView.field.actions, {},
 				copyButton,
 				revealButton
 			);
 		}
 
-		return react.DOM.div({
-			className: 'detailsField',
-			ref: 'itemField'
-		},
+		return div(theme.detailsView.field, {ref: 'itemField'},
 			material_ui.TextFieldF({
 				floatingLabel: true,
 				placeHolder: this.props.label,
@@ -234,7 +233,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 					}));
 				}
 			});
-			sections.push(react.DOM.div({className: 'detailsSection'},
+			sections.push(div(null, {},
 				fields)
 			);
 		});
@@ -325,7 +324,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				key: 'cancel'
 			}));
 		}
-		toolbarControls.push(react.DOM.div({className:'toolbarSpacer'}));
+		toolbarControls.push(div(theme.detailsView.toolbarSpacer,{}));
 
 		if (this.state.isEditing) {
 			toolbarControls.push(controls.ToolbarButtonF({
@@ -354,7 +353,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			}));
 		}
 
-		return react.DOM.div({className: stringutil.truthyKeys({toolbar: true, detailsToolbar: true})},
+		return div([theme.toolbar, theme.detailsView.toolbar], {},
 			toolbarControls
 		);
 	}
@@ -386,36 +385,33 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 					readOnly: false
 				});
 			} else {
-				titleField = react.DOM.div({className: 'detailsTitle'}, updatedItem.item.title);
+				titleField = div(theme.detailsView.overview.title, {}, updatedItem.item.title);
 			}
 
 			var coreFields = this.renderCoreFields(updatedItem, onChangeItem);
 			var sections = this.renderSections(updatedItem, onChangeItem);
 			var websites = this.renderWebsites(updatedItem, onChangeItem);
 
-			detailsContent = react.DOM.div({className: 'detailsContent'},
-				react.DOM.div({className: 'detailsHeader'},
+			detailsContent = div(theme.detailsView.content, {},
+				div(theme.detailsView.header, {},
 					item_icons.IconControlF({
 						location: this.props.item.primaryLocation(),
 						iconProvider: this.props.iconProvider,
 						visible: true,
 						isFocused: false
 					}),
-					react.DOM.div({className: 'detailsOverview'},
+					div(theme.detailsView.overview, {},
 						titleField,
-						react.DOM.div({className: 'detailsLocation'},
+						div(theme.detailsView.overview.location, {},
 							react.DOM.a({href: updatedItem.item.primaryLocation()},
 								url_util.domain(updatedItem.item.primaryLocation())
 							)
 						)
 					)
 				),
-				react.DOM.div({className: 'detailsCore'},
-					coreFields),
-				react.DOM.div({className: 'detailsURLs'},
-					websites),
-				react.DOM.div({className: 'detailsSections'},
-					sections)
+				div(theme.detailsView.coreFields, {}, coreFields),
+				div(null, {}, websites),
+				div(null, {}, sections)
 			);
 		}
 
@@ -428,17 +424,10 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			});
 		}
 
-		return react.DOM.div({
-				className: stringutil.truthyKeys({
-					detailsView: true,
-					hasSelectedItem: this.props.item
-				}),
-				ref: 'detailsView',
-				tabIndex: 0
-			},
+		return div(theme.detailsView, {ref: 'detailsView', tabIndex: 0},
 				this.renderToolbar()
 			,
-			react.DOM.div({className: 'itemActionBar'},
+			div(theme.detailsView.itemActionBar, {},
 				autofillButton
 			),
 			detailsContent
