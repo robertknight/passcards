@@ -14,6 +14,25 @@ var mixins = style.create({
 });
 
 var styles = style.create({
+	appView: {
+		width: '100%',
+		height: '100%'
+	},
+
+	// Setup View
+	setupView: {
+		width: '100%',
+		height: '100%',
+		backgroundColor: colors.MATERIAL_COLOR_PRIMARY,
+		color: 'white',
+		fontWeight: 'bold',
+
+		display: 'flex',
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'center'
+	},
+
 	// Item Icons
 	itemIcon: {
 		container: {
@@ -55,7 +74,7 @@ var styles = style.create({
 	},
 
 	// Unlock View
-	unlockPane: {
+	unlockView: {
 		upper: {
 			backgroundColor: colors.MATERIAL_COLOR_PRIMARY,
 			position: 'absolute',
@@ -246,63 +265,111 @@ var styles = style.create({
 	},
 
 	// Item List
-	itemListView: {
-		display: 'flex',
-		flexDirection: 'column',
-		height: '100%'
-	},
-
 	itemList: {
-		marginTop: 50,
-		height: '100%',
-		backgroundColor: 'white',
-		position: 'relative',
+		toolbar: {
+			width: '100%',
+			position: 'fixed',
+			display: 'flex',
+			flexDirection: 'row',
+			alignItems: 'center',
 
-		overflow: 'auto',
-		overflowScrolling: 'auto',
-		WebkitOverflowScrolling: 'touch',
-
-		footer: {
-			position: 'absolute',
-			color: 'rgba(0,0,0,0)'
-		}
-	},
-
-	item: {
-		display: 'flex',
-		flexDirection: 'row',
-		alignItems: 'center',
-		cursor: 'pointer',
-		paddingLeft: 16,
-		paddingRight: 5,
-		position: 'absolute',
-		width: '100%',
-		boxSizing: 'border-box',
-
-		focusIndicator: {
-			position: 'absolute',
-			left: 3,
-			top: '50%',
-			transform: 'translateY(-50%)',
-			fontSize: 10,
-			opacity: '0.3'
-		},
-
-		details: {
-			padding: 5,
-			marginLeft: 5,
-
-			title: {
-				opacity: '0.7',
-				fontSize: 13,
-				fontWeight: 'bold'
+			searchIcon: {
+				marginLeft: 20,
+				flexShrink: '0',
+				flexGrow: '0'
 			},
 
-			account: {
-				fontSize: 12,
-				color: '#888888'
+			searchField: {
+				flexGrow: '1',
+				paddingLeft: 5,
+				marginLeft: 20,
+				height: 30,
+				border: 0,
+				color: colors.MATERIAL_COLOR_HEADER,
+				backgroundColor: colors.MATERIAL_COLOR_PRIMARY,
+				fontSize: 20,
+				outline: 'none',
+
+				/* enable the search field to shrink
+				   when the width of the toolbar is collapsed
+				   in Firefox
+				*/
+				overflow: 'hidden'
+			},
+
+			'searchField::-webkit-input-placeholder': {
+				color: '#fff',
+				opacity: '0.8'
+			},
+
+			iconGroup: {
+				marginLeft: 10,
+				marginRight: 10,
+				flexShrink: '0',
+				flexGrow: '0',
+				display: 'flex',
+				height: '100%'
+			},
+		},
+
+		container: {
+			display: 'flex',
+			flexDirection: 'column',
+			height: '100%'
+		},
+
+		list: {
+			marginTop: 50,
+			height: '100%',
+			backgroundColor: 'white',
+			position: 'relative',
+
+			overflow: 'auto',
+			overflowScrolling: 'auto',
+			WebkitOverflowScrolling: 'touch',
+
+			footer: {
+				position: 'absolute',
+				color: 'rgba(0,0,0,0)'
 			}
-		}
+		},
+
+		item: {
+			display: 'flex',
+			flexDirection: 'row',
+			alignItems: 'center',
+			cursor: 'pointer',
+			paddingLeft: 16,
+			paddingRight: 5,
+			position: 'absolute',
+			width: '100%',
+			boxSizing: 'border-box',
+
+			focusIndicator: {
+				position: 'absolute',
+				left: 3,
+				top: '50%',
+				transform: 'translateY(-50%)',
+				fontSize: 10,
+				opacity: '0.3'
+			},
+
+			details: {
+				padding: 5,
+				marginLeft: 5,
+
+				title: {
+					opacity: '0.7',
+					fontSize: 13,
+					fontWeight: 'bold'
+				},
+
+				account: {
+					fontSize: 12,
+					color: '#888888'
+				}
+			}
+		},
 	},
 
 	// Details View

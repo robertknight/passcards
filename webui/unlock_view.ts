@@ -59,10 +59,10 @@ export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockVie
 		var unlockPaneLower: react.ReactElement<any,any>;
 
 		if (this.props.isLocked) {
-			unlockPaneUpper = div(theme.unlockPane.upper, {},
-				div(theme.unlockPane.form, {},
+			unlockPaneUpper = div(theme.unlockView.upper, {},
+				div(theme.unlockView.form, {},
 					react.DOM.form({
-						className: style.classes(theme.unlockPane.inputPane),
+						className: style.classes(theme.unlockView.inputPane),
 						ref:'unlockPaneForm',
 						onSubmit: (e) => {
 							e.preventDefault();
@@ -71,20 +71,20 @@ export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockVie
 						}
 					},
 						react.DOM.input({
-							className: style.classes(theme.unlockPane.masterPasswordField),
+							className: style.classes(theme.unlockView.masterPasswordField),
 							type: 'password',
 							placeholder: 'Master Password...',
 							ref: 'masterPassField',
 							autoFocus: true
 						}),
-						div(theme.unlockPane.unlockLabel, {}, unlockMessage)
+						div(theme.unlockView.unlockLabel, {}, unlockMessage)
 					)
 				)
 			);
-			unlockPaneLower = div(theme.unlockPane.lower, {});
+			unlockPaneLower = div(theme.unlockView.lower, {});
 		}
 
-		return div(theme.unlockPane, {},
+		return div(theme.unlockView, {},
 			reactutil.CSSTransitionGroupF({
 				transitionName: 'slide-from-top'
 			}, unlockPaneUpper),

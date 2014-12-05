@@ -16,6 +16,7 @@ import underscore = require('underscore');
 import autofill = require('./autofill');
 import controls = require('./controls');
 import details_view = require('./details_view');
+import div = require('./base/div');
 import dropboxvfs = require('../lib/vfs/dropbox');
 import env = require('../lib/base/env');
 import event_stream = require('../lib/base/event_stream');
@@ -33,6 +34,7 @@ import page_access = require('./page_access');
 import reactutil = require('./reactutil');
 import siteinfo_client = require('../lib/siteinfo/client');
 import sync = require('../lib/sync');
+import theme = require('./theme');
 import vfs = require('../lib/vfs/vfs');
 import unlock_view = require('./unlock_view');
 import url_util = require('../lib/base/url_util');
@@ -71,8 +73,8 @@ class Status {
   */
 class SetupView extends typed_react.Component<{}, {}> {
 	render() {
-		return react.DOM.div({className: 'setupView'},
-			react.DOM.div({className: 'loginText'},
+		return div(theme.setupView, {},
+			div(null, {},
 				'Connecting to Dropbox...'
 			)
 		);
@@ -265,7 +267,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 			children.push(this.renderMenu('menu'));
 		}
 
-		return react.DOM.div({className: 'appView', ref: 'app'},
+		return div(theme.appView, {ref: 'app'},
 			children
 		);
 	}

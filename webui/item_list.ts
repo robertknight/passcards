@@ -74,7 +74,7 @@ export class ItemListView extends typed_react.Component<ItemListViewProps, ItemL
 			filterUrl = this.props.currentUrl;
 		}
 
-		return div(theme.itemListView, {
+		return div(theme.itemList.container, {
 				tabIndex: 0,
 				onFocus: () => {
 					this.setFocus();
@@ -144,7 +144,7 @@ class Item extends typed_react.Component<ItemProps, {}> {
 	render() {
 		var focusIndicator: react.ReactElement<any,any>;
 		if (this.props.isFocused) {
-			focusIndicator = div(theme.item.focusIndicator, {}, '>');
+			focusIndicator = div(theme.itemList.item.focusIndicator, {}, '>');
 		}
 
 		// positioning a rendered item within its parent list could be
@@ -156,7 +156,7 @@ class Item extends typed_react.Component<ItemProps, {}> {
 		var offset = this.props.offsetTop.toString() + 'px';
 		var translation = 'translate3d(0px,' + offset + ',0px)';
 
-		return div(theme.item, {
+		return div(theme.itemList.item, {
 				ref: 'itemOverview',
 				onClick: () => this.props.onSelected(),
 				style: reactutil.prefix({transform: translation})
@@ -173,9 +173,9 @@ class Item extends typed_react.Component<ItemProps, {}> {
 				iconProvider: this.props.iconProvider,
 				isFocused: this.props.isFocused
 			}),
-			div(theme.item.details, {},
-				div(theme.item.details.title, {}, this.props.item.title),
-				div(theme.item.details.account, {}, this.props.item.account)
+			div(theme.itemList.item.details, {},
+				div(theme.itemList.item.details.title, {}, this.props.item.title),
+				div(theme.itemList.item.details.account, {}, this.props.item.account)
 			),
 			focusIndicator
 		);
@@ -314,7 +314,7 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 		});
 
 		var listHeight = this.state.matchingItems.length * this.state.itemHeight;
-		return div(theme.itemList, {
+		return div(theme.itemList.list, {
 			ref: 'itemList',
 			onScroll: (e) => {
 				// In iOS 8 multiple scroll events may be delivered
@@ -340,7 +340,7 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 			// add placeholder item at the bottom of the list to ensure
 			// that the scrollbar has a suitable range to allow the user
 			// to scroll the whole list
-			div(theme.itemList.footer, {
+			div(theme.itemList.list.footer, {
 				style: {
 					top: listHeight.toString() + 'px'
 				}
@@ -487,16 +487,16 @@ class ItemListToolbar extends typed_react.Component<ItemListToolbarProps, {}> {
 			this.props.onQueryChanged(this.fieldInput().value.toLowerCase());
 		}, 100);
 
-		return div(null, {className: stringutil.truthyKeys({itemListToolbar: true, toolbar: true})},
+		return div([theme.toolbar, theme.itemList.toolbar], {},
 				controls.SvgIconF({
-					className: 'toolbarSearchIcon',
+					className: style.classes(theme.itemList.toolbar.searchIcon),
 					href: 'icons/icons.svg#search',
 					width: 20,
 					height: 20,
 					viewBox: iconViewBox,
 					fill: 'white'
 				}),
-				react.DOM.input({className: 'searchFieldInput',
+				react.DOM.input({className: style.classes(theme.itemList.toolbar.searchField),
 					type: 'text',
 					placeholder: 'Search items...',
 					ref: 'searchField',
@@ -507,14 +507,12 @@ class ItemListToolbar extends typed_react.Component<ItemListToolbarProps, {}> {
 						updateQuery();
 					}
 				}),
-				div(null, {className: 'toolbarIconGroup'},
+				div(theme.itemList.toolbar.iconGroup, {},
 					controls.ToolbarButtonF({
-						className: 'toolbarLockIcon',
 						iconHref: 'icons/icons.svg#lock-outline',
 						onClick: () => this.props.onLockClicked()
 					}),
 					controls.ToolbarButtonF({
-						className: 'toolbarMenuIcon',
 						iconHref: 'icons/icons.svg#menu',
 						onClick: () => this.props.onMenuClicked()
 					})
