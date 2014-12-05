@@ -22,6 +22,9 @@ export interface Style {
 	parent?: Style;
 }
 
+/** A style registry holds a collection of named
+  * styles created by calls to create()
+  */
 export interface StyleRegistry {
 	styles() : {[name: string] : Style} 
 	add(style: Style) : void;
@@ -43,6 +46,8 @@ class StyleRegistryImpl implements StyleRegistry {
 	}
 }
 
+/** A global registry of all styles defined via style.create()
+  */
 export var registry: StyleRegistry = new StyleRegistryImpl();
 
 function addKeys(tree: any) {
@@ -81,6 +86,11 @@ function addKeys(tree: any) {
   *    background-color: 'white';
   *    width: 100px;
   *  }
+  *
+  * All styles defined via create() are added to the global
+  * registry, which allows generation of the CSS for all
+  * styles defined by modules loaded via a particular entry
+  * point.
   */
 export function create<T>(tree: T) : T {
 	addKeys(tree);
