@@ -33,6 +33,7 @@ import onepass_crypto = require('../lib/onepass_crypto');
 import page_access = require('./page_access');
 import reactutil = require('./reactutil');
 import siteinfo_client = require('../lib/siteinfo/client');
+import style = require('./base/style');
 import sync = require('../lib/sync');
 import theme = require('./theme');
 import vfs = require('../lib/vfs/vfs');
@@ -289,7 +290,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 				progressMax: this.state.syncState.total
 			}));
 		}
-		return reactutil.CSSTransitionGroupF({transitionName: 'fade', key: 'toasterList'},
+		return reactutil.CSSTransitionGroupF({transitionName: style.classes(theme.animations.fade), key: 'toasterList'},
 		  toasters
 		);
 	}
@@ -314,9 +315,9 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 	private renderItemDetails() {
 		var detailsViewTransition: string;
 		if (this.state.itemEditMode == details_view.ItemEditMode.EditItem) {
-			detailsViewTransition = 'slide-from-left';
+			detailsViewTransition = style.classes(theme.animations.slideFromLeft);
 		} else {
-			detailsViewTransition = 'slide-from-bottom';
+			detailsViewTransition = style.classes(theme.animations.slideFromBottom);
 		}
 
 		var detailsView: react.ReactComponentElement<any>;

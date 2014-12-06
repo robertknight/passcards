@@ -1,5 +1,3 @@
-/* constants */
-
 /* see http://www.google.com/design/spec/style/typography.html */
 @material-text-alpha: 0.87;
 @material-caption-alpha: 0.54;
@@ -12,14 +10,10 @@
 @material-color-accent2: #f48fb1;
 @material-color-accent3: #f06292;
 
-/* mixins */
-.disable-tap-highlight {
-	-webkit-tap-highlight-color: rgba(0,0,0,0);
-}
-
 /* app style */
 html, body {
-	.disable-tap-highlight;
+	/* disable tab highlight */
+	-webkit-tap-highlight-color: rgba(0,0,0,0);
 
 	font-family: 'Roboto', 'Helvetica Neue', 'Segoe UI', 'Helvetica', 'Arial';
 	margin:0px;
@@ -33,80 +27,5 @@ body {
 
 #app-view {
 	height: 100%;
-}
-
-/* ReactCSSTransitionGroup animation classes */
-.slide-from-left-enter {
-	transform: translateX(100%);
-}
-
-.slide-from-left-enter.slide-from-left-enter-active {
-	transform: translateX(0px);
-	transition: transform .3s ease-out;
-	border-left: 1px solid @material-color-accent3;
-}
-
-.slide-from-left-leave {
-	transform: translateX(0px);
-	transition: transform .3s ease-out;
-}
-
-.slide-from-left-leave.slide-from-left-leave-active {
-	transform: translateX(100%);
-	border-left: 1px solid @material-color-accent3;
-}
-
-.slide-from-top-enter {
-	transform: translateY(-100%);
-}
-
-.slide-from-top-enter.slide-from-top-enter-active {
-	transform: translateY(0px);
-	transition: transform .3s ease-out;
-}
-
-.slide-from-top-leave {
-	transform: translateY(0px);
-	transition: transform .3s ease-out;
-}
-
-.slide-from-top-leave.slide-from-top-leave-active {
-	transform: translateY(-100%);
-}
-
-.slide-from-bottom-enter {
-	transform: translateY(100%);
-}
-
-.slide-from-bottom-enter.slide-from-bottom-enter-active {
-	transform: translateY(0px);
-	transition: transform .3s ease-out;
-}
-
-.slide-from-bottom-leave {
-	transform: translateY(0px);
-	transition: transform .3s ease-out;
-}
-
-.slide-from-bottom-leave.slide-from-bottom-leave-active {
-	transform: translateY(100%);
-}
-
-.fade-enter {
-	opacity: 0.01;
-}
-
-.fade-enter.fade-enter-active {
-	opacity: 1.0;
-	transition: opacity .5s ease-out;
-}
-
-.fade-leave {
-	opacity: 1.0;
-	transition: opacity .5s ease-out;
-}
-
-.fade-leave.fade-leave-active {
-	opacity: 0.01;
 }
 

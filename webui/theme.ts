@@ -13,11 +13,91 @@ var mixins = style.create({
 	}
 });
 
+// ReactCSSTransitionGroup animation classes
+var FADE_TRANSITION = 'opacity .5s ease-out';
+var SLIDE_TRANSITION = 'transform .3s ease-out';
+
+var animations = style.create({
+	slideFromLeft: {
+		enter: {
+			transform: 'translateX(100%)',
+			active: {
+				transform: 'translateX(0px)',
+				transition: SLIDE_TRANSITION,
+				borderLeft: '1px solid ' + colors.MATERIAL_COLOR_ACCENT3
+			}
+		},
+
+		leave: {
+			transform: 'translateX(0px)',
+			transition: SLIDE_TRANSITION,
+			active: {
+				transform: 'translateX(100%)',
+				borderLeft: '1px solid ' + colors.MATERIAL_COLOR_ACCENT3
+			}
+		}
+	},
+
+	slideFromTop: {
+		enter: {
+			transform: 'translateY(-100%)',
+			active: {
+				transform: 'translateY(0px)',
+				transition: SLIDE_TRANSITION
+			}
+		},
+		leave: {
+			transform: 'translateY(0px)',
+			transition: SLIDE_TRANSITION,
+			active: {
+				transform: 'translateY(-100%)'
+			}
+		}
+	},
+
+	slideFromBottom: {
+		enter: {
+			transform: 'translateY(100%)',
+			active: {
+				transform: 'translateY(0px)',
+				transition: SLIDE_TRANSITION
+			}
+		},
+		leave: {
+			transform: 'translateY(0px)',
+			transition: SLIDE_TRANSITION,
+			active: {
+				transform: 'translateY(100%)'
+			}
+		}
+	},
+
+	fade: {
+		enter: {
+			opacity: '0.01',
+			active: {
+				opacity: '1.0',
+				transition: FADE_TRANSITION
+			}
+		},
+		leave: {
+			opacity: '1.0',
+			transition: FADE_TRANSITION,
+			active: {
+				opacity: '0.01'
+			}
+		}
+	}
+});
+
 var styles = style.create({
 	appView: {
 		width: '100%',
 		height: '100%'
 	},
+
+	// Animations
+	animations: animations,
 
 	// Setup View
 	setupView: {

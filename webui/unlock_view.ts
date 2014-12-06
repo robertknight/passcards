@@ -86,10 +86,10 @@ export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockVie
 
 		return div(theme.unlockView, {},
 			reactutil.CSSTransitionGroupF({
-				transitionName: 'slide-from-top'
+				transitionName: style.classes(theme.animations.slideFromTop)
 			}, unlockPaneUpper),
 			reactutil.CSSTransitionGroupF({
-				transitionName: 'slide-from-bottom'
+				transitionName: style.classes(theme.animations.slideFromBottom)
 			}, unlockPaneLower)
 		);
 	}
