@@ -206,12 +206,12 @@ var styles = style.create({
 			fontWeight: '400',
 			color: colors.MATERIAL_COLOR_HEADER,
 			backgroundColor: colors.MATERIAL_COLOR_ACCENT3,
-			outline: 'none'
-		},
+			outline: 'none',
 
-		'masterPasswordField::-webkit-input-placeholder': {
-			color: '#fff',
-			opacity: '0.8'
+			'::-webkit-input-placeholder' : {
+				color: '#fff',
+				opacity: '0.8'
+			}
 		},
 
 		unlockLabel: {
@@ -317,11 +317,11 @@ var styles = style.create({
 				height: 4
 			}
 		},
-	},
 
-	'toaster > *' : {
-		marginLeft: 2,
-		marginRight: 2
+		'> *' : {
+			marginLeft: 2,
+			marginRight: 2
+		}
 	},
 
 	// Controls - Menu
@@ -376,12 +376,12 @@ var styles = style.create({
 				   when the width of the toolbar is collapsed
 				   in Firefox
 				*/
-				overflow: 'hidden'
-			},
+				overflow: 'hidden',
 
-			'searchField::-webkit-input-placeholder': {
-				color: '#fff',
-				opacity: '0.8'
+				'::-webkit-input-placeholder' : {
+					color: '#fff',
+					opacity: '0.8'
+				}
 			},
 
 			iconGroup: {
@@ -488,12 +488,12 @@ var styles = style.create({
 			location: {
 				color: '#666',
 				textOverflow: 'ellipsis',
-				overflow: 'hidden'
-			},
+				overflow: 'hidden',
 
-			'location a': {
-				textDecoration: 'none'
-			}
+				' a': {
+					textDecoration: 'none'
+				}
+			},
 		},
 
 		content: {

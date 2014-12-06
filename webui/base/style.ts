@@ -110,7 +110,11 @@ function className(style: Style) : string {
 	if (style.parent) {
 		var parentClass = className(style.parent);
 		if (parentClass) {
-			name = parentClass + '-' + name;
+			if (name[0].match(/[a-z]/)) {
+				name = parentClass + '-' + name;
+			} else {
+				name = parentClass + name;
+			}
 		}
 	}
 	return name;
@@ -178,7 +182,7 @@ export function compile<T>(tree: T) : string {
 			cssProps.push(cssPropName(k) + ': ' + cssPropValue(prop));
 		}
 	});
-	
+
 	var style: Style = tree;
 	var css = style.key ? cssClass(className(style), cssProps) : '';
 	return [css].concat(classes).join('\n\n');
