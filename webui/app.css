@@ -1,7 +1,3 @@
-/* see http://www.google.com/design/spec/style/typography.html */
-@material-text-alpha: 0.87;
-@material-text-color: rgba(0,0,0,@material-text-alpha);
-
 /* app style */
 html, body {
 	/* disable tab highlight */
@@ -10,7 +6,7 @@ html, body {
 	font-family: 'Roboto', 'Helvetica Neue', 'Segoe UI', 'Helvetica', 'Arial';
 	margin:0px;
 	height: 100%;
-	color: @material-text-color;
+	color: rgba(0,0,0,0.87 /* material text alpha */);
 }
 
 body {
