@@ -55,8 +55,8 @@ export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockVie
 			unlockMessage = '';
 		}
 
-		var unlockPaneUpper: react.ReactElement<any,any>;
-		var unlockPaneLower: react.ReactElement<any,any>;
+		var unlockPaneUpper: React.ReactElement<any>;
+		var unlockPaneLower: React.ReactElement<any>;
 
 		if (this.props.isLocked) {
 			unlockPaneUpper = div(theme.unlockView.upper, {},

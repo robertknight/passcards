@@ -240,12 +240,12 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 		this.setState(state);
 	}
 
-	render() : react.ReactElement<any,any> {
+	render() : React.ReactElement<any> {
 		if (!this.state.store) {
 			return SetupViewF({});
 		}
 
-		var children: react.ReactComponentElement<any>[] = [];
+		var children: React.ComponentElement<any>[] = [];
 
 		children.push(unlock_view.UnlockViewF({
 			key: 'unlockPane',
@@ -274,7 +274,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 	}
 
 	private renderToasters() {
-		var toasters: react.ReactComponentElement<controls.ToasterProps>[] = [];
+		var toasters: React.ComponentElement<controls.ToasterProps>[] = [];
 		if (this.state.status) {
 			toasters.push(controls.ToasterF({
 				key: 'status-toaster',
@@ -320,7 +320,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 			detailsViewTransition = style.classes(theme.animations.slideFromBottom);
 		}
 
-		var detailsView: react.ReactComponentElement<any>;
+		var detailsView: React.ComponentElement<any>;
 		if (this.state.selectedItem) {
 			detailsView = details_view.DetailsViewF({
 				key: 'detailsView',

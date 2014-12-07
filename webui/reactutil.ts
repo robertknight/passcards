@@ -28,8 +28,8 @@ export function mergeProps<P,C>(parentProps: P, childProps: C) : C {
 	return childProps;
 }
 
-export function createFactory<P,S>(component: {new() : typed_react.Component<P,S>}, ...mixins: react.Mixin<any,any>[])
-  : react.ReactComponentFactory<P> {
+export function createFactory<P,S>(component: {new() : typed_react.Component<P,S>}, ...mixins: React.Mixin<any,any>[])
+  : React.ComponentFactory<P> {
 	return react.createFactory(typed_react.createClass(component, mixins));
 }
 

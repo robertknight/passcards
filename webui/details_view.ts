@@ -15,7 +15,6 @@ import keycodes = require('./base/keycodes');
 import page_access = require('./page_access');
 import reactutil = require('./reactutil');
 import shortcut = require('./base/shortcut');
-import stringutil = require('../lib/base/stringutil');
 import theme = require('./theme');
 import url_util = require('../lib/base/url_util');
 
@@ -68,9 +67,9 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 			inputType = 'password';
 		}
 
-		var fieldActions: react.ReactElement<any,any>;
+		var fieldActions: React.ReactElement<any>;
 
-		var revealButton: react.ReactComponentElement<controls.ActionButtonProps>;
+		var revealButton: React.ComponentElement<controls.ActionButtonProps>;
 		if (this.props.isPassword) {
 			revealButton = controls.ActionButtonF({
 				value: this.state.revealed ? 'Hide' : 'Reveal',
@@ -82,7 +81,7 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 		}
 
 		if (this.state.selected) {
-			var copyButton: react.ReactComponentElement<controls.ActionButtonProps>;
+			var copyButton: React.ComponentElement<controls.ActionButtonProps>;
 			if (this.props.clipboard.clipboardAvailable()) {
 				copyButton = controls.ActionButtonF({
 					value: 'Copy',
@@ -213,9 +212,9 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 	}
 
 	private renderSections(item: item_store.ItemAndContent, onSave: () => void) {
-		var sections: react.ReactElement<any,any>[] = [];
+		var sections: React.ReactElement<any>[] = [];
 		item.content.sections.forEach((section, sectionIndex) => {
-			var fields: react.ReactComponentElement<any>[] = [];
+			var fields: React.ComponentElement<any>[] = [];
 			section.fields.forEach((field, fieldIndex) => {
 				if (field.value) {
 					fields.push(ItemFieldF({
@@ -241,7 +240,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 	}
 
 	private renderWebsites(item: item_store.ItemAndContent, onSave: () => void) {
-		var websites: react.ReactComponentElement<any>[] = [];
+		var websites: React.ComponentElement<any>[] = [];
 		item.content.urls.forEach((url, urlIndex) => {
 			websites.push(ItemFieldF({
 				key: urlIndex,
@@ -261,7 +260,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 	}
 
 	private renderCoreFields(item: item_store.ItemAndContent, onSave: () => void) {
-		var coreFields: react.ReactComponentElement<any>[] = [];
+		var coreFields: React.ComponentElement<any>[] = [];
 
 		var accountField = item.content.accountField();
 		var passwordField = item.content.passwordField();
@@ -310,7 +309,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 	}
 
 	private renderToolbar() {
-		var toolbarControls: react.ReactElement<any,any>[] = [];
+		var toolbarControls: React.ReactElement<any>[] = [];
 		if (this.props.editMode == ItemEditMode.EditItem) {
 			toolbarControls.push(controls.ToolbarButtonF({
 				iconHref: 'icons/icons.svg#arrow-back',
@@ -359,7 +358,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 	}
 
 	render() {
-		var detailsContent : react.ReactElement<any,any>;
+		var detailsContent : React.ReactElement<any>;
 		var updatedItem = this.state.editedItem;
 		if (updatedItem) {
 			var onChangeItem = () => {
@@ -370,7 +369,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				});
 			};
 
-			var titleField: react.ReactElement<any,any>;
+			var titleField: React.ReactElement<any>;
 			if (this.state.isEditing) {
 				titleField = ItemFieldF({
 					label: 'Title',
@@ -415,7 +414,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			);
 		}
 
-		var autofillButton: react.ReactComponentElement<any>;
+		var autofillButton: React.ComponentElement<any>;
 		if (env.isFirefoxAddon() || env.isChromeExtension()) {
 			autofillButton = controls.ActionButtonF({
 				accessKey:'a',

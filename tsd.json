@@ -6,43 +6,40 @@
   "bundle": "typings/tsd.d.ts",
   "installed": {
     "react/react.d.ts": {
-      "commit": "16fc1fb8b440e55e88bd1bbb393dcf2e9fb07d22"
-    },
-    "react-addons/react-addons.d.ts": {
-      "commit": "16fc1fb8b440e55e88bd1bbb393dcf2e9fb07d22"
+      "commit": "2d27ff2bdb2e5ff94e6147206ff6fa27ea96a78d"
     },
     "node/node.d.ts": {
-      "commit": "16fc1fb8b440e55e88bd1bbb393dcf2e9fb07d22"
+      "commit": "2d27ff2bdb2e5ff94e6147206ff6fa27ea96a78d"
     },
     "q/Q.d.ts": {
-      "commit": "16fc1fb8b440e55e88bd1bbb393dcf2e9fb07d22"
+      "commit": "2d27ff2bdb2e5ff94e6147206ff6fa27ea96a78d"
     },
     "chrome/chrome.d.ts": {
-      "commit": "16fc1fb8b440e55e88bd1bbb393dcf2e9fb07d22"
+      "commit": "2d27ff2bdb2e5ff94e6147206ff6fa27ea96a78d"
     },
     "jquery/jquery.d.ts": {
-      "commit": "16fc1fb8b440e55e88bd1bbb393dcf2e9fb07d22"
+      "commit": "2d27ff2bdb2e5ff94e6147206ff6fa27ea96a78d"
     },
     "urlrouter/urlrouter.d.ts": {
-      "commit": "16fc1fb8b440e55e88bd1bbb393dcf2e9fb07d22"
+      "commit": "2d27ff2bdb2e5ff94e6147206ff6fa27ea96a78d"
     },
     "promptly/promptly.d.ts": {
-      "commit": "16fc1fb8b440e55e88bd1bbb393dcf2e9fb07d22"
+      "commit": "2d27ff2bdb2e5ff94e6147206ff6fa27ea96a78d"
     },
     "mkdirp/mkdirp.d.ts": {
-      "commit": "16fc1fb8b440e55e88bd1bbb393dcf2e9fb07d22"
+      "commit": "2d27ff2bdb2e5ff94e6147206ff6fa27ea96a78d"
     },
     "underscore/underscore.d.ts": {
-      "commit": "16fc1fb8b440e55e88bd1bbb393dcf2e9fb07d22"
+      "commit": "2d27ff2bdb2e5ff94e6147206ff6fa27ea96a78d"
     },
     "clone/clone.d.ts": {
-      "commit": "16fc1fb8b440e55e88bd1bbb393dcf2e9fb07d22"
+      "commit": "2d27ff2bdb2e5ff94e6147206ff6fa27ea96a78d"
     },
     "node-uuid/node-uuid.d.ts": {
-      "commit": "16fc1fb8b440e55e88bd1bbb393dcf2e9fb07d22"
+      "commit": "2d27ff2bdb2e5ff94e6147206ff6fa27ea96a78d"
     },
     "webrtc/MediaStream.d.ts": {
-      "commit": "16fc1fb8b440e55e88bd1bbb393dcf2e9fb07d22"
+      "commit": "2d27ff2bdb2e5ff94e6147206ff6fa27ea96a78d"
     }
   }
 }

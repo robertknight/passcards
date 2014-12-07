@@ -14,7 +14,6 @@ import item_icons = require('./item_icons');
 import item_search = require('../lib/item_search');
 import item_store = require('../lib/item_store');
 import reactutil = require('./reactutil');
-import stringutil = require('../lib/base/stringutil');
 import style = require('./base/style');
 import theme = require('./theme');
 
@@ -142,7 +141,7 @@ class Item extends typed_react.Component<ItemProps, {}> {
 	}
 
 	render() {
-		var focusIndicator: react.ReactElement<any,any>;
+		var focusIndicator: React.ReactElement<any>;
 		if (this.props.isFocused) {
 			focusIndicator = div(theme.itemList.item.focusIndicator, {}, '>');
 		}
@@ -228,7 +227,7 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 		focused: boolean;
 		index: number;
 		offsetTop: number;
-	}) : react.ReactComponentElement<ItemProps> {
+	}) : React.ComponentElement<ItemProps> {
 		return ItemF({
 			key: item.uuid,
 			item: item,

@@ -10,7 +10,7 @@ import style = require('./style');
   * @param props Props passed to react.DOM.div()
   * @param children Children passed to react.DOM.div()
   */
-function div(styles: any, props: react.DomAttributes, ...children: any[]) {
+function div(styles: any, props: React.HTMLAttributes, ...children: any[]) {
 	if (Array.isArray(styles)) {
 		props.className = style.classes.apply(style, styles);
 	} else if (styles) {
