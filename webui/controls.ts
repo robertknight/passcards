@@ -8,11 +8,11 @@
 import react = require('react');
 import typed_react = require('typed-react');
 import sprintf = require('sprintf');
+import style = require('ts-style');
 import underscore = require('underscore');
 
 import div = require('./base/div');
 import reactutil = require('./reactutil');
-import style = require('./base/style');
 import theme = require('./theme');
 
 export class ToolbarButtonProps {

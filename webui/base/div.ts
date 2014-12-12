@@ -1,6 +1,5 @@
 import react = require('react');
-
-import style = require('./style');
+import style = require('ts-style');
 
 /** Utility function for creating a react.DOM.div() element, applying
   * CSS styles defined with style.create()

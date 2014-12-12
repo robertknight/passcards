@@ -3,13 +3,13 @@
 // View for entering master password and unlocking the store
 
 import react = require('react');
+import style = require('ts-style');
 import typed_react = require('typed-react');
 
 import div = require('./base/div');
 import focus_mixin = require('./base/focus_mixin');
 import item_store = require('../lib/item_store');
 import reactutil = require('./reactutil');
-import style = require('./base/style');
 import theme = require('./theme');
 
 enum UnlockState {

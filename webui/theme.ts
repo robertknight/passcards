@@ -1,6 +1,7 @@
+import style = require('ts-style');
+
 import assign = require('../lib/base/assign');
 import colors = require('./colors');
-import style = require('./base/style');
 
 var mixins = style.create({
 	materialDesign: {

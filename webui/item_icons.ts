@@ -6,6 +6,7 @@
 
 import Q = require('q');
 import react = require('react');
+import style = require('ts-style');
 import typed_react = require('typed-react');
 import underscore = require('underscore');
 import urijs = require('URIjs');
@@ -16,7 +17,6 @@ import event_stream = require('../lib/base/event_stream');
 import key_value_store = require('../lib/base/key_value_store');
 import reactutil = require('./reactutil');
 import site_info = require('../lib/siteinfo/site_info');
-import style = require('./base/style');
 import theme = require('./theme');
 import url_util = require('../lib/base/url_util');
 

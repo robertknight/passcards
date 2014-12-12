@@ -2,6 +2,7 @@
 /// <reference path="../typings/react-0.12.d.ts" />
 
 import react = require('react');
+import style = require('ts-style');
 import typed_react = require('typed-react');
 import underscore = require('underscore');
 
@@ -14,7 +15,6 @@ import item_icons = require('./item_icons');
 import item_search = require('../lib/item_search');
 import item_store = require('../lib/item_store');
 import reactutil = require('./reactutil');
-import style = require('./base/style');
 import theme = require('./theme');
 
 export class ItemListViewState {

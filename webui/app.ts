@@ -3,12 +3,14 @@
 /// <reference path="../typings/fastclick.d.ts" />
 /// <reference path="../typings/react-0.12.d.ts" />
 /// <reference path="../typings/react-style.d.ts" />
+/// <reference path="../node_modules/ts-style/dist/ts-style.d.ts" />
 
 import assert = require('assert');
 import fastclick = require('fastclick');
 import Q = require('q');
 import react = require('react');
 import react_style = require('react-style');
+import style = require('ts-style');
 import typed_react = require('typed-react');
 import url = require('url');
 import underscore = require('underscore');
@@ -33,7 +35,6 @@ import onepass_crypto = require('../lib/onepass_crypto');
 import page_access = require('./page_access');
 import reactutil = require('./reactutil');
 import siteinfo_client = require('../lib/siteinfo/client');
-import style = require('./base/style');
 import sync = require('../lib/sync');
 import theme = require('./theme');
 import vfs = require('../lib/vfs/vfs');
