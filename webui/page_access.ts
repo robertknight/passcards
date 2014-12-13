@@ -282,20 +282,22 @@ export class ChromeExtensionPageAccess implements PageAccess, ClipboardAccess {
 
 	private connectToCurrentTab() : Q.Promise<rpc.RpcHandler> {
 		var tabRpc = Q.defer<rpc.RpcHandler>();
-		chrome.tabs.query({active:true}, (tabs) => {
-			if (tabs.length == 0) {
-				tabRpc.reject(new Error('No tabs active'));
-				return;
-			}
-			var activeTab = tabs[0];
-			if (this.tabPorts.hasOwnProperty(activeTab.id.toString())) {
-				tabRpc.resolve(this.tabPorts[activeTab.id]);
-			} else {
-				var tabPort = new rpc.ChromeMessagePort(activeTab.id);
-				var newTabRpc = new rpc.RpcHandler(tabPort);
-				this.tabPorts[activeTab.id] = newTabRpc;
-				tabRpc.resolve(newTabRpc);
-			}
+		chrome.windows.getCurrent((window) => {
+			chrome.tabs.query({active:true, windowId: window.id}, (tabs) => {
+				if (tabs.length == 0) {
+					tabRpc.reject(new Error('No tabs active'));
+					return;
+				}
+				var activeTab = tabs[0];
+				if (this.tabPorts.hasOwnProperty(activeTab.id.toString())) {
+					tabRpc.resolve(this.tabPorts[activeTab.id]);
+				} else {
+					var tabPort = new rpc.ChromeMessagePort(activeTab.id);
+					var newTabRpc = new rpc.RpcHandler(tabPort);
+					this.tabPorts[activeTab.id] = newTabRpc;
+					tabRpc.resolve(newTabRpc);
+				}
+			});
 		});
 		return tabRpc.promise;
 	}

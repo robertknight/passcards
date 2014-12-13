@@ -8,9 +8,11 @@ page.hidePanel = function() {
 
 page.renderApp(document.getElementById('app-view'));
 
-chrome.tabs.query({active: true}, function(tabs) {
-	if (tabs.length >= 1) {
-		var tab = tabs[0];
-		page.notifyPageChanged(tab);
-	}
+chrome.windows.getCurrent(function(window) {
+	chrome.tabs.query({active: true, windowId: window.id}, function(tabs) {
+		if (tabs.length >= 1) {
+			var tab = tabs[0];
+			page.notifyPageChanged(tab);
+		}
+	});
 });
