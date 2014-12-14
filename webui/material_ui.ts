@@ -1,5 +1,8 @@
 import react = require('react');
 
+import reactutil = require('./reactutil');
+import text_field = require('./text_field');
+
 // TODO - Upstream typings into react-material
 export interface TextFieldProps {
 	floatingLabel?: boolean;
@@ -9,5 +12,4 @@ export interface TextFieldProps {
 	initialValue?: string;
 }
 
-var TextField = require('react-material/components/TextField');
-export var TextFieldF: React.Factory<TextFieldProps> = react.createFactory(TextField);
+export var TextFieldF: React.Factory<TextFieldProps> = reactutil.createFactory(text_field.TextField);

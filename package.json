@@ -34,7 +34,6 @@
     "promptly": ">=0.2.0",
     "q": "^2.0.2",
     "react": "^0.12.1",
-    "react-material": "https://github.com/robertknight/react-material/archive/82a6e26cc5d68b74ed77e1efd9b2f91e60829fbd.tar.gz",
     "react-style": "^0.3.1",
     "reactify": "^0.15.2",
     "request": "^2.49.0",
