@@ -28,6 +28,7 @@ import typed_react = require('typed-react');
 import style = require('ts-style');
 
 import colors = require('./colors');
+import reactutil = require('./reactutil');
 import theme = require('./theme');
 import text_field_theme = require('./text_field_theme');
 
@@ -46,8 +47,8 @@ export interface TextFieldProps {
 	readOnly?: boolean;
 
 	onChange?: React.FormEventHandler;
-	onBlur: React.FocusEventHandler;
-	onFocus: React.FocusEventHandler;
+	onBlur?: React.FocusEventHandler;
+	onFocus?: React.FocusEventHandler;
 
 	style: TextFieldStyle;
 }
@@ -253,4 +254,6 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 		}
 	}
 }
+
+export var TextFieldF: React.Factory<TextFieldProps> = reactutil.createFactory(TextField);
 

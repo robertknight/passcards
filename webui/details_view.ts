@@ -10,7 +10,6 @@ import focus_mixin = require('./base/focus_mixin');
 import item_builder = require('../lib/item_builder');
 import item_icons = require('./item_icons');
 import item_store = require('../lib/item_store');
-import material_ui = require('./material_ui');
 import keycodes = require('./base/keycodes');
 import page_access = require('./page_access');
 import reactutil = require('./reactutil');
@@ -104,12 +103,12 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 		}
 
 		return div(theme.detailsView.field, {ref: 'itemField'},
-			material_ui.TextFieldF({
+			text_field.TextFieldF({
 				floatingLabel: true,
 				placeHolder: this.props.label,
 				value: displayValue,
 				type: inputType,
-				onChange: (e: Event) => {
+				onChange: (e) => {
 					var newValue = (<HTMLInputElement>e.target).value;
 					this.setState({value: newValue});
 					this.props.onChange(newValue);
