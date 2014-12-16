@@ -42,6 +42,8 @@ export interface TextFieldProps {
 	floatingLabel?: boolean;
 	error?: boolean;
 	placeHolder?: string;
+	showUnderline?: boolean;
+	readOnly?: boolean;
 
 	onChange?: React.FormEventHandler;
 	onBlur: React.FocusEventHandler;
@@ -67,6 +69,12 @@ var div = react.DOM.div;
 var input = react.DOM.input;
 
 export class TextField extends typed_react.Component<TextFieldProps, TextFieldState> {
+	getDefaultProps() {
+		return {
+			showUnderline: true
+		};
+	}
+
 	getInitialState() {
 		return {
 			focus: false,
@@ -129,6 +137,14 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 			focusedUnderlineStyling.push(styles.errorUnderlineStyle);
 		}
 
+		var underline: React.ReactElement<any>;
+		if (props.showUnderline) {
+			underline = div(style.mixin(styles.underlineContainerStyle, { ref: 'underlineContainer' }),
+					div(style.mixin(styles.underlineStyle, { ref: 'underline' })),
+					div(style.mixin(focusedUnderlineStyling, { ref: 'focusedUnderline' }))
+					);
+		}
+
 		return div(style.mixin(containerStyling),
 			div(style.mixin(placeHolderStyling), props.placeHolder),
 			input(style.mixin(textFieldStyling, {
@@ -143,12 +159,10 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 				type: this.props.type || 'text',
 				ref: 'textField',
 				defaultValue: this.props.defaultValue,
-				value: this.props.value
+				value: this.props.value,
+				readOnly: this.props.readOnly
 			})),
-			div(style.mixin(styles.underlineContainerStyle, { ref: 'underlineContainer' }),
-				div(style.mixin(styles.underlineStyle, { ref: 'underline' })),
-				div(style.mixin(focusedUnderlineStyling, { ref: 'focusedUnderline' }))
-				),
+			underline,
 			div(style.mixin(
 				[scrollLeft ? { opacity: '1' } : null,
 					this.state.focus ? styles.focusStyle : null,

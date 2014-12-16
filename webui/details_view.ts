@@ -114,6 +114,8 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 					this.setState({value: newValue});
 					this.props.onChange(newValue);
 				},
+				readOnly: this.props.readOnly,
+				showUnderline: !this.props.readOnly,
 				style: fieldStyle
 			}),
 			fieldActions
