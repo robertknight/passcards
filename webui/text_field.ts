@@ -23,132 +23,13 @@
 //		|	 |Input Text (16sp)
 //		| 16 |---
 
-import ReactStyle = require('react-style');
 import react = require('react');
 import typed_react = require('typed-react');
+import style = require('ts-style');
 
 import colors = require('./colors');
-
-// Color of floating label and underline when focused
-var focusColor = colors.MATERIAL_COLOR_PRIMARY;
-
-// Color of label when unfocused
-var labelColor = colors.MATERIAL_GREY_P500;
-
-var transitionDuration = '0.2s';
-var textMargin = '0.5em 0 0.25em';
-
-var TextFieldStyles = {
-
-	normalTextFieldStyle: ReactStyle({
-		background: 'transparent',
-		fontSize: 16,
-		border: 'none',
-		outline: 'none',
-		left: 0,
-		width: '100%',
-		padding: 0,
-		margin: textMargin
-	}, 'normalTextFieldStyle'),
-
-	underlineContainerStyle: ReactStyle({
-		position: 'relative',
-		left: 0,
-		right: 0,
-		height: 0,
-		overflow: 'visible'
-	}, 'underlineContainerStyle'),
-
-	underlineStyle: ReactStyle({
-		backgroundColor: labelColor,
-		height: 1
-	}),
-
-	// style used for the underline when the input
-	// has focus
-	focusedUnderlineStyle: ReactStyle({
-		backgroundColor: focusColor,
-		height: 2,
-		position: 'absolute',
-		top: 0,
-		left: 0,
-		right: 0,
-		opacity: '0',
-		transition: 'left ' + transitionDuration + ' ease-out, right ' + transitionDuration + ' ease-out'
-	}, 'focusedUnderlineStyle'),
-
-	errorUnderlineStyle: ReactStyle({
-		backgroundColor: colors.MATERIAL_RED_P400
-	}, 'errorTextFieldStyle'),
-
-	fullWidthTextFieldStyle: ReactStyle({
-		width: '100%'
-	}, 'fullWidthTextFieldStyle'),
-
-	placeHolderStyling: ReactStyle({
-		color: labelColor,
-		fontSize: 16,
-		left: 1,
-		position: 'absolute',
-		opacity: '1',
-		transition: 'top .18s linear, font-size .18s linear, opacity .10s linear',
-		pointerEvents: 'none',
-		margin: textMargin
-	}, 'placeHolderStyling'),
-
-	floatingLabelPlaceHolderStyling: ReactStyle({
-		top: 27
-	}, 'floatingLabelPlaceHolderStyling'),
-
-	containerStyling: ReactStyle({
-		position: 'relative',
-		width: 300,
-		paddingBottom: 8
-	}, 'containerStyling'),
-
-	placeHolderTopStyling: ReactStyle({
-		fontSize: 12,
-		top: 4
-	}, 'placeHolderTopStyling'),
-
-	scrollBlocksStyle: ReactStyle({
-		backgroundColor: labelColor,
-		bottom: 6,
-		height: 3,
-		opacity: '0',
-		position: 'absolute',
-		transition: 'opacity .28s linear',
-		width: 3,
-		':before': {
-			backgroundColor: labelColor,
-			bottom: 0,
-			content: "''",
-			position: 'absolute',
-			height: 3,
-			width: 3,
-			right: 6
-		},
-		':after': {
-			backgroundColor: labelColor,
-			bottom: 0,
-			content: "''",
-			position: 'absolute',
-			height: 3,
-			width: 3,
-			right: -6
-		}
-	}, 'scrollBlocksStyle'),
-
-	focusStyle: ReactStyle({
-		backgroundColor: focusColor,
-		':before': {
-			backgroundColor: focusColor
-		},
-		':after': {
-			backgroundColor: focusColor
-		}
-	}, 'focusStyle')
-};
+import theme = require('./theme');
+import text_field_theme = require('./text_field_theme');
 
 interface TextFieldProps {
 	type?: string;
@@ -190,12 +71,12 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 
 	render() {
 		var props = this.props;
-		var styles = TextFieldStyles;
+		var styles = theme.textField;
 		var textField = this.refs['textField'];
 		var scrollLeft = 0;
 		var scrollWidth = -1;
 		var width = -1;
-		var placeHolderStyling = [styles.placeHolderStyling];
+		var placeHolderStyling: any[] = [styles.placeHolderStyling];
 
 		if (props.floatingLabel) {
 			placeHolderStyling.push(styles.floatingLabelPlaceHolderStyling);
@@ -205,10 +86,10 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 			if (props.floatingLabel) {
 				placeHolderStyling.push(styles.placeHolderTopStyling);
 				if (this.state.focus) {
-					placeHolderStyling.push(ReactStyle({ color: focusColor }));
+					placeHolderStyling.push({ color: text_field_theme.focusColor });
 				}
 			} else {
-				placeHolderStyling.push(ReactStyle({ opacity: '0' }));
+				placeHolderStyling.push({ opacity: '0' });
 			}
 		}
 
@@ -219,29 +100,29 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 			width = textfieldDOMNode.offsetWidth;
 		}
 
-		var containerStyling = [styles.containerStyling];
+		var containerStyling: any[] = [styles.containerStyling];
 		if (props.floatingLabel) {
-			containerStyling.push(ReactStyle({ height: '66px' }));
+			containerStyling.push({ height: '66px' });
 		}
 
-		var textFieldStyling = [styles.normalTextFieldStyle];
+		var textFieldStyling: any[] = [styles.normalTextFieldStyle];
 
 		if (props.floatingLabel) {
-			textFieldStyling.push(ReactStyle({ paddingTop: 25 }));
+			textFieldStyling.push({ paddingTop: 25 });
 		}
 
-		var focusedUnderlineStyling = [styles.focusedUnderlineStyle];
+		var focusedUnderlineStyling: any[] = [styles.focusedUnderlineStyle];
 		if (this.state.focus) {
-			focusedUnderlineStyling.push(ReactStyle({ opacity: 1 }));
+			focusedUnderlineStyling.push({ opacity: 1 });
 		}
 
 		if (props.error) {
 			focusedUnderlineStyling.push(styles.errorUnderlineStyle);
 		}
 
-		return div({ styles: containerStyling },
-			div({ styles: placeHolderStyling }, props.placeHolder),
-			input({
+		return div(style.mixin(containerStyling),
+			div(style.mixin(placeHolderStyling), props.placeHolder),
+			input(style.mixin(textFieldStyling, {
 				onChange: this.onChange,
 				onKeyUp: this.onChange,
 				onClick: this.onChange,
@@ -253,26 +134,23 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 				type: this.props.type || 'text',
 				ref: 'textField',
 				defaultValue: this.props.defaultValue,
-				value: this.props.value,
-				styles: textFieldStyling
-			}),
-			div({ ref: 'underlineContainer', styles: styles.underlineContainerStyle },
-				div({ ref: 'underline', styles: styles.underlineStyle }),
-				div({ ref: 'focusedUnderline', styles: focusedUnderlineStyling })
+				value: this.props.value
+			})),
+			div(style.mixin(styles.underlineContainerStyle, { ref: 'underlineContainer' }),
+				div(style.mixin(styles.underlineStyle, { ref: 'underline' })),
+				div(style.mixin(focusedUnderlineStyling, { ref: 'focusedUnderline' }))
 				),
-			div({
-				styles: [scrollLeft ? ReactStyle({ opacity: '1' }) : null,
+			div(style.mixin(
+				[scrollLeft ? { opacity: '1' } : null,
 					this.state.focus ? styles.focusStyle : null,
 					styles.scrollBlocksStyle,
-					ReactStyle({ left: '6px' })]
-			}),
-			div({
-				styles: [(scrollWidth > (scrollLeft + width)) ?
-					ReactStyle({ opacity: '1' }) : null,
+					{ left: '6px' }]
+					)),
+			div(style.mixin([(scrollWidth > (scrollLeft + width)) ?
+					{ opacity: '1' } : null,
 					this.state.focus ? styles.focusStyle : null,
 					styles.scrollBlocksStyle,
-					ReactStyle({ right: '6px' })]
-			})
+					{ right: '6px' }]))
 			);
 	}
 

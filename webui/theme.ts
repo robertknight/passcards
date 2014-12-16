@@ -2,6 +2,7 @@ import style = require('ts-style');
 
 import assign = require('../lib/base/assign');
 import colors = require('./colors');
+import text_field_theme = require('./text_field_theme');
 
 var mixins = style.create({
 	materialDesign: {
@@ -121,7 +122,7 @@ var styles = style.create({
 			height: 48,
 			backgroundColor: 'white',
 			border: '1px solid #bbb',
-			
+
 			// make icon circular
 			borderRadius: '50%',
 			overflow: 'hidden',
@@ -209,7 +210,7 @@ var styles = style.create({
 			backgroundColor: colors.MATERIAL_COLOR_ACCENT3,
 			outline: 'none',
 
-			'::-webkit-input-placeholder' : {
+			'::-webkit-input-placeholder': {
 				color: '#fff',
 				opacity: '0.8'
 			}
@@ -319,7 +320,7 @@ var styles = style.create({
 			}
 		},
 
-		'> *' : {
+		'> *': {
 			marginLeft: 2,
 			marginRight: 2
 		}
@@ -346,6 +347,9 @@ var styles = style.create({
 			lineHeight: 48
 		}
 	},
+
+	// Controls - Text Field
+	textField: text_field_theme.styles,
 
 	// Item List
 	itemList: {
@@ -379,7 +383,7 @@ var styles = style.create({
 				*/
 				overflow: 'hidden',
 
-				'::-webkit-input-placeholder' : {
+				'::-webkit-input-placeholder': {
 					color: '#fff',
 					opacity: '0.8'
 				}
