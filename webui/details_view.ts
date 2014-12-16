@@ -15,6 +15,7 @@ import keycodes = require('./base/keycodes');
 import page_access = require('./page_access');
 import reactutil = require('./reactutil');
 import shortcut = require('./base/shortcut');
+import text_field = require('./text_field');
 import theme = require('./theme');
 import url_util = require('../lib/base/url_util');
 
@@ -97,6 +98,11 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 			);
 		}
 
+		var fieldStyle: text_field.TextFieldStyle = {};
+		if (this.props.isPassword) {
+			fieldStyle.fontFamily = 'monospace';
+		}
+
 		return div(theme.detailsView.field, {ref: 'itemField'},
 			material_ui.TextFieldF({
 				floatingLabel: true,
@@ -107,7 +113,8 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 					var newValue = (<HTMLInputElement>e.target).value;
 					this.setState({value: newValue});
 					this.props.onChange(newValue);
-				}
+				},
+				style: fieldStyle
 			}),
 			fieldActions
 		);

@@ -31,7 +31,11 @@ import colors = require('./colors');
 import theme = require('./theme');
 import text_field_theme = require('./text_field_theme');
 
-interface TextFieldProps {
+export interface TextFieldStyle {
+	fontFamily?: string;
+}
+
+export interface TextFieldProps {
 	type?: string;
 	defaultValue?: string;
 	value?: string;
@@ -42,6 +46,8 @@ interface TextFieldProps {
 	onChange?: React.FormEventHandler;
 	onBlur: React.FocusEventHandler;
 	onFocus: React.FocusEventHandler;
+
+	style: TextFieldStyle;
 }
 
 interface TextFieldState {
@@ -106,6 +112,9 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 		}
 
 		var textFieldStyling: any[] = [styles.normalTextFieldStyle];
+		if (props.style && props.style.fontFamily) {
+			textFieldStyling.push({fontFamily: props.style.fontFamily});
+		}
 
 		if (props.floatingLabel) {
 			textFieldStyling.push({ paddingTop: 25 });
