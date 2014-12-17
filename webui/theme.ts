@@ -345,7 +345,7 @@ var styles = style.create({
 			cursor: 'pointer',
 			userSelect: 'none',
 			verticalAlign: 'middle',
-			lineHeight: 48
+			lineHeight: '48px'
 		}
 	},
 
