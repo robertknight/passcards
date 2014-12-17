@@ -33,6 +33,7 @@ import onepass = require('../lib/onepass');
 import onepass_crypto = require('../lib/onepass_crypto');
 import page_access = require('./page_access');
 import reactutil = require('./reactutil');
+import settings = require('./settings');
 import siteinfo_client = require('../lib/siteinfo/client');
 import sync = require('../lib/sync');
 import theme = require('./theme');
@@ -449,16 +450,18 @@ export class App {
 	private activeAppView: any;
 
 	private savedState: AppViewState;
+	private settings: settings.Store;
 	private services: AppServices;
 
 	constructor() {
 		this.savedState = {};
+		this.settings = new settings.SimpleStore();
 
 		var fs = this.setupVfs();
 		var browserExt = this.setupBrowserExtension();
 
 		var keyAgent = new key_agent.SimpleKeyAgent();
-		keyAgent.setAutoLockTimeout(2 * 60 * 1000);
+		keyAgent.setAutoLockTimeout(this.settings.get(settings.Setting.AutoLockTimeout));
 
 		var iconProvider = this.setupItemIconProvider();
 		
