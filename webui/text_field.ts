@@ -217,7 +217,7 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 		// if the user focused via touch or mouse,
 		// animate the focused underline, spilling from the horizontal
 		// position of the mouse or touch
-		if (this.state.focusX) {
+		if (this.state.focusX && this.props.showUnderline) {
 			var underlineRect = this.refs['underlineContainer'].getDOMNode().getBoundingClientRect();
 			var focusedUnderline = <HTMLElement>this.refs['focusedUnderline'].getDOMNode();
 
