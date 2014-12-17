@@ -462,7 +462,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			div(theme.detailsView.itemActionBar, {},
 				autofillButton
 			),
-			react.DOM.div({style: {position: 'relative'}},
+			div(theme.detailsView.fieldsContainer, {},
 				reactutil.CSSTransitionGroupF({transitionName: style.classes(theme.animations.fade)},
 					this.renderFields(this.state.isEditing)
 				)

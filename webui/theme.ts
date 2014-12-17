@@ -471,6 +471,12 @@ var styles = style.create({
 		display: 'flex',
 		flexDirection: 'column',
 
+		// disable the focus ring around the
+		// edge of the details view when focused
+		':focus': {
+			outline: 0
+		},
+
 		toolbar: style.merge(mixins.materialDesign.header, {
 			display: 'flex',
 			flexDirection: 'row',
@@ -502,10 +508,17 @@ var styles = style.create({
 			},
 		},
 
+		// container that holds the list of field
+		// views / editors for the item
+		fieldsContainer: {
+			flexGrow: 1,
+			position: 'relative',
+			overflowY: 'auto'
+		},
+
 		content: {
 			paddingLeft: 16,
 			flexGrow: 1,
-			overflowY: 'auto',
 			position: 'absolute'
 		},
 
