@@ -226,10 +226,11 @@ var styles = style.create({
 	},
 
 	// Controls - Toolbar
-	toolbar: assign(mixins.materialDesign.header, {
+	toolbar: style.merge(mixins.materialDesign.header, {
 		borderBottom: '1px solid #bbb',
 		paddingRight: 20,
-		height: 40
+		height: 40,
+		flexShrink: 0
 	}),
 
 	toolbarButton: {
@@ -470,7 +471,7 @@ var styles = style.create({
 		display: 'flex',
 		flexDirection: 'column',
 
-		toolbar: assign(mixins.materialDesign.header, {
+		toolbar: style.merge(mixins.materialDesign.header, {
 			display: 'flex',
 			flexDirection: 'row',
 			alignItems: 'center',
