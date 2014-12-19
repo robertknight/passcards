@@ -336,6 +336,7 @@ var styles = style.create({
 		boxShadow: 'rgba(0, 0, 0, 0.26) 0px 1px 2px 2px',
 		zIndex: 10,
 		backgroundColor: 'white',
+		overflowY: 'hidden',
 
 		item: {
 			position: 'relative',

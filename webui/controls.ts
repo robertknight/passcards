@@ -307,18 +307,16 @@ export interface MenuProps {
 	onDismiss: () => void;
 }
 
-function toPixels(unit: number) {
-	if (unit) {
-		return unit + 'px';
-	} else {
-		return undefined;
-	}
-}
-
 var MENU_DISMISS_EVENTS = ['mousedown', 'touchstart', 'click'];
 
 export class Menu extends typed_react.Component<MenuProps, MenuState> {
 	private menuListener: EventListener;
+
+	getInitialState() {
+		return {
+			showTime: new Date
+		}
+	}
 
 	componentDidMount() {
 		var menuNode = <HTMLElement>this.refs['menu'].getDOMNode();
@@ -371,13 +369,28 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 				item.label
 			);
 		});
+
+		var visibleMs = Date.now() - this.state.showTime.getTime();
+
+		var maxHeight = menuItems.length * 48;
+		var expandedHeight = Math.min(1.0, visibleMs / 300.0) * maxHeight;
+		if (expandedHeight < maxHeight) {
+			requestAnimationFrame(() => {
+				this.forceUpdate();
+			});
+		}
+
+		var opacity = Math.min(1.0, visibleMs / 200);
+
 		return div(theme.menu, {
 			ref: 'menu',
 			style: {
-				top: toPixels(this.props.top),
-				left: toPixels(this.props.left),
-				right: toPixels(this.props.right),
-				bottom: toPixels(this.props.bottom)
+				top: this.props.top,
+				left: this.props.left,
+				right: this.props.right,
+				bottom: this.props.bottom,
+				height: expandedHeight,
+				opacity: opacity
 			}
 		}, menuItems);
 	}
