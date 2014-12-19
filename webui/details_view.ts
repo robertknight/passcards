@@ -19,6 +19,12 @@ import text_field = require('./text_field');
 import theme = require('./theme');
 import url_util = require('../lib/base/url_util');
 
+enum FieldType {
+	Text,
+	Password,
+	Url
+}
+
 interface ItemFieldState {
 	selected?: boolean;
 	revealed?: boolean;
@@ -28,7 +34,7 @@ interface ItemFieldState {
 interface ItemFieldProps {
 	label: string;
 	value: string;
-	isPassword: boolean;
+	type: FieldType;
 	clipboard: page_access.ClipboardAccess;
 	readOnly: boolean;
 
@@ -71,8 +77,11 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 	render() {
 		var displayValue = this.state.value;
 		var inputType = 'text';
-		if (this.props.isPassword && !this.state.revealed) {
+		if (this.props.type == FieldType.Password && !this.state.revealed) {
 			inputType = 'password';
+		}
+		if (this.props.type == FieldType.Url) {
+			inputType = 'url';
 		}
 
 
@@ -90,7 +99,7 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 			actions.push(copyButton);
 		}
 
-		if (this.props.isPassword) {
+		if (this.props.type == FieldType.Password) {
 			var revealButton = controls.ActionButtonF({
 				value: this.state.revealed ? 'Hide' : 'Reveal',
 				onClick: (e) => {
@@ -113,7 +122,7 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 		}
 
 		var fieldStyle: text_field.TextFieldStyle = {};
-		if (this.props.isPassword) {
+		if (this.props.type == FieldType.Password) {
 			fieldStyle.fontFamily = 'monospace';
 		}
 
@@ -243,7 +252,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 						key: sectionIndex + '.' + fieldIndex,
 						label: field.title,
 						value: field.value,
-						isPassword: field.kind == item_store.FieldType.Password,
+						type: field.kind == item_store.FieldType.Password ? FieldType.Password : FieldType.Text,
 						clipboard: this.props.clipboard,
 						onChange: (newValue) => {
 							field.value = newValue;
@@ -274,7 +283,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				key: urlIndex,
 				label: url.label,
 				value: url.url,
-				isPassword: false,
+				type: FieldType.Url,
 				clipboard: this.props.clipboard,
 				onChange: (newValue) => {
 					url.url = newValue;
@@ -317,7 +326,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				key: 'account',
 				label: 'Account',
 				value: accountField ? accountField.value : '',
-				isPassword: false,
+				type: FieldType.Text,
 				clipboard: this.props.clipboard,
 				onChange: (newValue) => {
 					if (accountField) {
@@ -337,7 +346,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				key: 'password',
 				label: 'Password',
 				value: passwordField ? passwordField.value : '',
-				isPassword: true,
+				type: FieldType.Password,
 				clipboard: this.props.clipboard,
 				onChange: (newValue) => {
 					if (passwordField) {
@@ -443,7 +452,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				titleField = ItemFieldF({
 					label: 'Title',
 					value: updatedItem.item.title,
-					isPassword: false,
+					type: FieldType.Text,
 					clipboard: this.props.clipboard,
 					onChange: (newValue) => {
 						updatedItem.item.title = newValue;
