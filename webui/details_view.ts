@@ -465,6 +465,18 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				contentKey += '-editing';
 			}
 
+			var itemActions: React.ComponentElement<any>[] = [];
+			if (editing && this.props.editMode === ItemEditMode.EditItem) {
+				var isTrashed = updatedItem.item.trashed;
+				itemActions.push(controls.ActionButtonF({
+					value: isTrashed ? 'Restore from Trash' : 'Move to Trash',
+					onClick: () => {
+						updatedItem.item.trashed = !isTrashed;
+						onChangeItem();
+					}
+				}));
+			}
+
 			detailsContent = div(theme.detailsView.content, {key: contentKey},
 				div(theme.detailsView.header, {},
 					item_icons.IconControlF({
@@ -484,7 +496,8 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				),
 				div(theme.detailsView.coreFields, {}, coreFields),
 				div(null, {}, websites),
-				div(null, {}, sections)
+				div(null, {}, sections),
+				div(null, {}, itemActions)
 			);
 		}
 
