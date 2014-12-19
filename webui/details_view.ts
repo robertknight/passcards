@@ -33,6 +33,7 @@ interface ItemFieldProps {
 	readOnly: boolean;
 
 	onChange(newValue: string) : boolean;
+	onDelete?() : void;
 }
 
 class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
@@ -44,6 +45,12 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 			revealed: false,
 			value: this.props.value
 		};
+	}
+
+	componentWillReceiveProps(nextProps: ItemFieldProps) {
+		if (this.props.value !== nextProps.value || nextProps.readOnly) {
+			this.setState({value: nextProps.value});
+		}
 	}
 
 	componentDidMount() {
@@ -68,19 +75,8 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 			inputType = 'password';
 		}
 
-		var fieldActions: React.ReactElement<any>;
 
-		var revealButton: React.ComponentElement<controls.ActionButtonProps>;
-		if (this.props.isPassword) {
-			revealButton = controls.ActionButtonF({
-				value: this.state.revealed ? 'Hide' : 'Reveal',
-				onClick: (e) => {
-					e.preventDefault();
-					this.setState({revealed: !this.state.revealed});
-				}
-			})
-		}
-
+		var actions: React.ComponentElement<any>[] = [];
 		if (this.state.selected) {
 			var copyButton: React.ComponentElement<controls.ActionButtonProps>;
 			if (this.props.clipboard.clipboardAvailable()) {
@@ -91,11 +87,29 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 					}
 				});
 			}
+			actions.push(copyButton);
+		}
 
-			fieldActions = div(theme.detailsView.field.actions, {},
-				copyButton,
-				revealButton
-			);
+		if (this.props.isPassword) {
+			var revealButton = controls.ActionButtonF({
+				value: this.state.revealed ? 'Hide' : 'Reveal',
+				onClick: (e) => {
+					e.preventDefault();
+					this.setState({revealed: !this.state.revealed});
+				}
+			});
+			actions.push(revealButton);
+		}
+
+		if (!this.props.readOnly && this.props.onDelete) {
+			var deleteButton = controls.ActionButtonF({
+				value: 'Delete',
+				onClick: (e) => {
+					e.preventDefault();
+					this.props.onDelete();
+				}
+			});
+			actions.push(deleteButton);
 		}
 
 		var fieldStyle: text_field.TextFieldStyle = {};
@@ -118,7 +132,7 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 				showUnderline: !this.props.readOnly,
 				style: fieldStyle
 			}),
-			fieldActions
+			div(theme.detailsView.field.actions, {}, actions)
 		);
 	}
 }
@@ -208,16 +222,14 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			if (!this.isMounted()) {
 				return;
 			}
-
-			var editedItem = item_store.cloneItem({
-				item: this.props.item,
-				content: content
-			}, this.props.item.uuid);
-			this.setState({
-				itemContent: content,
-				editedItem: editedItem
-			});
+			this.setState({itemContent: content});
+			this.resetEdits({item: item, content: content});
 		}).done();
+	}
+
+	private resetEdits(base: item_store.ItemAndContent) {
+		var editedItem = item_store.cloneItem(base);
+		this.setState({editedItem: editedItem});
 	}
 
 	private renderSections(item: item_store.ItemAndContent, onSave: () => void, editing: boolean) {
@@ -237,14 +249,20 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 							onSave();
 							return true;
 						},
+						onDelete: () => {
+							section.fields.splice(fieldIndex, 1);
+							onSave();
+						},
 						readOnly: !editing
 					}));
 				}
 			});
+			sections.push(div(null, {}, section.title));
 			sections.push(div(null, {},
-				fields)
+			fields)
 			);
 		});
+
 		return sections;
 	}
 
@@ -262,9 +280,28 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 					onSave();
 					return true;
 				},
+				onDelete: () => {
+					item.content.urls.splice(urlIndex, 1);
+					onSave();
+				},
 				readOnly: !editing
 			}));
 		});
+		
+		if (editing) {
+			websites.push(controls.ActionButtonF({
+				value: 'Add Website',
+				onClick: (e) => {
+					e.preventDefault();
+					this.state.editedItem.content.urls.push({
+						label: 'website',
+						url: 'domain.com'
+					});
+					onSave();
+				}
+			}));
+		}
+
 		return websites;
 	}
 
@@ -319,7 +356,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 
 	private renderToolbar() {
 		var toolbarControls: React.ReactElement<any>[] = [];
-		if (this.props.editMode == ItemEditMode.EditItem) {
+		if (this.props.editMode == ItemEditMode.EditItem && !this.state.isEditing) {
 			toolbarControls.push(controls.ToolbarButtonF({
 				iconHref: 'icons/icons.svg#arrow-back',
 				onClick: () => this.props.onGoBack(),
@@ -328,7 +365,14 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		} else {
 			toolbarControls.push(controls.ToolbarButtonF({
 				iconHref: 'icons/icons.svg#clear',
-				onClick: () => this.props.onGoBack(),
+				onClick: () => {
+					if (this.props.editMode == ItemEditMode.EditItem) {
+						this.resetEdits({item: this.props.item, content: this.state.itemContent});
+						this.setState({isEditing: false, didEditItem: false});
+					} else {
+						this.props.onGoBack();
+					}
+				},
 				key: 'cancel'
 			}));
 		}
