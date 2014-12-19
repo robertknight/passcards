@@ -89,6 +89,10 @@ export interface ActionButtonProps {
 export class ActionButton extends typed_react.Component<ActionButtonProps,{}> {
 	componentDidMount() {
 		setTimeout(() => {
+			if (!this.isMounted()) {
+				return;
+			}
+
 			var button = <HTMLButtonElement>(this.refs['button'].getDOMNode());
 			var ripple = <InkRipple>(this.refs['ripple']);
 			ripple.setState({
