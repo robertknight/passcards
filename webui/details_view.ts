@@ -229,7 +229,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 	}
 
 	private resetEdits(base: item_store.ItemAndContent) {
-		var editedItem = item_store.cloneItem(base);
+		var editedItem = item_store.cloneItem(base, base.item.uuid);
 		this.setState({editedItem: editedItem});
 	}
 
