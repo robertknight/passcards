@@ -150,6 +150,7 @@ export class DetailsViewProps {
 	clipboard: page_access.ClipboardAccess;
 	editMode: ItemEditMode;
 	focus: boolean;
+	currentUrl: string;
 
 	onGoBack: () => any;
 	onSave: (updates: item_store.ItemAndContent) => any;
@@ -295,7 +296,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 					e.preventDefault();
 					this.state.editedItem.content.urls.push({
 						label: 'website',
-						url: 'domain.com'
+						url: this.props.currentUrl
 					});
 					onSave();
 				}

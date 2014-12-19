@@ -328,6 +328,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 				item: this.state.selectedItem,
 				editMode: this.state.itemEditMode,
 				iconProvider: this.props.services.iconProvider,
+				currentUrl: this.state.currentUrl,
 				onGoBack: () => {
 					this.setSelectedItem(null);
 				},
