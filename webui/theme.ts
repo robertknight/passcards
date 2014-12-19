@@ -265,7 +265,10 @@ var styles = style.create({
 			boxShadow: 'rgba(0, 0, 0, 0.26) 0px 2px 5px 0px',
 			color: '#fff',
 			fontWeight: 400,
-			textTransform: 'uppercase'
+			textTransform: 'uppercase',
+
+			// disable button rounding on iOS
+			WebkitAppearance: 'none'
 		}
 	},
 
