@@ -9,20 +9,29 @@ import div = require('../base/div');
 import theme = require('../theme');
 import reactutil = require('../base/reactutil');
 
+enum Phase {
+	Idle,
+	Touch,
+	Release
+}
+
 export interface InkRippleProps {
 	color: {
 		r: number;
 		g: number;
 		b: number;
 	};
+	children?: React.ReactElement<any>[];
 }
 
 export interface InkRippleState {
 	startX?: number;
 	startY?: number;
 	active?: boolean;
-	width?: number;
-	height?: number;
+
+	phase?: Phase;
+	animStartTime?: number;
+	phaseStartTime?: number;
 }
 
 /** InkRipple provides a Material Design-style ripple effect when touched or clicked.
@@ -32,7 +41,6 @@ export interface InkRippleState {
   */
 export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleState> {
 	private anim : {
-		startTime: number;
 		context: CanvasRenderingContext2D;
 	};
 
@@ -41,9 +49,24 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 			startX: 0,
 			startY: 0,
 			active: false,
-			width: 500,
-			height: 500
+			phase: Phase.Idle
 		};
+	}
+
+	componentDidUpdate(prevProps: InkRippleProps, prevState: InkRippleState) {
+		if (this.state.phase !== prevState.phase && this.state.phase !== Phase.Idle) {
+			var now = Date.now();
+			var animStartTime = this.state.animStartTime;
+			if (prevState.phase === Phase.Idle) {
+				animStartTime = now;
+			}
+			this.setState({
+				animStartTime: animStartTime,
+				phaseStartTime: now
+			}, () => {
+				this.stepAnimation();
+			});
+		}
 	}
 
 	componentDidMount() {
@@ -69,20 +92,23 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 			var x = ex - (window.pageXOffset + cx);
 			var y = ey - (window.pageYOffset + cy);
 
-			canvas.width = container.offsetWidth;
-			canvas.height = container.offsetHeight;
+			this.updateCanvasSize();
 
+			this.anim = {
+				context: canvas.getContext('2d')
+			};
 			this.setState({
 				active: true,
 				startX: x,
 				startY: y,
+				phase: Phase.Touch
 			});
+		});
 
-			this.anim = {
-				startTime: Date.now(),
-				context: canvas.getContext('2d')
-			};
-			this.stepAnimation();
+		parentNode.addEventListener('mouseup', (e: MouseEvent) => {
+			if (this.state.phase === Phase.Touch) {
+				this.setState({phase: Phase.Release});
+			}
 		});
 	}
 
@@ -101,40 +127,63 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 		},
 			react.DOM.canvas({
 				className: style.classes(theme.inkRipple),
-				ref: 'canvas',
-				width: this.state.width,
-				height: this.state.height
-			})
+				ref: 'canvas'
+			}),
+			div(theme.inkRipple.container, {}, this.props.children)
 		)
 	}
 
+	private updateCanvasSize() {
+		var canvas = <HTMLCanvasElement>(this.refs['canvas'].getDOMNode());
+		var container = <HTMLElement>(this.refs['container'].getDOMNode());
+		canvas.width = container.offsetWidth;
+		canvas.height = container.offsetHeight;
+	}
+
 	private stepAnimation() {
-		if (!this.isMounted()) {
-			// component was unmounted during
+		if (!this.isMounted() || this.state.phase === Phase.Idle) {
+			// component was unmounted or lost focus during
 			// animation
 			return;
 		}
 
-		var duration = 500;
-		var elapsed = Date.now() - this.anim.startTime;
-		var radius = elapsed / 3.0;
-		var ctx = this.anim.context;
+		this.updateCanvasSize();
 
-		var alpha = 0.7 - (elapsed / duration);
+		var MAX_TOUCH_EXPAND_DURATION = 800;
+		var EXPAND_PX_PER_MS = 0.2;
+		var PHASE_DURATION = 300;
+
+		var elapsed = Date.now() - this.state.animStartTime;
+		var phaseElapsed = Date.now() - this.state.phaseStartTime;
+		var radius = 0;
+		if (this.state.phase === Phase.Touch) {
+			radius = Math.min(phaseElapsed, MAX_TOUCH_EXPAND_DURATION) * EXPAND_PX_PER_MS;
+		} else if (this.state.phase === Phase.Release) {
+			var expandPhaseDuration = Math.min(elapsed, MAX_TOUCH_EXPAND_DURATION);
+			radius = (expandPhaseDuration + phaseElapsed) * EXPAND_PX_PER_MS;
+		}
+
+		var rippleAlpha = 0.9;
+		if (this.state.phase == Phase.Release) {
+			rippleAlpha -= phaseElapsed / PHASE_DURATION;
+		}
+
 		var elem = <HTMLCanvasElement>(this.refs['container'].getDOMNode());
-
+		var ctx = this.anim.context;
 		ctx.clearRect(0,0, elem.offsetWidth, elem.offsetHeight);
 		ctx.fillStyle = sprintf('rgba(%d,%d,%d,%f)',
 		  this.props.color.r, this.props.color.g, this.props.color.b,
-		  alpha);
+		  rippleAlpha);
 		ctx.beginPath();
 		ctx.arc(this.state.startX, this.state.startY, radius, 0, Math.PI * 2, true);
 		ctx.fill();
 
-		if (elapsed < duration) {
+		if (phaseElapsed < PHASE_DURATION) {
 			window.requestAnimationFrame(() => {
 				this.stepAnimation();
 			});
+		} else if (this.state.phase === Phase.Release) {
+			this.setState({phase: Phase.Idle});
 		}
 	}
 }

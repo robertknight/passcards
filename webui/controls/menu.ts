@@ -86,7 +86,7 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 				}
 			}, 
 				ripple.InkRippleF({color: {r: 200, g: 200, b: 200}}),
-				item.label
+				div(theme.menu.item.label, {}, item.label)
 			);
 		});
 

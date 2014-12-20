@@ -91,6 +91,7 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 			if (this.props.clipboard.clipboardAvailable()) {
 				copyButton = controls.ActionButtonF({
 					value: 'Copy',
+					key: 'copy',
 					onClick: (e) => {
 						this.props.clipboard.copy('text/plain', this.props.value)
 					}
@@ -102,6 +103,7 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 		if (this.props.type == FieldType.Password) {
 			var revealButton = controls.ActionButtonF({
 				value: this.state.revealed ? 'Hide' : 'Reveal',
+				key: 'reveal',
 				onClick: (e) => {
 					e.preventDefault();
 					this.setState({revealed: !this.state.revealed});
@@ -113,6 +115,7 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 		if (!this.props.readOnly && this.props.onDelete) {
 			var deleteButton = controls.ActionButtonF({
 				value: 'Delete',
+				key: 'delete',
 				onClick: (e) => {
 					e.preventDefault();
 					this.props.onDelete();

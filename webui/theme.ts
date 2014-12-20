@@ -289,7 +289,12 @@ var styles = style.create({
 		/* the ripple listens for mouse events on the parent
 		 * element itself.
 		 */
-		pointerEvents: 'none'
+		pointerEvents: 'none',
+
+		container: {
+			// FIXME - Give clients a way to
+			// control the layout of the container
+		}
 	},
 
 	// Controls - Toaster
@@ -353,6 +358,15 @@ var styles = style.create({
 
 			':hover' : {
 				backgroundColor: colors.MATERIAL_GREY_P200
+			},
+
+			label: {
+				width: '100%',
+				height: '100%',
+				
+				// give menu item label its own stacking context so
+				// that it renders on top of ripple effect
+				transform: 'translate3d(0,0,0)'
 			}
 		}
 	},
