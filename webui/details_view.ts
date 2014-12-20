@@ -4,7 +4,7 @@ import react = require('react');
 import style = require('ts-style');
 import typed_react = require('typed-react');
 
-import controls = require('./controls');
+import controls = require('./controls/controls');
 import div = require('./base/div');
 import env = require('../lib/base/env');
 import focus_mixin = require('./base/focus_mixin');
@@ -13,9 +13,9 @@ import item_icons = require('./item_icons');
 import item_store = require('../lib/item_store');
 import keycodes = require('./base/keycodes');
 import page_access = require('./page_access');
-import reactutil = require('./reactutil');
+import reactutil = require('./base/reactutil');
 import shortcut = require('./base/shortcut');
-import text_field = require('./text_field');
+import text_field = require('./controls/text_field');
 import theme = require('./theme');
 import url_util = require('../lib/base/url_util');
 

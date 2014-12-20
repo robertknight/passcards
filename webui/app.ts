@@ -15,7 +15,7 @@ import url = require('url');
 import underscore = require('underscore');
 
 import autofill = require('./autofill');
-import controls = require('./controls');
+import controls = require('./controls/controls');
 import details_view = require('./details_view');
 import div = require('./base/div');
 import dropboxvfs = require('../lib/vfs/dropbox');
@@ -29,14 +29,16 @@ import item_store = require('../lib/item_store');
 import key_agent = require('../lib/key_agent');
 import key_value_store = require('../lib/base/key_value_store');
 import local_store = require('../lib/local_store');
+import menu = require('./controls/menu');
 import onepass = require('../lib/onepass');
 import onepass_crypto = require('../lib/onepass_crypto');
 import page_access = require('./page_access');
-import reactutil = require('./reactutil');
+import reactutil = require('./base/reactutil');
 import settings = require('./settings');
 import siteinfo_client = require('../lib/siteinfo/client');
 import sync = require('../lib/sync');
 import theme = require('./theme');
+import toaster = require('./controls/toaster');
 import vfs = require('../lib/vfs/vfs');
 import unlock_view = require('./unlock_view');
 import url_util = require('../lib/base/url_util');
@@ -275,16 +277,16 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 	}
 
 	private renderToasters() {
-		var toasters: React.ComponentElement<controls.ToasterProps>[] = [];
+		var toasters: React.ComponentElement<toaster.ToasterProps>[] = [];
 		if (this.state.status) {
-			toasters.push(controls.ToasterF({
+			toasters.push(toaster.ToasterF({
 				key: 'status-toaster',
 				message: this.state.status.text
 			}));
 		}
 		if (this.state.syncState &&
 		    this.state.syncState.state !== sync.SyncState.Idle) {
-			toasters.push(controls.ToasterF({
+			toasters.push(toaster.ToasterF({
 				key: 'sync-toaster',
 				message: 'Syncing...',
 				progressValue: this.state.syncState.updated,
@@ -401,7 +403,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 	}
 
 	private renderMenu(key: string) {
-		var menuItems: controls.MenuItem[] = [{
+		var menuItems: menu.MenuItem[] = [{
 			label: 'Add Item',
 			onClick: () => {
 				this.setSelectedItem(this.createNewItemTemplate());
@@ -425,7 +427,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 				win.focus();
 			}
 		}];
-		return controls.MenuF({
+		return menu.MenuF({
 			key: key,
 			items: menuItems,
 			   top: 5,

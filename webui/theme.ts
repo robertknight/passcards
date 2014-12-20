@@ -349,7 +349,11 @@ var styles = style.create({
 			cursor: 'pointer',
 			userSelect: 'none',
 			verticalAlign: 'middle',
-			lineHeight: '48px'
+			lineHeight: '48px',
+
+			':hover' : {
+				backgroundColor: colors.MATERIAL_GREY_P200
+			}
 		}
 	},
 

@@ -9,7 +9,7 @@ import typed_react = require('typed-react');
 import div = require('./base/div');
 import focus_mixin = require('./base/focus_mixin');
 import item_store = require('../lib/item_store');
-import reactutil = require('./reactutil');
+import reactutil = require('./base/reactutil');
 import theme = require('./theme');
 
 enum UnlockState {

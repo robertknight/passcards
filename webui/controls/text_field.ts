@@ -27,10 +27,10 @@ import react = require('react');
 import typed_react = require('typed-react');
 import style = require('ts-style');
 
-import colors = require('./colors');
-import reactutil = require('./reactutil');
-import theme = require('./theme');
-import text_field_theme = require('./text_field_theme');
+import colors = require('../colors');
+import reactutil = require('../base/reactutil');
+import theme = require('../theme');
+import text_field_theme = require('../text_field_theme');
 
 export interface TextFieldStyle {
 	fontFamily?: string;

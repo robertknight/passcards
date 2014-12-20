@@ -6,7 +6,7 @@ import style = require('ts-style');
 import typed_react = require('typed-react');
 import underscore = require('underscore');
 
-import controls = require('./controls');
+import controls = require('./controls/controls');
 import div = require('./base/div');
 import env = require('../lib/base/env');
 import focus_mixin = require('./base/focus_mixin');
@@ -14,7 +14,8 @@ import keycodes = require('./base/keycodes');
 import item_icons = require('./item_icons');
 import item_search = require('../lib/item_search');
 import item_store = require('../lib/item_store');
-import reactutil = require('./reactutil');
+import reactutil = require('./base/reactutil');
+import ripple = require('./controls/ripple');
 import theme = require('./theme');
 
 export class ItemListViewState {
@@ -160,7 +161,7 @@ class Item extends typed_react.Component<ItemProps, {}> {
 				onClick: () => this.props.onSelected(),
 				style: reactutil.prefix({transform: translation})
 			},
-			controls.InkRippleF({
+			ripple.InkRippleF({
 				color: {
 					r: 252,
 					g: 228,
