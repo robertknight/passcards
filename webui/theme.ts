@@ -292,8 +292,10 @@ var styles = style.create({
 		pointerEvents: 'none',
 
 		container: {
-			// FIXME - Give clients a way to
-			// control the layout of the container
+			// layout the child elements in their own stacking context so
+			// that they appear on top of the ripple effect
+			position: 'relative',
+			zIndex: 0
 		}
 	},
 

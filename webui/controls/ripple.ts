@@ -21,6 +21,7 @@ export interface InkRippleProps {
 		g: number;
 		b: number;
 	};
+
 	children?: React.ReactElement<any>[];
 }
 
@@ -73,7 +74,11 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 		var canvas = <HTMLCanvasElement>(this.refs['canvas'].getDOMNode());
 		var container = <HTMLElement>(this.refs['container'].getDOMNode());
 		var parentNode = <HTMLElement>(container.parentNode);
-		parentNode.addEventListener('mousedown', (e: MouseEvent) => {
+		var touchStartHandler = (e: MouseEvent) => {
+			if (this.state.phase !== Phase.Idle) {
+				return;
+			}
+
 			var cx = canvas.getBoundingClientRect().left;
 			var cy = canvas.getBoundingClientRect().top;
 
@@ -103,8 +108,12 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 				startY: y,
 				phase: Phase.Touch
 			});
-		});
+		};
 
+		// start the ripple on touch where supported or mousedown
+		// otherwise
+		parentNode.addEventListener('touchstart', touchStartHandler);
+		parentNode.addEventListener('mousedown', touchStartHandler);
 		parentNode.addEventListener('mouseup', (e: MouseEvent) => {
 			if (this.state.phase === Phase.Touch) {
 				this.setState({phase: Phase.Release});
@@ -151,7 +160,7 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 
 		var MAX_TOUCH_EXPAND_DURATION = 800;
 		var EXPAND_PX_PER_MS = 0.2;
-		var PHASE_DURATION = 300;
+		var PHASE_DURATION = 500;
 
 		var elapsed = Date.now() - this.state.animStartTime;
 		var phaseElapsed = Date.now() - this.state.phaseStartTime;
