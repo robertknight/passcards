@@ -68,6 +68,17 @@ $(webui_css_dir)/app.css: webui/app.css build/webui/theme.css
 	@cat build/webui/theme.css >> $@
 	@$(NODE_BIN_DIR)/autoprefixer $@
 
+controls-demo: $(webui_script_dir)/controls_bundle.js $(webui_css_dir)/controls_demo_theme.css
+
+$(webui_script_dir)/controls_bundle.js: build/current
+	@mkdir -p $(webui_script_dir)
+	@$(BROWSERIFY) --no-builtins --no-bundle-external --entry build/webui/controls/demo.js --outfile $@
+
+$(webui_css_dir)/controls_demo_theme.css: build/current
+	@echo "Generating controls demo theme CSS"
+	@mkdir -p $(webui_css_dir)
+	@$(NODE_BIN_DIR)/ts-style build/webui/controls/demo.js > $@
+
 webui-icons:
 	@mkdir -p ${webui_icon_dir}
 	@cp icons/* ${webui_icon_dir}
