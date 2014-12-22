@@ -72,7 +72,6 @@ export var styles = {
 
 	containerStyling: {
 		position: 'relative',
-		width: 300,
 		paddingBottom: 8
 	},
 
