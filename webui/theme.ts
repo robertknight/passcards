@@ -95,7 +95,8 @@ var animations = style.create({
 var styles = style.create({
 	appView: {
 		width: '100%',
-		height: '100%'
+		height: '100%',
+		userSelect: 'none'
 	},
 
 	// Animations

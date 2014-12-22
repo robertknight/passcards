@@ -43,12 +43,6 @@ import vfs = require('../lib/vfs/vfs');
 import unlock_view = require('./unlock_view');
 import url_util = require('../lib/base/url_util');
 
-enum ActiveView {
-	UnlockPane,
-	ItemList,
-	ItemDetailView
-}
-
 enum StatusType {
 	Success,
 	Error
@@ -88,8 +82,6 @@ class SetupView extends typed_react.Component<{}, {}> {
 var SetupViewF = reactutil.createFactory(SetupView);
 
 interface AppViewState {
-	mainView?: ActiveView;
-
 	store?: item_store.Store;
 	syncer?: sync.Syncer;
 	items?: item_store.Item[];
@@ -126,7 +118,6 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 		};
 
 		var state = {
-			mainView: ActiveView.UnlockPane,
 			items: <item_store.Item[]>[],
 			isLocked: true,
 			syncListener: syncListener,
