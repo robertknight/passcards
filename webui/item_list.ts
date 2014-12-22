@@ -163,9 +163,9 @@ class Item extends typed_react.Component<ItemProps, {}> {
 			},
 			ripple.InkRippleF({
 				color: {
-					r: 252,
-					g: 228,
-					b: 236
+					r: 200,
+					g: 200,
+					b: 200
 				}
 			}),
 			item_icons.IconControlF({

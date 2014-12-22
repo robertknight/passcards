@@ -348,6 +348,7 @@ var styles = style.create({
 		zIndex: 10,
 		backgroundColor: 'white',
 		overflowY: 'hidden',
+		transform: 'translate3d(0,0,0)',
 
 		item: {
 			position: 'relative',

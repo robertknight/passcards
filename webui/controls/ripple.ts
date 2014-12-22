@@ -110,15 +110,18 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 			});
 		};
 
-		// start the ripple on touch where supported or mousedown
-		// otherwise
-		parentNode.addEventListener('touchstart', touchStartHandler);
-		parentNode.addEventListener('mousedown', touchStartHandler);
-		parentNode.addEventListener('mouseup', (e: MouseEvent) => {
+		var touchEndHandler = (e: MouseEvent) => {
 			if (this.state.phase === Phase.Touch) {
 				this.setState({phase: Phase.Release});
 			}
-		});
+		}
+
+		// start the ripple on touch where supported or mousedown
+		// otherwise
+		parentNode.addEventListener('mousedown', touchStartHandler);
+		parentNode.addEventListener('touchstart', touchStartHandler);
+		parentNode.addEventListener('mouseup', touchEndHandler);
+		parentNode.addEventListener('touchend', touchEndHandler);
 	}
 
 	componentDidUnmount() {
@@ -158,40 +161,58 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 
 		this.updateCanvasSize();
 
-		var MAX_TOUCH_EXPAND_DURATION = 800;
-		var EXPAND_PX_PER_MS = 0.2;
-		var PHASE_DURATION = 500;
+		// max radius the wave ripple can reach during the touch-down phase
+		var MAX_RIPPLE_RADIUS = 240;
+		// max time for which the ripple can expand during the
+		// touch-down phase
+		var TOUCH_PHASE_DURATION = 800;
+		// duration of the wave fade-out during the touch-up phase
+		var RELEASE_PHASE_DURATION = 500;
 
 		var elapsed = Date.now() - this.state.animStartTime;
 		var phaseElapsed = Date.now() - this.state.phaseStartTime;
-		var radius = 0;
-		if (this.state.phase === Phase.Touch) {
-			radius = Math.min(phaseElapsed, MAX_TOUCH_EXPAND_DURATION) * EXPAND_PX_PER_MS;
-		} else if (this.state.phase === Phase.Release) {
-			var expandPhaseDuration = Math.min(elapsed, MAX_TOUCH_EXPAND_DURATION);
-			radius = (expandPhaseDuration + phaseElapsed) * EXPAND_PX_PER_MS;
+	
+		var touchDuration = Math.min(elapsed, TOUCH_PHASE_DURATION);
+		var radius = (touchDuration / TOUCH_PHASE_DURATION) * MAX_RIPPLE_RADIUS;
+
+		if (this.state.phase === Phase.Release) {
+			var expandPxPerMs = MAX_RIPPLE_RADIUS / TOUCH_PHASE_DURATION;
+			radius += phaseElapsed * expandPxPerMs;
 		}
 
-		var rippleAlpha = 0.9;
+		var MAX_BACKGROUND_ALPHA = 0.2;
+		var backgroundAlpha = Math.min((elapsed / 500.0) * MAX_BACKGROUND_ALPHA, MAX_BACKGROUND_ALPHA);
+
+		var rippleAlpha = 0.3;
 		if (this.state.phase == Phase.Release) {
-			rippleAlpha -= phaseElapsed / PHASE_DURATION;
+			// fade-out ripple after release
+			rippleAlpha *= 1 - (phaseElapsed / RELEASE_PHASE_DURATION);
+			backgroundAlpha *= 1 - (phaseElapsed / RELEASE_PHASE_DURATION);
 		}
 
 		var elem = <HTMLCanvasElement>(this.refs['container'].getDOMNode());
 		var ctx = this.anim.context;
 		ctx.clearRect(0,0, elem.offsetWidth, elem.offsetHeight);
-		ctx.fillStyle = sprintf('rgba(%d,%d,%d,%f)',
-		  this.props.color.r, this.props.color.g, this.props.color.b,
-		  rippleAlpha);
+		ctx.fillStyle = sprintf('rgb(%d,%d,%d)',
+		  this.props.color.r, this.props.color.g, this.props.color.b);
+
+		// render background
+		ctx.globalAlpha = backgroundAlpha;
+		ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+		// render ripple wave
+		ctx.globalAlpha = rippleAlpha;
 		ctx.beginPath();
 		ctx.arc(this.state.startX, this.state.startY, radius, 0, Math.PI * 2, true);
 		ctx.fill();
 
-		if (phaseElapsed < PHASE_DURATION) {
+		var phaseDuration = this.state.phase === Phase.Touch ? TOUCH_PHASE_DURATION : RELEASE_PHASE_DURATION;
+		if (phaseElapsed < phaseDuration) {
 			window.requestAnimationFrame(() => {
 				this.stepAnimation();
 			});
 		} else if (this.state.phase === Phase.Release) {
+			ctx.clearRect(0, 0, elem.offsetWidth, elem.offsetHeight);
 			this.setState({phase: Phase.Idle});
 		}
 	}
