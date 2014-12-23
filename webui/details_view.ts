@@ -5,6 +5,7 @@ import style = require('ts-style');
 import typed_react = require('typed-react');
 
 import controls = require('./controls/controls');
+import crypto = require('../lib/onepass_crypto');
 import div = require('./base/div');
 import env = require('../lib/base/env');
 import focus_mixin = require('./base/focus_mixin');
@@ -109,6 +110,19 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 					}
 				});
 				actions.push(revealButton);
+
+				if (!this.props.readOnly) {
+					var generateButton = controls.ActionButtonF({
+						value: 'Generate',
+						key: 'generate',
+						onClick: (e) => {
+							var newPassword = crypto.generatePassword(12);
+							this.setState({revealed: true});
+							this.props.onChange(newPassword);
+						}
+					});
+					actions.push(generateButton);
+				}
 			}
 		}
 
