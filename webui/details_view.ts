@@ -98,18 +98,18 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 				});
 			}
 			actions.push(copyButton);
-		}
 
-		if (this.props.type == FieldType.Password) {
-			var revealButton = controls.ActionButtonF({
-				value: this.state.revealed ? 'Hide' : 'Reveal',
-				key: 'reveal',
-				onClick: (e) => {
-					e.preventDefault();
-					this.setState({revealed: !this.state.revealed});
-				}
-			});
-			actions.push(revealButton);
+			if (this.props.type == FieldType.Password) {
+				var revealButton = controls.ActionButtonF({
+					value: this.state.revealed ? 'Hide' : 'Reveal',
+					key: 'reveal',
+					onClick: (e) => {
+						e.preventDefault();
+						this.setState({revealed: !this.state.revealed});
+					}
+				});
+				actions.push(revealButton);
+			}
 		}
 
 		if (!this.props.readOnly && this.props.onDelete) {
