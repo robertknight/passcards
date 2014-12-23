@@ -81,6 +81,8 @@ export class ItemListView extends typed_react.Component<ItemListViewProps, ItemL
 				}
 			},
 			ItemListToolbarF({
+				filterUrl: this.props.currentUrl,
+
 				onQueryChanged: (query) => {
 					this.updateFilter(query)
 				},
@@ -312,7 +314,7 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 		}).filter((item) => {
 			return item != null;
 		});
-
+			
 		var listHeight = this.state.matchingItems.length * this.state.itemHeight;
 		return div(theme.itemList.list, {
 			ref: 'itemList',
@@ -453,6 +455,8 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 export var ItemListF = reactutil.createFactory(ItemList);
 
 class ItemListToolbarProps {
+	filterUrl: string;
+
 	onQueryChanged: (query: string) => void;
 	onMoveUp: () => void;
 	onMoveDown: () => void;
@@ -487,6 +491,13 @@ class ItemListToolbar extends typed_react.Component<ItemListToolbarProps, {}> {
 			this.props.onQueryChanged(this.fieldInput().value.toLowerCase());
 		}, 100);
 
+		var searchPlaceholder: string;
+		if (this.props.filterUrl) {
+			searchPlaceholder = 'Search all items...';
+		} else {
+			searchPlaceholder = 'Search items...';
+		}
+
 		return div([theme.toolbar, theme.itemList.toolbar], {},
 				controls.SvgIconF({
 					className: style.classes(theme.itemList.toolbar.searchIcon),
@@ -498,7 +509,7 @@ class ItemListToolbar extends typed_react.Component<ItemListToolbarProps, {}> {
 				}),
 				react.DOM.input({className: style.classes(theme.itemList.toolbar.searchField),
 					type: 'text',
-					placeholder: 'Search items...',
+					placeholder: searchPlaceholder,
 					ref: 'searchField',
 					onKeyDown: (e) => {
 						this.handleSearchFieldKey(e);
