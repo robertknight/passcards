@@ -489,6 +489,8 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				}));
 			}
 
+			var mainItemUrl = url_util.normalize(updatedItem.item.primaryLocation());
+
 			detailsContent = div(theme.detailsView.content, {key: contentKey},
 				div(theme.detailsView.header, {},
 					item_icons.IconControlF({
@@ -500,8 +502,11 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 					div(theme.detailsView.overview, {},
 						titleField,
 						div(theme.detailsView.overview.location, {},
-							react.DOM.a({href: updatedItem.item.primaryLocation()},
-								url_util.domain(updatedItem.item.primaryLocation())
+							react.DOM.a({
+								href: mainItemUrl,
+								target: '_blank'
+							},
+								url_util.domain(mainItemUrl)
 							)
 						)
 					)
