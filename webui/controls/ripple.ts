@@ -35,6 +35,11 @@ export interface InkRippleState {
 	phaseStartTime?: number;
 }
 
+// ease-out function taken from Polmer's <paper-ripple> component
+function easeOut(max: number, value: number) {
+	return max * (1 - Math.pow(80, -value));
+}
+
 /** InkRipple provides a Material Design-style ripple effect when touched or clicked.
   *
   * To use an InkRipple, add it as the child of the element which should display
@@ -173,12 +178,14 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 		var phaseElapsed = Date.now() - this.state.phaseStartTime;
 	
 		var touchDuration = Math.min(elapsed, TOUCH_PHASE_DURATION);
-		var radius = (touchDuration / TOUCH_PHASE_DURATION) * MAX_RIPPLE_RADIUS;
+		var maxDuration = TOUCH_PHASE_DURATION + RELEASE_PHASE_DURATION;
+		var rippleDuration = touchDuration;
 
 		if (this.state.phase === Phase.Release) {
-			var expandPxPerMs = MAX_RIPPLE_RADIUS / TOUCH_PHASE_DURATION;
-			radius += phaseElapsed * expandPxPerMs;
+			rippleDuration += phaseElapsed;
 		}
+		
+		var radius = easeOut(MAX_RIPPLE_RADIUS, rippleDuration / maxDuration);
 
 		var MAX_BACKGROUND_ALPHA = 0.2;
 		var backgroundAlpha = Math.min((elapsed / 500.0) * MAX_BACKGROUND_ALPHA, MAX_BACKGROUND_ALPHA);
