@@ -208,7 +208,7 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 
 		var phaseDuration = this.state.phase === Phase.Touch ? TOUCH_PHASE_DURATION : RELEASE_PHASE_DURATION;
 		if (phaseElapsed < phaseDuration) {
-			window.requestAnimationFrame(() => {
+			reactutil.requestAnimationFrame(() => {
 				this.stepAnimation();
 			});
 		} else if (this.state.phase === Phase.Release) {

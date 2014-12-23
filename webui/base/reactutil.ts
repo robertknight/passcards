@@ -2,6 +2,7 @@ import react = require('react');
 import react_addons = require('react/addons');
 import typed_react = require('typed-react');
 
+import env = require('../../lib/base/env');
 import tsutil = require('../../lib/base/tsutil');
 
 export var CSSTransitionGroupF = react.createFactory(react_addons.addons.CSSTransitionGroup);
@@ -93,5 +94,40 @@ export function prefix(style: StyleMap) : StyleMap {
 		}
 	}
 	return result;
+}
+
+var nextFrameTimerId: any /* Timer | number */ = null;
+var nextFrameCallbacks: Array<() => void>;
+
+export function requestAnimationFrame(callback: () => void) {
+	if (env.isChromeExtension()) {
+		// in a Chrome extension, requestAnimationFrame() will only
+		// fire if invoked from a visible view (eg. popup, notification or tab),
+		// not if invoked from the background page
+		//
+		// This solution here is a poor-man's re-implementation of
+		// requestAnimationFrame() using setTimeout(). This could also
+		// be re-used in non-browser contexts
+		if (nextFrameTimerId) {
+			nextFrameCallbacks.push(callback);
+		} else {
+			// assume that browser tries to do 60 FPS animations
+			var FRAME_DELAY = 16;
+			nextFrameTimerId = setTimeout(() => {
+				var callbacks = nextFrameCallbacks;
+
+				// clear timer and callbacks first in case the callback
+				// itself invokes requestAnimationFrame() again
+				nextFrameTimerId = null;
+				nextFrameCallbacks = [];
+
+				callbacks.forEach((callback) => callback());
+			}, FRAME_DELAY);
+
+			nextFrameCallbacks = [callback];
+		}
+	} else {
+		window.requestAnimationFrame(callback);
+	}
 }
 

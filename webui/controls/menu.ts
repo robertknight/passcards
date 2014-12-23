@@ -94,8 +94,9 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 
 		var maxHeight = menuItems.length * 48;
 		var expandedHeight = Math.min(1.0, visibleMs / 300.0) * maxHeight;
+
 		if (expandedHeight < maxHeight) {
-			requestAnimationFrame(() => {
+			reactutil.requestAnimationFrame(() => {
 				this.forceUpdate();
 			});
 		}
