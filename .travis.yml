@@ -2,6 +2,8 @@ language: node_js
 # enable container-based builds
 # see (http://blog.travis-ci.com/2014-12-17-faster-builds-with-container-based-infrastructure/)
 sudo: false
+# Cache ruby gems used by S3 deployment
+cache: bundler
 node_js:
 - '0.10'
 before_script:
