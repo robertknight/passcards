@@ -1,4 +1,7 @@
 language: node_js
+# enable container-based builds
+# see (http://blog.travis-ci.com/2014-12-17-faster-builds-with-container-based-infrastructure/)
+sudo: false
 node_js:
 - '0.10'
 before_script:
