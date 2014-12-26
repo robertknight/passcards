@@ -153,8 +153,8 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 	private updateCanvasSize() {
 		var canvas = <HTMLCanvasElement>(this.refs['canvas'].getDOMNode());
 		var container = <HTMLElement>(this.refs['container'].getDOMNode());
-		canvas.width = container.offsetWidth;
-		canvas.height = container.offsetHeight;
+		canvas.width = container.clientWidth;
+		canvas.height = container.clientHeight;
 	}
 
 	private stepAnimation() {

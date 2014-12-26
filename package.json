@@ -36,6 +36,7 @@
     "react": "^0.12.1",
     "reactify": "^0.15.2",
     "request": "^2.49.0",
+    "shallow-equals": "0.0.0",
     "sprintf": "^0.1.5",
     "through2": "^0.6.3",
     "ts-style": "^0.3.1",

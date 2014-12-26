@@ -87,6 +87,8 @@ interface AppViewState {
 	items?: item_store.Item[];
 
 	selectedItem?: item_store.Item;
+	selectedItemRect?: reactutil.Rect;
+
 	itemEditMode?: details_view.ItemEditMode;
 	isLocked?: boolean;
 	currentUrl?: string;
@@ -222,8 +224,11 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 		});
 	}
 
-	private setSelectedItem(item: item_store.Item) {
-		var state = <AppViewState>{selectedItem: item};
+	private setSelectedItem(item: item_store.Item, rect?: reactutil.Rect) {
+		var state = <AppViewState>{
+			selectedItem: item,
+			selectedItemRect: rect
+		};
 		if (item) {
 			if (item.isSaved()) {
 				state.itemEditMode = details_view.ItemEditMode.EditItem;
@@ -295,7 +300,9 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 			ref: 'itemList',
 			items: this.state.items,
 			selectedItem: this.state.selectedItem,
-			onSelectedItemChanged: (item) => { this.setSelectedItem(item); },
+			onSelectedItemChanged: (item, rect) => { 
+				this.setSelectedItem(item, rect); 
+			},
 			currentUrl: this.state.currentUrl,
 			iconProvider: this.props.services.iconProvider,
 			onLockClicked: () => this.props.services.keyAgent.forgetKeys(),
@@ -316,6 +323,8 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 
 		var detailsView: React.ComponentElement<any>;
 		if (this.state.selectedItem) {
+			var selectedItemRect = this.state.selectedItemRect;
+
 			detailsView = details_view.DetailsViewF({
 				key: 'detailsView',
 				item: this.state.selectedItem,
@@ -343,15 +352,19 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 					this.autofill(this.state.selectedItem);
 				},
 				clipboard: this.props.services.clipboard,
-				focus: this.state.selectedItem != null
+				focus: this.state.selectedItem != null,
+
+				entryRect: selectedItemRect
 			});
 		}
-		return reactutil.CSSTransitionGroupF({
+		return detailsView;
+
+		/*return reactutil.CSSTransitionGroupF({
 			transitionName: detailsViewTransition,
 			key: 'detailsViewContainer'
 		},
 			detailsView ? [detailsView] : []
-		);
+		);*/
 	}
 
 	private createNewItemTemplate() {

@@ -16,6 +16,7 @@ import keycodes = require('./base/keycodes');
 import page_access = require('./page_access');
 import reactutil = require('./base/reactutil');
 import shortcut = require('./base/shortcut');
+import style_util = require('./base/style_util');
 import text_field = require('./controls/text_field');
 import theme = require('./theme');
 import url_util = require('../lib/base/url_util');
@@ -171,6 +172,8 @@ export enum ItemEditMode {
 }
 
 export class DetailsViewProps {
+	entryRect: reactutil.Rect;
+
 	item: item_store.Item;
 	iconProvider: item_icons.ItemIconProvider;
 	clipboard: page_access.ClipboardAccess;
@@ -188,6 +191,7 @@ interface DetailsViewState {
 	editedItem?: item_store.ItemAndContent;
 	isEditing?: boolean;
 	didEditItem?: boolean;
+	entering?: boolean;
 }
 
 export class DetailsView extends typed_react.Component<DetailsViewProps, DetailsViewState> {
@@ -196,7 +200,8 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 	getInitialState() {
 		return {
 			isEditing: this.props.editMode === ItemEditMode.AddItem,
-			didEditItem: false
+			didEditItem: false,
+			entering: true
 		};
 	}
 
@@ -226,15 +231,30 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 	}
 
 	componentDidMount() {
-		var elt = <HTMLElement>this.getDOMNode();
+		var root = <HTMLElement>this.getDOMNode();
 		this.shortcuts = [
-			new shortcut.Shortcut(elt, keycodes.Backspace, () => {
-				this.props.onGoBack();
+			new shortcut.Shortcut(root, keycodes.Backspace, () => {
+				this.exit();
 			}),
-			new shortcut.Shortcut(elt, keycodes.a, () => {
+			new shortcut.Shortcut(root, keycodes.a, () => {
 				this.props.autofill();
 			})
 		];
+		
+		if (this.state.entering) {
+			setTimeout(() => {
+				this.setState({entering: false});
+			}, 10);
+		}
+
+		root.addEventListener('transitionend', (e: TransitionEvent) => {
+			if (e.target === root && e.propertyName === 'top') {
+				if (this.state.entering) {
+					this.props.onGoBack();
+				}
+			}
+		}, false);
+
 	}
 
 	componentDidUnmount() {
@@ -386,7 +406,9 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		if (this.props.editMode == ItemEditMode.EditItem && !this.state.isEditing) {
 			toolbarControls.push(controls.ToolbarButtonF({
 				iconHref: 'icons/icons.svg#arrow-back',
-				onClick: () => this.props.onGoBack(),
+				onClick: () => {
+					this.setState({entering: true});
+				},
 				key: 'back'
 			}));
 		} else {
@@ -447,7 +469,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			)
 		));
 
-		return div([theme.toolbar, theme.detailsView.toolbar], {},
+		return div([theme.detailsViewHero.header.toolbar], {},
 			toolbarControls
 		);
 	}
@@ -478,8 +500,6 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 					},
 					readOnly: false
 				});
-			} else {
-				titleField = div(theme.detailsView.overview.title, {}, updatedItem.item.title);
 			}
 
 			var coreFields = this.renderCoreFields(updatedItem, onChangeItem, editing);
@@ -506,25 +526,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			var mainItemUrl = url_util.normalize(updatedItem.item.primaryLocation());
 
 			detailsContent = div(theme.detailsView.content, {key: contentKey},
-				div(theme.detailsView.header, {},
-					item_icons.IconControlF({
-						location: this.props.item.primaryLocation(),
-						iconProvider: this.props.iconProvider,
-						visible: true,
-						isFocused: false
-					}),
-					div(theme.detailsView.overview, {},
-						titleField,
-						div(theme.detailsView.overview.location, {},
-							react.DOM.a({
-								href: mainItemUrl,
-								target: '_blank'
-							},
-								url_util.domain(mainItemUrl)
-							)
-						)
-					)
-				),
+				titleField,
 				div(theme.detailsView.coreFields, {}, coreFields),
 				div(null, {}, websites),
 				div(null, {}, sections),
@@ -535,7 +537,89 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		return detailsContent;
 	}
 
+	private exit() {
+		this.setState({entering: true});
+		setTimeout(() => {
+			this.props.onGoBack();
+		}, 1000);
+	}
+
 	render() {
+		var viewStyles: any[] = [];
+		viewStyles.push(theme.detailsViewHero.container);
+
+		if (this.state.entering) {
+			viewStyles.push({
+				left: this.props.entryRect.left,
+				width: (this.props.entryRect.right - this.props.entryRect.left),
+				top: this.props.entryRect.top,
+				height: (this.props.entryRect.bottom - this.props.entryRect.top)
+			});
+		} else {
+			viewStyles.push({
+				left: 0,
+				width: '100%',
+				top: 0,
+				height: '100%'
+			});
+			viewStyles.push(theme.mixins.materialDesign.card);
+		}
+
+		var headerStyles: any[] = [];
+		headerStyles.push(theme.detailsViewHero.header);
+
+		if (!this.state.entering) {
+			headerStyles.push(theme.detailsViewHero.header.entered);
+		}
+
+		var toolbarControls: React.ReactElement<any>[] = [];
+		toolbarControls.push(controls.ToolbarButtonF({
+			iconHref: 'icons/icons.svg#clear',
+			onClick: () => {
+				this.exit();
+			},
+			key: 'cancel'
+		}));
+
+		var detailsLeftPadding = theme.itemList.item.details.padding;
+		var itemListDetailsStyle: React.CSSProperties[] = [{
+			position: 'absolute',
+			left: detailsLeftPadding,
+			right: 0,
+			top: 0,
+			bottom: 0,
+			transition: style_util.transitionOn({opacity: .2}),
+			opacity: 1
+		}];
+
+		var detailsViewDetailsStyle: React.CSSProperties[] = [{
+			position: 'absolute',
+			left: detailsLeftPadding,
+			right: 0,
+			top: 0,
+			bottom: 0,
+			color: 'white',
+			transition: style_util.transitionOn({opacity: .2}),
+			opacity: 0,
+			display: 'flex',
+			flexDirection: 'column',
+			justifyContent: 'center'
+		}];
+
+		var contentStyles: React.CSSProperties[] = [{
+			paddingTop: 16,
+			opacity: 0,
+			transition: style_util.transitionOn({opacity: .5}),
+			overflowY: 'auto',
+			flexGrow: 1
+		}];
+
+		if (!this.state.entering) {
+			itemListDetailsStyle.push({opacity: 0});
+			detailsViewDetailsStyle.push({opacity: 1});
+			contentStyles.push({opacity: 1});
+		}
+
 		var autofillButton: React.ComponentElement<any>;
 		if (env.isFirefoxAddon() || env.isChromeExtension()) {
 			autofillButton = controls.ActionButtonF({
@@ -545,16 +629,37 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			});
 		}
 
-		return div(theme.detailsView, {ref: 'detailsView', tabIndex: 0},
-				this.renderToolbar()
-			,
-			div(theme.detailsView.itemActionBar, {},
-				autofillButton
-			),
-			div(theme.detailsView.fieldsContainer, {},
-				reactutil.CSSTransitionGroupF({transitionName: style.classes(theme.animations.fade)},
-					this.renderFields(this.state.isEditing)
+		var updatedItem: item_store.Item;
+		if (this.state.editedItem) {
+			updatedItem = this.state.editedItem.item;
+		} else {
+			updatedItem = this.props.item;
+		}
+
+		return react.DOM.div(style.mixin(viewStyles, {tabIndex: 0}),
+			react.DOM.div(style.mixin(headerStyles),
+				this.renderToolbar(),
+				react.DOM.div(style.mixin(theme.detailsViewHero.header.iconAndDetails),
+					item_icons.IconControlF({
+						location: this.props.item.primaryLocation(),
+						iconProvider: this.props.iconProvider,
+						isFocused: true
+					}),
+					react.DOM.div(style.mixin(theme.detailsViewHero.header.details),
+						react.DOM.div(style.mixin(itemListDetailsStyle),
+							react.DOM.div(style.mixin(theme.itemList.item.details.title), updatedItem.title),
+							react.DOM.div(style.mixin(theme.itemList.item.details.account), updatedItem.account)
+						),
+						react.DOM.div(style.mixin(detailsViewDetailsStyle),
+							react.DOM.div(style.mixin(theme.detailsViewHero.header.title), updatedItem.title),
+							react.DOM.div(style.mixin(theme.detailsViewHero.header.account), updatedItem.account)
+						)
+					)
 				)
+			),
+			react.DOM.div(style.mixin(contentStyles),
+				autofillButton,
+				this.renderFields(this.state.isEditing)
 			)
 		);
 	}

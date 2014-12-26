@@ -274,7 +274,7 @@ class Cache {
 	}
 }
 
-export class IconControlProps {
+export interface IconControlProps {
 	location: string;
 	iconProvider: ItemIconProvider;
 	isFocused: boolean;
@@ -320,7 +320,7 @@ export class IconControl extends typed_react.Component<IconControlProps, {}> {
 
 		return react.DOM.div({className: style.classes(theme.itemIcon.container,
 			  this.props.isFocused ? theme.itemIcon.container.focused : null)},
-			react.DOM.img({className: style.classes(theme.itemIcon.icon), src: iconUrl})
+			react.DOM.img({className: style.classes(theme.itemIcon.icon), ref: 'img', src: iconUrl})
 		);
 	}
 }

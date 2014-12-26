@@ -1,7 +1,9 @@
 /// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
 /// <reference path="../typings/react-0.12.d.ts" />
+/// <reference path="../typings/shallow-equals.d.ts" />
 
 import react = require('react');
+import shallow_equals = require('shallow-equals');
 import style = require('ts-style');
 import typed_react = require('typed-react');
 import underscore = require('underscore');
@@ -25,7 +27,7 @@ export class ItemListViewState {
 export class ItemListViewProps {
 	items: item_store.Item[];
 	selectedItem: item_store.Item;
-	onSelectedItemChanged: (item: item_store.Item) => void;
+	onSelectedItemChanged: (item: item_store.Item, rect: reactutil.Rect) => void;
 	currentUrl: string;
 	iconProvider: item_icons.ItemIconProvider;
 	focus: boolean;
@@ -94,18 +96,21 @@ export class ItemListView extends typed_react.Component<ItemListViewProps, ItemL
 					(<ItemList>this.refs['itemList']).focusNextItem();
 				},
 				onActivate: () => {
-					this.props.onSelectedItemChanged((<ItemList>this.refs['itemList']).focusedItem());
+					var itemList = (<ItemList>this.refs['itemList']);
+					var focusedItem = itemList.focusedItem();
+					var itemRect = itemList.itemRect(focusedItem);
+					this.props.onSelectedItemChanged(focusedItem, itemRect);
 				},
 				onLockClicked: () => this.props.onLockClicked(),
 				onMenuClicked: () => this.props.onMenuClicked()
 			}),
 			ItemListF({items: this.props.items, filter: this.state.filter,
 				filterUrl: filterUrl,
-				onSelectedItemChanged: (item) => {
+				onSelectedItemChanged: (item, rect) => {
 					if (!item) {
 						this.focusSearchField();
 					}
-					this.props.onSelectedItemChanged(item);
+					this.props.onSelectedItemChanged(item, rect);
 				},
 				ref: 'itemList',
 				iconProvider: this.props.iconProvider
@@ -121,7 +126,7 @@ export class ItemListView extends typed_react.Component<ItemListViewProps, ItemL
 
 export var ItemListViewF = reactutil.createFactory(ItemListView, focus_mixin.FocusMixinM);
 
-class ItemProps {
+export interface ItemProps {
 	key: string;
 	item: item_store.Item;
 	onSelected: () => void;
@@ -131,7 +136,7 @@ class ItemProps {
 	offsetTop: number;
 }
 
-class Item extends typed_react.Component<ItemProps, {}> {
+export class Item extends typed_react.Component<ItemProps, {}> {
 	getInitialState() {
 		return {};
 	}
@@ -204,17 +209,17 @@ class ItemListProps {
 	items: item_store.Item[];
 	filter: string;
 	filterUrl: string;
-	onSelectedItemChanged: (item: item_store.Item) => void;
+	onSelectedItemChanged: (item: item_store.Item, rect: reactutil.Rect) => void;
 	iconProvider: item_icons.ItemIconProvider;
 }
 
 class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 
-	setSelectedItem(item: item_store.Item) {
+	setSelectedItem(item: item_store.Item, rect: reactutil.Rect) {
 		var state = this.state;
 		state.selectedItem = item;
 		this.setState(state);
-		this.props.onSelectedItemChanged(item);
+		this.props.onSelectedItemChanged(item, rect);
 	}
 
 	getInitialState() {
@@ -235,7 +240,7 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 			key: item.uuid,
 			item: item,
 			onSelected: () => {
-				this.setSelectedItem(item);
+				this.setSelectedItem(item, this.itemRect(item));
 			},
 			isFocused: state.focused,
 			iconProvider: this.props.iconProvider,
@@ -289,12 +294,31 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 		return null;
 	}
 
+	itemRect(item: item_store.Item) : reactutil.Rect {
+		var itemRef = this.refs[item.uuid];
+		if (!itemRef) {
+			return null;
+		}
+
+		var rect = itemRef.getDOMNode().getBoundingClientRect();
+		return {
+			left: rect.left,
+			top: rect.top,
+			bottom: rect.bottom,
+			right: rect.right
+		};
+	}
+
 	componentDidMount() {
 		this.updateMatchingItems(this.props);
 	}
 
 	componentWillReceiveProps(nextProps: ItemListProps) {
-		this.updateMatchingItems(nextProps);
+		if (!shallow_equals(this.props.items, nextProps.items) ||
+		    this.props.filter !== nextProps.filter ||
+			this.props.filterUrl !== nextProps.filterUrl) {
+			this.updateMatchingItems(nextProps);
+		}
 	}
 
 	render() {

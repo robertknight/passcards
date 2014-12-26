@@ -2,7 +2,15 @@ import style = require('ts-style');
 
 import assign = require('../lib/base/assign');
 import colors = require('./colors');
+import style_util = require('./base/style_util');
 import text_field_theme = require('./text_field_theme');
+
+var Z_LAYERS = {
+	TOASTER: 30,
+	UNLOCK_VIEW: 20,
+	MENU: 10,
+	DETAILS_VIEW: 1
+};
 
 var mixins = style.create({
 	materialDesign: {
@@ -11,6 +19,10 @@ var mixins = style.create({
 			boxShadow: 'rgba(0, 0, 0, 0.26) 0px 2px 5px 0px',
 			color: '#fff',
 			fontWeight: 400
+		},
+
+		card: {
+			boxShadow: 'rgba(0, 0, 0, 0.26) 0px 1px 2px 2px'
 		}
 	}
 });
@@ -99,6 +111,8 @@ var styles = style.create({
 		userSelect: 'none'
 	},
 
+	mixins: mixins,
+
 	// Animations
 	animations: animations,
 
@@ -130,7 +144,9 @@ var styles = style.create({
 
 			focused: {
 				boxShadow: '0px 0px 2px 2px rgba(0,0,0,0.2)'
-			}
+			},
+
+			flexShrink: 0
 		},
 
 		icon: {
@@ -166,7 +182,7 @@ var styles = style.create({
 			right: 0,
 			bottom: '60%',
 			boxShadow: 'rgba(0, 0, 0, 0.26) 0px 2px 5px 0px',
-			zIndex: '2'
+			zIndex: Z_LAYERS.UNLOCK_VIEW + 1
 		},
 
 		lower: {
@@ -177,7 +193,7 @@ var styles = style.create({
 			right: 0,
 			bottom: 0,
 			boxShadow: 'rgba(0, 0, 0, 0.26) 0px 2px -5px 0px',
-			zIndex: '1'
+			zIndex: Z_LAYERS.UNLOCK_VIEW
 		},
 
 		form: {
@@ -304,7 +320,7 @@ var styles = style.create({
 	toaster: {
 		fontSize: 12,
 		position: 'fixed',
-		zIndex: 10,
+		zIndex: Z_LAYERS.TOASTER,
 		bottom: 5,
 		backgroundColor: 'rgba(0,0,0,0.85)',
 		color: 'white',
@@ -345,7 +361,7 @@ var styles = style.create({
 		paddingTop: 8,
 		paddingBottom: 8,
 		boxShadow: 'rgba(0, 0, 0, 0.26) 0px 1px 2px 2px',
-		zIndex: 10,
+		zIndex: Z_LAYERS.MENU,
 		backgroundColor: 'white',
 		overflowY: 'hidden',
 		transform: 'translate3d(0,0,0)',
@@ -543,9 +559,7 @@ var styles = style.create({
 		},
 
 		content: {
-			paddingLeft: 16,
-			flexGrow: 1,
-			position: 'absolute'
+			flexGrow: 1
 		},
 
 		header: {
@@ -581,6 +595,84 @@ var styles = style.create({
 			paddingBottom: 5,
 			marginBottom: 10
 		}
+	},
+
+	detailsViewHero: {
+		container: {
+			boxShadow: 'none',
+			backgroundColor: 'white',
+			position: 'absolute',
+			transition: style_util.transitionOn({
+				left: .3,
+				top: .3,
+				width: .3,
+				height: .3,
+				boxShadow: .1
+			}),
+			zIndex: Z_LAYERS.DETAILS_VIEW,
+			display: 'flex',
+			flexDirection: 'column',
+
+			// disable the focus ring around the
+			// edge of the details view when focused
+			':focus': {
+				outline: 0
+			}
+		},
+
+		header: {
+			backgroundColor: 'transparent',
+			boxShadow: 'rgba(0, 0, 0, 0.26) 0px 2px 5px 0px',
+			flexShrink: 0,
+
+			// padding chosen to match icon padding in item list
+			// for item list -> details view transition
+			paddingLeft: 16,
+			transition: style_util.transitionOn({
+				all: .2,
+				color: .01
+			}),
+
+			toolbar: {
+				position: 'absolute',
+				left: 0,
+				top: 0,
+				right: 0,
+				height: 40,
+
+				display: 'flex',
+				flexDirection: 'row',
+				alignItems: 'center'
+			},
+
+			iconAndDetails: {
+				display: 'flex',
+				flexDirection: 'row'
+			},
+
+			entered: {
+				backgroundColor: colors.MATERIAL_COLOR_PRIMARY,
+				paddingTop: 40,
+				paddingBottom: 15
+			},
+
+			details: {
+				marginLeft: 5,
+				padding: 5,
+				display: 'flex',
+				flexDirection: 'column',
+				position: 'relative',
+				flexGrow: 1
+			},
+
+			title: {
+				fontSize: 23
+			},
+
+			account: {
+				fontSize: 13
+			}
+		},
 	}
 });
 
