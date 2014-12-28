@@ -171,8 +171,8 @@ export enum ItemEditMode {
 	EditItem
 }
 
-export class DetailsViewProps {
-	entryRect: reactutil.Rect;
+export interface DetailsViewProps {
+	entryRect?: reactutil.Rect;
 
 	item: item_store.Item;
 	iconProvider: item_icons.ItemIconProvider;
@@ -555,12 +555,21 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		viewStyles.push(theme.detailsViewHero.container);
 
 		if (this.state.transition !== TransitionState.Idle) {
-			viewStyles.push({
-				left: this.props.entryRect.left,
-				width: (this.props.entryRect.right - this.props.entryRect.left),
-				top: this.props.entryRect.top,
-				height: (this.props.entryRect.bottom - this.props.entryRect.top)
-			});
+			if (this.props.entryRect) {
+				viewStyles.push({
+					left: this.props.entryRect.left,
+					width: (this.props.entryRect.right - this.props.entryRect.left),
+					top: this.props.entryRect.top,
+					height: (this.props.entryRect.bottom - this.props.entryRect.top)
+				});
+			} else {
+				viewStyles.push({
+					left: 0,
+					width: '100%',
+					top: 100,
+					height: 0
+				});
+			}
 		} else {
 			viewStyles.push({
 				left: 0,
