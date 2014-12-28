@@ -186,12 +186,21 @@ export class DetailsViewProps {
 	autofill: () => void;
 }
 
+// describes whether we are entering or exiting the
+// details view. The state is initially 'Entering' and
+// transitions to 'Idle' a moment afterwards.
+enum TransitionState {
+	Entering,
+	Idle,
+	Exiting
+}
+
 interface DetailsViewState {
 	itemContent?: item_store.ItemContent;
 	editedItem?: item_store.ItemAndContent;
 	isEditing?: boolean;
 	didEditItem?: boolean;
-	entering?: boolean;
+	transition?: TransitionState;
 }
 
 export class DetailsView extends typed_react.Component<DetailsViewProps, DetailsViewState> {
@@ -201,7 +210,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		return {
 			isEditing: this.props.editMode === ItemEditMode.AddItem,
 			didEditItem: false,
-			entering: true
+			transition: TransitionState.Entering
 		};
 	}
 
@@ -241,15 +250,15 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			})
 		];
 		
-		if (this.state.entering) {
+		if (this.state.transition !== TransitionState.Idle) {
 			setTimeout(() => {
-				this.setState({entering: false});
+				this.setState({transition: TransitionState.Idle});
 			}, 10);
 		}
 
 		root.addEventListener('transitionend', (e: TransitionEvent) => {
 			if (e.target === root && e.propertyName === 'top') {
-				if (this.state.entering) {
+				if (this.state.transition === TransitionState.Exiting) {
 					this.props.onGoBack();
 				}
 			}
@@ -407,7 +416,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			toolbarControls.push(controls.ToolbarButtonF({
 				iconHref: 'icons/icons.svg#arrow-back',
 				onClick: () => {
-					this.setState({entering: true});
+					this.exit();
 				},
 				key: 'back'
 			}));
@@ -419,7 +428,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 						this.resetEdits({item: this.props.item, content: this.state.itemContent});
 						this.setState({isEditing: false, didEditItem: false});
 					} else {
-						this.props.onGoBack();
+						this.exit();
 					}
 				},
 				key: 'cancel'
@@ -538,17 +547,14 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 	}
 
 	private exit() {
-		this.setState({entering: true});
-		setTimeout(() => {
-			this.props.onGoBack();
-		}, 1000);
+		this.setState({transition: TransitionState.Exiting});
 	}
 
 	render() {
 		var viewStyles: any[] = [];
 		viewStyles.push(theme.detailsViewHero.container);
 
-		if (this.state.entering) {
+		if (this.state.transition !== TransitionState.Idle) {
 			viewStyles.push({
 				left: this.props.entryRect.left,
 				width: (this.props.entryRect.right - this.props.entryRect.left),
@@ -568,7 +574,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		var headerStyles: any[] = [];
 		headerStyles.push(theme.detailsViewHero.header);
 
-		if (!this.state.entering) {
+		if (this.state.transition === TransitionState.Idle) {
 			headerStyles.push(theme.detailsViewHero.header.entered);
 		}
 
@@ -614,7 +620,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			flexGrow: 1
 		}];
 
-		if (!this.state.entering) {
+		if (this.state.transition === TransitionState.Idle) {
 			itemListDetailsStyle.push({opacity: 0});
 			detailsViewDetailsStyle.push({opacity: 1});
 			contentStyles.push({opacity: 1});
