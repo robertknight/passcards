@@ -13,7 +13,7 @@ export interface MenuItem {
 	onClick: () => void;
 }
 
-export interface MenuState {
+interface MenuState {
 	showTime?: Date;
 }
 
@@ -85,7 +85,7 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 					}, 300);
 				}
 			}, 
-				ripple.InkRippleF({color: {r: 200, g: 200, b: 200}}),
+				ripple.InkRippleF({radius: 100}),
 				div(theme.menu.item.label, {}, item.label)
 			);
 		});

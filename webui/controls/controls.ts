@@ -110,10 +110,7 @@ export class ActionButton extends typed_react.Component<ActionButtonProps,{}> {
 				type: 'button',
 				ref: 'button'
 			})),
-			ripple.InkRippleF({
-				color: {r: 252, g: 228, b: 236},
-				ref: 'ripple'
-			})
+			ripple.InkRippleF({color: 'rgb(252,228,236)', radius: 100, ref: 'ripple'})
 		);
 	}
 }

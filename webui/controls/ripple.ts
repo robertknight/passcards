@@ -1,5 +1,8 @@
 /// <reference path="../../typings/react-0.12.d.ts" />
 
+// Material Design style touch-ripple.
+// See https://www.polymer-project.org/docs/elements/paper-elements.html#paper-ripple 
+
 import react = require('react');
 import sprintf = require('sprintf');
 import style = require('ts-style');
@@ -16,16 +19,17 @@ enum Phase {
 }
 
 export interface InkRippleProps {
-	color: {
-		r: number;
-		g: number;
-		b: number;
-	};
-
+	/** Fill style for the expanding ripple.
+	  * The background of the ripple uses a lighter version of
+	  * this color.
+	  */
+	color?: string;
+	/** Max radius the wave ripple can reach during the touch-down phase */
+	radius?: number;
 	children?: React.ReactElement<any>[];
 }
 
-export interface InkRippleState {
+interface InkRippleState {
 	startX?: number;
 	startY?: number;
 	active?: boolean;
@@ -49,6 +53,13 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 	private anim : {
 		context: CanvasRenderingContext2D;
 	};
+
+	getDefaultProps() {
+		return {
+			color: '#c8c8c8',
+			radius: 240
+		};
+	}
 
 	getInitialState() {
 		return {
@@ -166,8 +177,6 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 
 		this.updateCanvasSize();
 
-		// max radius the wave ripple can reach during the touch-down phase
-		var MAX_RIPPLE_RADIUS = 240;
 		// max time for which the ripple can expand during the
 		// touch-down phase
 		var TOUCH_PHASE_DURATION = 800;
@@ -185,7 +194,7 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 			rippleDuration += phaseElapsed;
 		}
 		
-		var radius = easeOut(MAX_RIPPLE_RADIUS, rippleDuration / maxDuration);
+		var radius = easeOut(this.props.radius, rippleDuration / maxDuration);
 
 		var MAX_BACKGROUND_ALPHA = 0.2;
 		var backgroundAlpha = Math.min((elapsed / 500.0) * MAX_BACKGROUND_ALPHA, MAX_BACKGROUND_ALPHA);
@@ -200,8 +209,7 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 		var elem = <HTMLCanvasElement>(this.refs['container'].getDOMNode());
 		var ctx = this.anim.context;
 		ctx.clearRect(0,0, elem.offsetWidth, elem.offsetHeight);
-		ctx.fillStyle = sprintf('rgb(%d,%d,%d)',
-		  this.props.color.r, this.props.color.g, this.props.color.b);
+		ctx.fillStyle = this.props.color;
 
 		// render background
 		ctx.globalAlpha = backgroundAlpha;

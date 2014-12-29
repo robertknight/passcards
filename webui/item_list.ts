@@ -168,13 +168,7 @@ export class Item extends typed_react.Component<ItemProps, {}> {
 				onClick: () => this.props.onSelected(),
 				style: reactutil.prefix({transform: translation})
 			},
-			ripple.InkRippleF({
-				color: {
-					r: 200,
-					g: 200,
-					b: 200
-				}
-			}),
+			ripple.InkRippleF(),
 			item_icons.IconControlF({
 				location: this.props.item.primaryLocation(),
 				iconProvider: this.props.iconProvider,
