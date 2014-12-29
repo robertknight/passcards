@@ -82,38 +82,3 @@ export class SvgIcon extends typed_react.Component<SvgIconProps, {}> {
 
 export var SvgIconF = reactutil.createFactory(SvgIcon);
 
-export interface ActionButtonProps {
-	value: string;
-	onClick: (e: MouseEvent) => void;
-}
-
-export class ActionButton extends typed_react.Component<ActionButtonProps,{}> {
-	componentDidMount() {
-		setTimeout(() => {
-			if (!this.isMounted()) {
-				return;
-			}
-
-			var button = <HTMLButtonElement>(this.refs['button'].getDOMNode());
-			var ripple = <ripple.InkRipple>(this.refs['ripple']);
-			ripple.setState({
-				width: button.offsetWidth,
-				height: button.offsetHeight
-			});
-		}, 1000);
-	}
-
-	render() {
-		return div(theme.actionButton.container, {},
-			react.DOM.input(reactutil.mergeProps(this.props, {
-				className: style.classes(theme.actionButton.button),
-				type: 'button',
-				ref: 'button'
-			})),
-			ripple.InkRippleF({color: 'rgb(252,228,236)', radius: 100, ref: 'ripple'})
-		);
-	}
-}
-
-export var ActionButtonF = reactutil.createFactory(ActionButton);
-

@@ -269,37 +269,47 @@ var styles = style.create({
 	},
 
 	// Controls - Button
-	actionButton: {
+	button: {
 		container: {
 			position: 'relative',
-			width: 'fit-content'
+			width: 'fit-content',
+			padding: 6
 		},
+
+		rippleContainer: {
+			position: 'relative',
+			borderRadius: 3,
+			overflow: 'hidden'
+		},
+
 		button: {
 			paddingTop: 5,
 			paddingBottom: 5,
 			paddingLeft: 15,
 			paddingRight: 15,
 			border: 0,
-			backgroundColor: colors.MATERIAL_COLOR_PRIMARY,
-			boxShadow: 'rgba(0, 0, 0, 0.26) 0px 2px 5px 0px',
-			color: '#fff',
+			borderRadius: 3,
 			fontWeight: 400,
 			textTransform: 'uppercase',
 
+			cursor: 'pointer',
+
 			// disable button rounding on iOS
-			WebkitAppearance: 'none'
+			WebkitAppearance: 'none',
+
+			// disable focus ring when selected
+			':focus': {
+				outline: 0
+			},
+
+			raised: {
+				boxShadow: 'rgba(0, 0, 0, 0.26) 0px 2px 5px 0px'
+			}
 		}
 	},
 
 	// Controls - Ink Ripple effect
 	inkRipple: {
-		/* force an element to be given its own
-		 * compositor layer.
-		 *
-		 * This can be used to reduce the amount of
-		 * repainting work for animated elements
-		 */
-		transform: 'translate3d(0,0,0)',
 		overflow: 'hidden',
 		position: 'absolute',
 		left: 0,
@@ -519,11 +529,42 @@ var styles = style.create({
 			paddingBottom: 5
 		},
 
+		section: {
+			title: {
+				fontSize: 12,
+				opacity: 0.54,
+				fontWeight: 'bold',
+				height: 48,
+
+				display: 'flex',
+				flexDirection: 'column',
+				justifyContent: 'center',
+
+				// add negative margin below title to get
+				// even spacing between divider line separating
+				// this from the previous section and the label
+				// of the first field in this section
+				marginBottom: -12
+			},
+
+			divider: {
+				width: '100%',
+				borderBottom: '1px solid rgba(0,0,0,0.3)'
+			}
+		},
+
+		divider: {
+			width: '100%',
+			borderBottom: '1px solid rgba(0,0,0,0.3)',
+			marginTop: 12,
+			marginBottom: 12
+		},
+
 		field: {
 			display: 'flex',
 			flexDirection: 'column',
-			paddingLeft: 20,
 			paddingRight: 20,
+			maxWidth: 300,
 
 			actions: {
 				display: 'flex',

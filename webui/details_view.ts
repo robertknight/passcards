@@ -4,6 +4,7 @@ import react = require('react');
 import style = require('ts-style');
 import typed_react = require('typed-react');
 
+import button = require('./controls/button');
 import controls = require('./controls/controls');
 import crypto = require('../lib/onepass_crypto');
 import div = require('./base/div');
@@ -89,9 +90,9 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 
 		var actions: React.ComponentElement<any>[] = [];
 		if (this.state.selected) {
-			var copyButton: React.ComponentElement<controls.ActionButtonProps>;
+			var copyButton: React.ComponentElement<button.ButtonProps>;
 			if (this.props.clipboard.clipboardAvailable()) {
-				copyButton = controls.ActionButtonF({
+				copyButton = button.ButtonF({
 					value: 'Copy',
 					key: 'copy',
 					onClick: (e) => {
@@ -102,7 +103,7 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 			actions.push(copyButton);
 
 			if (this.props.type == FieldType.Password) {
-				var revealButton = controls.ActionButtonF({
+				var revealButton = button.ButtonF({
 					value: this.state.revealed ? 'Hide' : 'Reveal',
 					key: 'reveal',
 					onClick: (e) => {
@@ -113,7 +114,7 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 				actions.push(revealButton);
 
 				if (!this.props.readOnly) {
-					var generateButton = controls.ActionButtonF({
+					var generateButton = button.ButtonF({
 						value: 'Generate',
 						key: 'generate',
 						onClick: (e) => {
@@ -128,7 +129,7 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 		}
 
 		if (!this.props.readOnly && this.props.onDelete) {
-			var deleteButton = controls.ActionButtonF({
+			var deleteButton = button.ButtonF({
 				value: 'Delete',
 				key: 'delete',
 				onClick: (e) => {
@@ -313,7 +314,13 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 					}));
 				}
 			});
-			sections.push(div(null, {}, section.title));
+			if (sectionIndex > 0) {
+				sections.push(div(theme.detailsView.section.divider, {}));
+			}
+			if (section.title) {
+				sections.push(div(theme.detailsView.section.title, {}, section.title));
+			}
+
 			sections.push(div(null, {},
 			fields)
 			);
@@ -345,7 +352,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		});
 		
 		if (editing) {
-			websites.push(controls.ActionButtonF({
+			websites.push(button.ButtonF({
 				value: 'Add Website',
 				onClick: (e) => {
 					e.preventDefault();
@@ -520,10 +527,16 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				contentKey += '-editing';
 			}
 
+			var sectionDivider: React.ReactElement<any>;
+			if (websites.length > 0 && sections.length > 0) {
+				sectionDivider = div(theme.detailsView.divider, {});
+			}
+
+			var itemActionDivider: React.ReactElement<any>;
 			var itemActions: React.ComponentElement<any>[] = [];
 			if (editing && this.props.editMode === ItemEditMode.EditItem) {
 				var isTrashed = updatedItem.item.trashed;
-				itemActions.push(controls.ActionButtonF({
+				itemActions.push(button.ButtonF({
 					value: isTrashed ? 'Restore from Trash' : 'Move to Trash',
 					onClick: () => {
 						updatedItem.item.trashed = !isTrashed;
@@ -532,13 +545,19 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				}));
 			}
 
+			if (itemActions.length > 0) {
+				itemActionDivider = div(theme.detailsView.divider, {});
+			}
+
 			var mainItemUrl = url_util.normalize(updatedItem.item.primaryLocation());
 
 			detailsContent = div(theme.detailsView.content, {key: contentKey},
 				titleField,
 				div(theme.detailsView.coreFields, {}, coreFields),
 				div(null, {}, websites),
+				sectionDivider,
 				div(null, {}, sections),
+				itemActionDivider,
 				div(null, {}, itemActions)
 			);
 		}
@@ -594,6 +613,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 
 		var contentStyles: React.CSSProperties[] = [{
 			paddingTop: 16,
+			paddingLeft: 72,
 			opacity: 0,
 			transition: style_util.transitionOn({opacity: .5}),
 			overflowY: 'auto',
@@ -608,7 +628,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 
 		var autofillButton: React.ComponentElement<any>;
 		if (env.isFirefoxAddon() || env.isChromeExtension()) {
-			autofillButton = controls.ActionButtonF({
+			autofillButton = button.ButtonF({
 				accessKey:'a',
 				value: 'Autofill',
 				onClick: () => this.props.autofill()
@@ -627,7 +647,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				this.renderToolbar(),
 				react.DOM.div(style.mixin(headerTheme.iconAndDetails),
 					item_icons.IconControlF({
-						location: this.props.item.primaryLocation(),
+						location: updatedItem.primaryLocation(),
 						iconProvider: this.props.iconProvider,
 						isFocused: true
 					}),
