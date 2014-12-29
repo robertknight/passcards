@@ -478,7 +478,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			)
 		));
 
-		return div([theme.detailsViewHero.header.toolbar], {},
+		return div([theme.detailsView.header.toolbar], {},
 			toolbarControls
 		);
 	}
@@ -552,8 +552,10 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 
 	render() {
 		var viewStyles: any[] = [];
-		viewStyles.push(theme.detailsViewHero.container);
+		viewStyles.push(theme.detailsView.container);
 
+		// expand the details view starting from the rect
+		// for the selected item
 		if (this.state.transition !== TransitionState.Idle) {
 			if (this.props.entryRect) {
 				viewStyles.push({
@@ -580,54 +582,15 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		}
 
 		var headerStyles: any[] = [];
-		headerStyles.push(theme.detailsViewHero.header);
+		headerStyles.push(theme.detailsView.header);
 
 		if (this.state.transition === TransitionState.Idle) {
-			headerStyles.push(theme.detailsViewHero.header.entered);
+			headerStyles.push(theme.detailsView.header.entered);
 		}
 
-		var toolbarControls: React.ReactElement<any>[] = [];
-		toolbarControls.push(controls.ToolbarButtonF({
-			iconHref: 'icons/icons.svg#clear',
-			onClick: () => {
-				this.exit();
-			},
-			key: 'cancel'
-		}));
-
-		var detailsLeftPadding = theme.itemList.item.details.padding;
-
-		// style for the container of the title and account fields
-		// at the start of the entry transition for the details
-		// view
-		var itemListDetailsStyle: React.CSSProperties[] = [{
-			position: 'absolute',
-			left: detailsLeftPadding,
-			right: 0,
-			top: 0,
-			bottom: 0,
-			transition: style_util.transitionOn({opacity: .2}),
-			opacity: 1,
-			display: 'flex',
-			flexDirection: 'column',
-			justifyContent: 'center'
-		}];
-
-		// style for the container of the title and account
-		// fields in the details view
-		var detailsViewDetailsStyle: React.CSSProperties[] = [{
-			position: 'relative',
-			left: detailsLeftPadding,
-			right: 0,
-			top: 0,
-			bottom: 0,
-			color: 'white',
-			transition: style_util.transitionOn({opacity: .2}),
-			opacity: 0,
-			display: 'flex',
-			flexDirection: 'column',
-			justifyContent: 'center'
-		}];
+		var headerTheme = theme.detailsView.header;
+		var itemListDetailsStyle: any[] = [headerTheme.iconAndDetails.details.itemList];
+		var detailsViewDetailsStyle: any[] = [headerTheme.iconAndDetails.details.detailsView];
 
 		var contentStyles: React.CSSProperties[] = [{
 			paddingTop: 16,
@@ -662,13 +625,13 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		return react.DOM.div(style.mixin(viewStyles, {tabIndex: 0}),
 			react.DOM.div(style.mixin(headerStyles),
 				this.renderToolbar(),
-				react.DOM.div(style.mixin(theme.detailsViewHero.header.iconAndDetails),
+				react.DOM.div(style.mixin(headerTheme.iconAndDetails),
 					item_icons.IconControlF({
 						location: this.props.item.primaryLocation(),
 						iconProvider: this.props.iconProvider,
 						isFocused: true
 					}),
-					react.DOM.div(style.mixin(theme.detailsViewHero.header.details),
+					react.DOM.div(style.mixin(headerTheme.iconAndDetails.details),
 						// item title and account at start of entry transition
 						react.DOM.div(style.mixin(itemListDetailsStyle),
 							react.DOM.div(style.mixin(theme.itemList.item.details.title), updatedItem.title),
@@ -676,8 +639,8 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 						),
 						// item title and account at end of entry transition
 						react.DOM.div(style.mixin(detailsViewDetailsStyle),
-							react.DOM.div(style.mixin(theme.detailsViewHero.header.title), updatedItem.title),
-							react.DOM.div(style.mixin(theme.detailsViewHero.header.account), updatedItem.account)
+							react.DOM.div(style.mixin(theme.detailsView.header.title), updatedItem.title),
+							react.DOM.div(style.mixin(theme.detailsView.header.account), updatedItem.account)
 						)
 					)
 				)

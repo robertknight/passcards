@@ -12,6 +12,8 @@ var Z_LAYERS = {
 	DETAILS_VIEW: 1
 };
 
+var ITEM_LIST_DETAILS_LEFT_PADDING = 5;
+
 var mixins = style.create({
 	materialDesign: {
 		header: {
@@ -485,7 +487,7 @@ var styles = style.create({
 			},
 
 			details: {
-				padding: 5,
+				padding: ITEM_LIST_DETAILS_LEFT_PADDING,
 				marginLeft: 5,
 
 				title: {
@@ -504,69 +506,12 @@ var styles = style.create({
 
 	// Details View
 	detailsView: {
-		position: 'absolute',
-		top: 0,
-		left: 0,
-		width: '100%',
-		height: '100%',
-		backgroundColor: 'white',
-		display: 'flex',
-		flexDirection: 'column',
-
-		// disable the focus ring around the
-		// edge of the details view when focused
-		':focus': {
-			outline: 0
-		},
-
-		toolbar: style.merge(mixins.materialDesign.header, {
-			display: 'flex',
-			flexDirection: 'row',
-			alignItems: 'center',
-		}),
-
 		toolbarSpacer: {
 			flexGrow: '1'
 		},
 
-		overview: {
-			display: 'flex',
-			flexDirection: 'column',
-			justifyContent: 'center',
-			marginLeft: 10,
-
-			title: {
-				fontSize: 16
-			},
-
-			location: {
-				color: '#666',
-				textOverflow: 'ellipsis',
-				overflow: 'hidden',
-
-				' a': {
-					textDecoration: 'none'
-				}
-			},
-		},
-
-		// container that holds the list of field
-		// views / editors for the item
-		fieldsContainer: {
-			flexGrow: 1,
-			position: 'relative',
-			overflowY: 'auto'
-		},
-
 		content: {
 			flexGrow: 1
-		},
-
-		header: {
-			display: 'flex',
-			flexDirection: 'row',
-			paddingBottom: 5,
-			marginBottom: 15
 		},
 
 		coreFields: {
@@ -594,10 +539,8 @@ var styles = style.create({
 			paddingTop: 10,
 			paddingBottom: 5,
 			marginBottom: 10
-		}
-	},
+		},
 
-	detailsViewHero: {
 		container: {
 			backgroundColor: 'white',
 			position: 'absolute',
@@ -645,7 +588,48 @@ var styles = style.create({
 
 			iconAndDetails: {
 				display: 'flex',
-				flexDirection: 'row'
+				flexDirection: 'row',
+
+				details: {
+					marginLeft: 5,
+					padding: 5,
+					display: 'flex',
+					flexDirection: 'column',
+					position: 'relative',
+					flexGrow: 1,
+
+					// style for the container of the title and account fields
+					// at the start of the entry transition for the details
+					// view
+					itemList: {
+						position: 'absolute',
+						left: ITEM_LIST_DETAILS_LEFT_PADDING,
+						right: 0,
+						top: 0,
+						bottom: 0,
+						transition: style_util.transitionOn({opacity: .2}),
+						opacity: 1,
+						display: 'flex',
+						flexDirection: 'column',
+						justifyContent: 'center'
+					},
+
+					// style for the container of the title and account
+					// fields in the details view
+					detailsView: {
+						position: 'relative',
+						left: ITEM_LIST_DETAILS_LEFT_PADDING,
+						right: 0,
+						top: 0,
+						bottom: 0,
+						color: 'white',
+						transition: style_util.transitionOn({opacity: .2}),
+						opacity: 0,
+						display: 'flex',
+						flexDirection: 'column',
+						justifyContent: 'center'
+					}
+				},
 			},
 
 			entered: {
@@ -653,15 +637,6 @@ var styles = style.create({
 				paddingTop: 40,
 				paddingBottom: 15,
 				boxShadow: 'rgba(0, 0, 0, 0.26) 0px 2px 5px 0px'
-			},
-
-			details: {
-				marginLeft: 5,
-				padding: 5,
-				display: 'flex',
-				flexDirection: 'column',
-				position: 'relative',
-				flexGrow: 1
 			},
 
 			title: {
