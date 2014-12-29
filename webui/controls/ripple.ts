@@ -87,61 +87,73 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 	}
 
 	componentDidMount() {
-		var canvas = <HTMLCanvasElement>(this.refs['canvas'].getDOMNode());
-		var container = <HTMLElement>(this.refs['container'].getDOMNode());
-		var parentNode = <HTMLElement>(container.parentNode);
-		var touchStartHandler = (e: MouseEvent) => {
-			if (this.state.phase !== Phase.Idle) {
-				return;
-			}
-
-			var cx = canvas.getBoundingClientRect().left;
-			var cy = canvas.getBoundingClientRect().top;
-
-			var ex: number;
-			var ey: number;
-
-			var touchEvent = <TouchEvent>(<Event>e);
-			if (touchEvent.touches) {
-				ex = touchEvent.touches[0].pageX;
-				ey = touchEvent.touches[0].pageY;
-			} else {
-				ex = e.pageX;
-				ey = e.pageY;
-			}
-
-			var x = ex - (window.pageXOffset + cx);
-			var y = ey - (window.pageYOffset + cy);
-
-			this.updateCanvasSize();
-
-			this.anim = {
-				context: canvas.getContext('2d')
-			};
-			this.setState({
-				active: true,
-				startX: x,
-				startY: y,
-				phase: Phase.Touch
-			});
-		};
-
-		var touchEndHandler = (e: MouseEvent) => {
-			if (this.state.phase === Phase.Touch) {
-				this.setState({phase: Phase.Release});
-			}
-		}
-
 		// start the ripple on touch where supported or mousedown
 		// otherwise
-		parentNode.addEventListener('mousedown', touchStartHandler);
-		parentNode.addEventListener('touchstart', touchStartHandler);
-		parentNode.addEventListener('mouseup', touchEndHandler);
-		parentNode.addEventListener('touchend', touchEndHandler);
+		var parentNode = <HTMLElement>(this.getDOMNode().parentNode);
+
+		parentNode.addEventListener('mousedown', this.onTouchStart);
+		parentNode.addEventListener('touchstart', this.onTouchStart);
+
+		parentNode.addEventListener('mouseup', this.onTouchEnd);
+		parentNode.addEventListener('mouseleave', this.onTouchEnd);
+		parentNode.addEventListener('touchend', this.onTouchEnd);
 	}
 
-	componentDidUnmount() {
+	componentWillUnmount() {
 		this.anim = null;
+
+		var parentNode = <HTMLElement>(this.getDOMNode().parentNode);
+
+		parentNode.removeEventListener('mousedown', this.onTouchStart);
+		parentNode.removeEventListener('touchstart', this.onTouchStart);
+
+		parentNode.removeEventListener('mouseup', this.onTouchEnd);
+		parentNode.removeEventListener('mouseleave', this.onTouchEnd);
+		parentNode.removeEventListener('touchend', this.onTouchEnd);
+	}
+
+	private onTouchStart(e: MouseEvent) {
+		var canvas = <HTMLCanvasElement>(this.refs['canvas'].getDOMNode());
+
+		if (this.state.phase !== Phase.Idle) {
+				return;
+		}
+
+		var cx = canvas.getBoundingClientRect().left;
+		var cy = canvas.getBoundingClientRect().top;
+
+		var ex: number;
+		var ey: number;
+
+		var touchEvent = <TouchEvent>(<Event>e);
+		if (touchEvent.touches) {
+			ex = touchEvent.touches[0].pageX;
+			ey = touchEvent.touches[0].pageY;
+		} else {
+			ex = e.pageX;
+			ey = e.pageY;
+		}
+
+		var x = ex - (window.pageXOffset + cx);
+		var y = ey - (window.pageYOffset + cy);
+
+		this.updateCanvasSize();
+
+		this.anim = {
+			context: canvas.getContext('2d')
+		};
+		this.setState({
+			active: true,
+			startX: x,
+			startY: y,
+			phase: Phase.Touch
+		});
+	}
+
+	private onTouchEnd(e: MouseEvent) {
+		if (this.state.phase === Phase.Touch) {
+			this.setState({phase: Phase.Release});
+		}
 	}
 
 	render() {
