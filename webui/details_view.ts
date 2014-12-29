@@ -577,7 +577,6 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				top: 0,
 				height: '100%'
 			});
-			viewStyles.push(theme.mixins.materialDesign.card);
 		}
 
 		var headerStyles: any[] = [];
@@ -597,6 +596,10 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		}));
 
 		var detailsLeftPadding = theme.itemList.item.details.padding;
+
+		// style for the container of the title and account fields
+		// at the start of the entry transition for the details
+		// view
 		var itemListDetailsStyle: React.CSSProperties[] = [{
 			position: 'absolute',
 			left: detailsLeftPadding,
@@ -604,11 +607,16 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			top: 0,
 			bottom: 0,
 			transition: style_util.transitionOn({opacity: .2}),
-			opacity: 1
+			opacity: 1,
+			display: 'flex',
+			flexDirection: 'column',
+			justifyContent: 'center'
 		}];
 
+		// style for the container of the title and account
+		// fields in the details view
 		var detailsViewDetailsStyle: React.CSSProperties[] = [{
-			position: 'absolute',
+			position: 'relative',
 			left: detailsLeftPadding,
 			right: 0,
 			top: 0,
@@ -661,10 +669,12 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 						isFocused: true
 					}),
 					react.DOM.div(style.mixin(theme.detailsViewHero.header.details),
+						// item title and account at start of entry transition
 						react.DOM.div(style.mixin(itemListDetailsStyle),
 							react.DOM.div(style.mixin(theme.itemList.item.details.title), updatedItem.title),
 							react.DOM.div(style.mixin(theme.itemList.item.details.account), updatedItem.account)
 						),
+						// item title and account at end of entry transition
 						react.DOM.div(style.mixin(detailsViewDetailsStyle),
 							react.DOM.div(style.mixin(theme.detailsViewHero.header.title), updatedItem.title),
 							react.DOM.div(style.mixin(theme.detailsViewHero.header.account), updatedItem.account)

@@ -599,15 +599,13 @@ var styles = style.create({
 
 	detailsViewHero: {
 		container: {
-			boxShadow: 'none',
 			backgroundColor: 'white',
 			position: 'absolute',
 			transition: style_util.transitionOn({
 				left: .3,
 				top: .3,
 				width: .3,
-				height: .3,
-				boxShadow: .1
+				height: .3
 			}),
 			zIndex: Z_LAYERS.DETAILS_VIEW,
 			display: 'flex',
@@ -622,8 +620,8 @@ var styles = style.create({
 
 		header: {
 			backgroundColor: 'transparent',
-			boxShadow: 'rgba(0, 0, 0, 0.26) 0px 2px 5px 0px',
 			flexShrink: 0,
+			boxShadow: 'none',
 
 			// padding chosen to match icon padding in item list
 			// for item list -> details view transition
@@ -653,7 +651,8 @@ var styles = style.create({
 			entered: {
 				backgroundColor: colors.MATERIAL_COLOR_PRIMARY,
 				paddingTop: 40,
-				paddingBottom: 15
+				paddingBottom: 15,
+				boxShadow: 'rgba(0, 0, 0, 0.26) 0px 2px 5px 0px'
 			},
 
 			details: {
