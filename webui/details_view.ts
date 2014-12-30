@@ -15,6 +15,7 @@ import item_builder = require('../lib/item_builder');
 import item_icons = require('./item_icons');
 import item_store = require('../lib/item_store');
 import keycodes = require('./base/keycodes');
+import menu = require('./controls/menu');
 import page_access = require('./page_access');
 import reactutil = require('./base/reactutil');
 import shortcut = require('./base/shortcut');
@@ -119,6 +120,7 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 
 				if (!this.props.readOnly) {
 					var generateButton = button.ButtonF({
+						color: colors.MATERIAL_COLOR_PRIMARY,
 						value: 'Generate',
 						key: 'generate',
 						onClick: (e) => {
@@ -203,6 +205,14 @@ enum TransitionState {
 	Exiting
 }
 
+interface AddingFieldState {
+	section: item_store.ItemSection;
+	pos: {
+		left: number;
+		top: number;
+	}
+}
+
 interface DetailsViewState {
 	itemContent?: item_store.ItemContent;
 	editedItem?: item_store.ItemAndContent;
@@ -210,6 +220,7 @@ interface DetailsViewState {
 	didEditItem?: boolean;
 	transition?: TransitionState;
 	autofocusField?: any; /* item_store.ItemField | item_store.ItemUrl | item_store.ItemSection */
+	addingField?: AddingFieldState;
 }
 
 export class DetailsView extends typed_react.Component<DetailsViewProps, DetailsViewState> {
@@ -302,37 +313,35 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		item.content.sections.forEach((section, sectionIndex) => {
 			var fields: React.ComponentElement<any>[] = [];
 			section.fields.forEach((field, fieldIndex) => {
-				if (field.value) {
-					var autofocus = this.state.autofocusField === field;
-					fields.push(ItemFieldF({
-						key: sectionIndex + '.' + fieldIndex,
-						label: field.title,
-						value: field.value,
-						type: field.kind == item_store.FieldType.Password ? FieldType.Password : FieldType.Text,
-						clipboard: this.props.clipboard,
-						onChange: (newValue) => {
-							field.value = newValue;
-							onSave();
-							return true;
-						},
-						onDelete: () => {
-							section.fields.splice(fieldIndex, 1);
-							onSave();
-						},
-						readOnly: !editing,
-						focused: autofocus
-					}));
-				}
+				var autofocus = this.state.autofocusField === field;
+				fields.push(ItemFieldF({
+					key: section.name + '.' + field.name,
+					label: field.title,
+					value: field.value,
+					type: field.kind == item_store.FieldType.Password ? FieldType.Password : FieldType.Text,
+					clipboard: this.props.clipboard,
+					onChange: (newValue) => {
+						field.value = newValue;
+						onSave();
+						return true;
+					},
+					onDelete: () => {
+						section.fields.splice(fieldIndex, 1);
+						onSave();
+					},
+					readOnly: !editing,
+					focused: autofocus
+				}));
 			});
 			if (sectionIndex > 0) {
 				sections.push(div(theme.detailsView.section.divider, {}));
 			}
-			if (section.title) {
+			if (section.title || editing) {
 				if (editing) {
 					var autofocus = this.state.autofocusField === section;
 					sections.push(ItemFieldF({
-						key: sectionIndex + '.title',
-						label: 'Section',
+						key: section.name + '.title',
+						label: 'Section Title',
 						value: section.title,
 						type: FieldType.Text,
 						clipboard: this.props.clipboard,
@@ -356,7 +365,42 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			sections.push(div(null, {},
 			fields)
 			);
+
+			if (editing) {
+				var addButtonRef = sectionIndex + '.addField';
+				sections.push(button.ButtonF({
+					value: 'Add Field',
+					color: colors.MATERIAL_COLOR_PRIMARY,
+					ref: addButtonRef,
+					onClick: (e) => {
+						var buttonRect = (<HTMLElement>this.refs[addButtonRef].getDOMNode()).getBoundingClientRect();
+						this.setState({addingField: {
+							pos: {
+								top: buttonRect.top,
+								left: buttonRect.left
+							},
+							section: section
+						}});
+					}
+				}));
+			}
 		});
+
+		if (editing) {
+			sections.push(button.ButtonF({
+				value: 'Add Section',
+				color: colors.MATERIAL_COLOR_PRIMARY,
+				onClick: () => {
+					var newSection = new item_store.ItemSection();
+					newSection.name = crypto.newUUID();
+					newSection.title = 'New Section';
+					item.content.sections.push(newSection);
+					
+					this.setState({autofocusField: newSection});
+					this.onChangeItem();
+				}
+			}));
+		}
 
 		return sections;
 	}
@@ -453,6 +497,45 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		return coreFields;
 	}
 
+	private renderMenus() {
+		var addField = (type: item_store.FieldType) => {
+			var field = new item_store.ItemField();
+			field.kind = type;
+			field.value = '';
+			field.name = crypto.newUUID();
+			field.title = 'New Field';
+
+			this.setState({autofocusField: field});
+			this.state.addingField.section.fields.push(field);
+			this.onChangeItem();
+		};
+
+		var fieldTypes = [{
+			label: 'Text',
+			onClick: () => {
+				addField(item_store.FieldType.Text);
+			}
+		},{
+			label: 'Password',
+			onClick: () => {
+				addField(item_store.FieldType.Password);
+			}
+		}];
+
+		if (this.state.addingField) {
+			return menu.MenuF({
+				items: fieldTypes,
+				top: this.state.addingField.pos.top,
+				left: this.state.addingField.pos.left,
+				onDismiss: () => {
+					this.setState({addingField: null});
+				}
+			});
+		} else {
+			return null;
+		}
+	}
+
 	private renderToolbar() {
 		var toolbarControls: React.ReactElement<any>[] = [];
 		if (this.props.editMode == ItemEditMode.EditItem && !this.state.isEditing) {
@@ -526,16 +609,21 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		);
 	}
 
+	private onChangeItem() {
+		var updatedItem = this.state.editedItem;
+		updatedItem.item.updateOverviewFromContent(updatedItem.content);
+		this.setState({
+			editedItem: updatedItem,
+			didEditItem: true
+		});
+	}
+
 	private renderFields(editing: boolean) {
 		var detailsContent : React.ReactElement<any>;
 		var updatedItem = this.state.editedItem;
 		if (updatedItem) {
 			var onChangeItem = () => {
-				updatedItem.item.updateOverviewFromContent(updatedItem.content);
-				this.setState({
-					editedItem: updatedItem,
-					didEditItem: true
-				});
+				this.onChangeItem();
 			};
 
 			var titleField: React.ReactElement<any>;
@@ -673,6 +761,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		if (env.isFirefoxAddon() || env.isChromeExtension()) {
 			autofillButton = button.ButtonF({
 				accessKey:'a',
+				color: colors.MATERIAL_COLOR_PRIMARY,
 				value: 'Autofill',
 				onClick: () => this.props.autofill()
 			});
@@ -688,6 +777,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		return react.DOM.div(style.mixin(viewStyles, {tabIndex: 0}),
 			react.DOM.div(style.mixin(headerStyles),
 				this.renderToolbar(),
+				this.renderMenus(),
 				react.DOM.div(style.mixin(headerTheme.iconAndDetails),
 					item_icons.IconControlF({
 						location: updatedItem.primaryLocation(),
