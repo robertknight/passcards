@@ -32,6 +32,8 @@ var mixins = style.create({
 var FADE_TRANSITION = 'opacity .5s ease-out';
 var SLIDE_TRANSITION = 'transform .3s ease-out';
 
+var DIVIDER_BORDER_STYLE = '1px solid ' + colors.MATERIAL_COLOR_DIVIDER;
+
 var animations = style.create({
 	slideFromLeft: {
 		enter: {
@@ -277,7 +279,12 @@ var styles = style.create({
 		container: {
 			position: 'relative',
 			width: 'fit-content',
-			padding: 6
+			padding: 6,
+
+			// disable focus ring when selected
+			':focus': {
+				outline: 0
+			}
 		},
 
 		rippleContainer: {
@@ -300,7 +307,8 @@ var styles = style.create({
 			paddingRight: 15,
 			border: 0,
 			borderRadius: 3,
-			fontWeight: 400,
+			fontWeight: fonts.MEDIUM_WEIGHT,
+			fontSize: fonts.BUTTON_TEXT_SIZE,
 			textTransform: 'uppercase',
 
 			cursor: 'pointer',
@@ -544,9 +552,9 @@ var styles = style.create({
 
 		section: {
 			title: {
-				fontSize: 12,
-				opacity: 0.54,
-				fontWeight: 'bold',
+				fontSize: fonts.CAPTION_TEXT_SIZE,
+				color: colors.MATERIAL_TEXT_SECONDARY,
+				fontWeight: fonts.REGULAR_WEIGHT,
 				height: 48,
 
 				display: 'flex',
@@ -562,13 +570,13 @@ var styles = style.create({
 
 			divider: {
 				width: '100%',
-				borderBottom: '1px solid rgba(0,0,0,0.3)'
+				borderBottom: DIVIDER_BORDER_STYLE
 			}
 		},
 
 		divider: {
 			width: '100%',
-			borderBottom: '1px solid rgba(0,0,0,0.3)',
+			borderBottom: DIVIDER_BORDER_STYLE,
 			marginTop: 12,
 			marginBottom: 12
 		},
@@ -692,11 +700,11 @@ var styles = style.create({
 			},
 
 			title: {
-				fontSize: 23
+				fontSize: fonts.HEADLINE_TEXT_SIZE
 			},
 
 			account: {
-				fontSize: 13
+				fontSize: fonts.ITEM_LIST_SECONDARY_TEXT_SIZE
 			}
 		},
 	}

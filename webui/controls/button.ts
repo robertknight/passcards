@@ -37,7 +37,7 @@ export class Button extends typed_react.Component<ButtonProps,{}> {
 			buttonStyles.push({color: this.props.color});
 		}
 
-		return div(theme.button.container, {role: 'button'},
+		return div(theme.button.container, {role: 'button', tabIndex: 0},
 			react.DOM.div(style.mixin(theme.button.rippleContainer, {
 				onClick: (e: React.MouseEvent) => this.props.onClick(e)
 			}),

@@ -21,6 +21,9 @@ var colors = {
 	MATERIAL_COLOR_ACCENT2: '#f48fb1',
 	MATERIAL_COLOR_ACCENT3: '#f06292',
 
+	// http://www.google.com/design/spec/components/dividers.html#dividers-specs
+	MATERIAL_COLOR_DIVIDER: premultiplyColor(0,0,0,0.12),
+
 	MATERIAL_GREY_P200: '#eeeeee',
 	MATERIAL_GREY_P500: '#9e9e9e',
 
