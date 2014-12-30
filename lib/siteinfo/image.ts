@@ -2,11 +2,13 @@
 
 import collectionutil = require('../base/collectionutil');
 import err_util = require('../base/err_util');
+import ico = require('./ico');
 
 export enum ImageType {
 	Png,
 	Bmp,
-	Jpeg
+	Jpeg,
+	Ico
 }
 
 export interface ImageInfo {
@@ -92,6 +94,18 @@ detectors.push((data) => {
 	}
 });
 
+// ICO
+detectors.push((data) => {
+	if (!ico.isIco(data)) {
+		return null;
+	}
+	return {
+		type: ImageType.Ico,
+		width: 0,
+		height: 0
+	};
+});
+
 // BMP
 detectors.push((data) => {
 	// bitmap files start with a BITMAPFILEHEADER struct, followed
@@ -126,6 +140,9 @@ detectors.push((data) => {
   * Returns the image metadata if successfully detected or
   * null if there is no match.
   *
+  * For .ico images, this returns the type of image but not
+  * the width or height, use the 'ico' module for that.
+  *
   * Throws DecodeError if the image type is recognized but cannot
   * be decoded.
   */
@@ -148,6 +165,8 @@ export function mimeType(type: ImageType) : string {
 			return 'image/bmp';
 		case ImageType.Jpeg:
 			return 'image/jpeg';
+		case ImageType.Ico:
+			return 'image/x-icon';
 		default:
 			return 'application/octet-stream';
 	}

@@ -14,6 +14,7 @@ import urijs = require('URIjs');
 import collectionutil = require('../lib/base/collectionutil');
 import err_util = require('../lib/base/err_util');
 import event_stream = require('../lib/base/event_stream');
+import image = require('../lib/siteinfo/image');
 import key_value_store = require('../lib/base/key_value_store');
 import reactutil = require('./base/reactutil');
 import site_info = require('../lib/siteinfo/site_info');
@@ -219,9 +220,10 @@ export class ItemIconProvider {
 			icon = iconsBySize[iconsBySize.length-1];
 		}
 		
-		// FIXME [TS/1.1] - Blob ctor is missing arguments
-		var _blob = <any>Blob;
-		var iconBlob = new _blob([icon.data]);
+		var iconInfo = image.getInfo(icon.data);
+		var mimeType = iconInfo ? image.mimeType(iconInfo.type) : 'application/octet-stream';
+
+		var iconBlob = new Blob([icon.data], {type: mimeType});
 		var blobUrl = URL.createObjectURL(iconBlob);
 
 		return {url: blobUrl, icon: icon};
