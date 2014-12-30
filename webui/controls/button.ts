@@ -12,6 +12,7 @@ export interface ButtonProps {
 	onClick: (e: React.MouseEvent) => void;
 
 	backgroundColor?: string;
+	color?: string;
 }
 
 export class Button extends typed_react.Component<ButtonProps,{}> {
@@ -31,7 +32,10 @@ export class Button extends typed_react.Component<ButtonProps,{}> {
 	}
 
 	render() {
-		var buttonStyles = [theme.button.button];
+		var buttonStyles: any[] = [theme.button.button];
+		if (this.props.color) {
+			buttonStyles.push({color: this.props.color});
+		}
 
 		return div(theme.button.container, {role: 'button'},
 			react.DOM.div(style.mixin(theme.button.rippleContainer, {

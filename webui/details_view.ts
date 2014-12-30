@@ -613,7 +613,13 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 
 		var contentStyles: React.CSSProperties[] = [{
 			paddingTop: 16,
-			paddingLeft: 72,
+
+			// vertically align left edge of details text with item
+			// title
+			//
+			// <16px> [Icon (48px)] <16px> [Item Title]
+			//
+			paddingLeft: 80,
 			opacity: 0,
 			transition: style_util.transitionOn({opacity: .5}),
 			overflowY: 'auto',

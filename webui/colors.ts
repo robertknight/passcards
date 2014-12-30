@@ -1,3 +1,17 @@
+function hex(value: number) {
+	return Math.round(value).toString(16);
+}
+
+function premultiply(dest: number, src: number, alpha: number) {
+	return alpha * dest + (1 - alpha) * src;
+}
+
+function premultiplyColor(r: number, g: number, b: number, alpha: number) {
+	var rOut = premultiply(r, 255, alpha);
+	var gOut = premultiply(g, 255, alpha);
+	var bOut = premultiply(b, 255, alpha);
+	return '#' + hex(rOut) + hex(gOut) + hex(bOut);
+}
 
 // see http://www.google.com/design/spec/style/typography.html
 var colors = {
@@ -10,7 +24,10 @@ var colors = {
 	MATERIAL_GREY_P200: '#eeeeee',
 	MATERIAL_GREY_P500: '#9e9e9e',
 
-	MATERIAL_RED_P400: '#e84e40'
+	MATERIAL_RED_P400: '#e84e40',
+
+	MATERIAL_TEXT_PRIMARY: premultiplyColor(0,0,0,0.87),
+	MATERIAL_TEXT_SECONDARY: premultiplyColor(0,0,0,0.54)
 };
 
 export = colors;

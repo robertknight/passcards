@@ -2,6 +2,7 @@ import style = require('ts-style');
 
 import assign = require('../lib/base/assign');
 import colors = require('./colors');
+import fonts = require('./fonts');
 import style_util = require('./base/style_util');
 import text_field_theme = require('./text_field_theme');
 
@@ -11,8 +12,6 @@ var Z_LAYERS = {
 	MENU: 10,
 	DETAILS_VIEW: 1
 };
-
-var ITEM_LIST_DETAILS_LEFT_PADDING = 5;
 
 var mixins = style.create({
 	materialDesign: {
@@ -110,7 +109,8 @@ var styles = style.create({
 	appView: {
 		width: '100%',
 		height: '100%',
-		userSelect: 'none'
+		userSelect: 'none',
+		color: colors.MATERIAL_TEXT_PRIMARY
 	},
 
 	mixins: mixins,
@@ -279,7 +279,14 @@ var styles = style.create({
 		rippleContainer: {
 			position: 'relative',
 			borderRadius: 3,
-			overflow: 'hidden'
+			overflow: 'hidden',
+			transition: style_util.transitionOn({
+				backgroundColor: .3
+			}),
+
+			':hover': {
+				backgroundColor: 'rgba(0,0,0,0.2)'
+			}
 		},
 
 		button: {
@@ -487,6 +494,11 @@ var styles = style.create({
 			width: '100%',
 			boxSizing: 'border-box',
 
+			// total item height is 72px,
+			// 48px icon + 1px border around icon + 11px margin top/bottom
+			marginTop: 11,
+			marginBottom: 11,
+
 			focusIndicator: {
 				position: 'absolute',
 				left: 3,
@@ -497,18 +509,15 @@ var styles = style.create({
 			},
 
 			details: {
-				padding: ITEM_LIST_DETAILS_LEFT_PADDING,
-				marginLeft: 5,
+				marginLeft: 16,
 
 				title: {
-					opacity: '0.7',
-					fontSize: 13,
-					fontWeight: 'bold'
+					fontSize: fonts.ITEM_LIST_PRIMARY_TEXT_SIZE
 				},
 
 				account: {
-					fontSize: 12,
-					color: '#888888'
+					fontSize: fonts.ITEM_LIST_SECONDARY_TEXT_SIZE,
+					color: colors.MATERIAL_TEXT_SECONDARY
 				}
 			}
 		},
@@ -632,8 +641,7 @@ var styles = style.create({
 				flexDirection: 'row',
 
 				details: {
-					marginLeft: 5,
-					padding: 5,
+					marginLeft: 16,
 					display: 'flex',
 					flexDirection: 'column',
 					position: 'relative',
@@ -644,7 +652,7 @@ var styles = style.create({
 					// view
 					itemList: {
 						position: 'absolute',
-						left: ITEM_LIST_DETAILS_LEFT_PADDING,
+						left: 0,
 						right: 0,
 						top: 0,
 						bottom: 0,
@@ -659,7 +667,6 @@ var styles = style.create({
 					// fields in the details view
 					detailsView: {
 						position: 'relative',
-						left: ITEM_LIST_DETAILS_LEFT_PADDING,
 						right: 0,
 						top: 0,
 						bottom: 0,
