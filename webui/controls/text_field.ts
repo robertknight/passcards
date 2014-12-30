@@ -122,8 +122,8 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 	}
 
 	private setFocus() {
-		var textField = <HTMLElement>this.refs['textField'].getDOMNode();
-		textField.focus();
+		var textField = <HTMLInputElement>this.refs['textField'].getDOMNode();
+		textField.select();
 	}
 
 	render() {
