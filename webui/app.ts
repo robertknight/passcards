@@ -323,7 +323,19 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 
 		var detailsView: React.ComponentElement<any>;
 		if (this.state.selectedItem) {
+			var appRect = (<HTMLElement>this.getDOMNode()).getBoundingClientRect();
+
 			var selectedItemRect = this.state.selectedItemRect;
+			if (!selectedItemRect) {
+				// when adding a new item, the details view
+				// will slide up from the bottom of the screen
+				selectedItemRect = {
+					top: appRect.bottom,
+					bottom: appRect.bottom,
+					left: appRect.left,
+					right: appRect.right
+				};
+			}
 
 			detailsView = details_view.DetailsViewF({
 				key: 'detailsView',
@@ -354,17 +366,17 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 				clipboard: this.props.services.clipboard,
 				focus: this.state.selectedItem != null,
 
-				entryRect: selectedItemRect
+				// make the details view expand from the entry
+				// in the item list
+				entryRect: {
+					left: appRect.left,
+					right: appRect.right,
+					top: selectedItemRect.top,
+					bottom: selectedItemRect.bottom
+				}
 			});
 		}
 		return detailsView;
-
-		/*return reactutil.CSSTransitionGroupF({
-			transitionName: detailsViewTransition,
-			key: 'detailsViewContainer'
-		},
-			detailsView ? [detailsView] : []
-		);*/
 	}
 
 	private createNewItemTemplate() {
