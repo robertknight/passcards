@@ -46,6 +46,9 @@ interface ItemFieldProps {
 	// if true, auto-focus the field on load
 	focused?: boolean;
 
+	deleteLabel?: string;
+
+	onChangeLabel?(newValue: string) : boolean;
 	onChange(newValue: string) : boolean;
 	onDelete?() : void;
 }
@@ -136,7 +139,7 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 
 		if (this.state.selected && !this.props.readOnly && this.props.onDelete) {
 			var deleteButton = button.ButtonF({
-				value: 'Delete',
+				value: this.props.deleteLabel || 'Delete',
 				key: 'delete',
 				color: colors.MATERIAL_RED_P400,
 				onClick: (e) => {
@@ -152,7 +155,26 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 			fieldStyle.fontFamily = 'monospace';
 		}
 
+		var focusField = this.props.focused;
+		var labelEditor: React.ReactElement<text_field.TextFieldProps>;
+		if (this.props.onChangeLabel) {
+			labelEditor = text_field.TextFieldF({
+				floatingLabel: true,
+				placeHolder: 'Field Title',
+				onChange: (e) => {
+					var newValue = (<HTMLInputElement>e.target).value;
+					this.props.onChangeLabel(newValue);
+				},
+				focus: focusField
+			});
+
+			// when editing the label, autofocus the label editor,
+			// not the field value
+			focusField = false;
+		}
+
 		return div(theme.detailsView.field, {ref: 'itemField'},
+			labelEditor,
 			text_field.TextFieldF({
 				floatingLabel: true,
 				placeHolder: this.props.label,
@@ -166,7 +188,7 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 				readOnly: this.props.readOnly,
 				showUnderline: !this.props.readOnly,
 				style: fieldStyle,
-				focus: this.props.focused,
+				focus: focusField,
 				ref: 'textField'
 			}),
 			div(theme.detailsView.field.actions, {}, actions)
@@ -219,8 +241,11 @@ interface DetailsViewState {
 	isEditing?: boolean;
 	didEditItem?: boolean;
 	transition?: TransitionState;
+
 	autofocusField?: any; /* item_store.ItemField | item_store.ItemUrl | item_store.ItemSection */
+
 	addingField?: AddingFieldState;
+	editingFieldLabel?: item_store.ItemField;
 }
 
 export class DetailsView extends typed_react.Component<DetailsViewProps, DetailsViewState> {
@@ -314,6 +339,15 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			var fields: React.ComponentElement<any>[] = [];
 			section.fields.forEach((field, fieldIndex) => {
 				var autofocus = this.state.autofocusField === field;
+				var labelChangeHandler: (newValue: string) => boolean;
+				if (field === this.state.editingFieldLabel) {
+					labelChangeHandler = (newValue) => {
+						field.title = newValue;
+						onSave();
+						return true;
+					}
+				}
+
 				fields.push(ItemFieldF({
 					key: section.name + '.' + field.name,
 					label: field.title,
@@ -329,6 +363,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 						section.fields.splice(fieldIndex, 1);
 						onSave();
 					},
+					onChangeLabel: labelChangeHandler,
 					readOnly: !editing,
 					focused: autofocus
 				}));
@@ -342,6 +377,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 					sections.push(ItemFieldF({
 						key: section.name + '.title',
 						label: 'Section Title',
+						deleteLabel: 'Delete Section',
 						value: section.title,
 						type: FieldType.Text,
 						clipboard: this.props.clipboard,
@@ -505,7 +541,10 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			field.name = crypto.newUUID();
 			field.title = 'New Field';
 
-			this.setState({autofocusField: field});
+			this.setState({
+				autofocusField: field,
+				editingFieldLabel: field
+			});
 			this.state.addingField.section.fields.push(field);
 			this.onChangeItem();
 		};
@@ -573,7 +612,8 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 
 					this.setState({
 						isEditing: false,
-						didEditItem: false
+						didEditItem: false,
+						editingFieldLabel: null
 					});
 
 					// go back to main item list after adding a new item

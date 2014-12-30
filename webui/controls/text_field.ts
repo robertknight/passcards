@@ -75,7 +75,7 @@ export interface TextFieldProps {
 	onBlur?: React.FocusEventHandler;
 	onFocus?: React.FocusEventHandler;
 
-	style: TextFieldStyle;
+	style?: TextFieldStyle;
 }
 
 interface TextFieldState {
