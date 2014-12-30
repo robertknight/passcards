@@ -5,6 +5,7 @@ import style = require('ts-style');
 import typed_react = require('typed-react');
 
 import button = require('./controls/button');
+import colors = require('./colors');
 import controls = require('./controls/controls');
 import crypto = require('../lib/onepass_crypto');
 import div = require('./base/div');
@@ -40,6 +41,9 @@ interface ItemFieldProps {
 	type: FieldType;
 	clipboard: page_access.ClipboardAccess;
 	readOnly: boolean;
+
+	// if true, auto-focus the field on load
+	focused?: boolean;
 
 	onChange(newValue: string) : boolean;
 	onDelete?() : void;
@@ -128,10 +132,11 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 			}
 		}
 
-		if (!this.props.readOnly && this.props.onDelete) {
+		if (this.state.selected && !this.props.readOnly && this.props.onDelete) {
 			var deleteButton = button.ButtonF({
 				value: 'Delete',
 				key: 'delete',
+				color: colors.MATERIAL_RED_P400,
 				onClick: (e) => {
 					e.preventDefault();
 					this.props.onDelete();
@@ -158,7 +163,9 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 				},
 				readOnly: this.props.readOnly,
 				showUnderline: !this.props.readOnly,
-				style: fieldStyle
+				style: fieldStyle,
+				focus: this.props.focused,
+				ref: 'textField'
 			}),
 			div(theme.detailsView.field.actions, {}, actions)
 		);
@@ -202,6 +209,7 @@ interface DetailsViewState {
 	isEditing?: boolean;
 	didEditItem?: boolean;
 	transition?: TransitionState;
+	autofocusField?: any; /* item_store.ItemField | item_store.ItemUrl | item_store.ItemSection */
 }
 
 export class DetailsView extends typed_react.Component<DetailsViewProps, DetailsViewState> {
@@ -295,6 +303,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			var fields: React.ComponentElement<any>[] = [];
 			section.fields.forEach((field, fieldIndex) => {
 				if (field.value) {
+					var autofocus = this.state.autofocusField === field;
 					fields.push(ItemFieldF({
 						key: sectionIndex + '.' + fieldIndex,
 						label: field.title,
@@ -310,7 +319,8 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 							section.fields.splice(fieldIndex, 1);
 							onSave();
 						},
-						readOnly: !editing
+						readOnly: !editing,
+						focused: autofocus
 					}));
 				}
 			});
@@ -319,6 +329,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			}
 			if (section.title) {
 				if (editing) {
+					var autofocus = this.state.autofocusField === section;
 					sections.push(ItemFieldF({
 						key: sectionIndex + '.title',
 						label: 'Section',
@@ -334,7 +345,8 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 							item.content.sections.splice(sectionIndex, 1);
 							onSave();
 						},
-						readOnly: false
+						readOnly: false,
+						focused: autofocus
 					}));
 				} else {
 					sections.push(div(theme.detailsView.section.title, {}, section.title));
@@ -352,6 +364,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 	private renderWebsites(item: item_store.ItemAndContent, onSave: () => void, editing: boolean) {
 		var websites: React.ComponentElement<any>[] = [];
 		item.content.urls.forEach((url, urlIndex) => {
+			var autofocus = this.state.autofocusField === url;
 			websites.push(ItemFieldF({
 				key: urlIndex,
 				label: url.label,
@@ -367,19 +380,22 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 					item.content.urls.splice(urlIndex, 1);
 					onSave();
 				},
-				readOnly: !editing
+				readOnly: !editing,
+				focused: autofocus
 			}));
 		});
 		
 		if (editing) {
 			websites.push(button.ButtonF({
 				value: 'Add Website',
+				color: colors.MATERIAL_COLOR_PRIMARY,
 				onClick: (e) => {
-					e.preventDefault();
-					this.state.editedItem.content.urls.push({
+					var newUrl = {
 						label: 'website',
 						url: this.props.currentUrl
-					});
+					};
+					this.state.editedItem.content.urls.push(newUrl);
+					this.setState({autofocusField: newUrl});
 					onSave();
 				}
 			}));
@@ -557,6 +573,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			if (editing && this.props.editMode === ItemEditMode.EditItem) {
 				var isTrashed = updatedItem.item.trashed;
 				itemActions.push(button.ButtonF({
+					color: isTrashed ? colors.MATERIAL_COLOR_PRIMARY : colors.MATERIAL_RED_P400,
 					value: isTrashed ? 'Restore from Trash' : 'Move to Trash',
 					onClick: () => {
 						updatedItem.item.trashed = !isTrashed;

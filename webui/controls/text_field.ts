@@ -32,19 +32,44 @@ import reactutil = require('../base/reactutil');
 import theme = require('../theme');
 import text_field_theme = require('../text_field_theme');
 
+/** Specify custom styling for the component. */
 export interface TextFieldStyle {
 	fontFamily?: string;
 }
 
 export interface TextFieldProps {
+	/** Specifies the type of <input> field */
 	type?: string;
+
+	/** Initial value of the <input> field, still allowing
+	  * the user to edit it.
+	  */
 	defaultValue?: string;
+
+	/** Fixed value for the <input> field. */
 	value?: string;
+
+	/** Specifies whether the placeholder text
+	  * should be shown above the field when it has
+	  * a value.
+	  */
 	floatingLabel?: boolean;
+
 	error?: boolean;
+
+	/** Label that is displayed in the field when empty.
+	  * If floatingLabel is enabeld, this value will also float above
+	  * the field's content when non-empty.
+	  */
 	placeHolder?: string;
+
 	showUnderline?: boolean;
 	readOnly?: boolean;
+
+	/** Specifies whether the field should be focused when mounted
+	  * or when this prop changes from false to true.
+	  */
+	focus?: boolean;
 
 	onChange?: React.FormEventHandler;
 	onBlur?: React.FocusEventHandler;
@@ -82,6 +107,23 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 			focusing: true,
 			value: ''
 		};
+	}
+
+	componentDidMount() {
+		if (this.props.focus) {
+			this.setFocus();
+		}
+	}
+
+	componentWillReceiveProps(nextProps: TextFieldProps) {
+		if (!this.props.focus && nextProps.focus) {
+			this.setFocus();
+		}
+	}
+
+	private setFocus() {
+		var textField = <HTMLElement>this.refs['textField'].getDOMNode();
+		textField.focus();
 	}
 
 	render() {
