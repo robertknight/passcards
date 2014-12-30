@@ -211,7 +211,7 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 		var MAX_BACKGROUND_ALPHA = 0.2;
 		var backgroundAlpha = Math.min((elapsed / 500.0) * MAX_BACKGROUND_ALPHA, MAX_BACKGROUND_ALPHA);
 
-		var rippleAlpha = 0.3;
+		var rippleAlpha = 0.2;
 		if (this.state.phase == Phase.Release) {
 			// fade-out ripple after release
 			rippleAlpha *= 1 - (phaseElapsed / RELEASE_PHASE_DURATION);
@@ -228,6 +228,7 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 		ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
 		// render ripple wave
+		ctx.fillStyle = '#000';
 		ctx.globalAlpha = rippleAlpha;
 		ctx.beginPath();
 		ctx.arc(this.state.startX, this.state.startY, radius, 0, Math.PI * 2, true);
