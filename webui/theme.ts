@@ -166,11 +166,15 @@ var styles = style.create({
 			top: '50%',
 			transform: 'translateY(-50%)',
 
-			// make image circular. Even if the image is too
-			// small to fill the circular container, it looks
-			// better if the image and the container have the
-			// same shape
-			borderRadius: '50%'
+			// for images that are smaller than the 48px max width,
+			// make the image circular, so that the image and the
+			// container have the same shape.
+			//
+			// If the image already fills the container then
+			// the container's border-radius will make it circular.
+			rounded: {
+				borderRadius: '50%'
+			}
 		}
 	},
 

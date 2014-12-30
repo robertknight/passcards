@@ -31,6 +31,8 @@ export enum IconFetchState {
 export interface Icon {
 	iconUrl: string;
 	state: IconFetchState;
+	width: number;
+	height: number;
 }
 
 /** Provides icon URLs for items.
@@ -120,7 +122,9 @@ export class ItemIconProvider {
 		if (url.length == 0) {
 			return {
 				iconUrl: ItemIconProvider.DEFAULT_ICON,
-				state: IconFetchState.NoIcon
+				state: IconFetchState.NoIcon,
+				width: 48,
+				height: 48
 			}
 		}
 
@@ -136,7 +140,9 @@ export class ItemIconProvider {
 		} else {
 			var icon : Icon = {
 				iconUrl: ItemIconProvider.LOADING_ICON,
-				state: IconFetchState.Fetching
+				state: IconFetchState.Fetching,
+				width: 48,
+				height: 48
 			};
 			this.tempCache.set(url, icon);
 			
@@ -157,12 +163,17 @@ export class ItemIconProvider {
 
 	private updateCacheEntry(url: string, icons: site_info.Icon[]) {
 		var icon = this.tempCache.get(url);
-		icon.iconUrl = this.makeIconUrl(icons, this.iconSize);
+		var selectedIcon = this.makeIconUrl(icons, this.iconSize);
+		icon.iconUrl = selectedIcon.url;
 		if (icon.iconUrl != '') {
 			icon.state = IconFetchState.Found;
+			icon.width = selectedIcon.icon.width;
+			icon.height = selectedIcon.icon.height;
 		} else {
 			icon.state = IconFetchState.NoIcon;
 			icon.iconUrl = ItemIconProvider.DEFAULT_ICON;
+			icon.width = 48;
+			icon.height = 48;
 		}
 		this.updated.publish(url);
 
@@ -181,7 +192,7 @@ export class ItemIconProvider {
 	// data
 	private makeIconUrl(icons: site_info.Icon[], minSize: number) {
 		if (icons.length == 0) {
-			return '';
+			return {url: '', icon: null};
 		}
 
 		var iconsBySize = underscore.sortBy(icons, (icon) => {
@@ -213,7 +224,7 @@ export class ItemIconProvider {
 		var iconBlob = new _blob([icon.data]);
 		var blobUrl = URL.createObjectURL(iconBlob);
 
-		return blobUrl;
+		return {url: blobUrl, icon: icon};
 	}
 
 	// Returns a fallback URL to try if querying an item's URL does
@@ -316,11 +327,21 @@ export class IconControl extends typed_react.Component<IconControlProps, {}> {
 	}
 
 	render() {
-		var iconUrl = this.props.iconProvider.query(this.props.location).iconUrl;
+		var icon = this.props.iconProvider.query(this.props.location);
 
-		return react.DOM.div({className: style.classes(theme.itemIcon.container,
-			  this.props.isFocused ? theme.itemIcon.container.focused : null)},
-			react.DOM.img({className: style.classes(theme.itemIcon.icon), ref: 'img', src: iconUrl})
+		var imgStyles: any[] = [theme.itemIcon.icon];
+		if (icon.width < 48) {
+			// make image rounded if it doesn't fill the container.
+			// For images that do fill the container, we get smoother
+			// anti-aliased rounding for the icon if we only
+			// apply border-radius to the container and not to both
+			// the container and the icon
+			imgStyles.push(theme.itemIcon.icon.rounded);
+		}
+
+		return react.DOM.div(style.mixin([theme.itemIcon.container,
+			  this.props.isFocused ? theme.itemIcon.container.focused : null]),
+			react.DOM.img(style.mixin(imgStyles, {ref: 'img', src: icon.iconUrl}))
 		);
 	}
 }
