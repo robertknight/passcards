@@ -318,7 +318,27 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				sections.push(div(theme.detailsView.section.divider, {}));
 			}
 			if (section.title) {
-				sections.push(div(theme.detailsView.section.title, {}, section.title));
+				if (editing) {
+					sections.push(ItemFieldF({
+						key: sectionIndex + '.title',
+						label: 'Section',
+						value: section.title,
+						type: FieldType.Text,
+						clipboard: this.props.clipboard,
+						onChange: (newValue) => {
+							section.title = newValue;
+							onSave();
+							return true;
+						},
+						onDelete: () => {
+							item.content.sections.splice(sectionIndex, 1);
+							onSave();
+						},
+						readOnly: false
+					}));
+				} else {
+					sections.push(div(theme.detailsView.section.title, {}, section.title));
+				}
 			}
 
 			sections.push(div(null, {},
