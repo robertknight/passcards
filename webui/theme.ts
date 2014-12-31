@@ -29,8 +29,8 @@ var mixins = style.create({
 });
 
 // ReactCSSTransitionGroup animation classes
-var FADE_TRANSITION = 'opacity .5s ease-out';
-var SLIDE_TRANSITION = 'transform .3s ease-out';
+var FADE_TRANSITION = style_util.transitionOn({opacity: .5});
+var SLIDE_TRANSITION = style_util.transitionOn({transform: .3});
 
 var DIVIDER_BORDER_STYLE = '1px solid ' + colors.MATERIAL_COLOR_DIVIDER;
 
@@ -150,7 +150,18 @@ var styles = style.create({
 				boxShadow: '0px 0px 2px 2px rgba(0,0,0,0.2)'
 			},
 
-			flexShrink: 0
+			flexShrink: 0,
+
+			// fix an issue in WebKit / Blink (tested in iOS 8,
+			// Chrome 39 on Linux) where the border-radius clipping
+			// would not be applied to the child <img> for the icon
+			// when a transition was being applied to a nearby element.
+			//
+			// Forcing the icon container and its descendants into their
+			// own compositing layer resolves the issue
+			//
+			// Possibly related to https://code.google.com/p/chromium/issues/detail?id=430184
+			transform: 'translate3d(0,0,0)'
 		},
 
 		icon: {
