@@ -256,8 +256,8 @@ var styles = style.create({
 			width: '100%',
 			marginTop: 5,
 			color: 'white',
-			fontSize: 14,
-			fontWeight: 'bold'
+			fontSize: fonts.BODY1_TEXT_SIZE,
+			fontWeight: fonts.MEDIUM_WEIGHT
 		}
 	},
 
@@ -417,6 +417,7 @@ var styles = style.create({
 			userSelect: 'none',
 			verticalAlign: 'middle',
 			lineHeight: '48px',
+			height: 48,
 
 			':hover' : {
 				backgroundColor: colors.MATERIAL_GREY_P200

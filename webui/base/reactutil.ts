@@ -138,4 +138,11 @@ export interface Rect {
 	bottom: number;
 }
 
+export function rectWidth(rect: Rect) {
+	return rect.right - rect.left;
+}
+
+export function rectHeight(rect: Rect) {
+	return rect.bottom - rect.top;
+}
 

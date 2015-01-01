@@ -205,6 +205,7 @@ export enum ItemEditMode {
 
 export interface DetailsViewProps {
 	entryRect?: reactutil.Rect;
+	viewportRect: reactutil.Rect;
 
 	item: item_store.Item;
 	iconProvider: item_icons.ItemIconProvider;
@@ -564,8 +565,13 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		if (this.state.addingField) {
 			return menu.MenuF({
 				items: fieldTypes,
-				top: this.state.addingField.pos.top,
-				left: this.state.addingField.pos.left,
+				sourceRect: {
+					top: this.state.addingField.pos.top,
+					left: this.state.addingField.pos.left,
+					right: this.state.addingField.pos.left,
+					bottom: this.state.addingField.pos.top
+				},
+				viewportRect: this.props.viewportRect,
 				onDismiss: () => {
 					this.setState({addingField: null});
 				}

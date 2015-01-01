@@ -5,6 +5,7 @@ import typed_react = require('typed-react');
 import style = require('ts-style');
 
 import env = require('../../lib/base/env');
+import menu = require('./menu');
 import reactutil = require('../base/reactutil');
 import ripple = require('./ripple');
 
@@ -20,15 +21,63 @@ var styles = style.create({
 	}
 });
 
-class ControlDemoApp extends typed_react.Component<{},{}> {
+interface ControlDemoAppProps {
+	viewportRect: reactutil.Rect;
+}
+
+interface ControlDemoAppState {
+	menuPos?: {
+		left: number;
+		top: number;
+	};
+}
+
+class ControlDemoApp extends typed_react.Component<ControlDemoAppProps, ControlDemoAppState> {
+	getInitialState() {
+		return {};
+	}
+
 	render() {
-		return react.DOM.div({},
+		var popupMenu: React.ReactElement<menu.MenuProps>;
+		if (this.state.menuPos) {
+			var menuItems = [{
+				label: 'Item One',
+				onClick: () => alert('Item one clicked')
+			},{
+				label: 'Item Two',
+				onClick: () => alert('Item two clicked')
+			},{
+				label: 'Item Three',
+				onClick: () => alert('Item three clicked')
+			}];
+			popupMenu = menu.MenuF({
+				items: menuItems,
+				viewportRect: this.props.viewportRect,
+				sourceRect: {
+					left: this.state.menuPos.left,
+					top: this.state.menuPos.top,
+					right: this.state.menuPos.left,
+					bottom: this.state.menuPos.top
+				},
+				onDismiss: () => {
+					this.setState({menuPos: null});
+				}
+			});
+		}
+
+		return react.DOM.div({
+			onClick: (e) => {
+				e.preventDefault();
+				this.setState({menuPos: {left: e.pageX, top: e.pageY}});
+			}
+		},
 			'Ink Ripple',
 			react.DOM.div(style.mixin(styles.rippleContainer),
 				ripple.InkRippleF({color: '#808080'},
 					'Ripple Text'
 				)
-			)
+			),
+			popupMenu
 		);
 	}
 }
@@ -36,7 +85,14 @@ var ControlDemoAppF = reactutil.createFactory(ControlDemoApp);
 
 function main() {
 	var elt = document.getElementById('app');
-	react.render(ControlDemoAppF(), elt);
+	var body = elt.ownerDocument.body;
+
+	var rootView = react.render(ControlDemoAppF({viewportRect: body.getBoundingClientRect()}), elt);
+	body.onresize = () => {
+		rootView.setProps({
+			viewportRect: body.getBoundingClientRect()
+		});
+	};
 }
 
 if (env.isBrowser()) {

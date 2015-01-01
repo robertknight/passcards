@@ -97,6 +97,8 @@ interface AppViewState {
 	syncState?: sync.SyncProgress;
 	syncListener?: event_stream.EventListener<sync.SyncProgress>;
 	showMenu?: boolean;
+
+	viewportRect?: reactutil.Rect;
 }
 
 interface AppServices {
@@ -110,6 +112,7 @@ interface AppServices {
 interface AppViewProps {
 	services: AppServices;
 	stateChanged: event_stream.EventStream<AppViewState>;
+	viewportRect: reactutil.Rect;
 }
 
 /** The main top-level app view. */
@@ -123,7 +126,8 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 			items: <item_store.Item[]>[],
 			isLocked: true,
 			syncListener: syncListener,
-			itemEditMode: details_view.ItemEditMode.EditItem
+			itemEditMode: details_view.ItemEditMode.EditItem,
+			viewportRect: this.props.viewportRect
 		};
 		return state;
 	}
@@ -373,7 +377,9 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 					right: appRect.right,
 					top: selectedItemRect.top,
 					bottom: selectedItemRect.bottom
-				}
+				},
+
+				viewportRect: this.state.viewportRect
 			});
 		}
 		return detailsView;
@@ -446,8 +452,13 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 		return menu.MenuF({
 			key: key,
 			items: menuItems,
-			   top: 5,
-			   right: 5,
+			   sourceRect: {
+				   top: 5,
+				   right: 5,
+				   left: 5,
+				   bottom: 5
+			   },
+			   viewportRect: this.state.viewportRect,
 			   onDismiss: () => {
 				   this.setState({showMenu: false});
 			   }
@@ -573,7 +584,8 @@ export class App {
 		var stateChanged = new event_stream.EventStream<AppViewState>();
 		var appView = AppViewF({
 			services: this.services,
-			stateChanged: stateChanged
+			stateChanged: stateChanged,
+			viewportRect: rootInputElement.getBoundingClientRect()
 		});
 		stateChanged.listen((state: AppViewState) => {
 			// save app state for when the app's view is mounted
@@ -586,7 +598,7 @@ export class App {
 		// the main item list only renders visible items,
 		// so force a re-render when the window size changes
 		rootInputElement.onresize = () => {
-			this.activeAppView.forceUpdate();
+			this.activeAppView.setState({viewportRect: rootInputElement.getBoundingClientRect()});
 		};
 	}
 
