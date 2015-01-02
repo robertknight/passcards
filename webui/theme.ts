@@ -402,11 +402,48 @@ var styles = style.create({
 		position: 'absolute',
 		paddingTop: 8,
 		paddingBottom: 8,
+		boxSizing: 'border-box',
 		boxShadow: 'rgba(0, 0, 0, 0.26) 0px 1px 2px 2px',
-		zIndex: Z_LAYERS.MENU,
 		backgroundColor: 'white',
 		overflowY: 'hidden',
 		transform: 'translate3d(0,0,0)',
+		transition: style_util.transitionOn({
+			opacity: .3,
+			transform: .3
+		}),
+
+		// container which holds the menu itself and the overlay
+		// which covers the background
+		container: {
+			position: 'absolute',
+			left: 0,
+			top: 0,
+			right: 0,
+			bottom: 0,
+			zIndex: Z_LAYERS.MENU,
+		},
+
+		// overlay which appears behind the menu
+		// and intercepts click/touch events to
+		// dismiss the menu.
+		//
+		// On small screens it also serves to
+		// dim the background to highlight the menu
+		overlay: {
+			position: 'fixed',
+
+			left: 0,
+			right: 0,
+			top: 0,
+			bottom: 0,
+
+			backgroundColor: '#000',
+			opacity: 0.01,
+
+			transition: style_util.transitionOn({
+				opacity: .3
+			})
+		},
 
 		item: {
 			position: 'relative',
@@ -418,6 +455,7 @@ var styles = style.create({
 			verticalAlign: 'middle',
 			lineHeight: '48px',
 			height: 48,
+			textOverflow: 'ellipsis',
 
 			':hover' : {
 				backgroundColor: colors.MATERIAL_GREY_P200

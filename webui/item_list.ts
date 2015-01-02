@@ -20,6 +20,10 @@ import reactutil = require('./base/reactutil');
 import ripple = require('./controls/ripple');
 import theme = require('./theme');
 
+export interface ToolbarClickEvent {
+	itemRect: reactutil.Rect;
+}
+
 export class ItemListViewState {
 	filter: string;
 }
@@ -33,7 +37,7 @@ export class ItemListViewProps {
 	focus: boolean;
 
 	onLockClicked: () => void;
-	onMenuClicked: () => void;
+	onMenuClicked: (e: ToolbarClickEvent) => void;
 }
 
 export class ItemListView extends typed_react.Component<ItemListViewProps, ItemListViewState> {
@@ -102,7 +106,7 @@ export class ItemListView extends typed_react.Component<ItemListViewProps, ItemL
 					this.props.onSelectedItemChanged(focusedItem, itemRect);
 				},
 				onLockClicked: () => this.props.onLockClicked(),
-				onMenuClicked: () => this.props.onMenuClicked()
+				onMenuClicked: (e) => this.props.onMenuClicked(e)
 			}),
 			ItemListF({items: this.props.items, filter: this.state.filter,
 				filterUrl: filterUrl,
@@ -481,7 +485,7 @@ class ItemListToolbarProps {
 	onActivate: () => void;
 
 	onLockClicked: () => void;
-	onMenuClicked: () => void;
+	onMenuClicked: (e: ToolbarClickEvent) => void;
 }
 
 class ItemListToolbar extends typed_react.Component<ItemListToolbarProps, {}> {
@@ -543,7 +547,13 @@ class ItemListToolbar extends typed_react.Component<ItemListToolbarProps, {}> {
 					}),
 					controls.ToolbarButtonF({
 						iconHref: 'icons/icons.svg#menu',
-						onClick: () => this.props.onMenuClicked()
+						ref: 'menuButton',
+						onClick: () => {
+							var event = {
+								itemRect: (<HTMLElement>this.refs['menuButton'].getDOMNode()).getBoundingClientRect()
+							};
+							this.props.onMenuClicked(event);
+						}
 					})
 				)
 			);

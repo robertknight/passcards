@@ -4,8 +4,8 @@ import react = require('react');
 import typed_react = require('typed-react');
 import style = require('ts-style');
 
-import controls = require('./controls');
 import div = require('../base/div');
+import fonts = require('../fonts');
 import reactutil = require('../base/reactutil');
 import ripple = require('./ripple');
 import theme = require('../theme');
@@ -16,6 +16,7 @@ export interface MenuItem {
 }
 
 interface MenuState {
+	entering?: boolean;
 	showTime?: Date;
 }
 
@@ -37,44 +38,53 @@ export interface MenuProps {
 	onDismiss: () => void;
 }
 
-var MENU_DISMISS_EVENTS = ['mousedown', 'touchstart', 'click'];
+function measureText(document: Document, text: string, font: string) {
+	if (!document) {
+		// in non-browser contexts, use a dummy value
+		return text.length * 10;
+	}
 
+	var HELPER_CANVAS_ID = 'materialMenuCanvas';
+	var menuCanvas = <HTMLCanvasElement>document.getElementById(HELPER_CANVAS_ID);
+	if (!menuCanvas) {
+		menuCanvas = document.createElement('canvas');
+		menuCanvas.id = HELPER_CANVAS_ID;
+		menuCanvas.style.display = 'none';
+		document.body.appendChild(menuCanvas);
+	}
+	var context = menuCanvas.getContext('2d');
+	context.font = font;
+	return context.measureText(text).width;
+}
+
+/** A material-design style menu.
+  *
+  * See http://www.google.co.uk/design/spec/components/menus.html
+  *
+  * On small screens, this component automatically
+  * displays as a bottom sheet
+  * (see http://www.google.co.uk/design/spec/components/bottom-sheets.html)
+  */
 export class Menu extends typed_react.Component<MenuProps, MenuState> {
-	private menuListener: EventListener;
-
 	getInitialState() {
 		return {
-			showTime: new Date
+			showTime: new Date,
+			entering: true
 		}
 	}
 
 	componentDidMount() {
-		var menuNode = <HTMLElement>this.refs['menu'].getDOMNode();
-
-		this.menuListener = (e: MouseEvent) => {
-			if (!this.isMounted()) {
-				return;
-			}
-
-			if (!menuNode.contains(<HTMLElement>e.target)) {
-				e.preventDefault();
-				this.props.onDismiss();
-			}
-		};
-
-		MENU_DISMISS_EVENTS.forEach((event) => {
-			menuNode.ownerDocument.addEventListener(event, this.menuListener);
-		});
-
 		this.setState({showTime: new Date});
 	}
 
-	componentWillUnmount() {
-		var menuNode = <HTMLElement>this.refs['menu'].getDOMNode();
-		MENU_DISMISS_EVENTS.forEach((event) => {
-			menuNode.ownerDocument.removeEventListener(event, this.menuListener);
-		});
-		this.menuListener = null;
+	// returns true if this menu should be displayed
+	// as a sheet sliding in from one edge of the app.
+	//
+	// Referred to as a 'Bottom Sheet' in the Material Design
+	// specs
+	private displayAsSheet() {
+		var SMALL_SCREEN_WIDTH_THRESHOLD = 400;
+		return reactutil.rectWidth(this.props.viewportRect) < SMALL_SCREEN_WIDTH_THRESHOLD;
 	}
 
 	private getMenuRect() {
@@ -88,21 +98,43 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 		// from one of the edges of the display and use the
 		// full width of that edge
 
+		var MENU_ITEM_HEIGHT = 48;
+		var VIEWPORT_EDGE_MARGIN = 3;
+
 		var viewRect = this.props.viewportRect;
-		var srcRect = this.props.sourceRect;
+		var srcRect = {
+			left: this.props.sourceRect.left,
+			right: this.props.sourceRect.right,
+			top: this.props.sourceRect.top,
+			bottom: this.props.sourceRect.bottom
+		};
+
+		srcRect.left = Math.max(srcRect.left, viewRect.left + VIEWPORT_EDGE_MARGIN);
+		srcRect.right = Math.min(srcRect.right, viewRect.right - VIEWPORT_EDGE_MARGIN);
+		srcRect.top = Math.max(srcRect.top, viewRect.top + VIEWPORT_EDGE_MARGIN);
+		srcRect.bottom = Math.min(srcRect.bottom, viewRect.bottom - VIEWPORT_EDGE_MARGIN);
 
 		var menuRect: reactutil.Rect;
-
-		var MENU_ITEM_HEIGHT = 48;
-		var SMALL_SCREEN_WIDTH_THRESHOLD = 400;
-
 		var expandedHeight = this.props.items.length * MENU_ITEM_HEIGHT;
+		expandedHeight += theme.menu.paddingTop + theme.menu.paddingBottom;
 
 		// ideally this should be adjusted to fit the text
 		// of menu items
-		var menuWidth = 150;
+		var menuWidth = 0;
+		var itemFont = theme.menu.item.fontSize + 'px ' + fonts.FAMILY;
 
-		if (reactutil.rectWidth(viewRect) < SMALL_SCREEN_WIDTH_THRESHOLD) {
+		var document: Document;
+		if (this.isMounted()) {
+			document = (<HTMLElement>this.getDOMNode()).ownerDocument;
+		}
+
+		this.props.items.forEach((item) => {
+			var itemWidth = measureText(document, item.label, itemFont);
+			menuWidth = Math.max(menuWidth, itemWidth);
+		});
+		menuWidth += theme.menu.item.paddingLeft + theme.menu.item.paddingRight;
+
+		if (this.displayAsSheet()) {
 			// show menu at bottom of display
 			menuRect = {
 				left: viewRect.left,
@@ -181,26 +213,48 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 
 		var visibleMs = Date.now() - this.state.showTime.getTime();
 		var menuRect = this.getMenuRect();
+		var menuOpacity = 0;
+		var menuTransform = 'translateY(0px)';
 
-		var expandedHeight = Math.min(1.0, visibleMs / 300.0) * reactutil.rectHeight(menuRect);
+		if (this.state.entering) {
+			window.setTimeout(() => {
+				this.setState({entering: false});
+			}, 10);
+		};
 
-		if (expandedHeight < reactutil.rectHeight(menuRect)) {
-			reactutil.requestAnimationFrame(() => {
-				this.forceUpdate();
-			});
+		if (!this.state.entering || this.displayAsSheet()) {
+			// menus fade in. Sheets slide in from a screen edge
+			menuOpacity = 1.0;
 		}
-		var opacity = Math.min(1.0, visibleMs / 200);
 
-		return div(theme.menu, {
-			ref: 'menu',
-			style: {
-				top: menuRect.top,
-				left: menuRect.left,
-				width: menuRect.right - menuRect.left,
-				height: menuRect.bottom - menuRect.top,
-				opacity: opacity
-			},
-		}, menuItems);
+		var overlayStyles: any[] = [theme.menu.overlay];
+		if (this.displayAsSheet()) {
+			if (!this.state.entering) {
+				// see http://www.google.co.uk/design/spec/components/bottom-sheets.html#bottom-sheets-specs
+				overlayStyles.push({opacity: .2});
+			} else {
+				menuTransform = 'translateY(' + reactutil.rectHeight(menuRect) + 'px)';
+			}
+		}
+
+		return div(theme.menu.container, {},
+			react.DOM.div(style.mixin(overlayStyles, {
+				onClick: (e: React.MouseEvent) => {
+					this.props.onDismiss();
+				}
+			})),
+			div(theme.menu, {
+				ref: 'menu',
+				style: reactutil.prefix({
+					top: menuRect.top,
+					left: menuRect.left,
+					width: menuRect.right - menuRect.left,
+					height: menuRect.bottom - menuRect.top,
+					opacity: menuOpacity,
+					transform: menuTransform
+				}),
+			}, menuItems)
+		);
 	}
 }
 

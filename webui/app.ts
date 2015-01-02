@@ -96,7 +96,8 @@ interface AppViewState {
 	status?: Status;
 	syncState?: sync.SyncProgress;
 	syncListener?: event_stream.EventListener<sync.SyncProgress>;
-	showMenu?: boolean;
+
+	appMenuSourceRect?: reactutil.Rect;
 
 	viewportRect?: reactutil.Rect;
 }
@@ -267,7 +268,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 		children.push(this.renderItemDetails());
 		children.push(this.renderToasters());
 
-		if (this.state.showMenu) {
+		if (this.state.appMenuSourceRect) {
 			children.push(this.renderMenu('menu'));
 		}
 
@@ -310,8 +311,8 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 			currentUrl: this.state.currentUrl,
 			iconProvider: this.props.services.iconProvider,
 			onLockClicked: () => this.props.services.keyAgent.forgetKeys(),
-			onMenuClicked: () => {
-				this.setState({showMenu: true});
+			onMenuClicked: (e) => {
+				this.setState({appMenuSourceRect: e.itemRect});
 			},
 			focus: !this.state.isLocked && !this.state.selectedItem
 		});
@@ -452,15 +453,10 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 		return menu.MenuF({
 			key: key,
 			items: menuItems,
-			   sourceRect: {
-				   top: 5,
-				   right: 5,
-				   left: 5,
-				   bottom: 5
-			   },
+			   sourceRect: this.state.appMenuSourceRect,
 			   viewportRect: this.state.viewportRect,
 			   onDismiss: () => {
-				   this.setState({showMenu: false});
+				   this.setState({appMenuSourceRect: null});
 			   }
 		});
 	}
@@ -555,6 +551,15 @@ export class App {
 		});
 	}
 
+	private getViewportRect(view: Window) {
+		return {
+			left: 0,
+			right: view.innerWidth,
+			top: 0,
+			bottom: view.innerHeight
+		};
+	}
+
 	/** Render the app into the given HTML element.
 	 *
 	 * In the web app and the Firefox extension this is only
@@ -585,7 +590,7 @@ export class App {
 		var appView = AppViewF({
 			services: this.services,
 			stateChanged: stateChanged,
-			viewportRect: rootInputElement.getBoundingClientRect()
+			viewportRect: this.getViewportRect(rootInputElement.ownerDocument.defaultView)
 		});
 		stateChanged.listen((state: AppViewState) => {
 			// save app state for when the app's view is mounted
@@ -597,8 +602,8 @@ export class App {
 
 		// the main item list only renders visible items,
 		// so force a re-render when the window size changes
-		rootInputElement.onresize = () => {
-			this.activeAppView.setState({viewportRect: rootInputElement.getBoundingClientRect()});
+		element.ownerDocument.defaultView.onresize = () => {
+			this.activeAppView.setState({viewportRect: this.getViewportRect(rootInputElement.ownerDocument.defaultView)});
 		};
 	}
 

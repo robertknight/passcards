@@ -4,6 +4,7 @@ import react = require('react');
 import typed_react = require('typed-react');
 import style = require('ts-style');
 
+import button = require('./button');
 import env = require('../../lib/base/env');
 import menu = require('./menu');
 import reactutil = require('../base/reactutil');
@@ -66,18 +67,25 @@ class ControlDemoApp extends typed_react.Component<ControlDemoAppProps, ControlD
 		}
 
 		return react.DOM.div({
-			onClick: (e) => {
-				e.preventDefault();
-				this.setState({menuPos: {left: e.pageX, top: e.pageY}});
-			}
 		},
 			'Ink Ripple',
-			react.DOM.div(style.mixin(styles.rippleContainer),
+			react.DOM.div(style.mixin(styles.rippleContainer, {
+				onClick: (e: React.MouseEvent) => {
+					e.preventDefault();
+					this.setState({menuPos: {left: e.pageX, top: e.pageY}});
+				}	
+			}),
 				ripple.InkRippleF({color: '#808080'},
 					'Ripple Text'
 				)
 			),
-			popupMenu
+			popupMenu,
+			button.ButtonF({
+				value: 'Click Me',
+				onClick: () => {
+					alert('Button Clicked');
+				}
+			})
 		);
 	}
 }
@@ -88,7 +96,7 @@ function main() {
 	var body = elt.ownerDocument.body;
 
 	var rootView = react.render(ControlDemoAppF({viewportRect: body.getBoundingClientRect()}), elt);
-	body.onresize = () => {
+	elt.ownerDocument.defaultView.onresize = () => {
 		rootView.setProps({
 			viewportRect: body.getBoundingClientRect()
 		});
