@@ -253,9 +253,11 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 	private shortcuts: shortcut.Shortcut[];
 
 	getInitialState() {
+		var isEditing = this.props.editMode === ItemEditMode.AddItem;
+
 		return {
-			isEditing: this.props.editMode === ItemEditMode.AddItem,
-			didEditItem: false,
+			isEditing: isEditing,
+			didEditItem: isEditing,
 			transition: TransitionState.Entering
 		};
 	}
