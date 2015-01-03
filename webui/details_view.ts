@@ -553,8 +553,9 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			}
 		}];
 
+		var newFieldMenu: React.ReactElement<menu.MenuProps>;
 		if (this.state.addingField) {
-			return menu.MenuF({
+			newFieldMenu = menu.MenuF({
 				items: fieldTypes,
 				sourceRect: {
 					top: this.state.addingField.pos.top,
@@ -567,9 +568,9 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 					this.setState({addingField: null});
 				}
 			});
-		} else {
-			return null;
 		}
+
+		return reactutil.TransitionGroupF({}, newFieldMenu);
 	}
 
 	private renderToolbar() {

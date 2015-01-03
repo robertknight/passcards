@@ -64,6 +64,9 @@ function measureText(document: Document, text: string, font: string) {
   * On small screens, this component automatically
   * displays as a bottom sheet
   * (see http://www.google.co.uk/design/spec/components/bottom-sheets.html)
+  *
+  * This component must be rendered inside a React.TransitionGroup component
+  * for it to be displayed.
   */
 export class Menu extends typed_react.Component<MenuProps, MenuState> {
 	getInitialState() {
