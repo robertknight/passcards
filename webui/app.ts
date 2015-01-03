@@ -414,7 +414,13 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 		  .addLogin(defaultAccount)
 		  .addPassword(randomPassword);
 
-		if (this.state.currentUrl) {
+		// prefill the new item with the current URL for web pages.
+		// Avoid prefilling for special browser pages (eg. 'about:version',
+		// 'chrome://settings') or blank tabs
+		var AUTOFILL_URL_SCHEMES = ['http:', 'https:', 'ftp:'];
+		var currentUrlProtocol = url.parse(this.state.currentUrl).protocol;
+
+		if (AUTOFILL_URL_SCHEMES.indexOf(currentUrlProtocol) !== -1) {
 			builder.setTitle(url_util.topLevelDomain(this.state.currentUrl));
 			builder.addUrl(this.state.currentUrl);
 		} else {
