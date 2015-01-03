@@ -219,15 +219,6 @@ export interface DetailsViewProps {
 	autofill: () => void;
 }
 
-// describes whether we are entering or exiting the
-// details view. The state is initially 'Entering' and
-// transitions to 'Idle' a moment afterwards.
-enum TransitionState {
-	Entering,
-	Idle,
-	Exiting
-}
-
 interface AddingFieldState {
 	section: item_store.ItemSection;
 	pos: {
@@ -241,7 +232,7 @@ interface DetailsViewState {
 	editedItem?: item_store.ItemAndContent;
 	isEditing?: boolean;
 	didEditItem?: boolean;
-	transition?: TransitionState;
+	transition?: reactutil.TransitionState;
 
 	autofocusField?: any; /* item_store.ItemField | item_store.ItemUrl | item_store.ItemSection */
 
@@ -258,7 +249,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		return {
 			isEditing: isEditing,
 			didEditItem: isEditing,
-			transition: TransitionState.Entering
+			transition: reactutil.TransitionState.Entering
 		};
 	}
 
@@ -298,19 +289,17 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			})
 		];
 		
-		if (this.state.transition !== TransitionState.Idle) {
+		if (this.state.transition !== reactutil.TransitionState.Idle) {
 			setTimeout(() => {
-				this.setState({transition: TransitionState.Idle});
+				this.setState({transition: reactutil.TransitionState.Idle});
 			}, 10);
 		}
 
-		root.addEventListener('transitionend', (e: TransitionEvent) => {
-			if (e.target === root && e.propertyName === 'top') {
-				if (this.state.transition === TransitionState.Exiting) {
-					this.props.onGoBack();
-				}
+		reactutil.onTransitionEnd(this, 'top', () => {
+			if (this.state.transition === reactutil.TransitionState.Leaving) {
+				this.props.onGoBack();
 			}
-		}, false);
+		});
 
 	}
 
@@ -739,7 +728,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 	}
 
 	private exit() {
-		this.setState({transition: TransitionState.Exiting});
+		this.setState({transition: reactutil.TransitionState.Leaving});
 	}
 
 	render() {
@@ -748,7 +737,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 
 		// expand the details view starting from the rect
 		// for the selected item
-		if (this.state.transition !== TransitionState.Idle) {
+		if (this.state.transition !== reactutil.TransitionState.Idle) {
 			if (this.props.entryRect) {
 				viewStyles.push({
 					left: this.props.entryRect.left,
@@ -776,7 +765,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		var headerStyles: any[] = [];
 		headerStyles.push(theme.detailsView.header);
 
-		if (this.state.transition === TransitionState.Idle) {
+		if (this.state.transition === reactutil.TransitionState.Idle) {
 			headerStyles.push(theme.detailsView.header.entered);
 		}
 
@@ -799,7 +788,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			flexGrow: 1
 		}];
 
-		if (this.state.transition === TransitionState.Idle) {
+		if (this.state.transition === reactutil.TransitionState.Idle) {
 			itemListDetailsStyle.push({opacity: 0});
 			detailsViewDetailsStyle.push({opacity: 1});
 			contentStyles.push({opacity: 1});

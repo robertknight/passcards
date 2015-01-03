@@ -16,7 +16,7 @@ export interface MenuItem {
 }
 
 interface MenuState {
-	entering?: boolean;
+	transition?: reactutil.TransitionState;
 	showTime?: Date;
 }
 
@@ -69,8 +69,30 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 	getInitialState() {
 		return {
 			showTime: new Date,
-			entering: true
+			transition: reactutil.TransitionState.Entering
 		}
+	}
+
+	private transitionProperty() {
+		return this.displayAsSheet() ? 'transform' : 'opacity';
+	}
+
+	componentWillEnter(callback: () => void) {
+		this.setState({transition: reactutil.TransitionState.Entering});
+		setTimeout(() => {
+			this.setState({transition: reactutil.TransitionState.Idle});
+		}, 10);
+
+		reactutil.onTransitionEnd(this.refs['menu'], this.transitionProperty(), () => {
+			callback();
+		});
+	}
+
+	componentWillLeave(callback: () => void) {
+		this.setState({transition: reactutil.TransitionState.Leaving});
+		reactutil.onTransitionEnd(this.refs['menu'], this.transitionProperty(), () => {
+			callback();
+		});
 	}
 
 	componentDidMount() {
@@ -215,21 +237,16 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 		var menuRect = this.getMenuRect();
 		var menuOpacity = 0;
 		var menuTransform = 'translateY(0px)';
+		var enteringOrLeaving = this.state.transition !== reactutil.TransitionState.Idle;
 
-		if (this.state.entering) {
-			window.setTimeout(() => {
-				this.setState({entering: false});
-			}, 10);
-		};
-
-		if (!this.state.entering || this.displayAsSheet()) {
+		if (!enteringOrLeaving || this.displayAsSheet()) {
 			// menus fade in. Sheets slide in from a screen edge
 			menuOpacity = 1.0;
 		}
 
 		var overlayStyles: any[] = [theme.menu.overlay];
 		if (this.displayAsSheet()) {
-			if (!this.state.entering) {
+			if (!enteringOrLeaving) {
 				// see http://www.google.co.uk/design/spec/components/bottom-sheets.html#bottom-sheets-specs
 				overlayStyles.push({opacity: .2});
 			} else {

@@ -268,9 +268,8 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 		children.push(this.renderItemDetails());
 		children.push(this.renderToasters());
 
-		if (this.state.appMenuSourceRect) {
-			children.push(this.renderMenu('menu'));
-		}
+		var menu = this.state.appMenuSourceRect ? this.renderMenu('menu') : null;
+		children.push(reactutil.TransitionGroupF({}, menu));
 
 		return div(theme.appView, {ref: 'app'},
 			children

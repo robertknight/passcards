@@ -5,6 +5,7 @@ import typed_react = require('typed-react');
 import env = require('../../lib/base/env');
 import tsutil = require('../../lib/base/tsutil');
 
+export var TransitionGroupF = react.createFactory(react_addons.addons.TransitionGroup);
 export var CSSTransitionGroupF = react.createFactory(react_addons.addons.CSSTransitionGroup);
 
 /** Merge props passed to a parent component with those set in a child
@@ -145,4 +146,26 @@ export function rectWidth(rect: Rect) {
 export function rectHeight(rect: Rect) {
 	return rect.bottom - rect.top;
 }
+
+/** Describes the transition state of a view.
+  *
+  * The state is initially 'Entering' and transitions to
+  * 'Idle' a moment afterwards.
+  */
+export enum TransitionState {
+	Entering,
+	Idle,
+	Leaving
+}
+
+export function onTransitionEnd(component: React.Component<any>, property: string, callback: () => void) {
+	var node = component.getDOMNode();
+	var eventListener = (e: TransitionEvent) => {
+		if (e.target === node && e.propertyName == property) {
+			callback();
+		}
+	};
+	node.addEventListener('transitionend', eventListener, false);
+}
+
 
