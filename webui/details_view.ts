@@ -176,7 +176,7 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 		return div(theme.detailsView.field, {ref: 'itemField'},
 			labelEditor,
 			text_field.TextFieldF({
-				floatingLabel: true,
+				floatingLabel: this.props.onChangeLabel == null,
 				placeHolder: this.props.label,
 				value: displayValue,
 				type: inputType,
