@@ -35,6 +35,7 @@ export class Builder {
 
 	addLogin(username: string) : Builder {
 		this._content.formFields.push(Builder.createLoginField(username));
+		this._item.updateOverviewFromContent(this._content);
 		return this;
 	}
 
@@ -55,11 +56,11 @@ export class Builder {
 	}
 
 	addUrl(url: string) : Builder {
-		this._item.locations.push(url);
 		this._content.urls.push({
 			label: 'website',
 			url: url
 		});
+		this._item.updateOverviewFromContent(this._content);
 		return this;
 	}
 
