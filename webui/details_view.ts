@@ -21,6 +21,7 @@ import reactutil = require('./base/reactutil');
 import shortcut = require('./base/shortcut');
 import style_util = require('./base/style_util');
 import text_field = require('./controls/text_field');
+import transition_events = require('./base/transition_events');
 import theme = require('./theme');
 import url_util = require('../lib/base/url_util');
 
@@ -242,6 +243,7 @@ interface DetailsViewState {
 
 export class DetailsView extends typed_react.Component<DetailsViewProps, DetailsViewState> {
 	private shortcuts: shortcut.Shortcut[];
+	private transitionHandler: reactutil.TransitionEndListener;
 
 	getInitialState() {
 		var isEditing = this.props.editMode === ItemEditMode.AddItem;
@@ -295,12 +297,11 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			}, 10);
 		}
 
-		reactutil.onTransitionEnd(this, 'top', () => {
+		this.transitionHandler = new reactutil.TransitionEndListener(this, 'top', () => {
 			if (this.state.transition === reactutil.TransitionState.Leaving) {
 				this.props.onGoBack();
 			}
 		});
-
 	}
 
 	componentDidUnmount() {
@@ -308,6 +309,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			shortcut.remove();
 		});
 		this.shortcuts = [];
+		this.transitionHandler.remove();
 	}
 
 	private fetchContent(item: item_store.Item) {

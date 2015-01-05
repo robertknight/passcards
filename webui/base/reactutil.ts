@@ -3,6 +3,7 @@ import react_addons = require('react/addons');
 import typed_react = require('typed-react');
 
 import env = require('../../lib/base/env');
+import transition_events = require('./transition_events');
 import tsutil = require('../../lib/base/tsutil');
 
 export var TransitionGroupF = react.createFactory(react_addons.addons.TransitionGroup);
@@ -158,14 +159,28 @@ export enum TransitionState {
 	Leaving
 }
 
-export function onTransitionEnd(component: React.Component<any>, property: string, callback: () => void) {
-	var node = component.getDOMNode();
-	var eventListener = (e: TransitionEvent) => {
-		if (e.target === node && e.propertyName == property) {
-			callback();
-		}
-	};
-	node.addEventListener('transitionend', eventListener, false);
-}
+export class TransitionEndListener {
+	private node: HTMLElement;
+	private listener: (e: TransitionEvent) => void;
 
+	/** Setup an event handler which is called when the CSS transition
+	  * for a given style @p property finishes on the DOM node for
+	  * a React @p component.
+	  *
+	  * Use remove() to remove the listener when no longer required.
+	  */
+	constructor(component: React.Component<any>, property: string, callback: () => void) {
+		this.node = <HTMLElement>component.getDOMNode();
+		this.listener = (e) => {
+			if (e.target === this.node && e.propertyName == property) {
+				callback();
+			}
+		};
+		transition_events.addEndEventListener(this.node, this.listener);
+	}
+
+	remove() {
+		transition_events.removeEndEventListener(this.node, this.listener);
+	}
+}
 

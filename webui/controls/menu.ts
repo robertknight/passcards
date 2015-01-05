@@ -69,6 +69,8 @@ function measureText(document: Document, text: string, font: string) {
   * for it to be displayed.
   */
 export class Menu extends typed_react.Component<MenuProps, MenuState> {
+	private transitionListener: reactutil.TransitionEndListener;
+
 	getInitialState() {
 		return {
 			showTime: new Date,
@@ -86,16 +88,24 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 			this.setState({transition: reactutil.TransitionState.Idle});
 		}, 10);
 
-		reactutil.onTransitionEnd(this.refs['menu'], this.transitionProperty(), () => {
+		this.transitionListener = new reactutil.TransitionEndListener(this.refs['menu'], this.transitionProperty(), () => {
 			callback();
 		});
 	}
 
+	componentDidEnter() {
+		this.transitionListener.remove();
+	}
+
 	componentWillLeave(callback: () => void) {
 		this.setState({transition: reactutil.TransitionState.Leaving});
-		reactutil.onTransitionEnd(this.refs['menu'], this.transitionProperty(), () => {
+		this.transitionListener = new reactutil.TransitionEndListener(this.refs['menu'], this.transitionProperty(), () => {
 			callback();
 		});
+	}
+
+	componentDidLeave() {
+		this.transitionListener.remove();
 	}
 
 	componentDidMount() {
