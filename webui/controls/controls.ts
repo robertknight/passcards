@@ -15,6 +15,7 @@ import div = require('../base/div');
 import reactutil = require('../base/reactutil');
 import ripple = require('./ripple');
 import theme = require('../theme');
+import svg_icon = require('./svg_icon');
 
 export class ToolbarButtonProps {
 	iconHref: string;
@@ -40,7 +41,7 @@ export class ToolbarButton extends typed_react.Component<ToolbarButtonProps,Tool
 				this.setState({pressed: false});
 			}
 		}),
-		SvgIconF({
+		svg_icon.SvgIconF({
 			href: this.props.iconHref,
 			width: 20,
 			height: 20,
@@ -51,34 +52,4 @@ export class ToolbarButton extends typed_react.Component<ToolbarButtonProps,Tool
 }
 
 export var ToolbarButtonF = reactutil.createFactory(ToolbarButton);
-
-export class SvgIconProps {
-	href: string;
-	fill: string;
-	viewBox: {
-		x: number;
-		y: number;
-		width: number;
-		height: number;
-	};
-	width: number;
-	height: number;
-}
-
-export class SvgIcon extends typed_react.Component<SvgIconProps, {}> {
-	render() {
-		return react.DOM.svg(reactutil.mergeProps(this.props, {
-			dangerouslySetInnerHTML: {
-				__html: sprintf('<use x="0" y="0" fill="%s" xlink:href="%s"></use>',
-				  underscore.escape(this.props.fill), underscore.escape(this.props.href))
-			},
-			viewBox: sprintf('%d %d %d %d', this.props.viewBox.x, this.props.viewBox.y,
-			  this.props.viewBox.width, this.props.viewBox.height),
-			width: this.props.width,
-			height: this.props.height
-		}));
-	}
-}
-
-export var SvgIconF = reactutil.createFactory(SvgIcon);
 

@@ -11,6 +11,12 @@ import reactutil = require('../base/reactutil');
 import ripple = require('./ripple');
 
 var styles = style.create({
+	app: {
+		width: 300,
+		marginLeft: 'auto',
+		marginRight: 'auto'
+	},
+
 	rippleContainer: {
 		width: 300,
 		height: 50,
@@ -66,8 +72,8 @@ class ControlDemoApp extends typed_react.Component<ControlDemoAppProps, ControlD
 			});
 		}
 
-		return react.DOM.div({
-		},
+		return react.DOM.div(style.mixin(styles.app, {
+		}),
 			'Ink Ripple',
 			react.DOM.div(style.mixin(styles.rippleContainer, {
 				onClick: (e: React.MouseEvent) => {
@@ -81,9 +87,23 @@ class ControlDemoApp extends typed_react.Component<ControlDemoAppProps, ControlD
 			),
 			popupMenu,
 			button.ButtonF({
-				value: 'Click Me',
+				value: 'Flat Button',
 				onClick: () => {
-					alert('Button Clicked');
+				}
+			}),
+			button.ButtonF({
+				floatingActionButton: true,
+				onClick: () => {
+				},
+				backgroundColor: '#FF4081',
+				rippleColor: 'white',
+				color: 'rgba(255,255,255,0.95)',
+				iconUrl: '/webui/icons/icons.svg#input'
+			}),
+			button.ButtonF({
+				raised: true,
+				value: 'Raised Button',
+				onClick: () => {
 				}
 			})
 		);

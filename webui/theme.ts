@@ -10,14 +10,20 @@ var Z_LAYERS = {
 	TOASTER: 30,
 	UNLOCK_VIEW: 20,
 	MENU: 10,
+	FLOATING_ACTION_BUTTON: 9,
 	DETAILS_VIEW: 1
 };
+
+var SHADOWS = {
+	RAISED_BUTTON: 'rgba(0, 0, 0, 0.26) 0px 2px 5px 0px',
+	RAISED_BUTTON_HOVERED: 'rgba(0, 0, 0, 0.4) 0px 4px 8px 0px'
+}
 
 var mixins = style.create({
 	materialDesign: {
 		header: {
 			backgroundColor: colors.MATERIAL_COLOR_PRIMARY,
-			boxShadow: 'rgba(0, 0, 0, 0.26) 0px 2px 5px 0px',
+			boxShadow: SHADOWS.RAISED_BUTTON,
 			color: '#fff',
 			fontWeight: 400
 		},
@@ -287,54 +293,102 @@ var styles = style.create({
 
 	// Controls - Button
 	button: {
-		container: {
+		base: {
+			cursor: 'pointer',
+
+			':focus': {
+				outline: 'none'
+			},
+
+			':hover': {
+				backgroundColor: 'rgba(0,0,0,0.2)'
+			},
+
+			transition: style_util.transitionOn({
+				backgroundColor: .3,
+				boxShadow: .3
+			}),
+
+			display: 'flex',
+			flexDirection: 'row',
+			alignItems: 'center',
+			justifyContent: 'center'
+		},
+
+		raised: {
+			boxShadow: SHADOWS.RAISED_BUTTON,
+
+			':hover': {
+				boxShadow: SHADOWS.RAISED_BUTTON_HOVERED
+			},
+
+			':focus': {
+				boxShadow: SHADOWS.RAISED_BUTTON_HOVERED
+			}
+		},
+
+		floatingAction: {
+			borderRadius: '50%',
+			zIndex: Z_LAYERS.FLOATING_ACTION_BUTTON,
+			position: 'relative',
+			overflow: 'hidden',
+
+			icon: {
+				width: 24,
+				height: 24,
+			},
+
+			// see http://www.google.co.uk/design/spec/components/buttons.html#buttons-floating-action-button
+			normalSize: {
+				width: 56,
+				height: 56,
+
+				icon: {
+					marginLeft: 16,
+					marginTop: 16
+				}
+			},
+
+			miniSize: {
+				width: 40,
+				height: 40,
+
+				icon: {
+					marginLeft: 8,
+					marginTop: 8
+				}
+			}
+		},
+
+		rectangular: {
+			borderRadius: 3,
+
 			position: 'relative',
 			width: 'fit-content',
-			padding: 6,
+			marginLeft: 4,
+			marginRight: 4,
 
-			// disable focus ring when selected
-			':focus': {
-				outline: 0
-			}
+			paddingLeft: 8,
+			paddingRight: 8,
+
+			minWidth: 64,
+
+			height: 36
 		},
 
 		rippleContainer: {
 			position: 'relative',
 			borderRadius: 3,
-			overflow: 'hidden',
-			transition: style_util.transitionOn({
-				backgroundColor: .3
-			}),
-
-			':hover': {
-				backgroundColor: 'rgba(0,0,0,0.2)'
-			}
+			overflow: 'hidden'
 		},
 
-		button: {
-			paddingTop: 5,
-			paddingBottom: 5,
-			paddingLeft: 15,
-			paddingRight: 15,
-			border: 0,
-			borderRadius: 3,
+		label: {
 			fontWeight: fonts.MEDIUM_WEIGHT,
 			fontSize: fonts.BUTTON_TEXT_SIZE,
 			textTransform: 'uppercase',
 
-			cursor: 'pointer',
-
 			// disable button rounding on iOS
 			WebkitAppearance: 'none',
-
-			// disable focus ring when selected
-			':focus': {
-				outline: 0
-			},
-
-			raised: {
-				boxShadow: 'rgba(0, 0, 0, 0.26) 0px 2px 5px 0px'
-			}
 		}
 	},
 

@@ -228,7 +228,8 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 		ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
 		// render ripple wave
-		ctx.fillStyle = '#000';
+		console.log('filling ripple wave with', this.props.color);
+		ctx.fillStyle = this.props.color;
 		ctx.globalAlpha = rippleAlpha;
 		ctx.beginPath();
 		ctx.arc(this.state.startX, this.state.startY, radius, 0, Math.PI * 2, true);

@@ -18,6 +18,7 @@ import item_search = require('../lib/item_search');
 import item_store = require('../lib/item_store');
 import reactutil = require('./base/reactutil');
 import ripple = require('./controls/ripple');
+import svg_icon = require('./controls/svg_icon');
 import theme = require('./theme');
 
 export interface ToolbarClickEvent {
@@ -521,7 +522,7 @@ class ItemListToolbar extends typed_react.Component<ItemListToolbarProps, {}> {
 		}
 
 		return div([theme.toolbar, theme.itemList.toolbar], {},
-				controls.SvgIconF({
+				svg_icon.SvgIconF({
 					className: style.classes(theme.itemList.toolbar.searchIcon),
 					href: 'icons/icons.svg#search',
 					width: 20,

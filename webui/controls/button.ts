@@ -5,14 +5,45 @@ import typed_react = require('typed-react');
 import div = require('../base/div');
 import reactutil = require('../base/reactutil');
 import ripple = require('./ripple');
+import svg_icon = require('./svg_icon');
 import theme = require('../theme');
 
 export interface ButtonProps {
-	value: string;
 	onClick: (e: React.MouseEvent) => void;
 
+	/** Label for the button */
+	value?: string;
+
+	/** Background color for the button */
 	backgroundColor?: string;
+
+	/** Color for the button's text or the fill
+	  * color of the SVG icon.
+	  */
 	color?: string;
+
+	/** Color used for the ripple that fills the button
+	  * when touched.
+	  */
+	rippleColor?: string;
+
+	/** The URL of the SVG icon for this button */
+	iconUrl?: string;
+
+	/** Specifies that this button should be rendered
+	  * as a round floating action button.
+	  */
+	floatingActionButton?: boolean;
+
+	/** Controls the size of the button when rendered as
+	  * a floating action button. If false, renders using
+	  * the normal (56px) size. If true, renders using
+	  * the mini (40px) size as defined by the Material Design
+	  * specs.
+	  */
+	miniSize?: boolean;
+
+	raised?: boolean;
 }
 
 export class Button extends typed_react.Component<ButtonProps,{}> {
@@ -32,17 +63,73 @@ export class Button extends typed_react.Component<ButtonProps,{}> {
 	}
 
 	render() {
-		var buttonStyles: any[] = [theme.button.button];
-		if (this.props.color) {
-			buttonStyles.push({color: this.props.color});
+		var rippleRadius = 100;
+
+		var containerStyles: any[] = [theme.button.base];
+		if (this.props.floatingActionButton) {
+			containerStyles.push(theme.button.floatingAction);
+			if (this.props.miniSize) {
+				rippleRadius = 60;
+				containerStyles.push(theme.button.floatingAction.miniSize);
+			} else {
+				rippleRadius = 80;
+				containerStyles.push(theme.button.floatingAction.normalSize);
+			}
+		} else {
+			containerStyles.push(theme.button.rectangular);
 		}
 
-		return div(theme.button.container, {role: 'button', tabIndex: 0},
-			react.DOM.div(style.mixin(theme.button.rippleContainer, {
+		if (this.props.raised || this.props.floatingActionButton) {
+			containerStyles.push(theme.button.raised);
+		}
+
+		if (this.props.backgroundColor) {
+			containerStyles.push({backgroundColor: this.props.backgroundColor});
+		}
+
+		var labelStyles: any[] = [theme.button.label];
+		if (this.props.color) {
+			labelStyles.push({color: this.props.color});
+		}
+
+		var rippleContainerStyles: any[] = [theme.button.rippleContainer];
+		if (this.props.floatingActionButton) {
+			rippleContainerStyles.push({width: '100%', height: '100%'});
+		}
+
+		var buttonIcon: React.ReactElement<any>;
+		if (this.props.iconUrl) {
+			var iconStyles: any[] = [theme.button.floatingAction.icon];
+			if (this.props.miniSize) {
+				iconStyles.push(theme.button.floatingAction.miniSize.icon);
+			} else {
+				iconStyles.push(theme.button.floatingAction.normalSize.icon);
+			}
+			buttonIcon = svg_icon.SvgIconF(style.mixin(iconStyles, {
+				href: this.props.iconUrl,
+				fill: this.props.color,
+				width: 24,
+				height: 24,
+				viewBox: {
+					x: 0,
+					y: 0,
+					width: 24,
+					height: 24
+				}
+			}));
+		}
+
+		return react.DOM.div(style.mixin(containerStyles, {role: 'button', tabIndex: 0}),
+			react.DOM.div(style.mixin(rippleContainerStyles, {
 				onClick: (e: React.MouseEvent) => this.props.onClick(e)
 			}),
-				ripple.InkRippleF({radius: 100, ref: 'ripple'}),
-				react.DOM.div(style.mixin(buttonStyles, {}), this.props.value)
+				ripple.InkRippleF({
+					color: this.props.rippleColor,
+					radius: rippleRadius,
+					ref: 'ripple'
+				}),
+				buttonIcon,
+				react.DOM.div(style.mixin(labelStyles, {}), this.props.value)
 			)
 		);
 	}
