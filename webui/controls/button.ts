@@ -114,6 +114,11 @@ export class Button extends typed_react.Component<ButtonProps,{}> {
 			}));
 		}
 
+		var label: React.ReactElement<any>;
+		if (this.props.value && !this.props.floatingActionButton) {
+			label = react.DOM.div(style.mixin(labelStyles, {}), this.props.value);
+		}
+
 		return react.DOM.div(style.mixin(containerStyles, {
 			role: 'button',
 			tabIndex: 0,
@@ -125,7 +130,7 @@ export class Button extends typed_react.Component<ButtonProps,{}> {
 				ref: 'ripple'
 			}),
 			buttonIcon,
-			react.DOM.div(style.mixin(labelStyles, {}), this.props.value)
+			label
 		);
 	}
 }
