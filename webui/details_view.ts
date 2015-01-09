@@ -798,13 +798,22 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		}
 
 		var autofillButton: React.ComponentElement<any>;
-		if (env.isFirefoxAddon() || env.isChromeExtension()) {
-			autofillButton = button.ButtonF({
+		var autofillSupported = env.isFirefoxAddon() || env.isChromeExtension();
+		if (!this.state.isEditing && autofillSupported) {
+			autofillButton = react.DOM.div(style.mixin({
+				position: 'absolute',
+				right: 16,
+				bottom: 16
+			}), button.ButtonF({
 				accessKey:'a',
-				color: colors.MATERIAL_COLOR_PRIMARY,
+				backgroundColor: colors.MATERIAL_COLOR_PRIMARY,
+				color: colors.MATERIAL_COLOR_HEADER,
+				rippleColor: 'white',
+				onClick: () => this.props.autofill(),
+				floatingActionButton: true,
 				value: 'Autofill',
-				onClick: () => this.props.autofill()
-			});
+				iconUrl: 'icons/icons.svg#input'
+			}));
 		}
 
 		var updatedItem: item_store.Item;
