@@ -78,6 +78,7 @@ $(webui_css_dir)/controls_demo_theme.css: build/current
 	@echo "Generating controls demo theme CSS"
 	@mkdir -p $(webui_css_dir)
 	@$(NODE_BIN_DIR)/ts-style build/webui/controls/demo.js > $@
+	@$(NODE_BIN_DIR)/autoprefixer $@
 
 webui-icons:
 	@mkdir -p ${webui_icon_dir}

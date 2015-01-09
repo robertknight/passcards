@@ -56,7 +56,7 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 
 	getDefaultProps() {
 		return {
-			color: '#c8c8c8',
+			color: '#000',
 			radius: 240
 		};
 	}
@@ -211,7 +211,7 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 		var MAX_BACKGROUND_ALPHA = 0.2;
 		var backgroundAlpha = Math.min((elapsed / 500.0) * MAX_BACKGROUND_ALPHA, MAX_BACKGROUND_ALPHA);
 
-		var rippleAlpha = 0.2;
+		var rippleAlpha = 0.17;
 		if (this.state.phase == Phase.Release) {
 			// fade-out ripple after release
 			rippleAlpha *= 1 - (phaseElapsed / RELEASE_PHASE_DURATION);
@@ -228,7 +228,6 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 		ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
 		// render ripple wave
-		console.log('filling ripple wave with', this.props.color);
 		ctx.fillStyle = this.props.color;
 		ctx.globalAlpha = rippleAlpha;
 		ctx.beginPath();

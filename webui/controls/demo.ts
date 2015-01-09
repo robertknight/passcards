@@ -49,13 +49,13 @@ class ControlDemoApp extends typed_react.Component<ControlDemoAppProps, ControlD
 		if (this.state.menuPos) {
 			var menuItems = [{
 				label: 'Item One',
-				onClick: () => alert('Item one clicked')
+				onClick: () => console.log('Item one clicked')
 			},{
 				label: 'Item Two',
-				onClick: () => alert('Item two clicked')
+				onClick: () => console.log('Item two clicked')
 			},{
 				label: 'Item Three',
-				onClick: () => alert('Item three clicked')
+				onClick: () => console.log('Item three clicked')
 			}];
 			popupMenu = menu.MenuF({
 				items: menuItems,
@@ -85,7 +85,7 @@ class ControlDemoApp extends typed_react.Component<ControlDemoAppProps, ControlD
 					'Ripple Text'
 				)
 			),
-			popupMenu,
+			reactutil.TransitionGroupF({}, popupMenu),
 			button.ButtonF({
 				value: 'Flat Button',
 				onClick: () => {

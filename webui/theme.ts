@@ -301,7 +301,7 @@ var styles = style.create({
 			},
 
 			':hover': {
-				backgroundColor: 'rgba(0,0,0,0.2)'
+				backgroundColor: 'rgba(0,0,0,0.1)'
 			},
 
 			transition: style_util.transitionOn({
@@ -343,25 +343,20 @@ var styles = style.create({
 				width: 56,
 				height: 56,
 
-				icon: {
-					marginLeft: 16,
-					marginTop: 16
-				}
+				icon: {}
 			},
 
 			miniSize: {
 				width: 40,
 				height: 40,
 
-				icon: {
-					marginLeft: 8,
-					marginTop: 8
-				}
+				icon: {}
 			}
 		},
 
 		rectangular: {
 			borderRadius: 3,
+			overflow: 'hidden',
 
 			position: 'relative',
 			width: 'fit-content',
@@ -376,16 +371,12 @@ var styles = style.create({
 			height: 36
 		},
 
-		rippleContainer: {
-			position: 'relative',
-			borderRadius: 3,
-			overflow: 'hidden'
-		},
-
 		label: {
 			fontWeight: fonts.MEDIUM_WEIGHT,
 			fontSize: fonts.BUTTON_TEXT_SIZE,
 			textTransform: 'uppercase',
+
+			userSelect: 'none',
 
 			// disable button rounding on iOS
 			WebkitAppearance: 'none',

@@ -92,11 +92,6 @@ export class Button extends typed_react.Component<ButtonProps,{}> {
 			labelStyles.push({color: this.props.color});
 		}
 
-		var rippleContainerStyles: any[] = [theme.button.rippleContainer];
-		if (this.props.floatingActionButton) {
-			rippleContainerStyles.push({width: '100%', height: '100%'});
-		}
-
 		var buttonIcon: React.ReactElement<any>;
 		if (this.props.iconUrl) {
 			var iconStyles: any[] = [theme.button.floatingAction.icon];
@@ -119,18 +114,18 @@ export class Button extends typed_react.Component<ButtonProps,{}> {
 			}));
 		}
 
-		return react.DOM.div(style.mixin(containerStyles, {role: 'button', tabIndex: 0}),
-			react.DOM.div(style.mixin(rippleContainerStyles, {
-				onClick: (e: React.MouseEvent) => this.props.onClick(e)
+		return react.DOM.div(style.mixin(containerStyles, {
+			role: 'button',
+			tabIndex: 0,
+			onClick: (e: React.MouseEvent) => this.props.onClick(e)
+		}),
+			ripple.InkRippleF({
+				radius: rippleRadius,
+				color: this.props.rippleColor,
+				ref: 'ripple'
 			}),
-				ripple.InkRippleF({
-					color: this.props.rippleColor,
-					radius: rippleRadius,
-					ref: 'ripple'
-				}),
-				buttonIcon,
-				react.DOM.div(style.mixin(labelStyles, {}), this.props.value)
-			)
+			buttonIcon,
+			react.DOM.div(style.mixin(labelStyles, {}), this.props.value)
 		);
 	}
 }
