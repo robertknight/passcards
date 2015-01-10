@@ -117,10 +117,10 @@ export class Button extends typed_react.Component<ButtonProps,{}> {
 			label = react.DOM.div(style.mixin(labelStyles, {}), this.props.value);
 		}
 
-		return react.DOM.div(style.mixin(containerStyles, {
-			role: 'button',
+		return react.DOM.button(style.mixin(containerStyles, {
 			tabIndex: 0,
-			onClick: (e: React.MouseEvent) => this.props.onClick(e)
+			onClick: (e: React.MouseEvent) => this.props.onClick(e),
+			title: this.props.value
 		}),
 			ripple.InkRippleF({
 				radius: rippleRadius,

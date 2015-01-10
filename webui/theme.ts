@@ -298,7 +298,13 @@ var styles = style.create({
 			display: 'flex',
 			flexDirection: 'row',
 			alignItems: 'center',
-			justifyContent: 'center'
+			justifyContent: 'center',
+			
+			// disable default button styles
+			border: 'none',
+			backgroundColor: 'transparent',
+			// disable button rounding on iOS
+			WebkitAppearance: 'none',
 		},
 
 		raised: {
@@ -371,10 +377,7 @@ var styles = style.create({
 			fontSize: fonts.BUTTON_TEXT_SIZE,
 			textTransform: 'uppercase',
 
-			userSelect: 'none',
-
-			// disable button rounding on iOS
-			WebkitAppearance: 'none',
+			userSelect: 'none'
 		}
 	},
 
