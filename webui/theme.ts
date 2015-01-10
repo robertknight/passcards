@@ -7,11 +7,16 @@ import style_util = require('./base/style_util');
 import text_field_theme = require('./text_field_theme');
 
 var Z_LAYERS = {
+	// controls
 	TOASTER: 30,
-	UNLOCK_VIEW: 20,
 	MENU: 10,
 	FLOATING_ACTION_BUTTON: 9,
-	DETAILS_VIEW: 1
+	TOOLBAR: 5,
+
+	// views
+	UNLOCK_VIEW: 20,
+	DETAILS_VIEW: 2,
+	ITEM_LIST_VIEW: 1
 };
 
 var SHADOWS = {
@@ -271,25 +276,10 @@ var styles = style.create({
 	toolbar: style.merge(mixins.materialDesign.header, {
 		borderBottom: '1px solid #bbb',
 		paddingRight: 20,
-		height: 40,
-		flexShrink: 0
+		height: 50,
+		flexShrink: 0,
+		zIndex: Z_LAYERS.TOOLBAR
 	}),
-
-	toolbarButton: {
-		icon: {
-			display: 'flex',
-			alignItems: 'center',
-			justifyContent: 'center',
-			marginLeft: 2,
-			marginRight: 2,
-			width: 40,
-			height: 40,
-			borderRadius: '50%'
-		},
-		active: {
-			backgroundColor: 'rgba(255, 255, 255, 0.3)'
-		}
-	},
 
 	// Controls - Button
 	button: {
@@ -298,10 +288,6 @@ var styles = style.create({
 
 			':focus': {
 				outline: 'none'
-			},
-
-			':hover': {
-				backgroundColor: 'rgba(0,0,0,0.1)'
 			},
 
 			transition: style_util.transitionOn({
@@ -327,30 +313,26 @@ var styles = style.create({
 			}
 		},
 
+		icon: {
+			width: 24,
+			height: 24
+		},
+
 		floatingAction: {
 			borderRadius: '50%',
 			zIndex: Z_LAYERS.FLOATING_ACTION_BUTTON,
 			position: 'relative',
 			overflow: 'hidden',
 
-			icon: {
-				width: 24,
-				height: 24,
-			},
-
 			// see http://www.google.co.uk/design/spec/components/buttons.html#buttons-floating-action-button
 			normalSize: {
 				width: 56,
-				height: 56,
-
-				icon: {}
+				height: 56
 			},
 
 			miniSize: {
 				width: 40,
-				height: 40,
-
-				icon: {}
+				height: 40
 			}
 		},
 
@@ -368,7 +350,20 @@ var styles = style.create({
 
 			minWidth: 64,
 
-			height: 36
+			height: 36,
+
+			':hover': {
+				backgroundColor: 'rgba(0,0,0,0.1)'
+			},
+		},
+
+		circular: {
+			borderRadius: '50%',
+			position: 'relative',
+			overflow: 'hidden',
+			margin: 5,
+			width: 40,
+			height: 40
 		},
 
 		label: {
@@ -571,7 +566,9 @@ var styles = style.create({
 		container: {
 			display: 'flex',
 			flexDirection: 'column',
-			height: '100%'
+			height: '100%',
+			position: 'relative',
+			zIndex: Z_LAYERS.ITEM_LIST_VIEW
 		},
 
 		list: {

@@ -8,11 +8,22 @@ import ripple = require('./ripple');
 import svg_icon = require('./svg_icon');
 import theme = require('../theme');
 
+export enum Style {
+	Rectangular,
+	RaisedRectangular,
+	FloatingAction,
+	MiniFloatingAction,
+	Icon
+}
+
 export interface ButtonProps {
 	onClick: (e: React.MouseEvent) => void;
 
 	/** Label for the button */
-	value?: string;
+	value: string;
+
+	/** Specifies the style for the button. */
+	style: Style;
 
 	/** Background color for the button */
 	backgroundColor?: string;
@@ -29,21 +40,6 @@ export interface ButtonProps {
 
 	/** The URL of the SVG icon for this button */
 	iconUrl?: string;
-
-	/** Specifies that this button should be rendered
-	  * as a round floating action button.
-	  */
-	floatingActionButton?: boolean;
-
-	/** Controls the size of the button when rendered as
-	  * a floating action button. If false, renders using
-	  * the normal (56px) size. If true, renders using
-	  * the mini (40px) size as defined by the Material Design
-	  * specs.
-	  */
-	miniSize?: boolean;
-
-	raised?: boolean;
 }
 
 export class Button extends typed_react.Component<ButtonProps,{}> {
@@ -65,21 +61,29 @@ export class Button extends typed_react.Component<ButtonProps,{}> {
 	render() {
 		var rippleRadius = 100;
 
+		var isRectangular = this.props.style === Style.Rectangular ||
+		                    this.props.style === Style.RaisedRectangular;
+
 		var containerStyles: any[] = [theme.button.base];
-		if (this.props.floatingActionButton) {
+		if (this.props.style === Style.FloatingAction ||
+			this.props.style === Style.MiniFloatingAction) {
 			containerStyles.push(theme.button.floatingAction);
-			if (this.props.miniSize) {
+			if (this.props.style === Style.MiniFloatingAction) {
 				rippleRadius = 60;
 				containerStyles.push(theme.button.floatingAction.miniSize);
 			} else {
 				rippleRadius = 80;
 				containerStyles.push(theme.button.floatingAction.normalSize);
 			}
-		} else {
+		} else if (isRectangular) {
 			containerStyles.push(theme.button.rectangular);
+		} else if (this.props.style === Style.Icon) {
+			containerStyles.push(theme.button.circular);
 		}
 
-		if (this.props.raised || this.props.floatingActionButton) {
+		if (this.props.style === Style.RaisedRectangular ||
+			this.props.style === Style.FloatingAction ||
+			this.props.style === Style.MiniFloatingAction) {
 			containerStyles.push(theme.button.raised);
 		}
 
@@ -94,13 +98,7 @@ export class Button extends typed_react.Component<ButtonProps,{}> {
 
 		var buttonIcon: React.ReactElement<any>;
 		if (this.props.iconUrl) {
-			var iconStyles: any[] = [theme.button.floatingAction.icon];
-			if (this.props.miniSize) {
-				iconStyles.push(theme.button.floatingAction.miniSize.icon);
-			} else {
-				iconStyles.push(theme.button.floatingAction.normalSize.icon);
-			}
-			buttonIcon = svg_icon.SvgIconF(style.mixin(iconStyles, {
+			buttonIcon = svg_icon.SvgIconF(style.mixin(theme.button.icon, {
 				href: this.props.iconUrl,
 				fill: this.props.color,
 				width: 24,
@@ -115,7 +113,7 @@ export class Button extends typed_react.Component<ButtonProps,{}> {
 		}
 
 		var label: React.ReactElement<any>;
-		if (this.props.value && !this.props.floatingActionButton) {
+		if (this.props.value && isRectangular) {
 			label = react.DOM.div(style.mixin(labelStyles, {}), this.props.value);
 		}
 

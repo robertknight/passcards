@@ -8,7 +8,6 @@ import style = require('ts-style');
 import typed_react = require('typed-react');
 import underscore = require('underscore');
 
-import controls = require('./controls/controls');
 import div = require('./base/div');
 import env = require('../lib/base/env');
 import focus_mixin = require('./base/focus_mixin');
@@ -20,6 +19,7 @@ import reactutil = require('./base/reactutil');
 import ripple = require('./controls/ripple');
 import svg_icon = require('./controls/svg_icon');
 import theme = require('./theme');
+import toolbar = require('./toolbar');
 
 export interface ToolbarClickEvent {
 	itemRect: reactutil.Rect;
@@ -542,12 +542,14 @@ class ItemListToolbar extends typed_react.Component<ItemListToolbarProps, {}> {
 					}
 				}),
 				div(theme.itemList.toolbar.iconGroup, {},
-					controls.ToolbarButtonF({
-						iconHref: 'icons/icons.svg#lock-outline',
+					toolbar.createButton({
+						iconUrl: 'icons/icons.svg#lock-outline',
+						value: 'Lock',
 						onClick: () => this.props.onLockClicked()
 					}),
-					controls.ToolbarButtonF({
-						iconHref: 'icons/icons.svg#menu',
+					toolbar.createButton({
+						iconUrl: 'icons/icons.svg#menu',
+						value: 'Menu',
 						ref: 'menuButton',
 						onClick: () => {
 							var event = {

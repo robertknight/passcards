@@ -44,6 +44,39 @@ class ControlDemoApp extends typed_react.Component<ControlDemoAppProps, ControlD
 		return {};
 	}
 
+	private renderButtons() {
+		return react.DOM.div({},
+			button.ButtonF({
+				value: 'Flat Button',
+				onClick: () => {
+				},
+				style: button.Style.Rectangular
+			}),
+			button.ButtonF({
+				value: 'Floating Action',
+			onClick: () => {
+			},
+			style: button.Style.FloatingAction,
+			backgroundColor: '#FF4081',
+			rippleColor: 'white',
+			color: 'rgba(255,255,255,0.95)',
+			iconUrl: '/webui/icons/icons.svg#input'
+			}),
+			button.ButtonF({
+				value: 'Raised Button',
+			onClick: () => {
+			},
+			style: button.Style.RaisedRectangular
+			}),
+			button.ButtonF({
+				value: 'Icon Button',
+			onClick: () => {},
+			style: button.Style.Icon,
+			iconUrl: '/webui/icons/icons.svg#input'
+			})
+		);
+	}
+
 	render() {
 		var popupMenu: React.ReactElement<menu.MenuProps>;
 		if (this.state.menuPos) {
@@ -86,26 +119,7 @@ class ControlDemoApp extends typed_react.Component<ControlDemoAppProps, ControlD
 				)
 			),
 			reactutil.TransitionGroupF({}, popupMenu),
-			button.ButtonF({
-				value: 'Flat Button',
-				onClick: () => {
-				}
-			}),
-			button.ButtonF({
-				floatingActionButton: true,
-				onClick: () => {
-				},
-				backgroundColor: '#FF4081',
-				rippleColor: 'white',
-				color: 'rgba(255,255,255,0.95)',
-				iconUrl: '/webui/icons/icons.svg#input'
-			}),
-			button.ButtonF({
-				raised: true,
-				value: 'Raised Button',
-				onClick: () => {
-				}
-			})
+			this.renderButtons()
 		);
 	}
 }

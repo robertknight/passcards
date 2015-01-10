@@ -4,9 +4,9 @@ import react = require('react');
 import style = require('ts-style');
 import typed_react = require('typed-react');
 
+import assign = require('../lib/base/assign');
 import button = require('./controls/button');
 import colors = require('./colors');
-import controls = require('./controls/controls');
 import crypto = require('../lib/onepass_crypto');
 import div = require('./base/div');
 import env = require('../lib/base/env');
@@ -23,6 +23,7 @@ import style_util = require('./base/style_util');
 import text_field = require('./controls/text_field');
 import transition_events = require('./base/transition_events');
 import theme = require('./theme');
+import toolbar = require('./toolbar');
 import url_util = require('../lib/base/url_util');
 
 enum FieldType {
@@ -102,6 +103,7 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 			var copyButton: React.ComponentElement<button.ButtonProps>;
 			if (this.props.clipboard.clipboardAvailable()) {
 				copyButton = button.ButtonF({
+					style: button.Style.Rectangular,
 					value: 'Copy',
 					key: 'copy',
 					onClick: (e) => {
@@ -113,6 +115,7 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 
 			if (this.props.type == FieldType.Password) {
 				var revealButton = button.ButtonF({
+					style: button.Style.Rectangular,
 					value: this.state.revealed ? 'Hide' : 'Reveal',
 					key: 'reveal',
 					onClick: (e) => {
@@ -124,6 +127,7 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 
 				if (!this.props.readOnly) {
 					var generateButton = button.ButtonF({
+						style: button.Style.Rectangular,
 						color: colors.MATERIAL_COLOR_PRIMARY,
 						value: 'Generate',
 						key: 'generate',
@@ -140,6 +144,7 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 
 		if (this.state.selected && !this.props.readOnly && this.props.onDelete) {
 			var deleteButton = button.ButtonF({
+				style: button.Style.Rectangular,
 				value: this.props.deleteLabel || 'Delete',
 				key: 'delete',
 				color: colors.MATERIAL_RED_P400,
@@ -399,6 +404,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			if (editing) {
 				var addButtonRef = sectionIndex + '.addField';
 				sections.push(button.ButtonF({
+					style: button.Style.Rectangular,
 					value: 'Add Field',
 					color: colors.MATERIAL_COLOR_PRIMARY,
 					ref: addButtonRef,
@@ -418,6 +424,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 
 		if (editing) {
 			sections.push(button.ButtonF({
+				style: button.Style.Rectangular,
 				value: 'Add Section',
 				color: colors.MATERIAL_COLOR_PRIMARY,
 				onClick: () => {
@@ -462,6 +469,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		if (editing) {
 			websites.push(button.ButtonF({
 				value: 'Add Website',
+				style: button.Style.Rectangular,
 				color: colors.MATERIAL_COLOR_PRIMARY,
 				onClick: (e) => {
 					var newUrl = {
@@ -578,16 +586,18 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 	private renderToolbar() {
 		var toolbarControls: React.ReactElement<any>[] = [];
 		if (this.props.editMode == ItemEditMode.EditItem && !this.state.isEditing) {
-			toolbarControls.push(controls.ToolbarButtonF({
-				iconHref: 'icons/icons.svg#arrow-back',
+			toolbarControls.push(toolbar.createButton({
+				value: 'Back',
+				iconUrl: 'icons/icons.svg#arrow-back',
 				onClick: () => {
 					this.exit();
 				},
 				key: 'back'
 			}));
 		} else {
-			toolbarControls.push(controls.ToolbarButtonF({
-				iconHref: 'icons/icons.svg#clear',
+			toolbarControls.push(toolbar.createButton({
+				value: 'Cancel',
+				iconUrl: 'icons/icons.svg#clear',
 				onClick: () => {
 					if (this.props.editMode == ItemEditMode.EditItem) {
 						this.resetEdits({item: this.props.item, content: this.state.itemContent});
@@ -601,10 +611,11 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		}
 		toolbarControls.push(div(theme.detailsView.toolbarSpacer,{}));
 
-		var editOrSave: React.ComponentElement<controls.ToolbarButtonProps>;
+		var editOrSave: React.ComponentElement<button.ButtonProps>;
 		if (this.state.isEditing) {
-			editOrSave = controls.ToolbarButtonF({
-				iconHref: 'icons/icons.svg#done',
+			editOrSave = toolbar.createButton({
+				value: 'Save',
+				iconUrl: 'icons/icons.svg#done',
 				onClick: () => {
 					if (this.state.didEditItem) {
 						this.props.onSave(this.state.editedItem);
@@ -622,16 +633,15 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 					}
 				},
 				key: 'save',
-				style: { position: 'absolute', top: 0 }
 			});
 		} else {
-			editOrSave = controls.ToolbarButtonF({
-				iconHref: 'icons/icons.svg#edit',
+			editOrSave = toolbar.createButton({
+				value: 'Edit',
+				iconUrl: 'icons/icons.svg#edit',
 				onClick: () => {
 					this.setState({isEditing:true});
 				},
 				key: 'edit',
-				style: { position: 'absolute', top: 0 }
 			});
 		}
 		toolbarControls.push(react.DOM.div(style.mixin([theme.itemList.toolbar.iconGroup, {
@@ -639,9 +649,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				width: 45,
 				overflow: 'hidden'
 			}]),
-			reactutil.CSSTransitionGroupF({transitionName: style.classes(theme.animations.slideFromBottom)},
-				editOrSave
-			)
+			editOrSave
 		));
 
 		return div([theme.detailsView.header.toolbar], {},
@@ -701,6 +709,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			if (editing && this.props.editMode === ItemEditMode.EditItem) {
 				var isTrashed = updatedItem.item.trashed;
 				itemActions.push(button.ButtonF({
+					style: button.Style.Rectangular,
 					color: isTrashed ? colors.MATERIAL_COLOR_PRIMARY : colors.MATERIAL_RED_P400,
 					value: isTrashed ? 'Restore from Trash' : 'Move to Trash',
 					onClick: () => {
@@ -805,12 +814,12 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				right: 16,
 				bottom: 16
 			}), button.ButtonF({
+				style: button.Style.FloatingAction,
 				accessKey:'a',
 				backgroundColor: colors.MATERIAL_COLOR_PRIMARY,
 				color: colors.MATERIAL_COLOR_HEADER,
 				rippleColor: 'white',
 				onClick: () => this.props.autofill(),
-				floatingActionButton: true,
 				value: 'Autofill',
 				iconUrl: 'icons/icons.svg#input'
 			}));

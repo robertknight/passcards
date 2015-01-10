@@ -15,7 +15,6 @@ import url = require('url');
 import underscore = require('underscore');
 
 import autofill = require('./autofill');
-import controls = require('./controls/controls');
 import details_view = require('./details_view');
 import div = require('./base/div');
 import dropboxvfs = require('../lib/vfs/dropbox');

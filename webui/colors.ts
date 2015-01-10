@@ -30,7 +30,9 @@ var colors = {
 	MATERIAL_RED_P400: '#e84e40',
 
 	MATERIAL_TEXT_PRIMARY: premultiplyColor(0,0,0,0.87),
-	MATERIAL_TEXT_SECONDARY: premultiplyColor(0,0,0,0.54)
+	MATERIAL_TEXT_SECONDARY: premultiplyColor(0,0,0,0.54),
+
+	TOOLBAR_ICON: 'white'
 };
 
 export = colors;
