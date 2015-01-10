@@ -82,7 +82,7 @@ testLib.addAsyncTest('simple user/password autofill', (assert) => {
 	fakePage.formList.push(form);
 
 	var autofiller = new autofill.AutoFiller(fakePage);
-	autofiller.autofill(item).then((result) => {
+	return autofiller.autofill(item).then((result) => {
 		assert.equal(result.count, 2);
 
 		fakePage.autofillEntries.sort((a,b) => {
@@ -93,9 +93,7 @@ testLib.addAsyncTest('simple user/password autofill', (assert) => {
 			{ key: 'f1', value: 'testuser@gmail.com' },
 			{ key: 'f2', value: 'testpass' }
 		]);
-
-		testLib.continueTests();
-	}).done();
+	});
 });
 
 testLib.addAsyncTest('ignore hidden fields', (assert) => {
@@ -114,12 +112,36 @@ testLib.addAsyncTest('ignore hidden fields', (assert) => {
 	fakePage.formList.push(form);
 
 	var autofiller = new autofill.AutoFiller(fakePage);
-	autofiller.autofill(item).then((result) => {
+	return autofiller.autofill(item).then((result) => {
 		assert.equal(result.count, 1);
 		assert.deepEqual(fakePage.autofillEntries, [
 			{ key: 'f1', value: 'testpass' }
 		]);
-		testLib.continueTests();
+	});
+});
+
+testLib.addAsyncTest('find unlabeled username fields', (assert) => {
+	var item = itemWithUsernameAndPassword('testuser@gmail.com', 'testpass');
+	var fakePage = new FakePageAccess();
+
+	var form = { fields: [{
+		key: 'f1',
+		type: forms.FieldType.Text,
+		visible: true
+	},{
+		key: 'f2',
+		type: forms.FieldType.Password,
+		visible: true
+	}] };
+	fakePage.formList.push(form);
+
+	var autofiller = new autofill.AutoFiller(fakePage);
+	return autofiller.autofill(item).then((result) => {
+		assert.equal(result.count, 2);
+		assert.deepEqual(fakePage.autofillEntries, [
+			{ key: 'f2', value: 'testpass' },
+			{ key: 'f1', value: 'testuser@gmail.com' }
+		]);
 	});
 });
 

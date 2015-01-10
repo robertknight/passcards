@@ -156,10 +156,15 @@ portRpc.on('autofill', (entries: forms.AutoFillEntry[]) => {
 	var filled = 0;
 
 	entries.forEach((entry) => {
+		var foundField = false;
 		if (typeof entry.key == 'number' && entry.key >= 0 && entry.key < lastFields.length) {
 			var elt = lastFields[entry.key];
 			elt.value = entry.value;
 			++filled;
+			foundField = true;
+		}
+		if (!foundField) {
+			console.warn('Failed to find input field to autofill');
 		}
 	});
 

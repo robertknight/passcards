@@ -42,46 +42,69 @@ export class AutoFiller {
 			this.page.findForms((formList) => {
 				var autofillEntries: forms.AutoFillEntry[] = [];
 
-				var fields: forms.InputField[] = [];
 				formList.forEach((form) => {
-					fields = fields.concat(form.fields);
-				});
+					var foundPasswordField = false;
+					var foundUsernameField = false;
 
-				fields.forEach((field) => {
-					if (!field.visible) {
-						return;
-					}
+					form.fields.forEach((field) => {
+						if (!field.visible) {
+							return;
+						}
 
-					var isUsernameField = false;
-					var isPasswordField = false;
+						var isUsernameField = false;
+						var isPasswordField = false;
 
-					if (this.fieldMatch(field, 'password') ||
-					    field.type == forms.FieldType.Password) {
-						isPasswordField = true;
-					}
+						if (this.fieldMatch(field, 'password') ||
+							field.type == forms.FieldType.Password) {
+							isPasswordField = true;
+						}
 
-					if (!isPasswordField) {
-						usernameKeys.forEach((key) => {
-							if (this.fieldMatch(field, key) ||
-								field.type === forms.FieldType.Email) {
-								isUsernameField = true;
+						if (!isPasswordField) {
+							usernameKeys.forEach((key) => {
+								if (this.fieldMatch(field, key) ||
+									field.type === forms.FieldType.Email) {
+									isUsernameField = true;
+								}
+							});
+						}
+
+						var autofillValue: string;
+						if (isUsernameField) {
+							autofillValue = content.account();
+							foundUsernameField = true;
+						} else if (isPasswordField) {
+							autofillValue = content.password();
+							foundPasswordField = true;
+						}
+
+						if (autofillValue) {
+							var entry: forms.AutoFillEntry = {
+								key: field.key,
+								value: autofillValue
+							};
+							autofillEntries.push(entry);
+						}
+					});
+
+					// if a password field was found in the form
+					// but no corresponding username field was found,
+					// pick the most likely candidate for a username
+					// field
+					if (foundPasswordField && !foundUsernameField) {
+						form.fields.forEach((field) => {
+							if (foundUsernameField || !field.visible) {
+								return;
+							}
+							if (field.type === forms.FieldType.Text ||
+							    field.type === forms.FieldType.Email) {
+
+								foundUsernameField = true;
+								autofillEntries.push({
+									key: field.key,
+									value: content.account()
+								});
 							}
 						});
-					}
-
-					var autofillValue: string;
-					if (isUsernameField) {
-						autofillValue = content.account();
-					} else if (isPasswordField) {
-						autofillValue = content.password();
-					}
-
-					if (autofillValue) {
-						var entry: forms.AutoFillEntry = {
-							key: field.key,
-							value: autofillValue
-						};
-						autofillEntries.push(entry);
 					}
 				});
 
