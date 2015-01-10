@@ -723,8 +723,6 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				itemActionDivider = div(theme.detailsView.divider, {});
 			}
 
-			var mainItemUrl = url_util.normalize(updatedItem.item.primaryLocation());
-
 			detailsContent = div(theme.detailsView.content, {key: contentKey},
 				titleField,
 				div(theme.detailsView.coreFields, {}, coreFields),
@@ -840,7 +838,12 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 					item_icons.IconControlF({
 						location: updatedItem.primaryLocation(),
 						iconProvider: this.props.iconProvider,
-						isFocused: true
+						isFocused: true,
+						onClick: () => {
+							var url = url_util.normalize(updatedItem.primaryLocation());
+							var siteWindow = window.open(url, '_blank');
+							siteWindow.focus();
+						}
 					}),
 					react.DOM.div(style.mixin(headerTheme.iconAndDetails.details),
 						// item title and account at start of entry transition

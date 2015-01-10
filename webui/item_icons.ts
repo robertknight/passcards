@@ -291,6 +291,7 @@ export interface IconControlProps {
 	location: string;
 	iconProvider: ItemIconProvider;
 	isFocused: boolean;
+	onClick?: () => void;
 }
 
 export class IconControl extends typed_react.Component<IconControlProps, {}> {
@@ -341,8 +342,17 @@ export class IconControl extends typed_react.Component<IconControlProps, {}> {
 			imgStyles.push(theme.itemIcon.icon.rounded);
 		}
 
-		return react.DOM.div(style.mixin([theme.itemIcon.container,
-			  this.props.isFocused ? theme.itemIcon.container.focused : null]),
+		var containerStyles: any[] = [theme.itemIcon.container];
+		if (this.props.isFocused) {
+			containerStyles.push(theme.itemIcon.container.focused);
+		}
+		if (this.props.onClick) {
+			containerStyles.push(theme.itemIcon.action);
+		}
+
+		return react.DOM.div(style.mixin(containerStyles, {
+			onClick: this.props.onClick
+		}),
 			react.DOM.img(style.mixin(imgStyles, {ref: 'img', src: icon.iconUrl}))
 		);
 	}

@@ -147,6 +147,10 @@ var styles = style.create({
 
 	// Item Icons
 	itemIcon: {
+		action: {
+			cursor: 'pointer'
+		},
+
 		container: {
 			width: 48,
 			height: 48,
