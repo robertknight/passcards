@@ -39,8 +39,13 @@ export class AutoFiller {
 		var usernameKeys = ['email', 'user', 'account'];
 
 		item.getContent().then((content) => {
-			this.page.findForms((fields) => {
+			this.page.findForms((formList) => {
 				var autofillEntries: forms.AutoFillEntry[] = [];
+
+				var fields: forms.InputField[] = [];
+				formList.forEach((form) => {
+					fields = fields.concat(form.fields);
+				});
 
 				fields.forEach((field) => {
 					if (!field.visible) {

@@ -105,6 +105,22 @@ function collectFieldsInDocument(document: Document) : InputField[] {
 	return fields;
 }
 
+function parentForm(input: HTMLInputElement) : HTMLFormElement {
+	var elt: Node = input;
+	while (elt) {
+		if (elt instanceof HTMLFormElement) {
+			return <HTMLFormElement>elt;
+		}
+		elt = elt.parentNode;
+	}
+	return null;
+}
+
+interface InputForm {
+	formElement: HTMLFormElement;
+	fieldGroup: forms.FieldGroup;
+}
+
 portRpc.on('find-fields', () => {
 	lastFields = [];
 
@@ -112,9 +128,27 @@ portRpc.on('find-fields', () => {
 	lastFields = inputFields.map((field) => {
 		return field.element;
 	});
-	
-	return inputFields.map((field) => {
-		return field.field;
+
+	var forms: InputForm[] = [];
+	inputFields.forEach((field) => {
+		var formElement = parentForm(field.element);
+		var form: InputForm;
+		for (var i=0; i < forms.length; i++) {
+			if (forms[i].formElement === formElement) {
+				form = forms[i];
+			}
+		}
+		if (!form) {
+			form = {
+				formElement: formElement,
+				fieldGroup: { fields: [] }
+			};
+			forms.push(form);
+		}
+		form.fieldGroup.fields.push(field.field);
+	});
+	return forms.map((form) => {
+		return form.fieldGroup;
 	});
 });
 

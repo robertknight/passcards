@@ -13,6 +13,10 @@ export enum FieldType {
 	Other
 }
 
+export interface FieldGroup {
+	fields: InputField[]
+}
+
 export interface InputField {
 	key: any;
 	type: FieldType;

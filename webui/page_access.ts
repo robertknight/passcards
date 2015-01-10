@@ -46,7 +46,7 @@ export interface PageAccess {
 	oauthRedirectUrl() : string;
 
 	/** Fetch a list of auto-fillable fields on the current page. */
-	findForms(callback: (formList: forms.InputField[]) => void) : void;
+	findForms(callback: (formList: forms.FieldGroup[]) => void) : void;
 
 	/** Auto-fill fields on the current page.
 	  * Returns a promise for the number of fields that were auto-filled.
@@ -130,8 +130,8 @@ export class ExtensionPageAccess implements PageAccess, ClipboardAccess {
 		});
 	}
 
-	findForms(callback: (fieldList: forms.InputField[]) => void) {
-		this.rpc.call('find-fields', [], (err: any, fieldList: forms.InputField[]) => {
+	findForms(callback: (fieldList: forms.FieldGroup[]) => void) {
+		this.rpc.call('find-fields', [], (err: any, fieldList: forms.FieldGroup[]) => {
 			if (err) {
 				callback([]);
 				return;
@@ -235,9 +235,9 @@ export class ChromeExtensionPageAccess implements PageAccess, ClipboardAccess {
 		return null;
 	}
 
-	findForms(callback: (formList: forms.InputField[]) => void) : void {
+	findForms(callback: (formList: forms.FieldGroup[]) => void) : void {
 		this.connectToCurrentTab().then((rpc) => {
-			rpc.call('find-fields', [], (err: any, forms: forms.InputField[]) => {
+			rpc.call('find-fields', [], (err: any, forms: forms.FieldGroup[]) => {
 				if (err) {
 					console.log('Error listing form fields:', err);
 					callback([]);

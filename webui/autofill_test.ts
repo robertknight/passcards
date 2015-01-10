@@ -12,7 +12,7 @@ import site_info = require('../lib/siteinfo/site_info');
 import testLib = require('../lib/test');
 
 class FakePageAccess implements page_access.PageAccess {
-	formList: forms.InputField[];
+	formList: forms.FieldGroup[];
 	autofillEntries: forms.AutoFillEntry[];
 
 	showEvents: event_stream.EventStream<void>;
@@ -31,7 +31,7 @@ class FakePageAccess implements page_access.PageAccess {
 		return '';
 	}
 
-	findForms(callback: (formList: forms.InputField[]) => void) : void {
+	findForms(callback: (formList: forms.FieldGroup[]) => void) : void {
 		setTimeout(() => {
 			callback(this.formList);
 		}, 0);
@@ -64,21 +64,22 @@ testLib.addAsyncTest('simple user/password autofill', (assert) => {
 	var item = itemWithUsernameAndPassword('testuser@gmail.com', 'testpass');
 	var fakePage = new FakePageAccess();
 
-	fakePage.formList.push({
-		key: 'f1',
-		id: 'username',
-		name: 'username',
-		type: forms.FieldType.Text,
-		visible: true
-	});
-
-	fakePage.formList.push({
-		key: 'f2',
-		id: '',
-		name: 'password',
-		type: forms.FieldType.Password,
-		visible: true
-	});
+	var form = {
+		fields: [{
+			key: 'f1',
+			id: 'username',
+			name: 'username',
+			type: forms.FieldType.Text,
+			visible: true
+		},{
+			key: 'f2',
+			id: '',
+			name: 'password',
+			type: forms.FieldType.Password,
+			visible: true
+		}]
+	};
+	fakePage.formList.push(form);
 
 	var autofiller = new autofill.AutoFiller(fakePage);
 	autofiller.autofill(item).then((result) => {
@@ -101,16 +102,16 @@ testLib.addAsyncTest('ignore hidden fields', (assert) => {
 	var item = itemWithUsernameAndPassword('testuser@gmail.com', 'testpass');
 	var fakePage = new FakePageAccess();
 
-	fakePage.formList.push({
+	var form = { fields: [{
 		key: 'f1',
 		type: forms.FieldType.Password,
 		visible: true
-	});
-	fakePage.formList.push({
+	},{
 		key: 'f2',
 		type: forms.FieldType.Password,
 		visible: false
-	});
+	}] };
+	fakePage.formList.push(form);
 
 	var autofiller = new autofill.AutoFiller(fakePage);
 	autofiller.autofill(item).then((result) => {
