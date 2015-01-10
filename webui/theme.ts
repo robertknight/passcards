@@ -566,7 +566,8 @@ var styles = style.create({
 				flexShrink: '0',
 				flexGrow: '0',
 				display: 'flex',
-				height: '100%'
+				height: '100%',
+				alignItems: 'center'
 			},
 		},
 
