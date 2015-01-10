@@ -276,7 +276,7 @@ var styles = style.create({
 	toolbar: style.merge(mixins.materialDesign.header, {
 		borderBottom: '1px solid #bbb',
 		paddingRight: 20,
-		height: 50,
+		height: 56,
 		flexShrink: 0,
 		zIndex: Z_LAYERS.TOOLBAR
 	}),
@@ -572,7 +572,7 @@ var styles = style.create({
 		},
 
 		list: {
-			marginTop: 50,
+			marginTop: 56,
 			height: '100%',
 			backgroundColor: 'white',
 			position: 'relative',
