@@ -1,6 +1,6 @@
 import assign = require('../lib/base/assign');
 import button = require('./controls/button');
-import colors = require('./colors');
+import colors = require('./controls/colors');
 
 interface ToolbarButtonProps {
 	value: string;

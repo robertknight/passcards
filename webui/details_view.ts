@@ -6,7 +6,7 @@ import typed_react = require('typed-react');
 
 import assign = require('../lib/base/assign');
 import button = require('./controls/button');
-import colors = require('./colors');
+import colors = require('./controls/colors');
 import crypto = require('../lib/onepass_crypto');
 import div = require('./base/div');
 import env = require('../lib/base/env');

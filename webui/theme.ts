@@ -1,34 +1,23 @@
 import style = require('ts-style');
 
 import assign = require('../lib/base/assign');
-import colors = require('./colors');
-import fonts = require('./fonts');
+import colors = require('./controls/colors');
+import controls_theme = require('./controls/theme');
+import fonts = require('./controls/fonts');
 import style_util = require('./base/style_util');
-import text_field_theme = require('./text_field_theme');
 
 var Z_LAYERS = {
-	// controls
-	TOASTER: 30,
-	MENU: 10,
-	FLOATING_ACTION_BUTTON: 9,
 	TOOLBAR: 5,
-
-	// views
 	UNLOCK_VIEW: 20,
 	DETAILS_VIEW: 2,
 	ITEM_LIST_VIEW: 1
 };
 
-var SHADOWS = {
-	RAISED_BUTTON: 'rgba(0, 0, 0, 0.26) 0px 2px 5px 0px',
-	RAISED_BUTTON_HOVERED: 'rgba(0, 0, 0, 0.4) 0px 4px 8px 0px'
-}
-
 var mixins = style.create({
 	materialDesign: {
 		header: {
 			backgroundColor: colors.MATERIAL_COLOR_PRIMARY,
-			boxShadow: SHADOWS.RAISED_BUTTON,
+			boxShadow: controls_theme.SHADOWS.RAISED_BUTTON,
 			color: '#fff',
 			fontWeight: 400
 		},
@@ -284,243 +273,6 @@ var styles = style.create({
 		flexShrink: 0,
 		zIndex: Z_LAYERS.TOOLBAR
 	}),
-
-	// Controls - Button
-	button: {
-		base: {
-			cursor: 'pointer',
-
-			':focus': {
-				outline: 'none'
-			},
-
-			transition: style_util.transitionOn({
-				backgroundColor: .3,
-				boxShadow: .3
-			}),
-
-			display: 'flex',
-			flexDirection: 'row',
-			alignItems: 'center',
-			justifyContent: 'center',
-			
-			// disable default button styles
-			border: 'none',
-			backgroundColor: 'transparent',
-			// disable button rounding on iOS
-			WebkitAppearance: 'none',
-		},
-
-		raised: {
-			boxShadow: SHADOWS.RAISED_BUTTON,
-
-			':hover': {
-				boxShadow: SHADOWS.RAISED_BUTTON_HOVERED
-			},
-
-			':focus': {
-				boxShadow: SHADOWS.RAISED_BUTTON_HOVERED
-			}
-		},
-
-		icon: {
-			width: 24,
-			height: 24
-		},
-
-		floatingAction: {
-			borderRadius: '50%',
-			zIndex: Z_LAYERS.FLOATING_ACTION_BUTTON,
-			position: 'relative',
-			overflow: 'hidden',
-
-			// see http://www.google.co.uk/design/spec/components/buttons.html#buttons-floating-action-button
-			normalSize: {
-				width: 56,
-				height: 56
-			},
-
-			miniSize: {
-				width: 40,
-				height: 40
-			}
-		},
-
-		rectangular: {
-			borderRadius: 3,
-			overflow: 'hidden',
-
-			position: 'relative',
-			width: 'fit-content',
-			marginLeft: 4,
-			marginRight: 4,
-
-			paddingLeft: 8,
-			paddingRight: 8,
-
-			minWidth: 64,
-
-			height: 36,
-
-			':hover': {
-				backgroundColor: 'rgba(0,0,0,0.1)'
-			},
-		},
-
-		circular: {
-			borderRadius: '50%',
-			position: 'relative',
-			overflow: 'hidden',
-			margin: 5,
-			width: 40,
-			height: 40
-		},
-
-		label: {
-			fontWeight: fonts.MEDIUM_WEIGHT,
-			fontSize: fonts.BUTTON_TEXT_SIZE,
-			textTransform: 'uppercase',
-
-			userSelect: 'none'
-		}
-	},
-
-	// Controls - Ink Ripple effect
-	inkRipple: {
-		overflow: 'hidden',
-		position: 'absolute',
-		left: 0,
-		top: 0,
-		WebkitTapHighlightColor: 'transparent',
-		/* the ripple listens for mouse events on the parent
-		 * element itself.
-		 */
-		pointerEvents: 'none',
-
-		container: {
-			// layout the child elements in their own stacking context so
-			// that they appear on top of the ripple effect
-			position: 'relative',
-			zIndex: 0
-		}
-	},
-
-	// Controls - Toaster
-	toaster: {
-		fontSize: 12,
-		position: 'fixed',
-		zIndex: Z_LAYERS.TOASTER,
-		bottom: 5,
-		backgroundColor: 'rgba(0,0,0,0.85)',
-		color: 'white',
-		borderRadius: 5,
-		display: 'flex',
-		flexDirection: 'row',
-		justifyContent: 'center',
-		alignItems: 'center',
-		padding: 4,
-		paddingLeft: 10,
-		paddingRight: 10,
-		left: '50%',
-		transform: 'translate(-50%)',
-
-		progressBar: {
-			outline: {
-				border: '1px solid white',
-				borderRadius: 5,
-				height: 4
-			},
-			meter: {
-				backgroundColor: 'white',
-				borderRadius: 5,
-				height: 4
-			}
-		},
-
-		'> *': {
-			marginLeft: 2,
-			marginRight: 2
-		}
-	},
-
-	// Controls - Menu
-	// http://www.google.co.uk/design/spec/components/menus.html
-	menu: {
-		position: 'absolute',
-		paddingTop: 8,
-		paddingBottom: 8,
-		boxSizing: 'border-box',
-		boxShadow: 'rgba(0, 0, 0, 0.26) 0px 1px 2px 2px',
-		backgroundColor: 'white',
-		overflowY: 'hidden',
-		transform: 'translate3d(0,0,0)',
-		transition: style_util.transitionOn({
-			opacity: .3,
-			transform: .3
-		}),
-
-		// container which holds the menu itself and the overlay
-		// which covers the background
-		container: {
-			position: 'absolute',
-			left: 0,
-			top: 0,
-			right: 0,
-			bottom: 0,
-			zIndex: Z_LAYERS.MENU,
-		},
-
-		// overlay which appears behind the menu
-		// and intercepts click/touch events to
-		// dismiss the menu.
-		//
-		// On small screens it also serves to
-		// dim the background to highlight the menu
-		overlay: {
-			position: 'fixed',
-
-			left: 0,
-			right: 0,
-			top: 0,
-			bottom: 0,
-
-			backgroundColor: '#000',
-			opacity: 0.01,
-
-			transition: style_util.transitionOn({
-				opacity: .3
-			})
-		},
-
-		item: {
-			position: 'relative',
-			paddingLeft: 16,
-			paddingRight: 16,
-			fontSize: 16,
-			cursor: 'pointer',
-			userSelect: 'none',
-			verticalAlign: 'middle',
-			lineHeight: '48px',
-			height: 48,
-			textOverflow: 'ellipsis',
-
-			':hover' : {
-				backgroundColor: colors.MATERIAL_GREY_P200
-			},
-
-			label: {
-				width: '100%',
-				height: '100%',
-				
-				// give menu item label its own stacking context so
-				// that it renders on top of ripple effect
-				transform: 'translate3d(0,0,0)'
-			}
-		}
-	},
-
-	// Controls - Text Field
-	textField: text_field_theme.styles,
 
 	// Item List
 	itemList: {

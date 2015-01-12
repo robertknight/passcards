@@ -2,11 +2,114 @@ import react = require('react');
 import style = require('ts-style');
 import typed_react = require('typed-react');
 
+import controls_theme = require('./theme');
 import div = require('../base/div');
+import fonts = require('./fonts');
 import reactutil = require('../base/reactutil');
 import ripple = require('./ripple');
 import svg_icon = require('./svg_icon');
-import theme = require('../theme');
+import style_util = require('../base/style_util');
+
+var theme = style.create({
+	button: {
+		base: {
+			cursor: 'pointer',
+
+			':focus': {
+				outline: 'none'
+			},
+
+			transition: style_util.transitionOn({
+				backgroundColor: .3,
+				boxShadow: .3
+			}),
+
+			display: 'flex',
+			flexDirection: 'row',
+			alignItems: 'center',
+			justifyContent: 'center',
+
+			// disable default button styles
+			border: 'none',
+			backgroundColor: 'transparent',
+			// disable button rounding on iOS
+			WebkitAppearance: 'none',
+		},
+
+		raised: {
+			boxShadow: controls_theme.SHADOWS.RAISED_BUTTON,
+
+			':hover': {
+				boxShadow: controls_theme.SHADOWS.RAISED_BUTTON_HOVERED
+			},
+
+			':focus': {
+				boxShadow: controls_theme.SHADOWS.RAISED_BUTTON_HOVERED
+			}
+		},
+
+		icon: {
+			width: 24,
+			height: 24
+		},
+
+		floatingAction: {
+			borderRadius: '50%',
+			zIndex: controls_theme.Z_LAYERS.FLOATING_ACTION_BUTTON,
+			position: 'relative',
+			overflow: 'hidden',
+
+			// see http://www.google.co.uk/design/spec/components/buttons.html#buttons-floating-action-button
+			normalSize: {
+				width: 56,
+				height: 56
+			},
+
+			miniSize: {
+				width: 40,
+				height: 40
+			}
+		},
+
+		rectangular: {
+			borderRadius: 3,
+			overflow: 'hidden',
+
+			position: 'relative',
+			width: 'fit-content',
+			marginLeft: 4,
+			marginRight: 4,
+
+			paddingLeft: 8,
+			paddingRight: 8,
+
+			minWidth: 64,
+
+			height: 36,
+
+			':hover': {
+				backgroundColor: 'rgba(0,0,0,0.1)'
+			},
+		},
+
+		circular: {
+			borderRadius: '50%',
+			position: 'relative',
+			overflow: 'hidden',
+			margin: 5,
+			width: 40,
+			height: 40
+		},
+
+		label: {
+			fontWeight: fonts.MEDIUM_WEIGHT,
+			fontSize: fonts.BUTTON_TEXT_SIZE,
+			textTransform: 'uppercase',
+
+			userSelect: 'none'
+		}
+	},
+});
 
 export enum Style {
 	Rectangular,

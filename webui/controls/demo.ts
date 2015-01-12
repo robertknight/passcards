@@ -6,15 +6,33 @@ import style = require('ts-style');
 
 import button = require('./button');
 import env = require('../../lib/base/env');
+import fonts = require('./fonts');
 import menu = require('./menu');
 import reactutil = require('../base/reactutil');
 import ripple = require('./ripple');
+import text_field = require('./text_field');
 
-var styles = style.create({
+var theme = style.create({
 	app: {
-		width: 300,
+		maxWidth: 500,
 		marginLeft: 'auto',
 		marginRight: 'auto'
+	},
+
+	section: {
+		marginBottom: 40,
+
+		header: {
+			fontSize: fonts.BODY1_TEXT_SIZE,
+			borderBottom: '1px solid #ccc',
+			paddingBottom: 5,
+			marginBottom: 10
+		},
+
+		content: {
+			paddingLeft: 16,
+			paddingRight: 16
+		}
 	},
 
 	rippleContainer: {
@@ -39,13 +57,35 @@ interface ControlDemoAppState {
 	};
 }
 
+function componentSection(name: string, ...children: React.ReactElement<any>[]) {
+	return react.DOM.div(style.mixin(theme.section, {}),
+		react.DOM.div(style.mixin(theme.section.header), name),
+		react.DOM.div(style.mixin(theme.section.content), children)
+	);
+}
+
 class ControlDemoApp extends typed_react.Component<ControlDemoAppProps, ControlDemoAppState> {
 	getInitialState() {
 		return {};
 	}
 
+	private renderTextFields() {
+		return componentSection('Text Fields',
+			text_field.TextFieldF({
+				type: 'text',
+				placeHolder: 'Text Field',
+				showUnderline: true
+			}),
+			text_field.TextFieldF({
+				type: 'text',
+				placeHolder: 'Text Field with Floating Label',
+				floatingLabel: true
+			})
+		);
+	}
+
 	private renderButtons() {
-		return react.DOM.div({},
+		return componentSection('Buttons',
 			button.ButtonF({
 				value: 'Flat Button',
 				onClick: () => {
@@ -77,7 +117,7 @@ class ControlDemoApp extends typed_react.Component<ControlDemoAppProps, ControlD
 		);
 	}
 
-	render() {
+	private renderMenus() {
 		var popupMenu: React.ReactElement<menu.MenuProps>;
 		if (this.state.menuPos) {
 			var menuItems = [{
@@ -105,21 +145,31 @@ class ControlDemoApp extends typed_react.Component<ControlDemoAppProps, ControlD
 			});
 		}
 
-		return react.DOM.div(style.mixin(styles.app, {
-		}),
-			'Ink Ripple',
-			react.DOM.div(style.mixin(styles.rippleContainer, {
+		return componentSection('Menus',
+			button.ButtonF({
+				value: 'Show Menu',
+				style: button.Style.RaisedRectangular,
 				onClick: (e: React.MouseEvent) => {
-					e.preventDefault();
 					this.setState({menuPos: {left: e.pageX, top: e.pageY}});
-				}	
+				}
 			}),
-				ripple.InkRippleF({color: '#808080'},
-					'Ripple Text'
+			reactutil.TransitionGroupF({}, popupMenu)
+		);
+	}
+
+	render() {
+		return react.DOM.div(style.mixin(theme.app, {}),
+			componentSection('Ripple Effects',
+				react.DOM.div(style.mixin(theme.rippleContainer, {
+				}),
+					ripple.InkRippleF({color: '#808080'},
+						'Ripple Child Element'
+					)
 				)
 			),
-			reactutil.TransitionGroupF({}, popupMenu),
-			this.renderButtons()
+			this.renderMenus(),
+			this.renderButtons(),
+			this.renderTextFields()
 		);
 	}
 }

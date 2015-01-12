@@ -9,8 +9,28 @@ import style = require('ts-style');
 import typed_react = require('typed-react');
 
 import div = require('../base/div');
-import theme = require('../theme');
 import reactutil = require('../base/reactutil');
+
+var theme = style.create({
+	inkRipple: {
+		overflow: 'hidden',
+	position: 'absolute',
+	left: 0,
+	top: 0,
+	WebkitTapHighlightColor: 'transparent',
+	/* the ripple listens for mouse events on the parent
+	 * element itself.
+	 */
+	pointerEvents: 'none',
+
+	container: {
+		// layout the child elements in their own stacking context so
+		// that they appear on top of the ripple effect
+		position: 'relative',
+	zIndex: 0
+	}
+	},
+});
 
 enum Phase {
 	Idle,

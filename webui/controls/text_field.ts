@@ -27,10 +27,129 @@ import react = require('react');
 import typed_react = require('typed-react');
 import style = require('ts-style');
 
-import colors = require('../colors');
+import colors = require('./colors');
 import reactutil = require('../base/reactutil');
-import theme = require('../theme');
-import text_field_theme = require('../text_field_theme');
+
+// Color of floating label and underline when focused
+var FOCUS_COLOR = colors.MATERIAL_COLOR_PRIMARY;
+
+// Color of label when unfocused
+var LABEL_COLOR = colors.MATERIAL_GREY_P500;
+
+var TRANSITION_DURATION = '0.2s';
+var TEXT_MARGIN = '0.5em 0 0.25em';
+
+var theme = style.create({
+	textField: {
+		normalTextFieldStyle: {
+			background: 'transparent',
+			fontSize: 16,
+			border: 'none',
+			outline: 'none',
+			left: 0,
+			width: '100%',
+			padding: 0,
+			margin: TEXT_MARGIN
+		},
+
+		underlineContainerStyle: {
+			position: 'relative',
+			left: 0,
+			right: 0,
+			height: 0,
+			overflow: 'visible'
+		},
+
+		underlineStyle: {
+			backgroundColor: LABEL_COLOR,
+			height: 1
+		},
+
+		// style used for the underline when the input
+		// has focus
+		focusedUnderlineStyle: {
+			backgroundColor: FOCUS_COLOR,
+			height: 2,
+			position: 'absolute',
+			top: 0,
+			left: 0,
+			right: 0,
+			opacity: 0,
+			transition: 'left ' + TRANSITION_DURATION + ' ease-out, right ' + TRANSITION_DURATION + ' ease-out'
+		},
+
+		errorUnderlineStyle: {
+			backgroundColor: colors.MATERIAL_RED_P400
+		},
+
+		fullWidthTextFieldStyle: {
+			width: '100%'
+		},
+
+		placeHolderStyling: {
+			color: LABEL_COLOR,
+			fontSize: 16,
+			left: 1,
+			position: 'absolute',
+			opacity: 1,
+			transition: 'top .18s linear, font-size .18s linear, opacity .10s linear',
+			pointerEvents: 'none',
+			margin: TEXT_MARGIN
+		},
+
+		floatingLabelPlaceHolderStyling: {
+			top: 27
+		},
+
+		containerStyling: {
+			position: 'relative',
+			paddingBottom: 8
+		},
+
+		placeHolderTopStyling: {
+			fontSize: 12,
+			top: 4
+		},
+
+		scrollBlocksStyle: {
+			backgroundColor: LABEL_COLOR,
+			bottom: 6,
+			height: 3,
+			opacity: 0,
+			position: 'absolute',
+			transition: 'opacity .28s linear',
+			width: 3,
+			':before': {
+				backgroundColor: LABEL_COLOR,
+				bottom: 0,
+				content: "''",
+				position: 'absolute',
+				height: 3,
+				width: 3,
+				right: 6
+			},
+			':after': {
+				backgroundColor: LABEL_COLOR,
+				bottom: 0,
+				content: "''",
+				position: 'absolute',
+				height: 3,
+				width: 3,
+				right: -6
+			}
+		},
+
+		focusStyle: {
+			backgroundColor: FOCUS_COLOR,
+			':before': {
+				backgroundColor: FOCUS_COLOR
+			},
+			':after': {
+				backgroundColor: FOCUS_COLOR
+			}
+		}
+	}
+});
 
 /** Specify custom styling for the component. */
 export interface TextFieldStyle {
@@ -143,7 +262,7 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 			if (props.floatingLabel) {
 				placeHolderStyling.push(styles.placeHolderTopStyling);
 				if (this.state.focus) {
-					placeHolderStyling.push({ color: text_field_theme.focusColor });
+					placeHolderStyling.push({ color: FOCUS_COLOR });
 				}
 			} else {
 				placeHolderStyling.push({ opacity: '0' });
