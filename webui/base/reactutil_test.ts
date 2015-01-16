@@ -1,7 +1,7 @@
-/// <reference path="../typings/react-0.12.d.ts" />
+/// <reference path="../../typings/react-0.12.d.ts" />
 
-import reactutil = require('./base/reactutil');
-import testLib = require('../lib/test');
+import reactutil = require('./reactutil');
+import testLib = require('../../lib/test');
 
 testLib.addTest('merge props', (assert) => {
 	assert.deepEqual(reactutil.mergeProps({
