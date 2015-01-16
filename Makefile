@@ -59,7 +59,7 @@ $(webui_script_dir)/crypto_worker.js: build/current
 
 build/webui/theme.css: build/current
 	@echo "Generating theme CSS"
-	@$(NODE_BIN_DIR)/ts-style build/webui/theme.js build/webui/controls/*.js > $@
+	@$(NODE_BIN_DIR)/ts-style build/webui/theme.js build/webui/controls/*.js build/webui/setup_view.js > $@
 
 $(webui_css_dir)/app.css: webui/app.css build/webui/theme.css
 	@echo "Generating web app stylesheet"

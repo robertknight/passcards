@@ -181,11 +181,15 @@ export class FileVFS implements vfs.VFS {
 		return true;
 	}
 
+	accountName() : string {
+		return null;
+	}
+
 	credentials() : Object {
 		return {};
 	}
 
-	setCredentials(credentials : Object) {
+	setCredentials(credentials: Object) {
 		// unused
 	}
 

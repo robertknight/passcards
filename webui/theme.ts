@@ -8,6 +8,7 @@ import style_util = require('./base/style_util');
 
 var Z_LAYERS = {
 	TOOLBAR: 5,
+	SETUP_VIEW: 20,
 	UNLOCK_VIEW: 20,
 	DETAILS_VIEW: 2,
 	ITEM_LIST_VIEW: 1
@@ -119,20 +120,6 @@ var styles = style.create({
 
 	// Animations
 	animations: animations,
-
-	// Setup View
-	setupView: {
-		width: '100%',
-		height: '100%',
-		backgroundColor: colors.MATERIAL_COLOR_PRIMARY,
-		color: 'white',
-		fontWeight: 'bold',
-
-		display: 'flex',
-		flexDirection: 'row',
-		alignItems: 'center',
-		justifyContent: 'center'
-	},
 
 	// Item Icons
 	itemIcon: {

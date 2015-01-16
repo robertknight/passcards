@@ -44,6 +44,8 @@ export interface VFS {
 	login(): Q.Promise<string>;
 	/** Returns true if the user is logged in */
 	isLoggedIn(): boolean;
+	/** Returns the name of the account which the user is logged in to */
+	accountName(): string;
 	/** Returns credentials for the logged in account.
 	 * This is an opaque object which can later be restored.
 	 */

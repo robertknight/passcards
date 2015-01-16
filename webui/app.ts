@@ -34,6 +34,7 @@ import onepass_crypto = require('../lib/onepass_crypto');
 import page_access = require('./page_access');
 import reactutil = require('./base/reactutil');
 import settings = require('./settings');
+import setup_view = require('./setup_view');
 import siteinfo_client = require('../lib/siteinfo/client');
 import sync = require('../lib/sync');
 import theme = require('./theme');
@@ -64,22 +65,6 @@ class Status {
 	}
 }
 
-/** The app setup screen. This is responsible for introducing the user
-  * to the app and displaying the initial status page when connecting
-  * to cloud storage.
-  */
-class SetupView extends typed_react.Component<{}, {}> {
-	render() {
-		return div(theme.setupView, {},
-			div(null, {},
-				'Connecting to Dropbox...'
-			)
-		);
-	}
-}
-
-var SetupViewF = reactutil.createFactory(SetupView);
-
 interface AppViewState {
 	store?: item_store.Store;
 	syncer?: sync.Syncer;
@@ -107,6 +92,8 @@ interface AppServices {
 	iconProvider: item_icons.ItemIconProvider;
 	keyAgent: key_agent.SimpleKeyAgent;
 	clipboard: page_access.ClipboardAccess;
+	settings?: settings.Store;
+	fs: vfs.VFS;
 }
 
 interface AppViewProps {
@@ -245,7 +232,10 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 
 	render() : React.ReactElement<any> {
 		if (!this.state.store) {
-			return SetupViewF({});
+			return setup_view.SetupViewF({
+				settings: this.props.services.settings,
+				fs: this.props.services.fs
+			});
 		}
 
 		var children: React.ComponentElement<any>[] = [];
@@ -480,18 +470,18 @@ export class App {
 	private activeAppView: any;
 
 	private savedState: AppViewState;
-	private settings: settings.Store;
 	private services: AppServices;
+	private fs: vfs.VFS;
 
 	constructor() {
 		this.savedState = {};
-		this.settings = new settings.SimpleStore();
+		var settingStore = new settings.SimpleStore();
 
-		var fs = this.setupVfs();
+		this.fs = this.setupVfs();
 		var browserExt = this.setupBrowserExtension();
 
 		var keyAgent = new key_agent.SimpleKeyAgent();
-		keyAgent.setAutoLockTimeout(this.settings.get(settings.Setting.AutoLockTimeout));
+		keyAgent.setAutoLockTimeout(settingStore.get(settings.Setting.AutoLockTimeout));
 
 		var iconProvider = this.setupItemIconProvider();
 		
@@ -500,8 +490,14 @@ export class App {
 			autofiller: new autofill.AutoFiller(browserExt.pageAccess),
 			pageAccess: browserExt.pageAccess,
 			keyAgent: keyAgent,
-			clipboard: browserExt.clipboard
+			clipboard: browserExt.clipboard,
+			settings: settingStore,
+			fs: this.fs
 		};
+
+		this.services.keyAgent.onLock().listen(() => {
+			this.updateState({isLocked: true});
+		});
 
 		onepass_crypto.CryptoJsCrypto.initWorkers();
 
@@ -518,10 +514,36 @@ export class App {
 		// update the initial URL when the app is loaded
 		this.updateState({currentUrl: browserExt.pageAccess.currentUrl});
 
-		fs.login().then(() => {
+		browserExt.pageAccess.pageChanged.listen((url) => {
+			this.updateState({currentUrl: url});
+		});
+
+		// handle login/logout events
+		settingStore.onChanged.listen((setting) => {
+			if (setting == settings.Setting.ActiveAccount) {
+				var account = settingStore.get(settings.Setting.ActiveAccount);
+				if (account) {
+					this.initAccount(account);
+				} else {
+					this.updateState({store: null, syncer: null});
+				}
+			}
+		});
+
+		// connect to current account if set
+		var account = settingStore.get(settings.Setting.ActiveAccount);
+		if (account) {
+			this.initAccount(account);
+		}
+	}
+
+	// setup the local store, remote store and item syncing
+	// once the user completes login
+	private initAccount(account: settings.Account) {
+		this.fs.login().then(() => {
 			try {
 				var itemDatabase = new key_value_store.IndexedDBDatabase();
-				var vault = new onepass.Vault(fs, '/1Password/1Password.agilekeychain', this.services.keyAgent);
+				var vault = new onepass.Vault(this.fs, account.storePath, this.services.keyAgent);
 				var store = new local_store.Store(itemDatabase, this.services.keyAgent);
 				var syncer = new sync.Syncer(store, vault);
 				syncer.syncKeys().then(() => {
@@ -537,14 +559,6 @@ export class App {
 				this.updateState({
 					store: store,
 					syncer: syncer
-				});
-
-				this.services.keyAgent.onLock().listen(() => {
-					this.updateState({isLocked: true});
-				});
-
-				browserExt.pageAccess.pageChanged.listen((url) => {
-					this.updateState({currentUrl: url});
 				});
 			} catch (err) {
 				console.log('vault setup failed', err, err.stack);

@@ -48,6 +48,10 @@ export class FS implements vfs.VFS {
 		return true;
 	}
 
+	accountName(): string {
+		return null;
+	}
+
 	credentials() : Object {
 		return {}
 	}

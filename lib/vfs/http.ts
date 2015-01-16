@@ -48,6 +48,10 @@ export class Client implements vfs.VFS {
 		// unused
 	}
 
+	accountName(): string {
+		return null;
+	}
+
 	stat(path: string) : Q.Promise<vfs.FileInfo> {
 		// stat() is implemented by listing the parent dir
 		// and returning the corresponding FileInfo object from
