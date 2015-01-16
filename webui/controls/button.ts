@@ -15,8 +15,18 @@ var theme = style.create({
 		base: {
 			cursor: 'pointer',
 
+			// remove dotted focus outline around button
+			// elements in most browsers
 			':focus': {
 				outline: 'none'
+			},
+
+			// remove dotted focus outline around <button>
+			// elements in Firefox.
+			//
+			// see http://stackoverflow.com/questions/71074
+			'::-moz-focus-inner': {
+				border: 0
 			},
 
 			transition: style_util.transitionOn({
@@ -34,6 +44,10 @@ var theme = style.create({
 			backgroundColor: 'transparent',
 			// disable button rounding on iOS
 			WebkitAppearance: 'none',
+
+			// override default fonts for <button>
+			// element. Required when tested in Firefox 37
+			fontFamily: fonts.FAMILY
 		},
 
 		raised: {
@@ -49,8 +63,8 @@ var theme = style.create({
 		},
 
 		icon: {
-			width: 24,
-			height: 24
+			 width: 24,
+			 height: 24
 		},
 
 		floatingAction: {
@@ -201,18 +215,27 @@ export class Button extends typed_react.Component<ButtonProps,{}> {
 
 		var buttonIcon: React.ReactElement<any>;
 		if (this.props.iconUrl) {
-			buttonIcon = svg_icon.SvgIconF(style.mixin(theme.button.icon, {
-				href: this.props.iconUrl,
-				fill: this.props.color,
-				width: 24,
-				height: 24,
-				viewBox: {
-					x: 0,
-					y: 0,
+			// the SVG icon here is wrapped in a container
+			// <div> to work around an issue in Firefox where
+			// a fixed-width <div> or <svg> placed as a direct child
+			// of a <button> element gets left-aligned instead of being
+			// centered.
+			//
+			// Tested in Firefox 37.
+			buttonIcon = react.DOM.div({},
+				svg_icon.SvgIconF(style.mixin(theme.button.icon, {
+					href: this.props.iconUrl,
+					fill: this.props.color,
 					width: 24,
-					height: 24
-				}
-			}));
+					height: 24,
+					viewBox: {
+						x: 0,
+						y: 0,
+						width: 24,
+						height: 24
+					}
+				}))
+			);
 		}
 
 		var label: React.ReactElement<any>;

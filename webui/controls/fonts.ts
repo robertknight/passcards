@@ -1,7 +1,7 @@
 // see http://www.google.com/design/spec/style/typography.html
 
 var fonts = {
-	FAMILY: 'RobotoDraft',
+	FAMILY: 'RobotoDraft, Roboto, "Helvetica Neue", sans-serif',
 
 	LIGHT_WEIGHT: 300,
 	REGULAR_WEIGHT: 400,
