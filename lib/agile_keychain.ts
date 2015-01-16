@@ -10,7 +10,7 @@ import Path = require('path');
 import underscore = require('underscore');
 
 import asyncutil = require('./base/asyncutil');
-import agilekeychain = require('./agilekeychain');
+import agile_keychain_entries = require('./agile_keychain_entries');
 import collectionutil = require('./base/collectionutil');
 import crypto = require('./onepass_crypto');
 import dateutil = require('./base/dateutil');
@@ -61,7 +61,7 @@ var DEFAULT_AGILEKEYCHAIN_SECURITY_LEVEL = 'SL5';
 /** Convert an item to JSON data for serialization in a .1password file.
   * @p encryptedData is the encrypted version of the item's content.
   */
-export function toAgileKeychainItem(item: item_store.Item, encryptedData: string) : agilekeychain.Item {
+export function toAgileKeychainItem(item: item_store.Item, encryptedData: string) : agile_keychain_entries.Item {
 	var keychainItem: any = {};
 
 	keychainItem.createdAt = dateutil.unixTimestampFromDate(item.createdAt);
@@ -85,7 +85,7 @@ export function toAgileKeychainItem(item: item_store.Item, encryptedData: string
   * The item content is initially encrypted. The decrypted
   * contents can be retrieved using getContent()
   */
-export function fromAgileKeychainItem(vault: Vault, data: agilekeychain.Item) : item_store.Item {
+export function fromAgileKeychainItem(vault: Vault, data: agile_keychain_entries.Item) : item_store.Item {
 	var item = new item_store.Item(vault);
 	item.updatedAt = dateutil.dateFromUnixTimestamp(data.updatedAt);
 	item.title = data.title;
@@ -116,8 +116,8 @@ export function fromAgileKeychainItem(vault: Vault, data: agilekeychain.Item) : 
 	return item;
 }
 
-export function toAgileKeychainField(field: item_store.ItemField) : agilekeychain.ItemField {
-	var keychainField = new agilekeychain.ItemField;
+export function toAgileKeychainField(field: item_store.ItemField) : agile_keychain_entries.ItemField {
+	var keychainField = new agile_keychain_entries.ItemField;
 	keychainField.k = fieldKindMap.get(field.kind);
 	keychainField.n = field.name;
 	keychainField.t = field.title;
@@ -125,7 +125,7 @@ export function toAgileKeychainField(field: item_store.ItemField) : agilekeychai
 	return keychainField;
 }
 
-export function fromAgileKeychainField(fieldData: agilekeychain.ItemField) : item_store.ItemField {
+export function fromAgileKeychainField(fieldData: agile_keychain_entries.ItemField) : item_store.ItemField {
 	var field = new item_store.ItemField;
 	field.kind = fieldKindMap.get2(fieldData.k);
 	field.name = fieldData.n;
@@ -137,8 +137,8 @@ export function fromAgileKeychainField(fieldData: agilekeychain.ItemField) : ite
 /** Convert an item_store.ItemContent entry into a `contents` blob for storage in
   * a 1Password item.
   */
-function toAgileKeychainContent(content: item_store.ItemContent) : agilekeychain.ItemContent {
-	var keychainContent = new agilekeychain.ItemContent();
+function toAgileKeychainContent(content: item_store.ItemContent) : agile_keychain_entries.ItemContent {
+	var keychainContent = new agile_keychain_entries.ItemContent();
 	if (content.sections) {
 		keychainContent.sections = [];
 		content.sections.forEach((section) => {
@@ -167,7 +167,7 @@ function toAgileKeychainContent(content: item_store.ItemContent) : agilekeychain
 /** Convert a decrypted JSON `contents` blob from a 1Password item
   * into an item_store.ItemContent instance.
   */
-function fromAgileKeychainContent(data: agilekeychain.ItemContent) : item_store.ItemContent {
+function fromAgileKeychainContent(data: agile_keychain_entries.ItemContent) : item_store.ItemContent {
 	var content = new item_store.ItemContent();
 	if (data.sections) {
 		data.sections.forEach((section) => {
@@ -200,8 +200,8 @@ function fromAgileKeychainContent(data: agilekeychain.ItemContent) : item_store.
 	return content;
 }
 
-function toAgileKeychainSection(section: item_store.ItemSection) : agilekeychain.ItemSection {
-	var keychainSection = new agilekeychain.ItemSection();
+function toAgileKeychainSection(section: item_store.ItemSection) : agile_keychain_entries.ItemSection {
+	var keychainSection = new agile_keychain_entries.ItemSection();
 	keychainSection.name = section.name;
 	keychainSection.title = section.title;
 	keychainSection.fields = [];
@@ -214,7 +214,7 @@ function toAgileKeychainSection(section: item_store.ItemSection) : agilekeychain
 /** Convert a section entry from the JSON contents blob for
   * an item into an item_store.ItemSection instance.
   */
-function fromAgileKeychainSection(data: agilekeychain.ItemSection) : item_store.ItemSection {
+function fromAgileKeychainSection(data: agile_keychain_entries.ItemSection) : item_store.ItemSection {
 	var section = new item_store.ItemSection();
 	section.name = data.name;
 	section.title = data.title;
@@ -227,8 +227,8 @@ function fromAgileKeychainSection(data: agilekeychain.ItemSection) : item_store.
 	return section;
 }
 
-function toAgileKeychainFormField(field: item_store.WebFormField) : agilekeychain.WebFormField {
-	var keychainField = new agilekeychain.WebFormField();
+function toAgileKeychainFormField(field: item_store.WebFormField) : agile_keychain_entries.WebFormField {
+	var keychainField = new agile_keychain_entries.WebFormField();
 	keychainField.id = field.id;
 	keychainField.name = field.name;
 	keychainField.type = fieldTypeCodeMap.get(field.type);
@@ -237,7 +237,7 @@ function toAgileKeychainFormField(field: item_store.WebFormField) : agilekeychai
 	return keychainField;
 }
 
-function fromAgileKeychainFormField(keychainField: agilekeychain.WebFormField) : item_store.WebFormField {
+function fromAgileKeychainFormField(keychainField: agile_keychain_entries.WebFormField) : item_store.WebFormField {
 	var field = new item_store.WebFormField();
 	field.id = keychainField.id;
 	field.name = keychainField.name;
@@ -252,7 +252,7 @@ export class Vault implements item_store.Store {
 	private fs: vfs.VFS;
 	private path: string;
 	private keyAgent: key_agent.KeyAgent;
-	private keys : Q.Promise<agilekeychain.EncryptionKeyEntry[]>;
+	private keys : Q.Promise<agile_keychain_entries.EncryptionKeyEntry[]>;
 
 	// map of (item ID -> Item) for items that have been
 	// modified and require the contents.js index file to be updated
@@ -282,23 +282,23 @@ export class Vault implements item_store.Store {
 		this.indexUpdatePending = false;
 	}
 
-	private getKeys() : Q.Promise<agilekeychain.EncryptionKeyEntry[]> {
+	private getKeys() : Q.Promise<agile_keychain_entries.EncryptionKeyEntry[]> {
 		if (!this.keys) {
 			this.keys = this.loadKeys();
 		}
 		return this.keys;
 	}
 
-	private loadKeys() : Q.Promise<agilekeychain.EncryptionKeyEntry[]> {
-		var keys = Q.defer<agilekeychain.EncryptionKeyEntry[]>();
+	private loadKeys() : Q.Promise<agile_keychain_entries.EncryptionKeyEntry[]> {
+		var keys = Q.defer<agile_keychain_entries.EncryptionKeyEntry[]>();
 		var content = this.fs.read(Path.join(this.dataFolderPath(), 'encryptionKeys.js'));
 		content.then((content:string) => {
-			var keyList : agilekeychain.EncryptionKeyList = JSON.parse(content);
+			var keyList : agile_keychain_entries.EncryptionKeyList = JSON.parse(content);
 			if (!keyList.list) {
 				keys.reject('Missing `list` entry in encryptionKeys.js file');
 				return;
 			}
-			var vaultKeys : agilekeychain.EncryptionKeyEntry[] = [];
+			var vaultKeys : agile_keychain_entries.EncryptionKeyEntry[] = [];
 			keyList.list.forEach((entry) => {
 				// Using 1Password v4, there are two entries in the
 				// encryptionKeys.js file, 'SL5' and 'SL3'.
@@ -317,7 +317,7 @@ export class Vault implements item_store.Store {
 		return keys.promise;
 	}
 
-	private writeKeys(keyList: agilekeychain.EncryptionKeyList, passHint: string) : Q.Promise<void> {
+	private writeKeys(keyList: agile_keychain_entries.EncryptionKeyList, passHint: string) : Q.Promise<void> {
 		// FIXME - Improve handling of concurrent attempts to update encryptionKeys.js.
 		// If the file in the VFS has been modified since the original read, the operation
 		// should fail.
@@ -379,7 +379,7 @@ export class Vault implements item_store.Store {
 	  */
 	isLocked() : Q.Promise<boolean> {
 		return Q.all([this.keyAgent.listKeys(), this.getKeys()]).spread<boolean>(
-			(keyIDs: string[], keyEntries: agilekeychain.EncryptionKeyEntry[]) => {
+			(keyIDs: string[], keyEntries: agile_keychain_entries.EncryptionKeyEntry[]) => {
 
 			var locked = false;
 			keyEntries.forEach((entry) => {
@@ -600,11 +600,11 @@ export class Vault implements item_store.Store {
 	changePassword(oldPass: string, newPass: string, newPassHint: string, iterations?: number) : Q.Promise<void> {
 		return this.isLocked().then((locked) => {
 			if (locked) {
-				return Q.reject<agilekeychain.EncryptionKeyEntry[]>(new Error('Vault must be unlocked before changing the password'));
+				return Q.reject<agile_keychain_entries.EncryptionKeyEntry[]>(new Error('Vault must be unlocked before changing the password'));
 			}
 			return this.getKeys();
 		}).then((keys) => {
-			var keyList = <agilekeychain.EncryptionKeyList>{
+			var keyList = <agile_keychain_entries.EncryptionKeyList>{
 				list: []
 			};
 
@@ -667,7 +667,7 @@ export class Vault implements item_store.Store {
 			validation: btoa(encryptedKey.validation)
 		};
 
-		var keyList = <agilekeychain.EncryptionKeyList>{
+		var keyList = <agile_keychain_entries.EncryptionKeyList>{
 			list: [masterKeyEntry],
 			SL5: masterKeyEntry.identifier
 		};
@@ -692,14 +692,14 @@ export class Vault implements item_store.Store {
 	getRawDecryptedData(item: item_store.Item) : Q.Promise<string> {
 		var encryptedContent = this.fs.read(this.itemPath(item.uuid));
 		return encryptedContent.then((content) => {
-			var keychainItem = <agilekeychain.Item>JSON.parse(content);
+			var keychainItem = <agile_keychain_entries.Item>JSON.parse(content);
 			return this.decryptItemData(keychainItem.securityLevel, atob(keychainItem.encrypted));
 		});
 	}
 
 	getContent(item: item_store.Item) : Q.Promise<item_store.ItemContent> {
 		return this.getRawDecryptedData(item).then((data: string) => {
-			var content = <agilekeychain.ItemContent>(JSON.parse(data));
+			var content = <agile_keychain_entries.ItemContent>(JSON.parse(data));
 			return fromAgileKeychainContent(content);
 		});
 	}

@@ -12,7 +12,7 @@ import event_stream = require('./base/event_stream');
 import item_merge = require('./item_merge');
 import item_store = require('./item_store');
 import key_agent = require('./key_agent');
-import onepass = require('./onepass');
+import agile_keychain = require('./agile_keychain');
 
 function syncLog(...args: any[]) {
 	//console.log.apply(console, args);
@@ -66,7 +66,7 @@ interface SyncItem {
 
 export class Syncer {
 	private store: item_store.SyncableStore;
-	private vault: onepass.Vault;
+	private vault: agile_keychain.Vault;
 
 	// queue of items left to sync
 	private syncQueue: SyncItem[];
@@ -79,7 +79,7 @@ export class Syncer {
 
 	onProgress: event_stream.EventStream<SyncProgress>;
 
-	constructor(store: item_store.SyncableStore, vault: onepass.Vault) {
+	constructor(store: item_store.SyncableStore, vault: agile_keychain.Vault) {
 		this.store = store;
 		this.vault = vault;
 		this.onProgress = new event_stream.EventStream<SyncProgress>();

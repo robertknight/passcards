@@ -10,7 +10,7 @@ import exportLib = require('./export');
 import item_store = require('./item_store');
 import key_agent = require('./key_agent');
 import nodefs = require('./vfs/node');
-import onepass = require('./onepass');
+import agile_keychain = require('./agile_keychain');
 import testLib = require('./test');
 import vfs = require('./vfs/vfs');
 
@@ -44,15 +44,15 @@ class ItemAndContent {
 	content : item_store.ItemContent;
 }
 
-function createTestVault() : Q.Promise<onepass.Vault> {
-	var vault = Q.defer<onepass.Vault>();
+function createTestVault() : Q.Promise<agile_keychain.Vault> {
+	var vault = Q.defer<agile_keychain.Vault>();
 	var fs = new nodefs.FileVFS('lib/test-data');
 	vfs.VFSUtil.rmrf(fs, 'copy.agilekeychain').then(() => {
 		return fs.stat('test.agilekeychain')
 	}).then((srcFolder) => {
 		return vfs.VFSUtil.cp(fs, srcFolder, 'copy.agilekeychain')
 	}).then(() => {
-		var newVault = new onepass.Vault(fs, 'copy.agilekeychain');
+		var newVault = new agile_keychain.Vault(fs, 'copy.agilekeychain');
 		newVault.unlock('logMEin').then(() => {
 			vault.resolve(newVault);
 		}).done();
@@ -66,7 +66,7 @@ testLib.addAsyncTest('Import item from .1pif file', (assert) => {
 	var actualItems = importer.importItems(fs, 'test.1pif');
 	actualItems.then((items) => {
 		assert.equal(items.length, 1, 'Imported expected number of items');
-		var expectedItem = onepass.fromAgileKeychainItem(null, {
+		var expectedItem = agile_keychain.fromAgileKeychainItem(null, {
 		  "vault": null,
 		  "updatedAt": 1398413120,
 		  "title": "Facebook",
@@ -133,7 +133,7 @@ testLib.addAsyncTest('Compare vaults against .1pif files', (assert) => {
 		var expectedItems = importer.importItems(fs, tst.itemDataPath);
 		var actualItems = Q.defer<ItemAndContent[]>();
 
-		var vault = new onepass.Vault(fs, tst.path);
+		var vault = new agile_keychain.Vault(fs, tst.path);
 		var items : item_store.Item[];
 		vault.unlock(tst.password).then(() => {
 			return vault.listItems();
@@ -439,10 +439,10 @@ testLib.addAsyncTest('Create new vault', (assert) => {
 	var fs = new nodefs.FileVFS('/tmp');
 	var pass = 'test-new-vault-pass';
 	var hint = 'the-password-hint';
-	var vault : onepass.Vault;
+	var vault : agile_keychain.Vault;
 	var keyIterations = 100;
 
-	return onepass.Vault.createVault(fs, '/new-vault', pass, hint, keyIterations)
+	return agile_keychain.Vault.createVault(fs, '/new-vault', pass, hint, keyIterations)
 	.then((vault_) => {
 		vault = vault_;
 		return vault.unlock(pass)
@@ -477,7 +477,7 @@ testLib.addAsyncTest('Create new vault', (assert) => {
 });
 
 testLib.addAsyncTest('Change vault password', (assert) => {
-	var vault: onepass.Vault;
+	var vault: agile_keychain.Vault;
 	createTestVault().then((vault_) => {
 		vault = vault_;
 		return vault.changePassword('wrong-pass', 'new-pass', 'new-hint');
@@ -496,7 +496,7 @@ testLib.addAsyncTest('Change vault password', (assert) => {
 });
 
 testLib.addAsyncTest('Save existing item to new vault', (assert) => {
-	var vault: onepass.Vault;
+	var vault: agile_keychain.Vault;
 	var item: item_store.Item;
 
 	return createTestVault().then((vault_) => {
@@ -534,7 +534,7 @@ testLib.addTest('Item content account and password accessors', (assert) => {
 });
 
 testLib.addTest('Item field value formatting', (assert) => {
-	var dateField = onepass.fromAgileKeychainField({
+	var dateField = agile_keychain.fromAgileKeychainField({
 		k: 'date',
 		n: 'dob',
 		t: 'Date of Birth',
@@ -542,7 +542,7 @@ testLib.addTest('Item field value formatting', (assert) => {
 	});
 	assert.ok(dateField.valueString().match(/Dec 23 1987/) != null);
 
-	var monthYearField = onepass.fromAgileKeychainField({
+	var monthYearField = agile_keychain.fromAgileKeychainField({
 		k: 'monthYear',
 		n: 'expdate',
 		t: 'Expiry Date',

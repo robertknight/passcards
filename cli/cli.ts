@@ -24,7 +24,7 @@ import item_search = require('../lib/item_search');
 import item_store = require('../lib/item_store');
 import key_agent = require('../lib/key_agent');
 import nodefs = require('../lib/vfs/node');
-import onepass = require('../lib/onepass');
+import agile_keychain = require('../lib/agile_keychain');
 import vfs = require('../lib/vfs/vfs');
 
 interface HandlerMap {
@@ -56,7 +56,7 @@ export class CLI {
 	private passwordGenerator : () => string;
 
 	constructor(io? : consoleio.TermIO, agent? : key_agent.KeyAgent, clipboardImpl?: clipboard.Clipboard) {
-		this.configDir = process.env.HOME + "/.config/onepass-web";
+		this.configDir = process.env.HOME + "/.config/agile_keychain-web";
 		this.io = io || new consoleio.ConsoleIO();
 		this.keyAgent = agent || new key_agent.SimpleKeyAgent();
 		this.clipboard = clipboardImpl || clipboard.createPlatformClipboard();
@@ -209,7 +209,7 @@ export class CLI {
 		return path.promise;
 	}
 
-	private unlockVault(vault: onepass.Vault) : Q.Promise<void> {
+	private unlockVault(vault: agile_keychain.Vault) : Q.Promise<void> {
 		return vault.isLocked().then((isLocked) => {
 			if (!isLocked) {
 				return Q<void>(null);
@@ -273,7 +273,7 @@ export class CLI {
 		}
 	}
 
-	private initVault(customVaultPath: string) : Q.Promise<onepass.Vault> {
+	private initVault(customVaultPath: string) : Q.Promise<agile_keychain.Vault> {
 		var storage : vfs.VFS = new nodefs.FileVFS('/');
 		var dropboxRoot : string;
 
@@ -284,7 +284,7 @@ export class CLI {
 		}
 
 		var authenticated = Q<void>(null);
-		var vault = Q.defer<onepass.Vault>();
+		var vault = Q.defer<agile_keychain.Vault>();
 
 		authenticated.then(() => {
 			var vaultPath : Q.Promise<string>;
@@ -294,7 +294,7 @@ export class CLI {
 				vaultPath = this.findExistingVaultInDropbox(storage, dropboxRoot);
 			}
 			vaultPath.then((path) => {
-				vault.resolve(new onepass.Vault(storage, path, this.keyAgent));
+				vault.resolve(new agile_keychain.Vault(storage, path, this.keyAgent));
 			}, (err) => {
 				vault.reject(err);
 			}).done();
@@ -312,7 +312,7 @@ export class CLI {
 	/** Returns the item from @p vault matching a given @p pattern.
 	  * If there are multiple matching items the user is prompted to select one.
 	  */
-	private selectItem(vault: onepass.Vault, pattern: string) : Q.Promise<item_store.Item> {
+	private selectItem(vault: agile_keychain.Vault, pattern: string) : Q.Promise<item_store.Item> {
 		return item_search.lookupItems(vault, pattern).then((items) => {
 			return this.select(items, 'items', 'Item', pattern, (item) => { return item.title; });
 		});
@@ -374,7 +374,7 @@ export class CLI {
 		});
 	}
 
-	private addItemCommand(vault: onepass.Vault, type: string, title: string) : Q.Promise<void> {
+	private addItemCommand(vault: agile_keychain.Vault, type: string, title: string) : Q.Promise<void> {
 		var types = item_search.matchType(type);
 		return this.select(types, 'item types', 'item type', type, (typeCode) => {
 			return item_store.ITEM_TYPES[<string>typeCode].name;
@@ -404,7 +404,7 @@ export class CLI {
 		});
 	}
 
-	private trashItemCommand(vault: onepass.Vault, pattern: string, trash: boolean) : Q.Promise<void[]> {
+	private trashItemCommand(vault: agile_keychain.Vault, pattern: string, trash: boolean) : Q.Promise<void[]> {
 		return item_search.lookupItems(vault, pattern).then((items) => {
 			var trashOps : Q.Promise<void>[] = [];
 			items.forEach((item) => {
@@ -429,7 +429,7 @@ export class CLI {
 		});
 	}
 
-	private setPasswordCommand(vault: onepass.Vault, iterations?: number) : Q.Promise<number> {
+	private setPasswordCommand(vault: agile_keychain.Vault, iterations?: number) : Q.Promise<number> {
 		var result = Q.defer<number>();
 		var currentPass: string;
 		var newPass: string;
@@ -464,7 +464,7 @@ export class CLI {
 		return result.promise;
 	}
 
-	private removeCommand(vault: onepass.Vault, pattern: string) : Q.Promise<void> {
+	private removeCommand(vault: agile_keychain.Vault, pattern: string) : Q.Promise<void> {
 		var items : item_store.Item[];
 
 		return item_search.lookupItems(vault, pattern).then((items_) => {
@@ -499,7 +499,7 @@ export class CLI {
 		return Q<void>(null);
 	}
 
-	private listCommand(vault: onepass.Vault, pattern: string) : Q.Promise<void> {
+	private listCommand(vault: agile_keychain.Vault, pattern: string) : Q.Promise<void> {
 		return vault.listItems().then((items) => {
 			items.sort((a, b) => {
 				return a.title.toLowerCase().localeCompare(b.title.toLowerCase());
@@ -516,7 +516,7 @@ export class CLI {
 		});
 	}
 
-	private showItemCommand(vault: onepass.Vault, pattern: string, format: ShowItemFormat) : Q.Promise<void> {
+	private showItemCommand(vault: agile_keychain.Vault, pattern: string, format: ShowItemFormat) : Q.Promise<void> {
 		var item: item_store.Item;
 		return this.selectItem(vault, pattern).then((_item) => {
 			item = _item;
@@ -538,7 +538,7 @@ export class CLI {
 		});
 	}
 
-	private copyItemCommand(vault: onepass.Vault, pattern: string, field: string) : Q.Promise<void> {
+	private copyItemCommand(vault: agile_keychain.Vault, pattern: string, field: string) : Q.Promise<void> {
 		return this.selectItem(vault, pattern).then((item) => {
 			return item.getContent().then((content) => {
 				var matches = item_search.matchField(content, field);
@@ -571,13 +571,13 @@ export class CLI {
 	private newVaultCommand(fs: vfs.VFS, path: string, iterations?: number) : Q.Promise<void> {
 		return this.readNewPassword().then((newPass) => {
 			var absPath = pathLib.resolve(path);
-			return onepass.Vault.createVault(fs, absPath, newPass.pass, newPass.hint, iterations).then((vault) => {
+			return agile_keychain.Vault.createVault(fs, absPath, newPass.pass, newPass.hint, iterations).then((vault) => {
 				this.printf('New vault created in %s', vault.vaultPath());
 			});
 		});
 	}
 
-	private repairCommand(vault: onepass.Vault) : Q.Promise<void[]> {
+	private repairCommand(vault: agile_keychain.Vault) : Q.Promise<void[]> {
 		return vault.listItems().then((items) => {
 			var sortedItems = underscore.sortBy(items, (item) => {
 				return item.title.toLowerCase();
@@ -607,7 +607,7 @@ export class CLI {
 		var args = this.createParser().parseArgs(argv);
 		mkdirp.sync(this.configDir)
 
-		var currentVault : onepass.Vault;
+		var currentVault : agile_keychain.Vault;
 		var vaultReady : Q.Promise<void>;
 		var requiresUnlockedVault = ['new-vault', 'gen-password'].indexOf(args.command) == -1;
 

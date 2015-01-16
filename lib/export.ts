@@ -4,7 +4,7 @@
 import Q = require('q');
 
 import item_store = require('./item_store');
-import onepass = require('./onepass');
+import onepass = require('./agile_keychain');
 import vfs = require('./vfs/vfs');
 
 export interface Exporter {
