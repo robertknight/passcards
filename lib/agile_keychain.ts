@@ -642,8 +642,8 @@ export class Vault implements item_store.Store {
 	  */
 	static createVault(fs: vfs.VFS, path: string, password: string, hint: string,
 	  passIterations: number = DEFAULT_VAULT_PASS_ITERATIONS) : Q.Promise<Vault> {
-		if (!stringutil.endsWith(path, '.agile_keychain_entries')) {
-			path += '.agile_keychain_entries';
+		if (!stringutil.endsWith(path, '.agilekeychain')) {
+			path += '.agilekeychain';
 		}
 
 		var vault = new Vault(fs, path);
