@@ -203,8 +203,6 @@ interface TextFieldState {
 	// a flag set when the user initiates focusing the
 	// text field and then cleared a moment later
 	focusing?: boolean;
-	// the current value of the input field
-	value?: string;
 	// the X-coordinate of the mouse event that
 	// caused the field to gain focus
 	focusX?: number;
@@ -223,8 +221,7 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 	getInitialState() {
 		return {
 			focus: false,
-			focusing: true,
-			value: ''
+			focusing: true
 		};
 	}
 
@@ -408,6 +405,8 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 	effectiveValue() {
 		if (this.props.value !== undefined) {
 			return this.props.value;
+		} else if (this.props.defaultValue) {
+			return this.props.defaultValue;
 		} else if (this.isMounted()) {
 			return (<HTMLInputElement>this.refs['textField'].getDOMNode()).value;
 		} else {
