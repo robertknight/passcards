@@ -37,7 +37,7 @@ export class PasscardsClient implements site_info.SiteInfoProvider {
 			return <site_info.QueryResult>{
 				info: {
 					url: url,
-					icons: []
+					icons: <site_info.Icon[]>[]
 				},
 				state: site_info.QueryState.Ready
 			};

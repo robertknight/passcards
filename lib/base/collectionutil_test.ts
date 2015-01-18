@@ -78,8 +78,10 @@ testLib.addTest('convert list to map', (assert) => {
 	assert.deepEqual(map.get(3), {k:3, v:3});
 });
 
+type KeyValueMap = {[index: string]: number};
+
 testLib.addAsyncTest('batched updates', (assert) => {
-	var savedItems = <{[index: string] : number}>{};
+	var savedItems: KeyValueMap = {};
 
 	var queue = new collectionutil.BatchedUpdateQueue<KeyValue>((updates: KeyValue[]) => {
 		updates.forEach((pair) => {
@@ -93,7 +95,7 @@ testLib.addAsyncTest('batched updates', (assert) => {
 	var update3 = queue.push({key: 'two', value: 3});
 
 	return Q.all([update1, update2, update3]).then(() => {
-		assert.deepEqual(savedItems, {
+		assert.deepEqual(savedItems, <KeyValueMap>{
 			one: 2,
 			two: 3
 		});
