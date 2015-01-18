@@ -1,8 +1,6 @@
 /// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
-/// <reference path="../typings/sprintf.d.ts" />
 
 import Q = require('q');
-import sprintf = require('sprintf');
 
 import item_store = require('./item_store');
 
@@ -16,8 +14,8 @@ export function repairItem(item: item_store.Item, reportError: (err: string) => 
 		var expectedLocation = content.urls.length > 0 ? content.urls[0].url : '';
 		var wasRepaired = false;
 		if (item.primaryLocation() != expectedLocation) {
-			reportError(sprintf('%s:', item.title));
-			reportError(sprintf('  Location mismatch. Actual "%s", expected "%s"', item.primaryLocation(), expectedLocation));
+			reportError(`${item.title}:`);
+			reportError(`  Location mismatch. Actual "${item.primaryLocation()}", expected "${expectedLocation}"`);
 
 			item.locations = [];
 			content.urls.forEach((url) => {

@@ -1,12 +1,8 @@
-/// <reference path="../../typings/sprintf.d.ts" />
-
 // Functions for extracting the size and data of individual icons in a .ico
 // file
 
 // .ico file format reference: http://msdn.microsoft.com/en-us/library/ms997538.aspx
 // and http://en.wikipedia.org/wiki/ICO_(file_format)
-
-import sprintf = require('sprintf');
 
 import collectionutil = require('../base/collectionutil');
 
@@ -89,11 +85,10 @@ function readNthIcon(leData: collectionutil.LittleEndianDataView, index: number)
 	var imageDataOffset = leData.getUint32(offset + 12);
 
 	if (width == 0 || height == 0) {
-		throw new Error(sprintf('Invalid bitmap size (%dx%d)', width, height));
+		throw new Error(`Invalid bitmap size (${width}x${height})`);
 	}
 	if (imageDataOffset + imageDataLength > leData.byteLength) {
-		throw new Error(sprintf('Invalid bitmap data offset (%d..%d of %d)', imageDataOffset,
-		  (imageDataOffset + imageDataLength), leData.byteLength));
+		throw new Error(`Invalid bitmap data offset (${imageDataOffset}..${imageDataOffset + imageDataLength} of ${leData.byteLength})`);
 	}
 
 	// read bitmap data -
@@ -111,18 +106,18 @@ function readNthIcon(leData: collectionutil.LittleEndianDataView, index: number)
 	// see http://msdn.microsoft.com/en-gb/library/windows/desktop/dd183376%28v=vs.85%29.aspx
 	var biSize = leData.getUint32(imageDataOffset);
 	if (biSize != 40 /* sizeof(BITMAPINFOHEADER) */) {
-		throw new Error(sprintf('Unsupported bitmap format. Header size %d', biSize));
+		throw new Error(`Unsupported bitmap format. Header size ${biSize}`);
 	}
 
 	var biHeight = leData.getInt32(imageDataOffset + 8);
 	if (biHeight != height * 2) {
-		throw new Error(sprintf('Unexpected bitmap height (%dpx)', biHeight));
+		throw new Error(`Unexpected bitmap height (${biHeight}px)`);
 	}
 
 	var BI_RGB = 0;
 	var biCompression = leData.getUint32(imageDataOffset + 16);
 	if (biCompression != BI_RGB) {
-		throw new Error(sprintf('Unsupported bitmap compression type %d', biCompression));
+		throw new Error(`Unsupported bitmap compression type ${biCompression}`);
 	}
 
 	var bmpFileHeader = bitmapFileHeader(sourceData);

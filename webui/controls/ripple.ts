@@ -4,7 +4,6 @@
 // See https://www.polymer-project.org/docs/elements/paper-elements.html#paper-ripple 
 
 import react = require('react');
-import sprintf = require('sprintf');
 import style = require('ts-style');
 import typed_react = require('typed-react');
 

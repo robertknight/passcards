@@ -2,7 +2,6 @@
 /// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
 
 /// <reference path="../typings/argparse.d.ts" />
-/// <reference path="../typings/sprintf.d.ts" />
 /// <reference path="../typings/xdiff.d.ts" />
 
 // test.ts provides a wrapper around QUnitJS (qunitjs.com)
@@ -18,7 +17,6 @@
 
 import argparse = require('argparse');
 import path = require('path');
-import sprintf = require('sprintf');
 import underscore = require('underscore');
 import xdiff = require('xdiff');
 var qunit = require('qunitjs');
@@ -193,7 +191,7 @@ export function start(args?: string[]) {
 			var testNames = tests.map((testCase) => {
 				return '"' + testCase.name + '"';
 			});
-			console.log(sprintf('Running %d matching tests: %s', tests.length, testNames.join(", ")));
+			console.log('Running %d matching tests: %s', tests.length, testNames.join(", "));
 		}
 	}
 	if (opts.list) {
@@ -201,7 +199,7 @@ export function start(args?: string[]) {
 			console.log(testCase.name);
 		});
 	} else {
-		console.log(sprintf('START: %s', path.basename(process.argv[1])));
+		console.log('START: %s', path.basename(process.argv[1]));
 		run(tests);
 	}
 }
@@ -231,13 +229,11 @@ function run(tests: TestCase[]) {
 
 	qunit.testDone((result: TestResult) => {
 		var summary = result.passed == result.total ? 'PASS' : 'FAIL';
-		var resultStr = sprintf('%s: %s (%sms)', summary, result.name, result.runtime);
-		console.log(resultStr);
+		console.log('%s: %s (%sms)', summary, result.name, result.runtime);
 	});
 
 	qunit.done((result: TestSuiteResult) => {
-		var summary = sprintf('END: Assertions: %d, Failed: %d, Duration: %dms', result.total, result.failed, result.runtime);
-		console.log(summary);
+		console.log('END: Assertions: %d, Failed: %d, Duration: %dms', result.total, result.failed, result.runtime);
 		if (env.isNodeJS()) {
 			if (result.failed > 0) {
 				process.on('exit', () => {

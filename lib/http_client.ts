@@ -1,11 +1,9 @@
 /// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
-/// <reference path="../typings/sprintf.d.ts" />
 
 import http = require('http');
 import https = require('https');
 import Q = require('q');
-import sprintf = require('sprintf');
 import urlLib = require('url');
 
 import asyncutil = require('./base/asyncutil');
@@ -35,7 +33,7 @@ export class BaseError extends err_util.BaseError {
 
 export class UnexpectedStatusError extends BaseError {
 	constructor(reply: Reply) {
-		super(sprintf('Unexpected response status %d', reply.status), reply);
+		super(`Unexpected response status ${reply.status}`, reply);
 	}
 }
 

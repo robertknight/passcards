@@ -1,5 +1,4 @@
 import react = require('react');
-import sprintf = require('sprintf');
 import typed_react = require('typed-react');
 import underscore = require('underscore');
 
@@ -20,13 +19,15 @@ export class SvgIconProps {
 
 export class SvgIcon extends typed_react.Component<SvgIconProps, {}> {
 	render() {
+		var fillAttr = underscore.escape(this.props.fill);
+		var hrefAttr = underscore.escape(this.props.href);
+
 		return react.DOM.svg(reactutil.mergeProps(this.props, {
 			dangerouslySetInnerHTML: {
-				__html: sprintf('<use x="0" y="0" fill="%s" xlink:href="%s"></use>',
-				  underscore.escape(this.props.fill), underscore.escape(this.props.href))
+				__html: `<use x="0" y="0" fill="${fillAttr}" xlink:href="${hrefAttr}"></use>`,
 			},
-			viewBox: sprintf('%d %d %d %d', this.props.viewBox.x, this.props.viewBox.y,
-			  this.props.viewBox.width, this.props.viewBox.height),
+			viewBox: `${this.props.viewBox.x} ${this.props.viewBox.y}
+			          ${this.props.viewBox.width} ${this.props.viewBox.height}`,
 			width: this.props.width,
 			height: this.props.height
 		}));

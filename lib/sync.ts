@@ -1,10 +1,8 @@
 /// <reference path="../typings/DefinitelyTyped/clone/clone.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
-/// <reference path="../typings/sprintf.d.ts" />
 
 import assert = require('assert');
 import Q = require('q');
-import sprintf = require('sprintf');
 
 import collectionutil = require('./base/collectionutil');
 import dateutil = require('./base/dateutil');
@@ -273,12 +271,12 @@ export class Syncer {
 				itemDone();
 			}).catch((err: Error) => {
 				syncLog('Syncing item %s failed:', uuid, err);
-				var itemErr = new Error(sprintf('Failed to save updates for item %s: %s', uuid, err));
+				var itemErr = new Error(`Failed to save updates for item ${uuid}: ${err}`);
 				itemDone(itemErr);
 			});
 		}).catch((err) => {
 			syncLog('Retrieving updates for %s failed:', uuid, err);
-			var itemErr = new Error(sprintf('Failed to retrieve updated item %s: %s', uuid, err));
+			var itemErr = new Error(`Failed to retrieve updated item ${uuid}: ${err}`);
 			itemDone(itemErr);
 		});
 	}
