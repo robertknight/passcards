@@ -361,3 +361,22 @@ testLib.addAsyncTest('item revision updates on save', (assert) => {
 		assert.equal(item.parentRevision, revisions[1]);
 	});
 });
+
+testLib.addAsyncTest('updating keys replaces existing keys', (assert) => {
+	var env = setupEnv();
+	var store = new local_store.Store(env.database, env.keyAgent);
+
+	env.masterKey.identifier = 'KEY1';
+	return store.saveKeys([env.masterKey], '').then(() => {
+		return store.listKeys();
+	}).then((keys) => {
+		assert.equal(keys.length, 1);
+		env.masterKey.identifier = 'KEY2';
+		return store.saveKeys([env.masterKey], '');
+	}).then(() => {
+		return store.listKeys();
+	}).then((keys) => {
+		assert.equal(keys.length, 1);
+	});
+});
+

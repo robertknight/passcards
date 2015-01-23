@@ -329,12 +329,21 @@ export class Store implements item_store.SyncableStore {
 	}
 
 	saveKeys(keys: key_agent.Key[], hint: string) : Q.Promise<void> {
-		var keysSaved: Q.Promise<void>[] = [];
-		keys.forEach((key) => {
-			keysSaved.push(this.keyStore.set(KEY_ID_PREFIX + key.identifier, key));
+		return this.keyStore.list(KEY_ID_PREFIX).then((keyIds) => {
+			// remove existing keys
+			var removeOps = keyIds.map((id) => {
+				return this.keyStore.remove(id);
+			});
+			return Q.all(removeOps);
+		}).then(() => {
+			// save new keys and hint
+			var keysSaved: Q.Promise<void>[] = [];
+			keys.forEach((key) => {
+				keysSaved.push(this.keyStore.set(KEY_ID_PREFIX + key.identifier, key));
+			});
+			keysSaved.push(this.keyStore.set('hint', hint));
+			return asyncutil.eraseResult(Q.all(keysSaved));
 		});
-		keysSaved.push(this.keyStore.set('hint', hint));
-		return asyncutil.eraseResult(Q.all(keysSaved));
 	}
 
 	passwordHint() : Q.Promise<string> {
