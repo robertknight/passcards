@@ -45,12 +45,12 @@ export class FileVFS implements vfs.VFS {
 		return result.promise;
 	}
 
-	searchIn(path: string, namePattern: string, cb: (files: vfs.FileInfo[]) => any) : void {
+	searchIn(path: string, namePattern: string, cb: (error: Error, files: vfs.FileInfo[]) => any) : void {
 		var fileList = this.list(path);
 		fileList.then((files) => {
 			files.forEach((file : vfs.FileInfo) => {
 				if (file.name.indexOf(namePattern) != -1) {
-					cb([file]);
+					cb(null, [file]);
 				}
 
 				if (file.isDir) {
@@ -58,11 +58,11 @@ export class FileVFS implements vfs.VFS {
 				}
 			});
 		}, (error) => {
-			throw error;
+			cb(error, null);
 		}).done();
 	}
 
-	search(namePattern: string, cb: (files: vfs.FileInfo[]) => any) : void {
+	search(namePattern: string, cb: (error: Error, files: vfs.FileInfo[]) => any) : void {
 		vfs.VFSUtil.searchIn(this, '', namePattern, cb);
 	}
 

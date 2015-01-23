@@ -113,16 +113,17 @@ export class DropboxVFS implements vfs.VFS {
 		return result.promise;
 	}
 
-	search(namePattern: string, cb: (files: vfs.FileInfo[]) => any) {
+	search(namePattern: string, cb: (error: Error, files: vfs.FileInfo[]) => any) {
 		this.client.search('/', namePattern, {}, (err, files) => {
 			if (err) {
-				console.log('searching Dropbox failed', convertError(err));
+				cb(convertError(err), null);
+				return;
 			}
 			var fileList : vfs.FileInfo[] = [];
 			files.forEach((file) => {
 				fileList.push(this.toVfsFile(file));
 			});
-			cb(fileList);
+			cb(null, fileList);
 		});
 	}
 

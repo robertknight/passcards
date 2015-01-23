@@ -81,7 +81,7 @@ export class Client implements vfs.VFS {
 		});
 	}
 
-	search(namePattern: string, cb: (files: vfs.FileInfo[]) => any) : void {
+	search(namePattern: string, cb: (error: Error, files: vfs.FileInfo[]) => any) : void {
 		vfs.VFSUtil.searchIn(this, '', namePattern, cb);
 	}
 

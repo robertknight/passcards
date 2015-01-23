@@ -155,7 +155,8 @@ function addTests(fsName: string, createFs: () => Q.Promise<vfs.VFS>) {
 		fs.then((fs) => {
 			var fileWritten = fs.write('test-search-folder', 'test-content');
 			fileWritten.then(() => {
-				fs.search('search-fold', (files) => {
+				fs.search('search-fold', (error, files) => {
+					assert.ok(error == null);
 					assert.equal(files.length, 1);
 					var expectedFile = {
 						name: 'test-search-folder',

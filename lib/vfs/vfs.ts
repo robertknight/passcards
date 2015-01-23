@@ -56,7 +56,7 @@ export interface VFS {
 	/** Returns the metadata of the file at the given path */
 	stat(path: string) : Q.Promise<FileInfo>;
 	/** Search for files whose name contains @p namePattern */
-	search(namePattern: string, cb: (files: FileInfo[]) => any) : void;
+	search(namePattern: string, cb: (err: Error, files: FileInfo[]) => any) : void;
 	/** Read the contents of a file at @p path */
 	read(path: string) : Q.Promise<string>
 	/** Write the contents of a file at @p path */
@@ -153,12 +153,13 @@ export class VFSUtil {
 	  * VFS.search() should be used by clients instead of this method as
 	  * some VFS implementations may use a faster method.
 	  */
-	static searchIn(fs: VFS, path: string, namePattern: string, cb: (files: FileInfo[]) => any) : void {
+	static searchIn(fs: VFS, path: string, namePattern: string,
+	                cb: (error: Error, files: FileInfo[]) => any) : void {
 		var fileList = fs.list(path);
 		fileList.then((files) => {
 			files.forEach((file) => {
 				if (file.name.indexOf(namePattern) != -1) {
-					cb([file]);
+					cb(null, [file]);
 				}
 
 				if (file.isDir) {
@@ -166,7 +167,7 @@ export class VFSUtil {
 				}
 			});
 		}, (error) => {
-			throw error;
+			cb(error, null);
 		}).done();
 	}
 }
