@@ -8,8 +8,11 @@ import agile_keychain = require('../lib/agile_keychain');
 import button = require('./controls/button');
 import colors = require('./controls/colors');
 import reactutil = require('./base/reactutil');
+import ripple = require('./controls/ripple');
 import settings = require('./settings');
+import style_util = require('./base/style_util');
 import text_field = require('./controls/text_field');
+import transition_mixin = require('./base/transition_mixin');
 import vfs = require('../lib/vfs/vfs');
 
 var theme = style.create({
@@ -17,7 +20,41 @@ var theme = style.create({
 		width: '100%',
 		height: '100%',
 		backgroundColor: colors.MATERIAL_COLOR_PRIMARY,
-		color: 'white'
+		color: 'white',
+		display: 'flex',
+		flexDirection: 'row',
+		justifyContent: 'center',
+		alignItems: 'center'
+	},
+
+	storeList: {
+		marginTop: 10,
+		marginBottom: 10,
+
+		item: {
+			padding: 5,
+			paddingTop: 5,
+			paddingBottom: 5,
+			cursor: 'pointer',
+			position: 'relative',
+			overflow: 'hidden',
+			userSelect: 'none'
+		}
+	},
+
+	screen: {
+		transition: style_util.transitionOn({
+			transform: .3,
+			opacity: .6
+		}),
+		position: 'absolute',
+		left: 10,
+		top: 10,
+		width: 'calc(100% - 20px)',
+		height: 'calc(100% - 20px)',
+		backgroundColor: colors.MATERIAL_COLOR_ACCENT2,
+		color: 'white',
+		transform: 'translateX(0px)'
 	}
 });
 
@@ -33,6 +70,7 @@ interface Store {
 
 interface StoreListState {
 	stores?: Store[];
+	error?: Error;
 }
 
 /** Displays a list of available password stores in a cloud file system */
@@ -41,8 +79,13 @@ class StoreList extends typed_react.Component<StoreListProps, StoreListState> {
 		return {};
 	}
 
-	componentDidMount() {
-		this.props.vfs.search('.agilekeychain', (files) => {
+	private startSearch() {
+		this.props.vfs.search('.agilekeychain', (error, files) => {
+			if (error) {
+				this.setState({error: error});
+				return;
+			}
+
 			var stores = this.state.stores || <Store[]>[];
 			stores = stores.concat(files.map((file) => {
 				return {path: file.path};
@@ -56,19 +99,41 @@ class StoreList extends typed_react.Component<StoreListProps, StoreListState> {
 		});
 	}
 
+	componentDidMount() {
+		this.startSearch();
+	}
+
 	render() {
 		if (!this.state.stores) {
-			return react.DOM.div({}, 'Searching for existing stores...');
+			if (this.state.error) {
+				return react.DOM.div(style.mixin(theme.storeList),
+				  `Unable to search Dropbox for existing stores: ${this.state.error.message}`,
+					button.ButtonF({
+						style: button.Style.RaisedRectangular,
+						backgroundColor: 'white',
+						value: 'Try Again',
+						onClick: () => {
+							this.setState({error: null});
+							this.startSearch();
+						}
+					})
+				)
+			} else {
+				return react.DOM.div(style.mixin(theme.storeList), 'Searching for existing stores...');
+			}
 		} else {
-			return react.DOM.div({}, this.state.stores.map((store) => {
-				return react.DOM.div({
+			return react.DOM.div(style.mixin(theme.storeList), this.state.stores.map((store) => {
+				var displayPath = store.path.slice(1);
+				return react.DOM.div(style.mixin(theme.storeList.item, {
+					key: store.path,
 					onClick: () => {
 						this.props.onSelectStore(store.path);
 					}
-				}, store.path);
+				}), ripple.InkRippleF({}), displayPath);
 			}),
 				button.ButtonF({
 					style: button.Style.RaisedRectangular,
+					backgroundColor: 'white',
 					value: 'Create New Store',
 					onClick: () => {
 						this.props.onNewStore();
@@ -102,6 +167,39 @@ interface NewStoreOptions {
 	hint?: string;
 }
 
+interface SlideProps {
+	children?: React.ReactElement<any>[];
+}
+
+interface SlideState extends transition_mixin.TransitionMixinState {
+}
+
+class Slide extends typed_react.Component<SlideProps, SlideState> {
+	render() {
+		var screenStyles: any[] = [theme.screen];
+		switch (this.state.transition) {
+		case reactutil.TransitionState.Entering:
+			screenStyles.push({
+				transform: 'translateX(100%)',
+				opacity: 0.1
+			});
+			break;
+		case reactutil.TransitionState.Leaving:
+			screenStyles.push({
+				transform: 'translateX(-100%)',
+				opacity: 0.1
+			});
+			break;
+		}
+
+		return react.DOM.div(style.mixin(screenStyles),
+			this.props.children
+		);
+	}
+}
+
+var SlideF = reactutil.createFactory(Slide, transition_mixin.TransitionMixinM);
+
 interface SetupViewState {
 	currentScreen?: Screen;
 	newStore?: NewStoreOptions;
@@ -128,22 +226,28 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 		var currentScreen: React.ReactElement<any>;
 		switch (this.state.currentScreen) {
 		case Screen.Welcome:
-			return this.renderWelcomeScreen();
+			currentScreen = SlideF({key: 'screen-welcome'}, this.renderWelcomeScreen());
 			break;
 		case Screen.DropboxConnect:
-			return this.renderDropboxConnectScreen();
+			currentScreen = SlideF({key: 'screen-connect-dropbox'}, this.renderDropboxConnectScreen());
 			break;
 		case Screen.NewStore:
-			return this.renderNewStoreScreen();
+			currentScreen = SlideF({key: 'screen-new-store'}, this.renderNewStoreScreen());
 			break;
 		case Screen.SelectStore:
-			return this.renderSelectStoreScreen();
+			currentScreen = SlideF({key: 'screen-select-store'}, this.renderSelectStoreScreen());
+			break;
 		case Screen.Connecting:
-			return react.DOM.div({}, 'Connecting to Store');
+			currentScreen = SlideF({key: 'screen-connect-store'},
+				react.DOM.div({}, 'Connecting to Store')
+			);
+			break;
 		}
 
 		return react.DOM.div(style.mixin(theme.setupView),
-			currentScreen
+			reactutil.TransitionGroupF({},
+				currentScreen
+			)
 		);
 	}
 
@@ -151,6 +255,7 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 		return react.DOM.div({}, 'Welcome to Passcards',
 			button.ButtonF({
 				style: button.Style.RaisedRectangular,
+				backgroundColor: 'white',
 				value: 'Continue',
 				onClick: () => {
 					this.setState({currentScreen: Screen.DropboxConnect});
@@ -163,6 +268,7 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 		return react.DOM.div({}, 'Connect to Dropbox',
 			button.ButtonF({
 				style: button.Style.RaisedRectangular,
+				backgroundColor: 'white',
 				value: 'Connect to Dropbox',
 				onClick: () => {
 					this.props.fs.login().then(() => {

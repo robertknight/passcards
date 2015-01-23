@@ -151,12 +151,13 @@ export function rectHeight(rect: Rect) {
 /** Describes the transition state of a view.
   *
   * The state is initially 'Entering' and transitions to
-  * 'Idle' a moment afterwards.
+  * 'Entered' a moment afterwards.
   */
 export enum TransitionState {
 	Entering,
-	Idle,
-	Leaving
+	Entered,
+	Leaving,
+	Left
 }
 
 export class TransitionEndListener {

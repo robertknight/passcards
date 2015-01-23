@@ -21,7 +21,6 @@ import reactutil = require('./base/reactutil');
 import shortcut = require('./base/shortcut');
 import style_util = require('./base/style_util');
 import text_field = require('./controls/text_field');
-import transition_events = require('./base/transition_events');
 import theme = require('./theme');
 import toolbar = require('./toolbar');
 import url_util = require('../lib/base/url_util');
@@ -296,9 +295,9 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			})
 		];
 		
-		if (this.state.transition !== reactutil.TransitionState.Idle) {
+		if (this.state.transition !== reactutil.TransitionState.Entered) {
 			setTimeout(() => {
-				this.setState({transition: reactutil.TransitionState.Idle});
+				this.setState({transition: reactutil.TransitionState.Entered});
 			}, 10);
 		}
 
@@ -747,7 +746,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 
 		// expand the details view starting from the rect
 		// for the selected item
-		if (this.state.transition !== reactutil.TransitionState.Idle) {
+		if (this.state.transition !== reactutil.TransitionState.Entered) {
 			if (this.props.entryRect) {
 				viewStyles.push({
 					left: this.props.entryRect.left,
@@ -775,7 +774,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		var headerStyles: any[] = [];
 		headerStyles.push(theme.detailsView.header);
 
-		if (this.state.transition === reactutil.TransitionState.Idle) {
+		if (this.state.transition === reactutil.TransitionState.Entered) {
 			headerStyles.push(theme.detailsView.header.entered);
 		}
 
@@ -798,7 +797,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			flexGrow: 1
 		}];
 
-		if (this.state.transition === reactutil.TransitionState.Idle) {
+		if (this.state.transition === reactutil.TransitionState.Entered) {
 			itemListDetailsStyle.push({opacity: 0});
 			detailsViewDetailsStyle.push({opacity: 1});
 			contentStyles.push({opacity: 1});
