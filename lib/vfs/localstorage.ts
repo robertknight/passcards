@@ -48,8 +48,8 @@ export class FS implements vfs.VFS {
 		return true;
 	}
 
-	accountName(): string {
-		return null;
+	accountInfo(): Q.Promise<vfs.AccountInfo> {
+		return Q.reject<vfs.AccountInfo>(new Error('Not implemented'));
 	}
 
 	credentials() : Object {

@@ -201,6 +201,7 @@ class Slide extends typed_react.Component<SlideProps, SlideState> {
 var SlideF = reactutil.createFactory(Slide, transition_mixin.TransitionMixinM);
 
 interface SetupViewState {
+	accountInfo?: vfs.AccountInfo;
 	currentScreen?: Screen;
 	newStore?: NewStoreOptions;
 }
@@ -272,7 +273,12 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 				value: 'Connect to Dropbox',
 				onClick: () => {
 					this.props.fs.login().then(() => {
-						this.setState({currentScreen: Screen.SelectStore});
+						return this.props.fs.accountInfo();
+					}).then((accountInfo) => {
+						this.setState({
+							accountInfo: accountInfo,
+							currentScreen: Screen.SelectStore
+						});
 					});
 				}
 			})
@@ -343,14 +349,14 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 	private onSelectStore(path: string) {
 		this.props.settings.set(settings.Setting.ActiveAccount, {
 			cloudService: settings.CloudService.Dropbox,
-			accountName: this.props.fs.accountName(),
+			accountName: this.state.accountInfo.userId,
 			storePath: path
 		});
 		this.setState({currentScreen: Screen.Connecting});
 	}
 
 	private renderSelectStoreScreen() {
-		return react.DOM.div({}, 'Select store',
+		return react.DOM.div({}, `Select store in ${this.state.accountInfo.name}'s Dropbox` ,
 			StoreListF({
 				vfs: this.props.fs,
 				onSelectStore: (path) => {

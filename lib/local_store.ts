@@ -83,6 +83,7 @@ var KEY_ID_PREFIX = 'key/';
 export class Store implements item_store.SyncableStore {
 	private crypto: onepass_crypto.Crypto;
 	private database: key_value_store.Database;
+	private name: string;
 	private keyAgent: key_agent.KeyAgent;
 	private keyStore: key_value_store.ObjectStore;
 	private itemStore: key_value_store.ObjectStore;
@@ -92,10 +93,11 @@ export class Store implements item_store.SyncableStore {
 	onItemUpdated: event_stream.EventStream<item_store.Item>;
 	onUnlock: event_stream.EventStream<void>;
 
-	constructor(database: key_value_store.Database, keyAgent: key_agent.KeyAgent) {
+	constructor(database: key_value_store.Database, name: string, keyAgent: key_agent.KeyAgent) {
 		this.database = database;
 		this.keyAgent = keyAgent;
 		this.crypto = onepass_crypto.defaultCrypto;
+		this.name = name;
 
 		this.onItemUpdated = new event_stream.EventStream<item_store.Item>();
 		this.onUnlock = new event_stream.EventStream<void>();
@@ -116,7 +118,7 @@ export class Store implements item_store.SyncableStore {
 	}
 
 	private initDatabase() {
-		this.database.open('passcards-items', SCHEMA_VERSION, (schemaUpdater) => {
+		this.database.open(this.name, SCHEMA_VERSION, (schemaUpdater) => {
 			if (schemaUpdater.currentVersion() < 2) {
 				schemaUpdater.storeNames().forEach((name) => {
 					schemaUpdater.deleteStore(name);

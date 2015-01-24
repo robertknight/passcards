@@ -92,15 +92,33 @@ declare module "dropbox" {
 		}
 	}
 
+	export interface AccountInfo {
+		name?: string;
+		email?: string;
+		countryCode?: string;
+		uid: string;
+		referralUrl: string;
+		publicAppUrl: string;
+		quota: number;
+		usedQuota: number;
+		privateBytes: number;
+		sharedBytes: number;
+	}
+
+	export interface AccountInfoOptions {
+		httpCache?: boolean;
+	}
+
 	export interface AuthDriver {
 		// TODO
 	}
 
 	export interface Client {
 		authDriver(driver: AuthDriver) : Client;
-		authenticate(callback : (error: ApiError, account: string) => any) : Client;
+		authenticate(callback : (error: ApiError) => any) : Client;
 		credentials() : Object;
 		isAuthenticated() : boolean;
+		getAccountInfo(options: AccountInfoOptions, callback: (error: ApiError, info: AccountInfo) => void) : XMLHttpRequest;
 		mkdir(path: string, callback: (error: ApiError, folder: File.Stat) => void) : XMLHttpRequest;
 		readFile(path: string, options : ReadFileOptions, callback: (error: ApiError, content: string) => void) : XMLHttpRequest;
 		readdir(path: string, options : ReadDirOptions, callback: (error: any, names: string[], folderInfo: File.Stat, files: File.Stat[]) => void) : XMLHttpRequest;

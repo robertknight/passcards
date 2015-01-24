@@ -37,7 +37,6 @@ function convertError(error: dropbox.ApiError) : err_util.ApiError {
 }
 
 export class DropboxVFS implements vfs.VFS {
-	private _accountName: string;
 	private client : dropbox.Client;
 
 	constructor(options?: Options) {
@@ -82,13 +81,12 @@ export class DropboxVFS implements vfs.VFS {
 
 	login() : Q.Promise<string> {
 		var account = Q.defer<string>();
-		this.client.authenticate((err, accountName) => {
+		this.client.authenticate((err) => {
 			if (err) {
 				account.reject(convertError(err));
 				return;
 			}
-			this._accountName = accountName;
-			account.resolve(accountName);
+			account.resolve('unknown');
 		});
 		return account.promise;
 	}
@@ -97,8 +95,21 @@ export class DropboxVFS implements vfs.VFS {
 		return this.client.isAuthenticated();
 	}
 
-	accountName() {
-		return this._accountName;
+	accountInfo() {
+		var result = Q.defer<vfs.AccountInfo>();
+		this.client.getAccountInfo({}, (err, info) => {
+			if (err) {
+				result.reject(convertError(err));
+				return;
+			}
+			var accountInfo = {
+				userId: info.uid,
+				name: info.name,
+				email: info.email
+			};
+			result.resolve(accountInfo);
+		});
+		return result.promise;
 	}
 
 	stat(path: string) : Q.Promise<vfs.FileInfo> {

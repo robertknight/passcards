@@ -17,6 +17,12 @@ export interface FileInfo {
 	revision?: string;
 }
 
+export interface AccountInfo {
+	userId: string;
+	email: string;
+	name: string;
+}
+
 export interface WriteOptions {
 	/** The revision of the file that the client
 	  * is expecting to update. If this is specified
@@ -45,7 +51,7 @@ export interface VFS {
 	/** Returns true if the user is logged in */
 	isLoggedIn(): boolean;
 	/** Returns the name of the account which the user is logged in to */
-	accountName(): string;
+	accountInfo(): Q.Promise<AccountInfo>;
 	/** Returns credentials for the logged in account.
 	 * This is an opaque object which can later be restored.
 	 */

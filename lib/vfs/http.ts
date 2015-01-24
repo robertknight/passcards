@@ -48,8 +48,8 @@ export class Client implements vfs.VFS {
 		// unused
 	}
 
-	accountName(): string {
-		return null;
+	accountInfo() {
+		return Q.reject<vfs.AccountInfo>(new Error('Not implemented'));
 	}
 
 	stat(path: string) : Q.Promise<vfs.FileInfo> {

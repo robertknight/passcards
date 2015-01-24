@@ -107,6 +107,7 @@ interface Env {
 	masterKey: key_agent.Key;
 	keyAgent: key_agent.SimpleKeyAgent;
 	database: FakeKeyValueDatabase;
+	databaseName: string;
 }
 
 // TODO - Move to onepass_crypto
@@ -137,14 +138,15 @@ function setupEnv() : Env {
 		masterPass: masterPass,
 		masterKey: masterKey,
 		keyAgent: keyAgent,
-		database: database
+		database: database,
+		databaseName: 'test'
 	};
 }
 
 testLib.addAsyncTest('save and load keys and hint', (assert) => {
 	var env = setupEnv();
 
-	var store = new local_store.Store(env.database, env.keyAgent);
+	var store = new local_store.Store(env.database, env.databaseName, env.keyAgent);
 	var params: key_agent.CryptoParams = {
 		algo: key_agent.CryptoAlgorithm.AES128_OpenSSLKey
 	};
@@ -166,7 +168,7 @@ testLib.addAsyncTest('save and load keys and hint', (assert) => {
 		assert.equal(plainText, 'testcontent');
 
 		// reset the store and try unlocking again
-		store = new local_store.Store(env.database, env.keyAgent);
+		store = new local_store.Store(env.database, env.databaseName, env.keyAgent);
 		return env.keyAgent.forgetKeys();
 	}).then(() => {
 		return store.unlock(env.masterPass);
@@ -191,7 +193,7 @@ function makeItem() {
 
 testLib.addAsyncTest('save and load items', (assert) => {
 	var env = setupEnv();
-	var store = new local_store.Store(env.database, env.keyAgent);
+	var store = new local_store.Store(env.database, env.databaseName, env.keyAgent);
 	var item = makeItem();
 
 	return store.saveKeys([env.masterKey],'').then(() => {
@@ -222,7 +224,7 @@ testLib.addAsyncTest('save and load items', (assert) => {
 
 testLib.addAsyncTest('save and load item revisions', (assert) => {
 	var env = setupEnv();
-	var store = new local_store.Store(env.database, env.keyAgent);
+	var store = new local_store.Store(env.database, env.databaseName, env.keyAgent);
 	var item = makeItem();
 
 	item.title = 'Initial Title';
@@ -271,7 +273,7 @@ testLib.addAsyncTest('save and load item revisions', (assert) => {
 
 testLib.addAsyncTest('clear store', (assert) => {
 	var env = setupEnv();
-	var store = new local_store.Store(env.database, env.keyAgent);
+	var store = new local_store.Store(env.database, env.databaseName, env.keyAgent);
 	var item = makeItem();
 
 	return store.saveKeys([env.masterKey], '').then(() => {
@@ -292,7 +294,7 @@ testLib.addAsyncTest('clear store', (assert) => {
 
 testLib.addAsyncTest('unlock store with no keys', (assert) => {
 	var env = setupEnv();
-	var store = new local_store.Store(env.database, env.keyAgent);
+	var store = new local_store.Store(env.database, env.databaseName, env.keyAgent);
 	
 	return store.unlock(env.masterPass).then(() => {
 		return false;
@@ -305,7 +307,7 @@ testLib.addAsyncTest('unlock store with no keys', (assert) => {
 
 testLib.addAsyncTest('get/set last sync data', (assert) => {
 	var env = setupEnv();
-	var store = new local_store.Store(env.database, env.keyAgent);
+	var store = new local_store.Store(env.database, env.databaseName, env.keyAgent);
 	var item = makeItem();
 
 	return store.saveKeys([env.masterKey], '').then(() => {
@@ -334,7 +336,7 @@ testLib.addAsyncTest('get/set last sync data', (assert) => {
 
 testLib.addAsyncTest('item revision updates on save', (assert) => {
 	var env = setupEnv();
-	var store = new local_store.Store(env.database, env.keyAgent);
+	var store = new local_store.Store(env.database, env.databaseName, env.keyAgent);
 	var item = makeItem();
 
 	var revisions: string[] = [];
@@ -364,7 +366,7 @@ testLib.addAsyncTest('item revision updates on save', (assert) => {
 
 testLib.addAsyncTest('updating keys replaces existing keys', (assert) => {
 	var env = setupEnv();
-	var store = new local_store.Store(env.database, env.keyAgent);
+	var store = new local_store.Store(env.database, env.databaseName, env.keyAgent);
 
 	env.masterKey.identifier = 'KEY1';
 	return store.saveKeys([env.masterKey], '').then(() => {

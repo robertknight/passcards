@@ -537,6 +537,11 @@ export class App {
 		}
 	}
 
+	private databaseKeyForAccount(account: settings.Account) {
+		var serviceName = settings.CloudService[account.cloudService];
+		return `passcards-${serviceName.toLowerCase()}-${account.accountName}-${account.storePath}`
+	}
+
 	// setup the local store, remote store and item syncing
 	// once the user completes login
 	private initAccount(account: settings.Account) {
@@ -544,7 +549,8 @@ export class App {
 			try {
 				var itemDatabase = new key_value_store.IndexedDBDatabase();
 				var vault = new onepass.Vault(this.fs, account.storePath, this.services.keyAgent);
-				var store = new local_store.Store(itemDatabase, this.services.keyAgent);
+				var localDatabaseName = this.databaseKeyForAccount(account);
+				var store = new local_store.Store(itemDatabase, localDatabaseName, this.services.keyAgent);
 				var syncer = new sync.Syncer(store, vault);
 				syncer.syncKeys().then(() => {
 					console.log('Encryption keys synced')
