@@ -475,7 +475,7 @@ export class App {
 
 	constructor() {
 		this.savedState = {};
-		var settingStore = new settings.SimpleStore();
+		var settingStore = new settings.LocalStorageStore();
 
 		this.fs = this.setupVfs();
 		var browserExt = this.setupBrowserExtension();
