@@ -32,6 +32,12 @@ export interface WriteOptions {
 	parentRevision?: string;
 }
 
+/** Opaque object representing the login credentials
+ * for an account.
+ */
+export interface Credentials extends Object {
+}
+
 /** Error reported when a file update with VFS.write() conflicts
   * with another update to the same file.
   */
@@ -45,19 +51,23 @@ export class ConflictError extends err_util.BaseError {
  */
 export interface VFS {
 	/** Logs in to the VFS service.
-	  * Returns a promise for the account ID
+	  * Returns a promise for login credentials.
 	  */
-	login(): Q.Promise<string>;
+	login(): Q.Promise<Credentials>;
 	/** Returns true if the user is logged in */
 	isLoggedIn(): boolean;
+	/** Sign out of the account, invalidating the
+	  * access credentials.
+	  */
+	logout(): Q.Promise<void>;
 	/** Returns the name of the account which the user is logged in to */
 	accountInfo(): Q.Promise<AccountInfo>;
 	/** Returns credentials for the logged in account.
 	 * This is an opaque object which can later be restored.
 	 */
-	credentials() : Object;
+	credentials(): Credentials;
 	/** Sets the login credentials */
-	setCredentials(credentials : Object) : void;
+	setCredentials(credentials: Credentials) : void;
 
 	/** Returns the metadata of the file at the given path */
 	stat(path: string) : Q.Promise<FileInfo>;

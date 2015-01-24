@@ -79,20 +79,32 @@ export class DropboxVFS implements vfs.VFS {
 		}
 	}
 
-	login() : Q.Promise<string> {
-		var account = Q.defer<string>();
+	login() {
+		var account = Q.defer<Object>();
 		this.client.authenticate((err) => {
 			if (err) {
 				account.reject(convertError(err));
 				return;
 			}
-			account.resolve('unknown');
+			account.resolve(this.client.credentials());
 		});
 		return account.promise;
 	}
 
 	isLoggedIn() : boolean {
 		return this.client.isAuthenticated();
+	}
+
+	logout() {
+		var done = Q.defer<void>();
+		this.client.signOut((err) => {
+			if (err) {
+				done.reject(convertError(err));
+				return;
+			}
+			done.resolve(null);
+		});
+		return done.promise;
 	}
 
 	accountInfo() {
@@ -198,11 +210,11 @@ export class DropboxVFS implements vfs.VFS {
 		return result.promise;
 	}
 
-	credentials() : Object {
+	credentials(): vfs.Credentials {
 		return this.client.credentials();
 	}
 
-	setCredentials(credentials : Object) {
+	setCredentials(credentials: vfs.Credentials) {
 		this.client.setCredentials(credentials);
 	}
 

@@ -40,23 +40,27 @@ export class FS implements vfs.VFS {
 		this.storage = storage || window.localStorage;
 	}
 
-	login() : Q.Promise<string> {
-		return Q('');
+	login() : Q.Promise<vfs.Credentials> {
+		return Q({});
 	}
 
 	isLoggedIn() : boolean {
 		return true;
 	}
 
+	logout() {
+		return Q<void>(null);
+	}
+
 	accountInfo(): Q.Promise<vfs.AccountInfo> {
 		return Q.reject<vfs.AccountInfo>(new Error('Not implemented'));
 	}
 
-	credentials() : Object {
+	credentials(): vfs.Credentials {
 		return {}
 	}
 
-	setCredentials(credentials: Object) : void {
+	setCredentials(credentials: vfs.Credentials) : void {
 		// unused
 	}
 

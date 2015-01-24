@@ -42,6 +42,10 @@ var theme = style.create({
 		}
 	},
 
+	newStore: {
+		margin: 10
+	},
+
 	screen: {
 		transition: style_util.transitionOn({
 			transform: .3,
@@ -52,16 +56,30 @@ var theme = style.create({
 		top: 10,
 		width: 'calc(100% - 20px)',
 		height: 'calc(100% - 20px)',
-		backgroundColor: colors.MATERIAL_COLOR_ACCENT2,
 		color: 'white',
 		transform: 'translateX(0px)'
+	},
+
+	screenButtons: {
+		display: 'flex',
+		flexDirection: 'row'
 	}
 });
+
+function screenNavButton(label: string, onClick: () => void) {
+	return button.ButtonF({
+		style: button.Style.RaisedRectangular,
+		backgroundColor: 'white',
+		value: label,
+		onClick: onClick
+	});
+}
 
 interface StoreListProps {
 	vfs: vfs.VFS;
 	onSelectStore: (path: string) => void;
 	onNewStore: () => void;
+	onChangeCloudService: () => void;
 }
 
 interface Store {
@@ -108,15 +126,12 @@ class StoreList extends typed_react.Component<StoreListProps, StoreListState> {
 			if (this.state.error) {
 				return react.DOM.div(style.mixin(theme.storeList),
 				  `Unable to search Dropbox for existing stores: ${this.state.error.message}`,
-					button.ButtonF({
-						style: button.Style.RaisedRectangular,
-						backgroundColor: 'white',
-						value: 'Try Again',
-						onClick: () => {
+					  react.DOM.div(style.mixin(theme.screenButtons),
+						screenNavButton('Try Again', () => {
 							this.setState({error: null});
 							this.startSearch();
-						}
-					})
+						})
+					)
 				)
 			} else {
 				return react.DOM.div(style.mixin(theme.storeList), 'Searching for existing stores...');
@@ -131,14 +146,12 @@ class StoreList extends typed_react.Component<StoreListProps, StoreListState> {
 					}
 				}), ripple.InkRippleF({}), displayPath);
 			}),
-				button.ButtonF({
-					style: button.Style.RaisedRectangular,
-					backgroundColor: 'white',
-					value: 'Create New Store',
-					onClick: () => {
-						this.props.onNewStore();
-					}
-				})
+				react.DOM.div(style.mixin(theme.screenButtons),
+					screenNavButton('Back', () => {
+						this.props.onChangeCloudService();
+					}),
+					screenNavButton('Create New Store', () => this.props.onNewStore())
+				)
 			);
 		}
 	}
@@ -154,7 +167,7 @@ export interface SetupViewProps {
 // active screen in the setup / onboarding dialog
 enum Screen {
 	Welcome,
-	DropboxConnect,
+	ConnectToCloudService,
 	NewStore,
 	SelectStore,
 	Connecting
@@ -223,14 +236,22 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 		};
 	}
 
+	componentDidMount() {
+		if (this.props.fs.isLoggedIn()) {
+			this.props.fs.accountInfo().then((info) => {
+				this.setState({accountInfo: info});
+			});
+		}
+	}
+
 	render() {
 		var currentScreen: React.ReactElement<any>;
 		switch (this.state.currentScreen) {
 		case Screen.Welcome:
 			currentScreen = SlideF({key: 'screen-welcome'}, this.renderWelcomeScreen());
 			break;
-		case Screen.DropboxConnect:
-			currentScreen = SlideF({key: 'screen-connect-dropbox'}, this.renderDropboxConnectScreen());
+		case Screen.ConnectToCloudService:
+			currentScreen = SlideF({key: 'screen-connect-dropbox'}, this.renderConnectToCloudServiceScreen());
 			break;
 		case Screen.NewStore:
 			currentScreen = SlideF({key: 'screen-new-store'}, this.renderNewStoreScreen());
@@ -254,24 +275,18 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 
 	private renderWelcomeScreen() {
 		return react.DOM.div({}, 'Welcome to Passcards',
-			button.ButtonF({
-				style: button.Style.RaisedRectangular,
-				backgroundColor: 'white',
-				value: 'Continue',
-				onClick: () => {
-					this.setState({currentScreen: Screen.DropboxConnect});
-				}
-			})
+			react.DOM.div(style.mixin(theme.screenButtons),
+				screenNavButton('Continue', () => {
+					this.setState({currentScreen: Screen.ConnectToCloudService});
+				})
+			)
 		);
 	}
 
-	private renderDropboxConnectScreen() {
-		return react.DOM.div({}, 'Connect to Dropbox',
-			button.ButtonF({
-				style: button.Style.RaisedRectangular,
-				backgroundColor: 'white',
-				value: 'Connect to Dropbox',
-				onClick: () => {
+	private renderConnectToCloudServiceScreen() {
+		return react.DOM.div({}, 'Where do you want Passcards to store your data?',
+			react.DOM.div(style.mixin(theme.screenButtons),
+				screenNavButton('Dropbox', () => {
 					this.props.fs.login().then(() => {
 						return this.props.fs.accountInfo();
 					}).then((accountInfo) => {
@@ -280,8 +295,8 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 							currentScreen: Screen.SelectStore
 						});
 					});
-				}
-			})
+				})
+			)
 		);
 	}
 
@@ -291,43 +306,44 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 		};
 
 		return react.DOM.div({}, 'Setup new store',
-			text_field.TextFieldF({
-				type: 'text',
-				defaultValue: newStore.path,
-				floatingLabel: true,
-				placeHolder: 'Location',
-				onChange: (e) => {
-					newStore.path = (<HTMLInputElement>e.target).value;
-				}
-			}),
-			text_field.TextFieldF({
-				type: 'password',
-				floatingLabel: true,
-				placeHolder: 'Master Password',
-				onChange: (e) => {
-					newStore.password = (<HTMLInputElement>e.target).value;
-				}
-			}),
-			text_field.TextFieldF({
-				type: 'password',
-				floatingLabel: true,
-				placeHolder: 'Re-enter Master Password',
-				onChange: (e) => {
-					newStore.confirmPassword = (<HTMLInputElement>e.target).value;
-				}
-			}),
-			text_field.TextFieldF({
-				type: 'text',
-				floatingLabel: true,
-				placeHolder: 'Master password hint',
-				onChange: (e) => {
-					newStore.hint = (<HTMLInputElement>e.target).value;
-				}
-			}),
-			button.ButtonF({
-				style: button.Style.RaisedRectangular,
-				value: 'Create Store',
-				onClick: () => {
+			react.DOM.div(style.mixin(theme.newStore),
+				text_field.TextFieldF({
+					type: 'text',
+					defaultValue: newStore.path,
+					floatingLabel: true,
+					placeHolder: 'Location in Dropbox',
+					onChange: (e) => {
+						newStore.path = (<HTMLInputElement>e.target).value;
+					}
+				}),
+				text_field.TextFieldF({
+					type: 'password',
+					floatingLabel: true,
+					placeHolder: 'Master Password',
+					onChange: (e) => {
+						newStore.password = (<HTMLInputElement>e.target).value;
+					}
+				}),
+				text_field.TextFieldF({
+					type: 'password',
+					floatingLabel: true,
+					placeHolder: 'Re-enter Master Password',
+					onChange: (e) => {
+						newStore.confirmPassword = (<HTMLInputElement>e.target).value;
+					}
+				}),
+				text_field.TextFieldF({
+					type: 'text',
+					floatingLabel: true,
+					placeHolder: 'Master password hint',
+					onChange: (e) => {
+						newStore.hint = (<HTMLInputElement>e.target).value;
+					}
+				})
+			),
+			react.DOM.div(style.mixin(theme.screenButtons),
+				screenNavButton('Back', () => this.setState({currentScreen: Screen.SelectStore})),
+				screenNavButton('Create Store', () => {
 					if (newStore.password !== newStore.confirmPassword) {
 						// TODO - Display a message in the UI
 						console.log('Passwords do not match');
@@ -339,10 +355,11 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 					store.then((store) => {
 						this.onSelectStore(newStore.path);
 					}).catch((err) => {
+						// TODO - Display a message in the UI
 						console.log('Failed to create store');
 					});
-				}
-			})
+				})
+			)
 		);
 	}
 
@@ -356,7 +373,12 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 	}
 
 	private renderSelectStoreScreen() {
-		return react.DOM.div({}, `Select store in ${this.state.accountInfo.name}'s Dropbox` ,
+		var accountName = 'your';
+		if (this.state.accountInfo) {
+			accountName = `${this.state.accountInfo.name}'s`;
+		}
+
+		return react.DOM.div({}, `Select store in ${accountName} Dropbox` ,
 			StoreListF({
 				vfs: this.props.fs,
 				onSelectStore: (path) => {
@@ -364,6 +386,11 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 				},
 				onNewStore: () => {
 					this.setState({currentScreen: Screen.NewStore});
+				},
+				onChangeCloudService: () => {
+					this.props.fs.login().then(() => {
+						this.setState({currentScreen: Screen.ConnectToCloudService});
+					});
 				}
 			})
 		);

@@ -32,19 +32,23 @@ export class Client implements vfs.VFS {
 	constructor(public url: string) {
 	}
 
-	login() : Q.Promise<string> {
-		return Q('');
+	login() : Q.Promise<vfs.Credentials> {
+		return Q({});
 	}
 
 	isLoggedIn() : boolean {
 		return true;
 	}
 
-	credentials() : Object {
+	logout(): Q.Promise<void> {
+		return Q<void>(null);
+	}
+
+	credentials(): vfs.Credentials {
 		return {};
 	}
 
-	setCredentials(credentials: Object) : void {
+	setCredentials(credentials: vfs.Credentials) : void {
 		// unused
 	}
 

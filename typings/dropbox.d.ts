@@ -115,7 +115,10 @@ declare module "dropbox" {
 
 	export interface Client {
 		authDriver(driver: AuthDriver) : Client;
-		authenticate(callback : (error: ApiError) => any) : Client;
+
+		authenticate(callback: (error: ApiError) => any): Client;
+		signOut(callback: (error: ApiError) => void): XMLHttpRequest;
+
 		credentials() : Object;
 		isAuthenticated() : boolean;
 		getAccountInfo(options: AccountInfoOptions, callback: (error: ApiError, info: AccountInfo) => void) : XMLHttpRequest;

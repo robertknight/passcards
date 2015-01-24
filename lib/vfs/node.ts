@@ -173,23 +173,27 @@ export class FileVFS implements vfs.VFS {
 		return result.promise;
 	}
 
-	login() : Q.Promise<string> {
-		return Q<string>(process.env.USER);
+	login() : Q.Promise<vfs.Credentials> {
+		return Q<vfs.Credentials>({user: process.env.USER});
 	}
 
 	isLoggedIn() : boolean {
 		return true;
 	}
+	
+	logout(): Q.Promise<void> {
+		return Q<void>(null);
+	}
 
-	accountInfo() : Q.Promise<vfs.AccountInfo> {
+	accountInfo(): Q.Promise<vfs.AccountInfo> {
 		return Q.reject<vfs.AccountInfo>(new Error('Not implemented'));
 	}
 
-	credentials() : Object {
+	credentials(): vfs.Credentials {
 		return {};
 	}
 
-	setCredentials(credentials: Object) {
+	setCredentials(credentials: vfs.Credentials) {
 		// unused
 	}
 

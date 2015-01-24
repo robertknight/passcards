@@ -146,7 +146,9 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 			if (this.state.syncer) {
 				this.state.syncer.onProgress.ignore(this.state.syncListener);
 			}
-			nextState.syncer.onProgress.listen(this.state.syncListener);
+			if (nextState.syncer) {
+				nextState.syncer.onProgress.listen(this.state.syncListener);
+			}
 		}
 
 		// listen for updates to items in the store
@@ -160,7 +162,9 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 			if (this.state.store) {
 				this.state.store.onItemUpdated.ignoreContext(this);
 			}
-			nextState.store.onItemUpdated.listen(debouncedRefresh, this);
+			if (nextState.store) {
+				nextState.store.onItemUpdated.listen(debouncedRefresh, this);
+			}
 		}
 
 		if (doRefresh) {
@@ -438,6 +442,11 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 				});
 			}
 		},{
+			label: 'Switch Account',
+			onClick: () => {
+				this.props.services.settings.clear(settings.Setting.ActiveAccount)
+			}
+		},{
 			label: 'Help',
 			onClick: () => {
 				var win = window.open('https://robertknight.github.io/passcards', '_blank');
@@ -525,6 +534,7 @@ export class App {
 				if (account) {
 					this.initAccount(account);
 				} else {
+					keyAgent.forgetKeys();
 					this.updateState({store: null, syncer: null});
 				}
 			}
