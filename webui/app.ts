@@ -644,11 +644,23 @@ export class App {
 		this.activeAppView = react.render(appView, element);
 		this.updateState(this.savedState);
 
-		// the main item list only renders visible items,
-		// so force a re-render when the window size changes
-		element.ownerDocument.defaultView.onresize = () => {
-			this.activeAppView.setState({viewportRect: this.getViewportRect(rootInputElement.ownerDocument.defaultView)});
-		};
+		if (!env.isTouchDevice()) {
+			// the main item list only renders visible items,
+			// so force a re-render when the window size changes.
+			//
+			// We don't do this for touch devices since the viewport
+			// resizes (at least on Android) when the on-screen keyboard
+			// is shown and we want to ignore that.
+			//
+			// TODO - Find a better solution for Android which
+			// avoids re-rendering/zooming/scaling the UI when the keyboard
+			// is shown but ensures that the app knows about the viewport
+			// and can use it to avoid showing elements (eg. popup menus)
+			// underneath the keyboard
+			element.ownerDocument.defaultView.onresize = () => {
+				this.activeAppView.setState({viewportRect: this.getViewportRect(rootInputElement.ownerDocument.defaultView)});
+			};
+		}
 	}
 
 	// setup the site icon database and connection to
