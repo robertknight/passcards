@@ -575,7 +575,8 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				viewportRect: this.props.viewportRect,
 				onDismiss: () => {
 					this.setState({addingField: null});
-				}
+				},
+				zIndex: 1
 			});
 		}
 

@@ -141,7 +141,8 @@ class ControlDemoApp extends typed_react.Component<ControlDemoAppProps, ControlD
 				},
 				onDismiss: () => {
 					this.setState({menuPos: null});
-				}
+				},
+				zIndex: 1
 			});
 		}
 

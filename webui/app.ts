@@ -254,6 +254,9 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 			},
 			onUnlockErr: (err) => {
 				this.showError(err);
+			},
+			onMenuClicked: (rect) => {
+				this.setState({appMenuSourceRect: rect});
 			}
 		}));
 
@@ -261,8 +264,10 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 		children.push(this.renderItemDetails());
 		children.push(this.renderToasters());
 
-		var menu = this.state.appMenuSourceRect ? this.renderMenu('menu') : null;
-		children.push(reactutil.TransitionGroupF({}, menu));
+		var menu = reactutil.TransitionGroupF({},
+		  this.state.appMenuSourceRect ? this.renderMenu('menu') : null
+		);
+		children.push(menu);
 
 		return div(theme.appView, {ref: 'app'},
 			children
@@ -424,18 +429,22 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 	}
 
 	private renderMenu(key: string) {
-		var menuItems: menu.MenuItem[] = [{
-			label: 'Add Item',
-			onClick: () => {
-				this.setSelectedItem(this.createNewItemTemplate());
-			},
-		},{
+		var menuItems: menu.MenuItem[] = [];
+		if (!this.state.isLocked) {
+			menuItems = menuItems.concat([{
+				label: 'Add Item',
+				onClick: () => {
+					this.setSelectedItem(this.createNewItemTemplate());
+				}
+			}]);
+		}
+		
+		menuItems = menuItems.concat([{
 			label: 'Clear Offline Storage',
 			onClick: () => {
 				return this.props.services.keyAgent.forgetKeys().then(() => {
 					return this.state.store.clear();
 				}).then(() => {
-					console.log('Re-syncing keys');
 					return this.state.syncer.syncKeys();
 				}).catch((err) => {
 					this.showError(err);
@@ -452,15 +461,16 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 				var win = window.open('https://robertknight.github.io/passcards', '_blank');
 				win.focus();
 			}
-		}];
+		}]);
 		return menu.MenuF({
 			key: key,
 			items: menuItems,
-			   sourceRect: this.state.appMenuSourceRect,
-			   viewportRect: this.state.viewportRect,
-			   onDismiss: () => {
-				   this.setState({appMenuSourceRect: null});
-			   }
+			sourceRect: this.state.appMenuSourceRect,
+			viewportRect: this.state.viewportRect,
+			onDismiss: () => {
+			   this.setState({appMenuSourceRect: null});
+			},
+			zIndex: theme.zLayers.MENU_LAYER
 		});
 	}
 }

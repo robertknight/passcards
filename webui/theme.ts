@@ -8,6 +8,7 @@ import style_util = require('./base/style_util');
 
 var Z_LAYERS = {
 	TOOLBAR: 5,
+	MENU_LAYER: 30,
 	SETUP_VIEW: 20,
 	UNLOCK_VIEW: 20,
 	DETAILS_VIEW: 2,
@@ -118,6 +119,8 @@ var styles = style.create({
 
 	mixins: mixins,
 
+	zLayers: Z_LAYERS,
+
 	// Animations
 	animations: animations,
 
@@ -225,6 +228,12 @@ var styles = style.create({
 			marginLeft: 'auto',
 			marginRight: 'auto',
 			marginTop: '10%'
+		},
+
+		passwordRow: {
+			display: 'flex',
+			flexDirection: 'row',
+			alignItems: 'center'
 		},
 
 		masterPasswordField: {

@@ -6,6 +6,8 @@ import react = require('react');
 import style = require('ts-style');
 import typed_react = require('typed-react');
 
+import button = require('./controls/button');
+import colors = require('./controls/colors');
 import div = require('./base/div');
 import focus_mixin = require('./base/focus_mixin');
 import item_store = require('../lib/item_store');
@@ -29,6 +31,7 @@ export class UnlockViewProps {
 	isLocked: boolean;
 	onUnlock: () => void;
 	onUnlockErr: (error: Error) => void;
+	onMenuClicked: (rect: reactutil.Rect) => void;
 	focus: boolean;
 }
 
@@ -70,13 +73,28 @@ export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockVie
 							this.tryUnlock(masterPass);
 						}
 					},
-						react.DOM.input({
-							className: style.classes(theme.unlockView.masterPasswordField),
-							type: 'password',
-							placeholder: 'Master Password...',
-							ref: 'masterPassField',
-							autoFocus: true
-						}),
+						react.DOM.div(style.mixin(theme.unlockView.passwordRow),
+							react.DOM.input({
+								className: style.classes(theme.unlockView.masterPasswordField),
+								type: 'password',
+								placeholder: 'Master Password...',
+								ref: 'masterPassField',
+								autoFocus: true
+							}),
+							button.ButtonF({
+								style: button.Style.Icon,
+								color: colors.TOOLBAR_ICON,
+								rippleColor: colors.TOOLBAR_ICON,
+								value: 'App Menu',
+								iconUrl: 'icons/icons.svg#menu',
+								ref: 'menuButton',
+								onClick: (e) => {
+									e.preventDefault();
+									var itemRect = (<HTMLElement>this.refs['menuButton'].getDOMNode()).getBoundingClientRect();
+									this.props.onMenuClicked(itemRect);
+								}
+							})
+						),
 						div(theme.unlockView.unlockLabel, {}, unlockMessage)
 					)
 				)

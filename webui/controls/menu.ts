@@ -35,8 +35,7 @@ var theme = style.create({
 			left: 0,
 			top: 0,
 			right: 0,
-			bottom: 0,
-			zIndex: controls_theme.Z_LAYERS.MENU,
+			bottom: 0
 		},
 
 		// overlay which appears behind the menu
@@ -115,6 +114,9 @@ export interface MenuProps {
 
 	/** Callback to invoke when the menu is dismissed. */
 	onDismiss: () => void;
+
+	/** Z-index of the menu container. */
+	zIndex: number;
 }
 
 function measureText(document: Document, text: string, font: string) {
@@ -346,7 +348,9 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 			}
 		}
 
-		return div(theme.menu.container, {},
+		return react.DOM.div(style.mixin([theme.menu.container, {
+			zIndex: this.props.zIndex	
+		}]),
 			react.DOM.div(style.mixin(overlayStyles, {
 				onClick: (e: React.MouseEvent) => {
 					this.props.onDismiss();
