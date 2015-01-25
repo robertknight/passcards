@@ -24,17 +24,31 @@ var theme = style.create({
 		display: 'flex',
 		flexDirection: 'row',
 		justifyContent: 'center',
-		alignItems: 'center'
+		alignItems: 'center',
+
+		inner: {
+			position: 'relative',
+			width: 'calc(100% + 2px)',
+			height: 'calc(100% + 2px)',
+			maxWidth: 400,
+			maxHeight: 600,
+			border: '1px solid white',
+			overflow: 'hidden'
+		}
 	},
 
 	storeList: {
 		marginTop: 10,
 		marginBottom: 10,
+		borderRadius: 3,
+		backgroundColor: 'white',
+		color: colors.MATERIAL_TEXT_PRIMARY,
+		minHeight: 40,
 
 		item: {
-			padding: 5,
-			paddingTop: 5,
-			paddingBottom: 5,
+			padding: 15,
+			paddingTop: 10,
+			paddingBottom: 10,
 			cursor: 'pointer',
 			position: 'relative',
 			overflow: 'hidden',
@@ -43,7 +57,11 @@ var theme = style.create({
 	},
 
 	newStore: {
-		margin: 10
+		marginTop: 10,
+		marginBottom: 10,
+		padding: 10,
+		backgroundColor: 'white',
+		borderRadius: 3
 	},
 
 	screen: {
@@ -63,23 +81,39 @@ var theme = style.create({
 	screenButtons: {
 		display: 'flex',
 		flexDirection: 'row'
+	},
+
+	cloudServiceList: {
+		padding: 20,
+		display: 'flex',
+		flexDirection: 'column',
+		alignItems: 'center'
 	}
 });
 
-function screenNavButton(label: string, onClick: () => void) {
-	return button.ButtonF({
-		style: button.Style.RaisedRectangular,
-		backgroundColor: 'white',
-		value: label,
-		onClick: onClick
-	});
+interface NavButtonProps {
+	label: string;
+	onClick: () => void;
+	iconUrl?: string;
 }
+
+class NavButton extends typed_react.Component<NavButtonProps,{}> {
+	render() {
+		return button.ButtonF({
+			style: button.Style.RaisedRectangular,
+			backgroundColor: 'white',
+			value: this.props.label,
+			iconUrl: this.props.iconUrl,
+			color: 'black',
+			onClick: this.props.onClick
+		});
+	}
+}
+var NavButtonF = reactutil.createFactory(NavButton);
 
 interface StoreListProps {
 	vfs: vfs.VFS;
 	onSelectStore: (path: string) => void;
-	onNewStore: () => void;
-	onChangeCloudService: () => void;
 }
 
 interface Store {
@@ -127,14 +161,19 @@ class StoreList extends typed_react.Component<StoreListProps, StoreListState> {
 				return react.DOM.div(style.mixin(theme.storeList),
 				  `Unable to search Dropbox for existing stores: ${this.state.error.message}`,
 					  react.DOM.div(style.mixin(theme.screenButtons),
-						screenNavButton('Try Again', () => {
-							this.setState({error: null});
-							this.startSearch();
+						NavButtonF({
+							label: 'Try Again',
+							onClick: () => {
+								this.setState({error: null});
+								this.startSearch();
+							}
 						})
 					)
-				)
+				);
 			} else {
-				return react.DOM.div(style.mixin(theme.storeList), 'Searching for existing stores...');
+				return react.DOM.div(style.mixin(theme.storeList), 
+					react.DOM.div(style.mixin(theme.storeList.item), 'Searching for existing stores...')
+				);
 			}
 		} else {
 			return react.DOM.div(style.mixin(theme.storeList), this.state.stores.map((store) => {
@@ -145,14 +184,7 @@ class StoreList extends typed_react.Component<StoreListProps, StoreListState> {
 						this.props.onSelectStore(store.path);
 					}
 				}), ripple.InkRippleF({}), displayPath);
-			}),
-				react.DOM.div(style.mixin(theme.screenButtons),
-					screenNavButton('Back', () => {
-						this.props.onChangeCloudService();
-					}),
-					screenNavButton('Create New Store', () => this.props.onNewStore())
-				)
-			);
+			}));
 		}
 	}
 }
@@ -224,7 +256,7 @@ interface SetupViewState {
 export class SetupView extends typed_react.Component<SetupViewProps, SetupViewState> {
 	getInitialState() {
 		var account = this.props.settings.get(settings.Setting.ActiveAccount);
-		var initialScreen = Screen.Welcome;
+		var initialScreen = Screen.ConnectToCloudService;
 		if (account) {
 			initialScreen = Screen.Connecting;
 		} else if (this.props.fs.isLoggedIn()) {
@@ -267,35 +299,51 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 		}
 
 		return react.DOM.div(style.mixin(theme.setupView),
-			reactutil.TransitionGroupF({},
-				currentScreen
+			react.DOM.div(style.mixin(theme.setupView.inner),
+				reactutil.TransitionGroupF({},
+					currentScreen
+				)
 			)
 		);
 	}
 
 	private renderWelcomeScreen() {
-		return react.DOM.div({}, 'Welcome to Passcards',
+		return react.DOM.div({}, 'Passcards',
 			react.DOM.div(style.mixin(theme.screenButtons),
-				screenNavButton('Continue', () => {
-					this.setState({currentScreen: Screen.ConnectToCloudService});
+				NavButtonF({
+					label: 'Continue',
+					onClick: () => {
+						this.setState({currentScreen: Screen.ConnectToCloudService});
+					}
 				})
 			)
 		);
 	}
 
 	private renderConnectToCloudServiceScreen() {
-		return react.DOM.div({}, 'Where do you want Passcards to store your data?',
-			react.DOM.div(style.mixin(theme.screenButtons),
-				screenNavButton('Dropbox', () => {
-					this.props.fs.login().then(() => {
-						return this.props.fs.accountInfo();
-					}).then((accountInfo) => {
-						this.setState({
-							accountInfo: accountInfo,
-							currentScreen: Screen.SelectStore
+		return react.DOM.div({}, 'Where do you want Passcards to store your passwords?',
+			react.DOM.div(style.mixin(theme.cloudServiceList),
+				button.ButtonF({
+					style: button.Style.RaisedRectangular,
+					backgroundColor: 'white',
+					color: 'black',
+					value: '',
+					onClick: () => {
+						this.props.fs.login().then(() => {
+							return this.props.fs.accountInfo();
+						}).then((accountInfo) => {
+							this.setState({
+								accountInfo: accountInfo,
+								currentScreen: Screen.SelectStore
+							});
 						});
-					});
-				})
+					}
+				},
+					react.DOM.img({
+						src: 'icons/dropbox-logotype-blue.svg',
+						height: 64
+					})
+				)
 			)
 		);
 	}
@@ -342,22 +390,28 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 				})
 			),
 			react.DOM.div(style.mixin(theme.screenButtons),
-				screenNavButton('Back', () => this.setState({currentScreen: Screen.SelectStore})),
-				screenNavButton('Create Store', () => {
-					if (newStore.password !== newStore.confirmPassword) {
-						// TODO - Display a message in the UI
-						console.log('Passwords do not match');
-						return;
-					}
+				NavButtonF({
+					label: 'Back',
+					onClick: () => this.setState({currentScreen: Screen.SelectStore})
+				}),
+				NavButtonF({
+					label: 'Create Store',
+					onClick: () => {
+						if (newStore.password !== newStore.confirmPassword) {
+							// TODO - Display a message in the UI
+							console.log('Passwords do not match');
+							return;
+						}
 
-					var store = agile_keychain.Vault.createVault(this.props.fs,
-					  newStore.path, newStore.password, newStore.hint);
-					store.then((store) => {
-						this.onSelectStore(newStore.path);
-					}).catch((err) => {
-						// TODO - Display a message in the UI
-						console.log('Failed to create store');
-					});
+						var store = agile_keychain.Vault.createVault(this.props.fs,
+						  newStore.path, newStore.password, newStore.hint);
+						store.then((store) => {
+							this.onSelectStore(newStore.path);
+						}).catch((err) => {
+							// TODO - Display a message in the UI
+							console.log('Failed to create store');
+						});
+					}
 				})
 			)
 		);
@@ -383,16 +437,24 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 				vfs: this.props.fs,
 				onSelectStore: (path) => {
 					this.onSelectStore(path);
-				},
-				onNewStore: () => {
-					this.setState({currentScreen: Screen.NewStore});
-				},
-				onChangeCloudService: () => {
-					this.props.fs.login().then(() => {
-						this.setState({currentScreen: Screen.ConnectToCloudService});
-					});
 				}
-			})
+			}),
+			react.DOM.div(style.mixin(theme.screenButtons),
+				NavButtonF({
+					label: 'Back',
+					onClick: () => {
+						this.props.fs.logout().then(() => {
+							this.setState({currentScreen: Screen.ConnectToCloudService});
+						});
+					}
+				}),
+				NavButtonF({
+					label: 'Create New Store',
+					onClick: () => {
+						this.setState({currentScreen: Screen.NewStore});
+					}
+				})
+			)
 		);
 	}
 }
