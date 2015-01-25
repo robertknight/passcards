@@ -1,5 +1,6 @@
 /// <reference path="../typings/react-0.12.d.ts" />
 
+import Q = require('q');
 import react = require('react');
 import style = require('ts-style');
 import typed_react = require('typed-react');
@@ -274,6 +275,11 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 				this.setState({accountInfo: info});
 			});
 		}
+
+		if (window.location.hash.indexOf('access_token') !== -1) {
+			// resume OAuth login flow
+			this.completeCloudServiceLogin();
+		}
 	}
 
 	render() {
@@ -320,6 +326,26 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 		);
 	}
 
+	private completeCloudServiceLogin() {
+		var loggedIn = Q(null);
+		if (!this.props.fs.isLoggedIn()) {
+			// if completeCloudServiceLogin() is called and
+			// isLoggedIn() returns false, this means that
+			// the app has been reloaded after an OAuth redirect
+			// has completed. Call login() to complete the OAuth
+			// login process.
+			loggedIn = this.props.fs.login();
+		}
+		loggedIn.then(() => {
+			return this.props.fs.accountInfo()
+		}).then((accountInfo) => {
+			this.setState({
+				accountInfo: accountInfo,
+				currentScreen: Screen.SelectStore
+			});
+		}).done();
+	}
+
 	private renderConnectToCloudServiceScreen() {
 		return react.DOM.div({}, 'Where do you want Passcards to store your passwords?',
 			react.DOM.div(style.mixin(theme.cloudServiceList),
@@ -330,12 +356,11 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 					value: '',
 					onClick: () => {
 						this.props.fs.login().then(() => {
-							return this.props.fs.accountInfo();
-						}).then((accountInfo) => {
-							this.setState({
-								accountInfo: accountInfo,
-								currentScreen: Screen.SelectStore
-							});
+							// depending on the environment, the login
+							// will either complete in this instance of the app,
+							// or the app will reload and the login completion
+							// will be handled by componentDidMount()
+							this.completeCloudServiceLogin();
 						});
 					}
 				},

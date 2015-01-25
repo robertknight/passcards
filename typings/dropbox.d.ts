@@ -55,12 +55,23 @@ declare module "dropbox" {
 			rememberUser?: boolean;
 		}
 
+		interface PopupDriverOpts {
+			receiverUrl?: string;
+			receiverFile?: string;
+			scope?: string;
+			rememberUser?: boolean;
+		}
+
 		export var NodeServer : {
 			new(port: number) : AuthDriver;
 		}
 
 		export var Redirect : {
-			new(options: RedirectDriverOpts) : AuthDriver;
+			new(options: RedirectDriverOpts): AuthDriver;
+		}
+
+		export var Popup : {
+			new(options: PopupDriverOpts): AuthDriver;
 		}
 
 		interface ChromeDriverOpts {
