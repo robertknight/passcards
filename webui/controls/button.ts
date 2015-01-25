@@ -47,7 +47,10 @@ var theme = style.create({
 
 			// override default fonts for <button>
 			// element. Required when tested in Firefox 37
-			fontFamily: fonts.FAMILY
+			fontFamily: fonts.FAMILY,
+
+			// disable drag of button image
+			userSelect: 'none'
 		},
 
 		raised: {
@@ -111,6 +114,8 @@ var theme = style.create({
 			position: 'relative',
 			overflow: 'hidden',
 			margin: 5,
+			minWidth: 40,
+			minHeight: 40,
 			width: 40,
 			height: 40
 		},
@@ -121,6 +126,11 @@ var theme = style.create({
 			textTransform: 'uppercase',
 
 			userSelect: 'none'
+		},
+
+		// styles applied to buttons which have custom children
+		customContent: {
+			height: 'initial'
 		}
 	},
 });
@@ -157,6 +167,8 @@ export interface ButtonProps {
 
 	/** The URL of the SVG icon for this button */
 	iconUrl?: string;
+
+	children?: any;
 }
 
 export class Button extends typed_react.Component<ButtonProps,{}> {
@@ -208,6 +220,10 @@ export class Button extends typed_react.Component<ButtonProps,{}> {
 			containerStyles.push({backgroundColor: this.props.backgroundColor});
 		}
 
+		if (this.props.children) {
+			containerStyles.push(theme.button.customContent);
+		}
+
 		var labelStyles: any[] = [theme.button.label];
 		if (this.props.color) {
 			labelStyles.push({color: this.props.color});
@@ -246,7 +262,8 @@ export class Button extends typed_react.Component<ButtonProps,{}> {
 		return react.DOM.button(style.mixin(containerStyles, {
 			tabIndex: 0,
 			onClick: (e: React.MouseEvent) => this.props.onClick(e),
-			title: this.props.value
+			title: this.props.value,
+			type: 'button'
 		}),
 			ripple.InkRippleF({
 				radius: rippleRadius,
@@ -254,7 +271,8 @@ export class Button extends typed_react.Component<ButtonProps,{}> {
 				ref: 'ripple'
 			}),
 			buttonIcon,
-			label
+			label,
+			this.props.children
 		);
 	}
 }
