@@ -13,6 +13,7 @@ import ripple = require('./controls/ripple');
 import settings = require('./settings');
 import style_util = require('./base/style_util');
 import text_field = require('./controls/text_field');
+import toaster = require('./controls/toaster');
 import transition_mixin = require('./base/transition_mixin');
 import vfs = require('../lib/vfs/vfs');
 
@@ -86,9 +87,16 @@ var theme = style.create({
 
 	cloudServiceList: {
 		padding: 20,
+		marginTop: 50,
 		display: 'flex',
 		flexDirection: 'column',
 		alignItems: 'center'
+	},
+
+	header: {
+		fontSize: 16,
+		marginTop: 10,
+		marginBottom: 15
 	}
 });
 
@@ -98,6 +106,9 @@ interface NavButtonProps {
 	iconUrl?: string;
 }
 
+/** Button displayed at the bottom of the setup view
+  * to go to the previous/next steps.
+  */
 class NavButton extends typed_react.Component<NavButtonProps,{}> {
 	render() {
 		return button.ButtonF({
@@ -162,8 +173,10 @@ class StoreList extends typed_react.Component<StoreListProps, StoreListState> {
 				return react.DOM.div(style.mixin(theme.storeList),
 				  `Unable to search Dropbox for existing stores: ${this.state.error.message}`,
 					  react.DOM.div(style.mixin(theme.screenButtons),
-						NavButtonF({
-							label: 'Try Again',
+						button.ButtonF({
+							style: button.Style.Rectangular,
+							color: colors.MATERIAL_COLOR_PRIMARY,
+							value: 'Try Again',
 							onClick: () => {
 								this.setState({error: null});
 								this.startSearch();
@@ -221,6 +234,12 @@ interface SlideState extends transition_mixin.TransitionMixinState {
 }
 
 class Slide extends typed_react.Component<SlideProps, SlideState> {
+	getInitialState() {
+		return {
+			transitionProperty: 'transform'
+		}
+	}
+
 	render() {
 		var screenStyles: any[] = [theme.screen];
 		switch (this.state.transition) {
@@ -250,6 +269,7 @@ interface SetupViewState {
 	accountInfo?: vfs.AccountInfo;
 	currentScreen?: Screen;
 	newStore?: NewStoreOptions;
+	toasterMessage?: string;
 }
 
 /** App setup and onboarding screen.
@@ -304,17 +324,34 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 			break;
 		}
 
+		var message: React.ReactElement<toaster.ToasterProps>;
+		if (this.state.toasterMessage) {
+			message = toaster.ToasterF({
+				message: this.state.toasterMessage
+			});
+		}
+
 		return react.DOM.div(style.mixin(theme.setupView),
 			react.DOM.div(style.mixin(theme.setupView.inner),
 				reactutil.TransitionGroupF({},
 					currentScreen
-				)
+				),
+				reactutil.TransitionGroupF({}, message)
 			)
 		);
 	}
 
+	private reportError(err: string | Error) {
+		if (typeof err === 'string') {
+			this.setState({toasterMessage: err});
+		} else {
+			this.setState({toasterMessage: err.message});
+		}
+	}
+
 	private renderWelcomeScreen() {
-		return react.DOM.div({}, 'Passcards',
+		return react.DOM.div({},
+			react.DOM.div(style.mixin(theme.header), 'Passcards'),
 			react.DOM.div(style.mixin(theme.screenButtons),
 				NavButtonF({
 					label: 'Continue',
@@ -343,11 +380,14 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 				accountInfo: accountInfo,
 				currentScreen: Screen.SelectStore
 			});
-		}).done();
+		}).catch((err) => {
+			this.reportError(err);
+		});
 	}
 
 	private renderConnectToCloudServiceScreen() {
-		return react.DOM.div({}, 'Where do you want Passcards to store your passwords?',
+		return react.DOM.div({},
+			react.DOM.div(style.mixin(theme.header), 'Where do you want Passcards to store your passwords?'),
 			react.DOM.div(style.mixin(theme.cloudServiceList),
 				button.ButtonF({
 					style: button.Style.RaisedRectangular,
@@ -361,6 +401,8 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 							// or the app will reload and the login completion
 							// will be handled by componentDidMount()
 							this.completeCloudServiceLogin();
+						}).catch((err) => {
+							this.reportError(err);
 						});
 					}
 				},
@@ -378,7 +420,8 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 			path: 'Passcards/Passcards.agilekeychain'
 		};
 
-		return react.DOM.div({}, 'Setup new store',
+		return react.DOM.div({},
+			react.DOM.div(style.mixin(theme.header), 'Setup new store'),
 			react.DOM.div(style.mixin(theme.newStore),
 				text_field.TextFieldF({
 					type: 'text',
@@ -457,7 +500,8 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 			accountName = `${this.state.accountInfo.name}'s`;
 		}
 
-		return react.DOM.div({}, `Select store in ${accountName} Dropbox` ,
+		return react.DOM.div({},
+			react.DOM.div(style.mixin(theme.header), `Select store in ${accountName} Dropbox`),
 			StoreListF({
 				vfs: this.props.fs,
 				onSelectStore: (path) => {

@@ -291,7 +291,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 				progressMax: this.state.syncState.total
 			}));
 		}
-		return reactutil.CSSTransitionGroupF({transitionName: style.classes(theme.animations.fade), key: 'toasterList'},
+		return reactutil.TransitionGroupF({key: 'toasterList'},
 		  toasters
 		);
 	}

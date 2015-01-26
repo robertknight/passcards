@@ -7,6 +7,8 @@ import style = require('ts-style');
 import div = require('../base/div');
 import reactutil = require('../base/reactutil');
 import controls_theme = require('./theme');
+import style_util = require('../base/style_util');
+import transition_mixin = require('../base/transition_mixin');
 
 var theme = style.create({
 	toaster: {
@@ -26,6 +28,10 @@ var theme = style.create({
 		paddingRight: 10,
 		left: '50%',
 		transform: 'translate(-50%)',
+
+		transition: style_util.transitionOn({
+			opacity: .3
+		}),
 
 		progressBar: {
 			outline: {
@@ -53,10 +59,19 @@ export interface ToasterProps {
 	progressMax?: number;
 }
 
+interface ToasterState extends transition_mixin.TransitionMixinState {
+}
+
 /** Control for displaying a temporary notification,
   * with an optional progress indicator.
   */
-export class Toaster extends typed_react.Component<ToasterProps, {}> {
+export class Toaster extends typed_react.Component<ToasterProps, ToasterState> {
+	getInitialState() {
+		return {
+			transitionProperty: 'opacity'
+		};
+	}
+
 	render() {
 		var PROGRESS_WIDTH = 200;
 		var meterWidth = (this.props.progressValue / this.props.progressMax) * PROGRESS_WIDTH;
@@ -74,7 +89,8 @@ export class Toaster extends typed_react.Component<ToasterProps, {}> {
 			);
 		}
 
-		return div(theme.toaster, {},
+		var transitionStyle = transition_mixin.fadeIn(this.state.transition);
+		return react.DOM.div(style.mixin([theme.toaster, transitionStyle], {}),
 			react.DOM.div({},
 				this.props.message
 			),
@@ -83,5 +99,5 @@ export class Toaster extends typed_react.Component<ToasterProps, {}> {
 	}
 }
 
-export var ToasterF = reactutil.createFactory(Toaster);
+export var ToasterF = reactutil.createFactory(Toaster, transition_mixin.TransitionMixinM);
 
