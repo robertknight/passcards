@@ -1,6 +1,5 @@
 import style = require('ts-style');
 
-import assign = require('../lib/base/assign');
 import colors = require('./controls/colors');
 import controls_theme = require('./controls/theme');
 import fonts = require('./controls/fonts');

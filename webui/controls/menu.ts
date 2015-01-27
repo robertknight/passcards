@@ -5,8 +5,6 @@ import typed_react = require('typed-react');
 import style = require('ts-style');
 
 import colors = require('./colors');
-import controls_theme = require('./theme');
-import div = require('../base/div');
 import fonts = require('./fonts');
 import reactutil = require('../base/reactutil');
 import ripple = require('./ripple');
@@ -306,7 +304,7 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 
 	render() {
 		var menuItems = this.props.items.map((item) => {
-			return div(theme.menu.item, {
+			return react.DOM.div(style.mixin(theme.menu.item, {
 				key: item.label,
 				onClick: () => {
 					// when the menu is first opened, ignore any immediate taps that
@@ -321,13 +319,12 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 						this.props.onDismiss();
 					}, 300);
 				}
-			}, 
+			}), 
 				ripple.InkRippleF({radius: 100}),
-				div(theme.menu.item.label, {}, item.label)
+				react.DOM.div(style.mixin(theme.menu.item.label), item.label)
 			);
 		});
 
-		var visibleMs = Date.now() - this.state.showTime.getTime();
 		var menuRect = this.getMenuRect();
 		var menuOpacity = 0;
 		var menuTransform = 'translateY(0px)';
@@ -356,7 +353,7 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 					this.props.onDismiss();
 				}
 			})),
-			div(theme.menu, {
+			react.DOM.div(style.mixin(theme.menu, {
 				ref: 'menu',
 				style: reactutil.prefix({
 					top: menuRect.top,
@@ -366,7 +363,7 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 					opacity: menuOpacity,
 					transform: menuTransform
 				}),
-			}, menuItems)
+			}), menuItems)
 		);
 	}
 }

@@ -4,11 +4,9 @@ import react = require('react');
 import style = require('ts-style');
 import typed_react = require('typed-react');
 
-import assign = require('../lib/base/assign');
 import button = require('./controls/button');
 import colors = require('./controls/colors');
 import crypto = require('../lib/onepass_crypto');
-import div = require('./base/div');
 import env = require('../lib/base/env');
 import focus_mixin = require('./base/focus_mixin');
 import item_builder = require('../lib/item_builder');
@@ -178,7 +176,7 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 			focusField = false;
 		}
 
-		return div(theme.detailsView.field, {ref: 'itemField'},
+		return react.DOM.div(style.mixin(theme.detailsView.field, {ref: 'itemField'}),
 			labelEditor,
 			text_field.TextFieldF({
 				floatingLabel: this.props.onChangeLabel == null,
@@ -196,7 +194,7 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 				focus: focusField,
 				ref: 'textField'
 			}),
-			div(theme.detailsView.field.actions, {}, actions)
+			react.DOM.div(style.mixin(theme.detailsView.field.actions), actions)
 		);
 	}
 }
@@ -367,7 +365,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				}));
 			});
 			if (sectionIndex > 0) {
-				sections.push(div(theme.detailsView.section.divider, {}));
+				sections.push(react.DOM.div(style.mixin(theme.detailsView.section.divider)));
 			}
 			if (section.title || editing) {
 				if (editing) {
@@ -392,13 +390,15 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 						focused: autofocus
 					}));
 				} else {
-					sections.push(div(theme.detailsView.section.title, {}, section.title));
+					sections.push(react.DOM.div(style.mixin(theme.detailsView.section.title),
+						section.title)
+					);
 				}
 			}
 
-			sections.push(div(null, {},
-			fields)
-			);
+			sections.push(react.DOM.div({},
+				fields
+			));
 
 			if (editing) {
 				var addButtonRef = sectionIndex + '.addField';
@@ -609,7 +609,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				key: 'cancel'
 			}));
 		}
-		toolbarControls.push(div(theme.detailsView.toolbarSpacer,{}));
+		toolbarControls.push(react.DOM.div(style.mixin(theme.detailsView.toolbarSpacer)));
 
 		var editOrSave: React.ComponentElement<button.ButtonProps>;
 		if (this.state.isEditing) {
@@ -652,7 +652,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			editOrSave
 		));
 
-		return div([theme.detailsView.header.toolbar], {},
+		return react.DOM.div(style.mixin(theme.detailsView.header.toolbar),
 			toolbarControls
 		);
 	}
@@ -701,7 +701,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 
 			var sectionDivider: React.ReactElement<any>;
 			if (websites.length > 0 && sections.length > 0) {
-				sectionDivider = div(theme.detailsView.divider, {});
+				sectionDivider = react.DOM.div(style.mixin(theme.detailsView.divider));
 			}
 
 			var itemActionDivider: React.ReactElement<any>;
@@ -720,17 +720,17 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			}
 
 			if (itemActions.length > 0) {
-				itemActionDivider = div(theme.detailsView.divider, {});
+				itemActionDivider = react.DOM.div(style.mixin(theme.detailsView.divider));
 			}
 
-			detailsContent = div(theme.detailsView.content, {key: contentKey},
+			detailsContent = react.DOM.div(style.mixin(theme.detailsView.content, {key: contentKey}),
 				titleField,
-				div(theme.detailsView.coreFields, {}, coreFields),
-				div(null, {}, websites),
+				react.DOM.div(style.mixin(theme.detailsView.coreFields), coreFields),
+				react.DOM.div({}, websites),
 				sectionDivider,
-				div(null, {}, sections),
+				react.DOM.div({}, sections),
 				itemActionDivider,
-				div(null, {}, itemActions)
+				react.DOM.div({}, itemActions)
 			);
 		}
 

@@ -7,27 +7,28 @@ import react = require('react');
 import style = require('ts-style');
 import typed_react = require('typed-react');
 
-import div = require('../base/div');
 import reactutil = require('../base/reactutil');
 
 var theme = style.create({
 	inkRipple: {
 		overflow: 'hidden',
-	position: 'absolute',
-	left: 0,
-	top: 0,
-	WebkitTapHighlightColor: 'transparent',
-	/* the ripple listens for mouse events on the parent
-	 * element itself.
-	 */
-	pointerEvents: 'none',
+		position: 'absolute',
+		left: 0,
+		top: 0,
+		WebkitTapHighlightColor: 'transparent',
+		/* the ripple listens for mouse events on the parent
+		 * element itself.
+		 */
+		pointerEvents: 'none',
+		width: '100%',
+		height: '100%',
 
-	container: {
-		// layout the child elements in their own stacking context so
-		// that they appear on top of the ripple effect
-		position: 'relative',
-	zIndex: 0
-	}
+		container: {
+			// layout the child elements in their own stacking context so
+			// that they appear on top of the ripple effect
+			position: 'relative',
+			zIndex: 0
+		}
 	},
 });
 
@@ -176,19 +177,12 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 	}
 
 	render() {
-		return div(theme.inkRipple, {
-			ref: 'container',
-			style : {
-				width: '100%',
-				height: '100%',
-				overflow: 'hidden'
-			}
-		},
+		return react.DOM.div(style.mixin(theme.inkRipple, {ref: 'container'}),
 			react.DOM.canvas({
 				className: style.classes(theme.inkRipple),
 				ref: 'canvas'
 			}),
-			div(theme.inkRipple.container, {}, this.props.children)
+			react.DOM.div(style.mixin(theme.inkRipple.container), this.props.children)
 		)
 	}
 

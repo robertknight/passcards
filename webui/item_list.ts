@@ -8,7 +8,6 @@ import style = require('ts-style');
 import typed_react = require('typed-react');
 import underscore = require('underscore');
 
-import div = require('./base/div');
 import env = require('../lib/base/env');
 import focus_mixin = require('./base/focus_mixin');
 import keycodes = require('./base/keycodes');
@@ -81,12 +80,12 @@ export class ItemListView extends typed_react.Component<ItemListViewProps, ItemL
 			filterUrl = this.props.currentUrl;
 		}
 
-		return div(theme.itemList.container, {
+		return react.DOM.div(style.mixin(theme.itemList.container, {
 				tabIndex: 0,
 				onFocus: () => {
 					this.setFocus();
 				}
-			},
+			}),
 			ItemListToolbarF({
 				filterUrl: this.props.currentUrl,
 
@@ -156,7 +155,7 @@ export class Item extends typed_react.Component<ItemProps, {}> {
 	render() {
 		var focusIndicator: React.ReactElement<any>;
 		if (this.props.isFocused) {
-			focusIndicator = div(theme.itemList.item.focusIndicator, {}, '>');
+			focusIndicator = react.DOM.div(style.mixin(theme.itemList.item.focusIndicator), '>');
 		}
 
 		// positioning a rendered item within its parent list could be
@@ -168,20 +167,20 @@ export class Item extends typed_react.Component<ItemProps, {}> {
 		var offset = this.props.offsetTop.toString() + 'px';
 		var translation = 'translate3d(0px,' + offset + ',0px)';
 
-		return div(theme.itemList.item, {
+		return react.DOM.div(style.mixin(theme.itemList.item, {
 				ref: 'itemOverview',
 				onClick: () => this.props.onSelected(),
 				style: reactutil.prefix({transform: translation})
-			},
+			}),
 			ripple.InkRippleF(),
 			item_icons.IconControlF({
 				location: this.props.item.primaryLocation(),
 				iconProvider: this.props.iconProvider,
 				isFocused: this.props.isFocused
 			}),
-			div(theme.itemList.item.details, {},
-				div(theme.itemList.item.details.title, {}, this.props.item.title),
-				div(theme.itemList.item.details.account, {}, this.props.item.account)
+			react.DOM.div(style.mixin(theme.itemList.item.details),
+				react.DOM.div(style.mixin(theme.itemList.item.details.title), this.props.item.title),
+				react.DOM.div(style.mixin(theme.itemList.item.details.account), this.props.item.account)
 			),
 			focusIndicator
 		);
@@ -339,9 +338,9 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 		});
 			
 		var listHeight = this.state.matchingItems.length * this.state.itemHeight;
-		return div(theme.itemList.list, {
+		return react.DOM.div(style.mixin(theme.itemList.list, {
 			ref: 'itemList',
-			onScroll: (e) => {
+			onScroll: () => {
 				// In iOS 8 multiple scroll events may be delivered
 				// in a single animation frame. Aside from avoiding unnecessary
 				// updates, buffering these avoids flicker in Mobile Safari when
@@ -359,17 +358,15 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 					});
 				}
 			}
-		},
+		}),
 			listItems,
 
 			// add placeholder item at the bottom of the list to ensure
 			// that the scrollbar has a suitable range to allow the user
 			// to scroll the whole list
-			div(theme.itemList.list.footer, {
-				style: {
-					top: listHeight.toString() + 'px'
-				}
-			}, 'placeholder')
+			react.DOM.div(style.mixin([theme.itemList.list.footer, {
+				top: listHeight.toString()
+			}]), 'placeholder')
 		);
 	}
 
@@ -521,7 +518,7 @@ class ItemListToolbar extends typed_react.Component<ItemListToolbarProps, {}> {
 			searchPlaceholder = 'Search items...';
 		}
 
-		return div([theme.toolbar, theme.itemList.toolbar], {},
+		return react.DOM.div(style.mixin([theme.toolbar, theme.itemList.toolbar]),
 				svg_icon.SvgIconF({
 					className: style.classes(theme.itemList.toolbar.searchIcon),
 					href: 'icons/icons.svg#search',
@@ -541,7 +538,7 @@ class ItemListToolbar extends typed_react.Component<ItemListToolbarProps, {}> {
 						updateQuery();
 					}
 				}),
-				div(theme.itemList.toolbar.iconGroup, {},
+				react.DOM.div(style.mixin(theme.itemList.toolbar.iconGroup),
 					toolbar.createButton({
 						iconUrl: 'icons/icons.svg#lock-outline',
 						value: 'Lock',

@@ -8,7 +8,6 @@ import typed_react = require('typed-react');
 
 import button = require('./controls/button');
 import colors = require('./controls/colors');
-import div = require('./base/div');
 import focus_mixin = require('./base/focus_mixin');
 import item_store = require('../lib/item_store');
 import reactutil = require('./base/reactutil');
@@ -62,8 +61,8 @@ export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockVie
 		var unlockPaneLower: React.ReactElement<any>;
 
 		if (this.props.isLocked) {
-			unlockPaneUpper = div(theme.unlockView.upper, {},
-				div(theme.unlockView.form, {},
+			unlockPaneUpper = react.DOM.div(style.mixin(theme.unlockView.upper),
+				react.DOM.div(style.mixin(theme.unlockView.form),
 					react.DOM.form({
 						className: style.classes(theme.unlockView.inputPane),
 						ref:'unlockPaneForm',
@@ -95,14 +94,14 @@ export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockVie
 								}
 							})
 						),
-						div(theme.unlockView.unlockLabel, {}, unlockMessage)
+						react.DOM.div(style.mixin(theme.unlockView.unlockLabel), unlockMessage)
 					)
 				)
 			);
-			unlockPaneLower = div(theme.unlockView.lower, {});
+			unlockPaneLower = react.DOM.div(style.mixin(theme.unlockView.lower));
 		}
 
-		return div(theme.unlockView, {},
+		return react.DOM.div(style.mixin(theme.unlockView),
 			reactutil.CSSTransitionGroupF({
 				transitionName: style.classes(theme.animations.slideFromTop)
 			}, unlockPaneUpper),

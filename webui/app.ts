@@ -16,7 +16,6 @@ import underscore = require('underscore');
 
 import autofill = require('./autofill');
 import details_view = require('./details_view');
-import div = require('./base/div');
 import dropboxvfs = require('../lib/vfs/dropbox');
 import env = require('../lib/base/env');
 import event_stream = require('../lib/base/event_stream');
@@ -191,7 +190,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 		});
 	}
 
-	showError(error: Error) {
+	private showError(error: Error) {
 		assert(error.message);
 
 		var status = new Status(StatusType.Error, error.message);
@@ -199,7 +198,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 		console.log('App error:', error.message, error.stack);
 	}
 
-	showStatus(status: Status) {
+	private showStatus(status: Status) {
 		status.expired.listen(() => {
 			if (this.state.status == status) {
 				this.setState({status: null});
@@ -209,7 +208,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 		this.setState({status: status});
 	}
 
-	autofill(item: item_store.Item) {
+	private autofill(item: item_store.Item) {
 		this.props.services.autofiller.autofill(item).then((result) => {
 			if (result.count > 0) {
 				this.props.services.pageAccess.hidePanel();
@@ -269,7 +268,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 		);
 		children.push(menu);
 
-		return div(theme.appView, {ref: 'app'},
+		return react.DOM.div(style.mixin(theme.appView, {ref: 'app'}),
 			children
 		);
 	}

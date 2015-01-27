@@ -3,7 +3,6 @@ import style = require('ts-style');
 import typed_react = require('typed-react');
 
 import controls_theme = require('./theme');
-import div = require('../base/div');
 import fonts = require('./fonts');
 import reactutil = require('../base/reactutil');
 import ripple = require('./ripple');

@@ -4,7 +4,6 @@ import react = require('react');
 import typed_react = require('typed-react');
 import style = require('ts-style');
 
-import div = require('../base/div');
 import reactutil = require('../base/reactutil');
 import controls_theme = require('./theme');
 import style_util = require('../base/style_util');
@@ -78,14 +77,12 @@ export class Toaster extends typed_react.Component<ToasterProps, ToasterState> {
 
 		var progressBar: React.ReactElement<any>;
 		if (this.props.progressMax) {
-			progressBar = div(theme.toaster.progressBar.outline, {
-					style: {
-						width: PROGRESS_WIDTH + 'px'
-					}
-				},
-				div(theme.toaster.progressBar.meter, {
-					style: { width: meterWidth + 'px' }
-				})
+			progressBar = react.DOM.div(style.mixin([theme.toaster.progressBar.outline, {
+					width: PROGRESS_WIDTH + 'px'
+				}]),
+				react.DOM.div(style.mixin([theme.toaster.progressBar.meter, {
+					width: meterWidth + 'px'
+				}]))
 			);
 		}
 
