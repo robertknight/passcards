@@ -1,18 +1,39 @@
 import event_stream = require('../lib/base/event_stream');
 
+export function accountKey(account: Account) {
+	var serviceName = CloudService[account.cloudService];
+	return `${serviceName.toLowerCase()}-${account.cloudAccountId}-${account.storePath}`;
+}
+
 export enum CloudService {
 	Dropbox
 }
 
 export interface Account {
+	/** Local ID of the account */
+	id: string;
+
+	/** Cloud storage where the data for this account is hosted */
 	cloudService: CloudService;
-	accountName: string;
+
+	/** ID of the account on the cloud service */
+	cloudAccountId: string;
 	storePath: string;
+
+	/** Name of the user associated with the account */
+	name: string;
+}
+
+export interface AccountMap {
+	[accountId: string]: Account;
 }
 
 export enum Setting {
+	Version, // {number}
 	AutoLockTimeout,
-	ActiveAccount
+	/// ID of the active account
+	ActiveAccount,
+	Accounts // {AccountMap}
 }
 
 export interface Store {
@@ -80,7 +101,16 @@ export class LocalStorageStore extends SimpleStore {
 	}
 
 	private readSettings() {
-		return <SettingsDict>JSON.parse(window.localStorage.getItem(SETTING_KEY)) || {};
+		var settings = <SettingsDict>JSON.parse(window.localStorage.getItem(SETTING_KEY)) || {};
+		
+		// settings migration
+		if (Number(settings['Version']) < 1) {
+			// ActiveAccount changed to local ID
+			delete settings['ActiveAccount'];
+			settings['Version'] = 1;
+		}
+
+		return settings;
 	}
 
 	private writeSettings(newSettings: SettingsDict) {

@@ -539,7 +539,10 @@ export class App {
 		// handle login/logout events
 		settingStore.onChanged.listen((setting) => {
 			if (setting == settings.Setting.ActiveAccount) {
-				var account = settingStore.get(settings.Setting.ActiveAccount);
+				var accountId = settingStore.get(settings.Setting.ActiveAccount);
+				var accounts = <settings.AccountMap>settingStore.get(settings.Setting.Accounts);
+				var account = accounts[accountId];
+
 				if (account) {
 					this.initAccount(account);
 				} else {
@@ -557,8 +560,7 @@ export class App {
 	}
 
 	private databaseKeyForAccount(account: settings.Account) {
-		var serviceName = settings.CloudService[account.cloudService];
-		return `passcards-${serviceName.toLowerCase()}-${account.accountName}-${account.storePath}`
+		return `passcards-${account.id}`;
 	}
 
 	// setup the local store, remote store and item syncing
