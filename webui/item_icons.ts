@@ -292,6 +292,7 @@ export interface IconControlProps {
 	iconProvider: ItemIconProvider;
 	isFocused: boolean;
 	onClick?: () => void;
+	title?: string;
 }
 
 export class IconControl extends typed_react.Component<IconControlProps, {}> {
@@ -351,7 +352,8 @@ export class IconControl extends typed_react.Component<IconControlProps, {}> {
 		}
 
 		return react.DOM.div(style.mixin(containerStyles, {
-			onClick: this.props.onClick
+			onClick: this.props.onClick,
+			title: this.props.title
 		}),
 			react.DOM.img(style.mixin(imgStyles, {ref: 'img', src: icon.iconUrl}))
 		);

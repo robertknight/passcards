@@ -843,7 +843,8 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 							var url = url_util.normalize(updatedItem.primaryLocation());
 							var siteWindow = window.open(url, '_blank');
 							siteWindow.focus();
-						}
+						},
+						title: `Open ${updatedItem.primaryLocation()} in a new tab`
 					}),
 					react.DOM.div(style.mixin(headerTheme.iconAndDetails.details),
 						// item title and account at start of entry transition
