@@ -588,7 +588,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		if (this.props.editMode == ItemEditMode.EditItem && !this.state.isEditing) {
 			toolbarControls.push(toolbar.createButton({
 				value: 'Back',
-				iconUrl: 'icons/icons.svg#arrow-back',
+				iconUrl: 'dist/icons/icons.svg#arrow-back',
 				onClick: () => {
 					this.exit();
 				},
@@ -597,7 +597,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		} else {
 			toolbarControls.push(toolbar.createButton({
 				value: 'Cancel',
-				iconUrl: 'icons/icons.svg#clear',
+				iconUrl: 'dist/icons/icons.svg#clear',
 				onClick: () => {
 					if (this.props.editMode == ItemEditMode.EditItem) {
 						this.resetEdits({item: this.props.item, content: this.state.itemContent});
@@ -615,7 +615,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		if (this.state.isEditing) {
 			editOrSave = toolbar.createButton({
 				value: 'Save',
-				iconUrl: 'icons/icons.svg#done',
+				iconUrl: 'dist/icons/icons.svg#done',
 				onClick: () => {
 					if (this.state.didEditItem) {
 						this.props.onSave(this.state.editedItem);
@@ -637,7 +637,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		} else {
 			editOrSave = toolbar.createButton({
 				value: 'Edit',
-				iconUrl: 'icons/icons.svg#edit',
+				iconUrl: 'dist/icons/icons.svg#edit',
 				onClick: () => {
 					this.setState({isEditing:true});
 				},
@@ -819,7 +819,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				rippleColor: 'white',
 				onClick: () => this.props.autofill(),
 				value: 'Autofill',
-				iconUrl: 'icons/icons.svg#input'
+				iconUrl: 'dist/icons/icons.svg#input'
 			}));
 		}
 

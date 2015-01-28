@@ -6,9 +6,11 @@ webui_srcs=$(shell find webui -name '*.ts')
 firefox_addon_srcs=$(shell find addons/firefox/src -name '*.ts')
 all_srcs=$(lib_srcs) $(cli_srcs) $(webui_srcs) $(addon_srcs)
 test_files=$(shell find build -name '*_test.js')
-webui_script_dir=webui/scripts
-webui_css_dir=webui/style
-webui_icon_dir=webui/icons
+
+webui_dist_dir=webui/dist
+webui_script_dir=$(webui_dist_dir)/scripts
+webui_css_dir=$(webui_dist_dir)/style
+webui_icon_dir=$(webui_dist_dir)/icons
 
 # marker files used to trigger npm / Git submodule
 # updates prior to build
@@ -97,7 +99,7 @@ lint_files=$(addprefix build/,$(subst .ts,.ts.lint, $(all_srcs)))
 lint: $(lint_files)
 
 build/%.ts.lint: %.ts
-	$(TSLINT) -f $<
+	$(TSLINT) -f $< || true
 	@mkdir -p $(dir $@)
 	@touch $@
 

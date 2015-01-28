@@ -521,7 +521,7 @@ class ItemListToolbar extends typed_react.Component<ItemListToolbarProps, {}> {
 		return react.DOM.div(style.mixin([theme.toolbar, theme.itemList.toolbar]),
 				svg_icon.SvgIconF({
 					className: style.classes(theme.itemList.toolbar.searchIcon),
-					href: 'icons/icons.svg#search',
+					href: 'dist/icons/icons.svg#search',
 					width: 20,
 					height: 20,
 					viewBox: iconViewBox,
@@ -540,12 +540,12 @@ class ItemListToolbar extends typed_react.Component<ItemListToolbarProps, {}> {
 				}),
 				react.DOM.div(style.mixin(theme.itemList.toolbar.iconGroup),
 					toolbar.createButton({
-						iconUrl: 'icons/icons.svg#lock-outline',
+						iconUrl: 'dist/icons/icons.svg#lock-outline',
 						value: 'Lock',
 						onClick: () => this.props.onLockClicked()
 					}),
 					toolbar.createButton({
-						iconUrl: 'icons/icons.svg#menu',
+						iconUrl: 'dist/icons/icons.svg#menu',
 						value: 'Menu',
 						ref: 'menuButton',
 						onClick: () => {

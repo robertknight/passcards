@@ -85,7 +85,7 @@ export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockVie
 								color: colors.TOOLBAR_ICON,
 								rippleColor: colors.TOOLBAR_ICON,
 								value: 'App Menu',
-								iconUrl: 'icons/icons.svg#menu',
+								iconUrl: 'dist/icons/icons.svg#menu',
 								ref: 'menuButton',
 								onClick: (e) => {
 									e.preventDefault();

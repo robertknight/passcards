@@ -407,7 +407,7 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 					}
 				},
 					react.DOM.img({
-						src: 'icons/dropbox-logotype-blue.svg',
+						src: 'dist/icons/dropbox-logotype-blue.svg',
 						height: 64
 					})
 				)
