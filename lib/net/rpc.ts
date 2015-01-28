@@ -17,8 +17,16 @@ export interface Client {
 	/** Invoke an RPC call and invoke callback with the results.
 	  * The values in the arguments array are passed to handler registered
 	  * with Server.on() for the given method.
+	  *
+	  * The optional timeout specifies the time interval within which
+	  * a reply should be received if @p callback is specified.
+	  *
+	  * If no reply is received within the timeout, @p callback is invoked
+	  * with a timeout error. If @p timeout is null, a default timeout
+	  * is used.
 	  */
-	call<R>(method: string, args: any[], callback?: (err: any, result: R) => void) : void;
+	call<R>(method: string, args: any[], callback?: (err: any, result: R) => void,
+	        timeout?: number) : void;
 }
 
 /** Provides an interface for handling an RPC call.
@@ -169,16 +177,23 @@ export class ChromeMessagePort {
 	}
 }
 
+interface PendingRpcCall {
+	id: number;
+	method: string;
+	callback?: Function;
+
+	// ID of timeout timer to verify that RPC calls are replied
+	// to
+	replyTimerId?: NodeJS.Timer | number;
+}
+
 /** Simple RPC implementation. RpcHandler implements both the
   * client and server-sides of an RPC handler.
   */
 export class RpcHandler implements Client, Server {
+	private replyId: number;
 	private id: number;
-	private pending: {
-		id: number;
-		method: string;
-		callback?: Function;
-	}[];
+	private pending: PendingRpcCall[];
 	private handlers: {
 		method: string;
 		callback: (args: any) => any;
@@ -251,17 +266,32 @@ export class RpcHandler implements Client, Server {
 		});
 	}
 
-	call<R>(method: string, args: any[], callback?: (err: any, result: R) => void) {
+	call<R>(method: string, args: any[], callback?: (err: any, result: R) => void,
+	        timeout?: number) {
 		var call = {
 			id: ++this.id,
 			method: method,
 			payload: args
 		};
-		var pending = {
+
+		var pending: PendingRpcCall = {
 			id: call.id,
-			method: method,
-			callback: callback
+			method: method
 		};
+
+		if (callback) {
+			timeout = timeout || 5000;
+			pending.callback = (err: any, result: R) => {
+				clearTimeout(<number>pending.replyTimerId);
+				callback(err, result);
+			};
+			pending.replyTimerId = setTimeout(() => {
+				callback(new Error(`RPC call ${method} did not receive a reply within ${timeout} ms`),
+				  null);
+				console.warn('rpc-call %s did not receive a reply within %d ms', method, timeout);
+			}, timeout)
+		}
+
 		this.pending.push(pending);
 		this.port.emit('rpc-call', call);
 	}

@@ -209,3 +209,21 @@ testLib.addAsyncTest('rpc-promise bridge', (assert) => {
 	});
 });
 
+testLib.addAsyncTest('reports an error if RPC handler fails to reply within a timeout', (assert) => {
+	var clientPort = new FakePort();
+	var serverPort = new FakePort(clientPort);
+
+	var client = new rpc.RpcHandler(clientPort);
+	var server = new rpc.RpcHandler(serverPort);
+
+	server.onAsync('greet', (done) => {
+		// do nothing
+	});
+
+	client.call('greet', [], (err, result) => {
+		assert.ok(err);
+		assert.equal(result, undefined);
+		testLib.continueTests();
+	}, 100 /* use a short timeout */);
+});
+
