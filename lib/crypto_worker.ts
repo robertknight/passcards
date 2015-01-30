@@ -6,7 +6,13 @@ import env = require('./base/env');
 import pbkdf2Lib = require('./crypto/pbkdf2');
 import rpc = require('./net/rpc');
 
-export var SCRIPT_PATH = env.isNodeJS() ? './build/lib/crypto_worker.js' : 'dist/scripts/crypto_worker.js';
+export var SCRIPT_PATH: string;
+
+if (env.isNodeJS()) {
+	SCRIPT_PATH = './build/lib/crypto_worker.js';
+} else {
+	SCRIPT_PATH = 'dist/scripts/crypto_worker.js';
+}
 
 export function setupWorker(worker: Worker) {
 	var rpcHandler = new rpc.RpcHandler(new rpc.WorkerMessagePort(worker, 'passcards', 'crypto-worker'));

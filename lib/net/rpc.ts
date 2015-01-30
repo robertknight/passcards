@@ -183,8 +183,12 @@ interface PendingRpcCall {
 	callback?: Function;
 
 	// ID of timeout timer to verify that RPC calls are replied
-	// to
-	replyTimerId?: NodeJS.Timer | number;
+	// to.
+	//
+	// Note: Type here is set to 'any' to avoid need to import
+	// Node.js typings when compiling Firefox addon SDK
+
+	replyTimerId?: any; /* NodeJS.Timer | number */
 }
 
 /** Simple RPC implementation. RpcHandler implements both the

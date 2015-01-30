@@ -7,6 +7,9 @@ XPI_PACKAGE=$(PKG_DIR)/$(XPI_PACKAGE_NAME)
 XPI_UPDATE_LINK=$(S3_PACKAGE_URL)/$(XPI_PACKAGE_NAME)
 XPI_UPDATE_RDF_URL=$(S3_PACKAGE_URL)/passcards.update.rdf
 
+webui_build_dir=$(PWD)/../../webui/dist
+script_build_dir=$(webui_build_dir)/scripts
+
 all: $(XPI_PACKAGE)
 
 $(XPI_PACKAGE): build/xpi_content
@@ -18,13 +21,8 @@ run: build/xpi_content
 	(export PASSCARDS_ENV='development' && $(CFX) run)
 
 build/xpi_content: lib/main.js \
-				   data/icons \
-				   data/scripts/crypto_worker.js \
-				   data/scripts/page_bundle.js \
+				   data/dist \
 				   data/scripts/panel_content.js \
-				   data/scripts/platform_bundle.js \
-				   data/scripts/webui_bundle.js \
-				   data/style/app.css \
                    data/index.html
 	@mkdir -p $@
 	@touch $@
@@ -39,38 +37,20 @@ lib/main.js: src/main.ts
 	cp build/addons/firefox/src/main.js $@
 	sed -i='' 's/..\/..\/..\/lib\/net\/rpc/.\/rpc/' $@
 
-data/icons: $(wildcard ../../icons/*)
-	mkdir -p data/icons
-	cp ../../icons/* data/icons
+data/dist:
+	mkdir -p data
+	cp -R $(webui_build_dir) data/dist
 
 data/scripts:
-	mkdir -p $@
-
-data/style:
 	mkdir -p $@
 
 data/index.html: ../../webui/index.html
 	mkdir -p data
 	cp ../../webui/index.html $@
 
-data/scripts/crypto_worker.js: data/scripts ../../webui/scripts/crypto_worker.js
-	cp ../../webui/scripts/crypto_worker.js $@
-
-data/scripts/webui_bundle.js: data/scripts ../../webui/scripts/webui_bundle.js
-	cp ../../webui/scripts/webui_bundle.js $@
-
-data/scripts/platform_bundle.js: data/scripts ../../webui/scripts/platform_bundle.js
-	cp ../../webui/scripts/platform_bundle.js $@
-
 data/scripts/panel_content.js: data/scripts src/panel_content.ts
 	$(TSC) --outDir build/ src/panel_content.ts 
 	$(BROWSERIFY) --no-builtins build/addons/firefox/src/panel_content.js > $@
-
-data/scripts/page_bundle.js: data/scripts ../../webui/scripts/page_bundle.js
-	cp ../../webui/scripts/page_bundle.js $@
-
-data/style/app.css: data/style ../../webui/style/app.css
-	cp ../../webui/style/app.css $@
 
 clean:
 	rm -rf build data lib

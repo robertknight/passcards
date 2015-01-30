@@ -34,7 +34,6 @@ appUiRpc.clone = (data) => {
 	return cloneInto(data, unsafeWindow);
 };
 
-pageAccess.syncService = selfWorker.options.syncService;
 pageAccess.oauthRedirectUrl = OAUTH_REDIRECT_URL;
 
 // forwards an RPC request from the app UI to the priviledged extension code,

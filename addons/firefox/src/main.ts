@@ -24,7 +24,7 @@ var panelRpc: rpc.RpcHandler;
 function getTabWorker(tab: Tab) {
 	if (!tabWorkers[tab.id]) {
 		var worker : PageWorker = tab.attach({
-			contentScriptFile: self_.data.url('scripts/page_bundle.js')
+			contentScriptFile: self_.data.url('dist/scripts/page_bundle.js')
 		});
 		worker.rpc = new rpc.RpcHandler(worker.port);
 		worker.on('detach', () => {
@@ -53,8 +53,7 @@ function main() {
 	}
 
 	// read internal settings
-	var PREF_ROOT = 'extensions.' + self_.id + '.';
-	var syncService = preferences_service.get(PREF_ROOT + '.syncService', 'dropbox');
+	//var PREF_ROOT = 'extensions.' + self_.id + '.';
 
 	tabs.on('ready', (tab) => {
 		if (tab === tabs.activeTab) {
@@ -75,7 +74,6 @@ function main() {
 				contentScriptFile: self_.data.url('scripts/panel_content.js'),
 				contentScriptWhen: 'start',
 				contentScriptOptions: {
-					syncService: syncService
 				},
 				onHide: onPanelHidden
 			});
@@ -152,8 +150,8 @@ function main() {
 		id: 'passcards-icon',
 		label: 'passcards Password Manager',
 		icon: {
-			'32' : './icons/icon-32.png',
-			'64' : './icons/icon-64.png'
+			'32' : self_.data.url('dist/icons/icon-32.png'),
+			'64' : self_.data.url('dist/icons/icon-64.png')
 		},
 		onChange: showPanel
 	});
