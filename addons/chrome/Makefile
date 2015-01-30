@@ -6,25 +6,20 @@ all: $(ZIP_PACKAGE)
 
 zip: $(ZIP_PACKAGE)
 
-$(ZIP_PACKAGE): scripts style icons
+$(ZIP_PACKAGE): data/dist scripts
 	@rm -f $(ZIP_PACKAGE)
 	@zip --quiet --exclude '.*' -r $(ZIP_PACKAGE) .
 
-scripts: ../../webui/scripts/*.js src/*.js
+webui_build_dir=$(PWD)/../../webui/dist
+
+data/dist: $(webui_build_dir)
+	ln -s -f $(webui_build_dir) $@
+
+scripts: $(webui_build_dir)/scripts/*.js src/*.js
 	@mkdir -p data/scripts
 	@cp src/*.js data/scripts
-	@cp ../../webui/scripts/*.js data/scripts
 	@cp $(NODE_MODULE_DIR)/dropbox/lib/dropbox.js data/scripts
 
-style: ../../webui/style/*.css
-	@mkdir -p data/style
-	@cp ../../webui/style/*.css data/style
-
-icons: ../../icons/*
-	@mkdir -p data/icons
-	@cp ../../icons/* data/icons
-
 clean:
-	@rm -rf data/icons
+	@rm -rf data/dist
 	@rm -rf data/scripts
-	@rm -rf data/style
