@@ -8,6 +8,7 @@ XPI_UPDATE_LINK=$(S3_PACKAGE_URL)/$(XPI_PACKAGE_NAME)
 XPI_UPDATE_RDF_URL=$(S3_PACKAGE_URL)/passcards.update.rdf
 
 webui_build_dir=$(PWD)/../../webui/dist
+webui_app_srcs=$(shell find $(webui_build_dir))
 script_build_dir=$(webui_build_dir)/scripts
 
 all: $(XPI_PACKAGE)
@@ -37,9 +38,10 @@ lib/main.js: src/main.ts
 	cp build/addons/firefox/src/main.js $@
 	sed -i='' 's/..\/..\/..\/lib\/net\/rpc/.\/rpc/' $@
 
-data/dist:
+data/dist: $(webui_app_srcs)
 	mkdir -p data
-	cp -R $(webui_build_dir) data/dist
+	rm -rf $@
+	cp -R $(webui_build_dir) $@
 
 data/scripts:
 	mkdir -p $@
