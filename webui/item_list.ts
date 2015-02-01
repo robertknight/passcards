@@ -33,7 +33,7 @@ export class ItemListViewProps {
 	selectedItem: item_store.Item;
 	onSelectedItemChanged: (item: item_store.Item, rect: reactutil.Rect) => void;
 	currentUrl: string;
-	iconProvider: item_icons.ItemIconProvider;
+	iconProvider: item_icons.IconProvider;
 	focus: boolean;
 
 	onLockClicked: () => void;
@@ -135,7 +135,7 @@ export interface ItemProps {
 	item: item_store.Item;
 	onSelected: () => void;
 	isFocused: boolean;
-	iconProvider: item_icons.ItemIconProvider;
+	iconProvider: item_icons.IconProvider;
 	index: number;
 	offsetTop: number;
 }
@@ -208,7 +208,7 @@ class ItemListProps {
 	filter: string;
 	filterUrl: string;
 	onSelectedItemChanged: (item: item_store.Item, rect: reactutil.Rect) => void;
-	iconProvider: item_icons.ItemIconProvider;
+	iconProvider: item_icons.IconProvider;
 }
 
 class ItemList extends typed_react.Component<ItemListProps, ItemListState> {

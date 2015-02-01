@@ -211,7 +211,7 @@ export interface DetailsViewProps {
 	viewportRect: reactutil.Rect;
 
 	item: item_store.Item;
-	iconProvider: item_icons.ItemIconProvider;
+	iconProvider: item_icons.IconProvider;
 	clipboard: page_access.ClipboardAccess;
 	editMode: ItemEditMode;
 	focus: boolean;

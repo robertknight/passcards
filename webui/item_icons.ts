@@ -21,7 +21,7 @@ import site_info = require('../lib/siteinfo/site_info');
 import theme = require('./theme');
 import url_util = require('../lib/base/url_util');
 
-/** Fetch state for an icon returned by ItemIconProvider query.
+/** Fetch state for an icon returned by IconProvider query.
   */
 export enum IconFetchState {
 	Fetching, ///< Icons associated with the URL are currently being fetched
@@ -45,7 +45,27 @@ export interface Icon {
   * When the icon associated with a previously looked up URL changes,
   * the updated event stream will emit the normalized URL.
   */
-export class ItemIconProvider {
+export interface IconProvider {
+	/** Stream of icon update events.
+	  * Emits the normalized URL (using url_util.normalize) of the location
+	  * when the icon for that location is updated.
+	  */
+	updated: event_stream.EventStream<string>;
+
+	/** Fetch the icon for a given URL. */
+	query(url: string): Icon;
+
+	/** Returns true if a given @p updateUrl from IconProvider.updated
+	  * matches an item with location @p location.
+	  *
+	  * The update URL may not match the original item location due to
+	  * normalization or if a fallback URL has been used to find
+	  * an icon for the item.
+	  */
+	updateMatches(updateUrl: string, itemUrl: string): boolean;
+}
+
+export class BasicIconProvider implements IconProvider {
 	private tempCache: Map<string,Icon>;
 	private diskCache : Cache;
 	private provider: site_info.SiteInfoProvider;
@@ -54,10 +74,6 @@ export class ItemIconProvider {
 	private static LOADING_ICON = 'dist/icons/loading.png';
 	private static DEFAULT_ICON = 'dist/icons/default.png';
 
-	/** Stream of icon update events.
-	  * Emits the normalized URL (using url_util.normalize) of the location
-	  * when the icon for that location is updated.
-	  */
 	updated: event_stream.EventStream<string>;
 	
 	/** Create an icon provider which uses @p provider to fetch
@@ -103,26 +119,18 @@ export class ItemIconProvider {
 		});
 	}
 
-	/** Returns true if a given @p updateUrl from ItemIconProvider.updated
-	  * matches an item with location @p location.
-	  *
-	  * The update URL may not match the original item location due to
-	  * normalization or if a fallback URL has been used to find
-	  * an icon for the item.
-	  */
 	updateMatches(updateUrl: string, itemUrl: string) {
 		itemUrl = url_util.normalize(itemUrl);
 		return updateUrl == itemUrl ||
 		       updateUrl == this.fallbackUrlForIcon(itemUrl);
 	}
 
-	/** Fetch the icon for a given URL. */
 	query(url: string) : Icon {
 		url = url_util.normalize(url);
 
 		if (url.length == 0) {
 			return {
-				iconUrl: ItemIconProvider.DEFAULT_ICON,
+				iconUrl: BasicIconProvider.DEFAULT_ICON,
 				state: IconFetchState.NoIcon,
 				width: 48,
 				height: 48
@@ -140,7 +148,7 @@ export class ItemIconProvider {
 			return cachedIcon;
 		} else {
 			var icon : Icon = {
-				iconUrl: ItemIconProvider.LOADING_ICON,
+				iconUrl: BasicIconProvider.LOADING_ICON,
 				state: IconFetchState.Fetching,
 				width: 48,
 				height: 48
@@ -172,7 +180,7 @@ export class ItemIconProvider {
 			icon.height = selectedIcon.icon.height;
 		} else {
 			icon.state = IconFetchState.NoIcon;
-			icon.iconUrl = ItemIconProvider.DEFAULT_ICON;
+			icon.iconUrl = BasicIconProvider.DEFAULT_ICON;
 			icon.width = 48;
 			icon.height = 48;
 		}
@@ -289,7 +297,7 @@ class Cache {
 
 export interface IconControlProps {
 	location: string;
-	iconProvider: ItemIconProvider;
+	iconProvider: IconProvider;
 	isFocused: boolean;
 	onClick?: () => void;
 	title?: string;
@@ -298,7 +306,7 @@ export interface IconControlProps {
 export class IconControl extends typed_react.Component<IconControlProps, {}> {
 	private iconUpdateListener: (url: string) => void;
 
-	private setupIconUpdateListener(iconProvider: ItemIconProvider) {
+	private setupIconUpdateListener(iconProvider: IconProvider) {
 		if (!this.iconUpdateListener) {
 			this.iconUpdateListener = (url) => {
 				if (this.props.location &&

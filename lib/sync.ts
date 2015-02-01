@@ -62,7 +62,29 @@ interface SyncItem {
 	vaultItem: item_store.Item;
 }
 
-export class Syncer {
+/** Interface for syncing encryption keys and items between
+  * a cloud-based store and a local cache.
+  */
+export interface Syncer {
+	onProgress: event_stream.EventStream<SyncProgress>;
+
+	/** Sync encryption keys for the vault.
+	  * This does not require the vault to be unlocked.
+	  */
+	syncKeys(): Q.Promise<void>;
+
+	/** Sync items from the vault to the local store.
+	  * Returns a promise which is resolved when the current sync completes.
+	  *
+	  * Syncing items requires the vault to be unlocked.
+	  */
+	syncItems(): Q.Promise<SyncProgress>;
+}
+
+/** Syncer implementation for agile_keychain.Vault and
+  * a local store.
+  */
+export class AgileKeychainSyncer implements Syncer {
 	private store: item_store.SyncableStore;
 	private vault: agile_keychain.Vault;
 
@@ -84,10 +106,7 @@ export class Syncer {
 		this.syncQueue = [];
 	}
 
-	/** Sync encryption keys for the vault.
-	  * This does not require the vault to be unlocked.
-	  */
-	syncKeys() : Q.Promise<void> {
+	syncKeys(): Q.Promise<void> {
 		var keys = this.vault.listKeys();
 		var hint = this.vault.passwordHint();
 
@@ -98,12 +117,7 @@ export class Syncer {
 		});
 	}
 
-	/** Sync items from the vault to the local store.
-	  * Returns a promise which is resolved when the current sync completes.
-	  *
-	  * Syncing items requires the vault to be unlocked.
-	  */
-	syncItems() : Q.Promise<SyncProgress> {
+	syncItems(): Q.Promise<SyncProgress> {
 		syncLog('starting sync');
 		if (this.currentSync) {
 			return this.currentSync.promise;

@@ -69,6 +69,10 @@ export class HttpKeyAgent implements key_agent.KeyAgent {
 		return cipherText.promise;
 	}
 
+	resetAutoLock() {
+		// not-implemented
+	}
+
 	private sendRequest<T>(method: string, path: string, data: T) : Q.Promise<string> {
 		return this.agentPID.then(() => {
 			var url = this.agentUrl + path;

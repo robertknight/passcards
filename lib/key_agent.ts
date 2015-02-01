@@ -141,10 +141,17 @@ export interface KeyAgent {
 	  * called. Some key agents may not support this.
 	  */
 	onLock?() : event_stream.EventStream<void>;
+	
+	/** Reset the timeout for auto-locking this key agent.
+	  * This should be called when the user interacts with the app
+	  * in some way to prevent auto-locking whilst the user is
+	  * interacting with the app.
+	  */
+	resetAutoLock(): void;
 }
 
 /** A simple key agent which just stores keys in memory */
-export class SimpleKeyAgent {
+export class SimpleKeyAgent implements KeyAgent {
 	private autoLockTimeout: number;
 	private crypto: crypto.Crypto;
 	private keys: {[id:string] : string};

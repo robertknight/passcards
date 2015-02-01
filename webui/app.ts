@@ -88,8 +88,8 @@ interface AppViewState {
 interface AppServices {
 	pageAccess: page_access.PageAccess;
 	autofiller: autofill.AutoFillHandler;
-	iconProvider: item_icons.ItemIconProvider;
-	keyAgent: key_agent.SimpleKeyAgent;
+	iconProvider: item_icons.IconProvider;
+	keyAgent: key_agent.KeyAgent;
 	clipboard: page_access.ClipboardAccess;
 	settings?: settings.Store;
 	fs: vfs.VFS;
@@ -575,7 +575,7 @@ export class App {
 				var vault = new onepass.Vault(this.fs, account.storePath, this.services.keyAgent);
 				var localDatabaseName = this.databaseKeyForAccount(account);
 				var store = new local_store.Store(itemDatabase, localDatabaseName, this.services.keyAgent);
-				var syncer = new sync.Syncer(store, vault);
+				var syncer = new sync.AgileKeychainSyncer(store, vault);
 				syncer.syncKeys().then(() => {
 					console.log('Encryption keys synced')
 				}).catch((err) => {
@@ -678,7 +678,7 @@ export class App {
 
 		var ICON_SIZE = 48;
 
-		return new item_icons.ItemIconProvider(iconDiskCache.store('icon-cache'),
+		return new item_icons.BasicIconProvider(iconDiskCache.store('icon-cache'),
 		  siteInfoProvider, ICON_SIZE);
 	}
 

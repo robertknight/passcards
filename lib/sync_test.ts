@@ -33,7 +33,7 @@ function setup() : Q.Promise<Env> {
 		return vault.unlock(VAULT_PASS);
 	}).then(() => {
 		var store = new temp_store.Store(new key_agent.SimpleKeyAgent());
-		var syncer = new sync.Syncer(store, vault);
+		var syncer = new sync.AgileKeychainSyncer(store, vault);
 
 		return {
 			store: store,
