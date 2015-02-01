@@ -11,11 +11,14 @@ $(ZIP_PACKAGE): data/dist scripts
 	@zip --quiet --exclude '.*' -r $(ZIP_PACKAGE) .
 
 webui_build_dir=$(PWD)/../../webui/dist
+webui_app_srcs=$(shell find $(webui_build_dir))
 
-data/dist: $(webui_build_dir)
-	ln -s -f $(webui_build_dir) $@
+data/dist: $(webui_app_srcs)
+	mkdir -p data
+	rm -rf $@
+	cp -R $(webui_build_dir) $@
 
-scripts: $(webui_build_dir)/scripts/*.js src/*.js
+scripts: src/*.js
 	@mkdir -p data/scripts
 	@cp src/*.js data/scripts
 	@cp $(NODE_MODULE_DIR)/dropbox/lib/dropbox.js data/scripts
