@@ -499,7 +499,7 @@ export class App {
 		var browserExt = this.setupBrowserExtension();
 
 		var keyAgent = new key_agent.SimpleKeyAgent();
-		keyAgent.setAutoLockTimeout(settingStore.get(settings.Setting.AutoLockTimeout));
+		keyAgent.setAutoLockTimeout(settingStore.get<number>(settings.Setting.AutoLockTimeout));
 
 		var iconProvider = this.setupItemIconProvider();
 		
@@ -539,8 +539,8 @@ export class App {
 		// handle login/logout events
 		settingStore.onChanged.listen((setting) => {
 			if (setting == settings.Setting.ActiveAccount) {
-				var accountId = settingStore.get(settings.Setting.ActiveAccount);
-				var accounts = <settings.AccountMap>settingStore.get(settings.Setting.Accounts);
+				var accountId = settingStore.get<string>(settings.Setting.ActiveAccount);
+				var accounts = settingStore.get<settings.AccountMap>(settings.Setting.Accounts);
 				var account = accounts[accountId];
 
 				if (account) {
@@ -553,9 +553,12 @@ export class App {
 		});
 
 		// connect to current account if set
-		var account = settingStore.get(settings.Setting.ActiveAccount);
-		if (account) {
-			this.initAccount(account);
+		var accountId = settingStore.get<string>(settings.Setting.ActiveAccount);
+		if (accountId) {
+			var accounts = settingStore.get<settings.AccountMap>(settings.Setting.Accounts);
+			if (accounts && accounts[accountId]) {
+				this.initAccount(accounts[accountId]);
+			}
 		}
 	}
 

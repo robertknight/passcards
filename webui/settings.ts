@@ -38,7 +38,7 @@ export enum Setting {
 
 export interface Store {
 	onChanged: event_stream.EventStream<Setting>;
-	get(setting: Setting) : any;
+	get<T>(setting: Setting) : T;
 	set(setting: Setting, value: any) : void;
 	clear(setting: Setting) : void;
 }
@@ -54,8 +54,8 @@ export class SimpleStore implements Store {
 		this.onChanged = new event_stream.EventStream<Setting>();
 	}
 
-	get(setting: Setting) {
-		return this.settings[setting];
+	get<T>(setting: Setting) {
+		return <T>this.settings[setting];
 	}
 
 	set(setting: Setting, value: any) {
