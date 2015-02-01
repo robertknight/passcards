@@ -683,16 +683,12 @@ export class App {
 	private setupVfs() {
 		var fs: vfs.VFS;
 		if (env.isFirefoxAddon()) {
-			if (firefoxAddOn.syncService === 'dropbox') {
-				fs = new dropboxvfs.DropboxVFS({
-					authMode: dropboxvfs.AuthMode.Redirect,
-					authRedirectUrl: firefoxAddOn.oauthRedirectUrl,
-					disableLocationCleanup: true,
-					receiverPage: ''
-				});
-			} else if (firefoxAddOn.syncService === 'httpfs') {
-				fs = new http_vfs.Client('http://localhost:3030');
-			}
+			fs = new dropboxvfs.DropboxVFS({
+				authMode: dropboxvfs.AuthMode.Redirect,
+				authRedirectUrl: firefoxAddOn.oauthRedirectUrl,
+				disableLocationCleanup: true,
+				receiverPage: ''
+			});
 		} else if (env.isChromeExtension()) {
 			fs = new dropboxvfs.DropboxVFS({
 				authMode: dropboxvfs.AuthMode.ChromeExtension,

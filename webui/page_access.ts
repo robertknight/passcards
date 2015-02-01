@@ -82,7 +82,6 @@ export interface PageAccess {
 export interface ExtensionConnector {
 	currentUrl: string;
 	oauthRedirectUrl: string;
-	syncService: string;
 }
 
 /** A stub extension connector with no-op findForms()
