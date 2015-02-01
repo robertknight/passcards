@@ -73,13 +73,12 @@ export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockVie
 						}
 					},
 						react.DOM.div(style.mixin(theme.unlockView.passwordRow),
-							react.DOM.input({
-								className: style.classes(theme.unlockView.masterPasswordField),
+							react.DOM.input(style.mixin(theme.unlockView.masterPasswordField, {
 								type: 'password',
 								placeholder: 'Master Password...',
 								ref: 'masterPassField',
 								autoFocus: true
-							}),
+							})),
 							button.ButtonF({
 								style: button.Style.Icon,
 								color: colors.TOOLBAR_ICON,

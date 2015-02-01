@@ -245,6 +245,11 @@ var styles = style.create({
 			backgroundColor: colors.MATERIAL_COLOR_ACCENT3,
 			outline: 'none',
 
+			// force a small enough min width that the
+			// whole unlock view is visible when viewport
+			// is 3-400px wide.
+			minWidth: 175,
+
 			'::-webkit-input-placeholder': {
 				color: '#fff',
 				opacity: '0.8'
