@@ -151,3 +151,11 @@ declare module 'sdk/clipboard' {
 	export = clipboard;
 }
 
+declare module 'sdk/timers' {
+	var timers: {
+		setTimeout(callback: () => void, ms: number): number;
+		clearTimeout(id: number): void;
+	};
+	export = timers;
+}
+

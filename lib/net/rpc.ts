@@ -191,6 +191,20 @@ interface PendingRpcCall {
 	replyTimerId?: any; /* NodeJS.Timer | number */
 }
 
+/** Interface for object providing timer APIs, which may
+  * either be 'window' (in a browser context), 'global' (in Node)
+  * or something else (eg. in a Firefox addon)
+  */
+interface Timers {
+	setTimeout(callback: () => void, ms: number): any;
+	clearTimeout(id: any): void;
+}
+
+// 'global' var for use in NodeJS. This file does
+// not reference NodeJS' typings directly to avoid
+// conflicts with require() in Firefox addon typings
+declare var global: Timers;
+
 /** Simple RPC implementation. RpcHandler implements both the
   * client and server-sides of an RPC handler.
   */
@@ -198,11 +212,13 @@ export class RpcHandler implements Client, Server {
 	private replyId: number;
 	private id: number;
 	private pending: PendingRpcCall[];
+	private port: MessagePort<CallMessage, ReplyMessage>;
 	private handlers: {
 		method: string;
 		callback: (args: any) => any;
 		isAsync: boolean;
 	}[];
+	private timers: Timers;
 
 	/** A handler responsible for performing any special copying
 	  * of method arguments or replies needed before the data
@@ -217,13 +233,25 @@ export class RpcHandler implements Client, Server {
 	/** Construct an RPC handler which uses @p port to send and receive
 	  * messages to/from the other side of the connection.
 	  */
-	constructor(public port: MessagePort<CallMessage, ReplyMessage>) {
+	constructor(port: MessagePort<CallMessage, ReplyMessage>, timers?: Timers) {
+		this.port = port;
+
+		if (timers) {
+			this.timers = timers;
+		} else if (typeof window !== 'undefined') {
+			// default to using window.setTimeout() in browser
+			this.timers = window;
+		} else if (typeof global !== 'undefined') {
+			// default to global.setTimeout() in Node
+			this.timers = global;
+		}
+
 		this.id = 1;
 		this.handlers = [];
 		this.pending = [];
 		this.clone = (data) => {
 			return data;
-		}
+		};
 
 		this.port.on('rpc-reply', (reply: ReplyMessage) => {
 			var pending = this.pending.filter((pending) => {
@@ -286,10 +314,10 @@ export class RpcHandler implements Client, Server {
 		if (callback) {
 			timeout = timeout || 5000;
 			pending.callback = (err: any, result: R) => {
-				clearTimeout(<number>pending.replyTimerId);
+				this.timers.clearTimeout(<number>pending.replyTimerId);
 				callback(err, result);
 			};
-			pending.replyTimerId = setTimeout(() => {
+			pending.replyTimerId = this.timers.setTimeout(() => {
 				callback(new Error(`RPC call ${method} did not receive a reply within ${timeout} ms`),
 				  null);
 				console.warn('rpc-call %s did not receive a reply within %d ms', method, timeout);

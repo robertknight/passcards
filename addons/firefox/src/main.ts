@@ -9,6 +9,7 @@ import preferences_service = require('sdk/preferences/service');
 import self_ = require('sdk/self');
 import tabs = require('sdk/tabs');
 import xhr = require('sdk/net/xhr');
+import timers = require('sdk/timers');
 
 import rpc = require('../../../lib/net/rpc');
 
@@ -26,9 +27,12 @@ function getTabWorker(tab: Tab) {
 		var worker : PageWorker = tab.attach({
 			contentScriptFile: self_.data.url('dist/scripts/page_bundle.js')
 		});
-		worker.rpc = new rpc.RpcHandler(worker.port);
+		worker.rpc = new rpc.RpcHandler(worker.port, timers);
 		worker.on('detach', () => {
 			delete tabWorkers[tab.id];
+		});
+		worker.on('error', () => {
+			console.warn('Passcards worker script error', arguments);
 		});
 		tabWorkers[tab.id] = worker;
 	}
@@ -78,7 +82,7 @@ function main() {
 				onHide: onPanelHidden
 			});
 			
-			panelRpc = new rpc.RpcHandler(mainPanel.port);
+			panelRpc = new rpc.RpcHandler(mainPanel.port, timers);
 
 			mainPanel.port.on('oauth-credentials-received', (hash: string) => {
 				mainPanel.contentURL = self_.data.url('index.html') + hash;
