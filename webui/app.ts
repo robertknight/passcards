@@ -699,15 +699,8 @@ export class App {
 				disableLocationCleanup: true,
 				receiverPage: 'data/chrome_dropbox_oauth_receiver.html'
 			});
-		}
-
-		if (!fs) {
-			var opts = <any>url.parse(document.location.href, true /* parse query */).query;
-			if (opts.httpfs) {
-				fs = new http_vfs.Client(opts.httpfs);
-			} else {
-				fs = new dropboxvfs.DropboxVFS();
-			}
+		} else {
+			fs = new dropboxvfs.DropboxVFS();
 		}
 		return fs;
 	}
