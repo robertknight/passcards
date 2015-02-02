@@ -41,7 +41,6 @@ export class App {
 	private fs: vfs.VFS;
 
 	constructor() {
-		this.savedState = {};
 		var settingStore = new settings.LocalStorageStore();
 
 		this.fs = this.setupVfs();
@@ -186,6 +185,7 @@ export class App {
 		var appWindow = rootInputElement.ownerDocument.defaultView;
 		var stateChanged = new event_stream.EventStream<app_view.AppViewState>();
 		var appView = app_view.AppViewF({
+			initialState: this.savedState,
 			services: this.services,
 			stateChanged: stateChanged,
 			viewportRect: this.getViewportRect(appWindow)
@@ -196,7 +196,6 @@ export class App {
 			this.savedState = underscore.clone(state);
 		}, this);
 		this.activeAppView = react.render(appView, element);
-		this.updateState(this.savedState);
 
 		// in the Chrome extension, the app runs in a background
 		// page but the UI is rendered into a popup window
@@ -302,6 +301,9 @@ export class App {
 		} else {
 			// save app state for when the app's view is mounted
 			// via renderInto()
+			if (!this.savedState) {
+				this.savedState = {};
+			}
 			underscore.extend(this.savedState, state);
 		}
 	}

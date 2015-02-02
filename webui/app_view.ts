@@ -5,6 +5,7 @@ import typed_react = require('typed-react');
 import url = require('url');
 import underscore = require('underscore');
 
+import assign = require('../lib/base/assign');
 import autofill = require('./autofill');
 import details_view = require('./details_view');
 import event_stream = require('../lib/base/event_stream');
@@ -80,6 +81,15 @@ export interface AppServices {
 }
 
 export interface AppViewProps {
+	/** Initial state of the app view. This is used to save and restore
+	  * the state of the app when reloaded into a different view when the
+	  * user closes and reopens the Chrome extension popup.
+	  *
+	  * TODO - Replace this with data in a store which flows around
+	  * the app in a Flux-y style?
+	  */
+	initialState: AppViewState;
+
 	services: AppServices;
 	stateChanged: event_stream.EventStream<AppViewState>;
 	viewportRect: reactutil.Rect;
@@ -99,6 +109,11 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 			itemEditMode: details_view.ItemEditMode.EditItem,
 			viewportRect: this.props.viewportRect
 		};
+
+		if (this.props.initialState) {
+			assign(state, this.props.initialState);
+		}
+
 		return state;
 	}
 
@@ -311,7 +326,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 
 		var detailsView: React.ComponentElement<any>;
 		if (this.state.selectedItem) {
-			var appRect = (<HTMLElement>this.getDOMNode()).getBoundingClientRect();
+			var appRect = this.state.viewportRect;
 
 			var selectedItemRect = this.state.selectedItemRect;
 			if (!selectedItemRect) {
