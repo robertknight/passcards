@@ -10,7 +10,6 @@ import event_stream = require('./base/event_stream');
 import item_merge = require('./item_merge');
 import item_store = require('./item_store');
 import key_agent = require('./key_agent');
-import agile_keychain = require('./agile_keychain');
 
 function syncLog(...args: any[]) {
 	//console.log.apply(console, args);
@@ -59,7 +58,7 @@ export interface SyncProgress {
 
 interface SyncItem {
 	localItem: item_store.Item;
-	vaultItem: item_store.Item;
+	remoteItem: item_store.Item;
 }
 
 /** Interface for syncing encryption keys and items between
@@ -68,25 +67,26 @@ interface SyncItem {
 export interface Syncer {
 	onProgress: event_stream.EventStream<SyncProgress>;
 
-	/** Sync encryption keys for the vault.
-	  * This does not require the vault to be unlocked.
+	/** Sync encryption keys from the remote store to the local one.
+	  * This does not require the remote store to be unlocked.
 	  */
 	syncKeys(): Q.Promise<void>;
 
-	/** Sync items from the vault to the local store.
+	/** Sync items between the local and remote stores.
 	  * Returns a promise which is resolved when the current sync completes.
 	  *
-	  * Syncing items requires the vault to be unlocked.
+	  * Syncing items requires both local and remote stores
+	  * to be unlocked first.
 	  */
 	syncItems(): Q.Promise<SyncProgress>;
 }
 
-/** Syncer implementation for agile_keychain.Vault and
-  * a local store.
+/** Syncer implementation which syncs changes between an item_store.Store
+  * representing a remote store and a local store.
   */
-export class AgileKeychainSyncer implements Syncer {
-	private store: item_store.SyncableStore;
-	private vault: agile_keychain.Vault;
+export class CloudStoreSyncer implements Syncer {
+	private localStore: item_store.SyncableStore;
+	private cloudStore: item_store.Store;
 
 	// queue of items left to sync
 	private syncQueue: SyncItem[];
@@ -99,21 +99,21 @@ export class AgileKeychainSyncer implements Syncer {
 
 	onProgress: event_stream.EventStream<SyncProgress>;
 
-	constructor(store: item_store.SyncableStore, vault: agile_keychain.Vault) {
-		this.store = store;
-		this.vault = vault;
+	constructor(localStore: item_store.SyncableStore, cloudStore: item_store.Store) {
+		this.localStore = localStore;
+		this.cloudStore = cloudStore;
 		this.onProgress = new event_stream.EventStream<SyncProgress>();
 		this.syncQueue = [];
 	}
 
 	syncKeys(): Q.Promise<void> {
-		var keys = this.vault.listKeys();
-		var hint = this.vault.passwordHint();
+		var keys = this.cloudStore.listKeys();
+		var hint = this.cloudStore.passwordHint();
 
 		return Q.all([keys, hint]).then((keysAndHint) => {
 			var keys = <key_agent.Key[]>keysAndHint[0];
 			var hint = <string>keysAndHint[1];
-			return this.store.saveKeys(keys, hint);
+			return this.localStore.saveKeys(keys, hint);
 		});
 	}
 
@@ -156,41 +156,41 @@ export class AgileKeychainSyncer implements Syncer {
 		this.onProgress.publish(this.syncProgress);
 
 		var listOpts = { includeTombstones: true };
-		var storeItems = this.store.listItems(listOpts);
-		var vaultItems = this.vault.listItems(listOpts);
-		var lastSyncTimes = this.store.lastSyncTimestamps();
+		var localItems = this.localStore.listItems(listOpts);
+		var remoteItems = this.cloudStore.listItems(listOpts);
+		var lastSyncTimes = this.localStore.lastSyncTimestamps();
 
-		Q.all([storeItems, vaultItems, lastSyncTimes]).then((itemLists) => {
-			var storeItems = <item_store.Item[]>itemLists[0];
-			var vaultItems = <item_store.Item[]>itemLists[1];
+		Q.all([localItems, remoteItems, lastSyncTimes]).then((itemLists) => {
+			var localItems = <item_store.Item[]>itemLists[0];
+			var remoteItems = <item_store.Item[]>itemLists[1];
 			var lastSyncTimes = <Map<string,Date>>(itemLists[2]);
 		
-			syncLog('%d items in vault, %d in store', storeItems.length, vaultItems.length);
+			syncLog('%d items in remote store, %d in local store', localItems.length, remoteItems.length);
 
 			var allItems: {[index: string]: boolean} = {};
 
-			var storeItemMap = collectionutil.listToMap(storeItems, (item) => {
+			var localItemMap = collectionutil.listToMap(localItems, (item) => {
 				allItems[item.uuid] = true;
 				return item.uuid;
 			});
-			var vaultItemMap = collectionutil.listToMap(vaultItems, (item) => {
+			var remoteItemMap = collectionutil.listToMap(remoteItems, (item) => {
 				allItems[item.uuid] = true;
 				return item.uuid;
 			});
 
 			Object.keys(allItems).forEach((uuid) => {
-				var vaultItem = vaultItemMap.get(uuid);
-				var storeItem = storeItemMap.get(uuid);
+				var remoteItem = remoteItemMap.get(uuid);
+				var localItem = localItemMap.get(uuid);
 				var lastSyncedAt = lastSyncTimes.get(uuid);
 
-				if (!storeItem || // item added in cloud
-					!vaultItem || // item added locally
+				if (!localItem || // item added in cloud
+					!remoteItem || // item added locally
 					// item updated either in cloud or locally
-					!itemUpdateTimesEqual(vaultItem.updatedAt, lastSyncedAt) ||
-				    !itemUpdateTimesEqual(storeItem.updatedAt, lastSyncedAt)) {
+					!itemUpdateTimesEqual(remoteItem.updatedAt, lastSyncedAt) ||
+				    !itemUpdateTimesEqual(localItem.updatedAt, lastSyncedAt)) {
 					this.syncQueue.push({
-						localItem: storeItem,
-						vaultItem: vaultItem
+						localItem: localItem,
+						remoteItem: remoteItem
 					});
 					++this.syncProgress.total;
 				}
@@ -200,7 +200,7 @@ export class AgileKeychainSyncer implements Syncer {
 			this.syncProgress.state = SyncState.SyncingItems;
 			this.onProgress.publish(this.syncProgress);
 		}).catch((err) => {
-			syncLog('Failed to list items in vault or store', err.stack);
+			syncLog('Failed to list items in local or remote stores', err.stack);
 			result.reject(err);
 
 			this.syncProgress.state = SyncState.Idle;
@@ -216,7 +216,7 @@ export class AgileKeychainSyncer implements Syncer {
 	// to the queue to sync until the limit of concurrent items
 	// being updated at once reaches a limit.
 	//
-	// When syncing with a vault using the Agile Keychain format
+	// When syncing with a store using the Agile Keychain format
 	// and Dropbox, there is one file to fetch per-item so this
 	// batching nicely maps to network requests that we'll need
 	// to make. If we switch to the Cloud Keychain format (or another
@@ -228,11 +228,11 @@ export class AgileKeychainSyncer implements Syncer {
 		while (this.syncProgress.active < SYNC_MAX_ACTIVE_ITEMS &&
 		       this.syncQueue.length > 0) {
 			var next = this.syncQueue.shift();
-			this.syncItem(next.localItem, next.vaultItem);
+			this.syncItem(next.localItem, next.remoteItem);
 		}
 	}
 
-	private syncItem(localItem: item_store.Item, vaultItem: item_store.Item) {
+	private syncItem(localItem: item_store.Item, remoteItem: item_store.Item) {
 		++this.syncProgress.active;
 
 		var itemDone = (err?: Error) => {
@@ -248,10 +248,10 @@ export class AgileKeychainSyncer implements Syncer {
 			this.onProgress.publish(this.syncProgress);
 		};
 
-		// fetch content for local and vault items and the last-synced
+		// fetch content for local and remote items and the last-synced
 		// version of the item in order to perform a 3-way merge
 		var localItemContent: Q.Promise<item_store.ItemAndContent>;
-		var vaultItemContent: Q.Promise<item_store.ItemAndContent>;
+		var remoteItemContent: Q.Promise<item_store.ItemAndContent>;
 		var lastSyncedItemContent: Q.Promise<item_store.ItemAndContent>;
 
 		if (localItem) {
@@ -261,25 +261,26 @@ export class AgileKeychainSyncer implements Syncer {
 			lastSyncedItemContent = this.getLastSyncedItemRevision(localItem);
 		}
 
-		if (vaultItem) {
-			vaultItemContent = this.vault.loadItem(vaultItem.uuid).then((item) => {
-				// load the full item overview data from the vault.
-				// The overview data returned by Vault.listItems() only includes
-				// the core overview metadata fields
-				vaultItem = item;
-				return vaultItem.getContent();
+		if (remoteItem) {
+			remoteItemContent = this.cloudStore.loadItem(remoteItem.uuid).then((item) => {
+				// load the full item overview data from the remote store.
+				// When the remote store is an Agile Keychain-format store,
+				// ItemStore.listItems() only includes the core overview metadata
+				// fields and not account data or non-primary locations.
+				remoteItem = item;
+				return remoteItem.getContent();
 			}).then((content) => {
-				return { item: vaultItem, content: content };
+				return { item: remoteItem, content: content };
 			});
 		}
 
-		var uuid = localItem ? localItem.uuid : vaultItem.uuid;
-		var contents = Q.all([localItemContent, vaultItemContent, lastSyncedItemContent]);
+		var uuid = localItem ? localItem.uuid : remoteItem.uuid;
+		var contents = Q.all([localItemContent, remoteItemContent, lastSyncedItemContent]);
 		contents.then((contents: any[]) => {
-			// merge changes between store and vault items and update the
+			// merge changes between local/remote store items and update the
 			// last-synced revision
 			this.mergeAndSyncItem(contents[0] /* local item */,
-			                      contents[1] /* vault item */,
+			                      contents[1] /* remote item */,
 			                      contents[2] /* last synced item */)
 			.then(() => {
 				itemDone();
@@ -299,9 +300,9 @@ export class AgileKeychainSyncer implements Syncer {
 	// or null if the item has not been synced before
 	private getLastSyncedItemRevision(item: item_store.Item) : Q.Promise<item_store.ItemAndContent> {
 		var lastSyncedItem: item_store.Item;
-		return this.store.getLastSyncedRevision(item).then((revision) => {
+		return this.localStore.getLastSyncedRevision(item).then((revision) => {
 			if (revision) {
-				return this.store.loadItem(item.uuid, revision);
+				return this.localStore.loadItem(item.uuid, revision);
 			} else {
 				return null;
 			}
@@ -321,14 +322,14 @@ export class AgileKeychainSyncer implements Syncer {
 		});
 	}
 
-	// given a store item and a vault item, one or both of which have changed
+	// given an item from the local and remote stores, one or both of which have changed
 	// since the last sync, and the last-synced version of the item, merge
-	// changes and save the result to the store and/or vault as necessary.
+	// changes and save the result to the local/remote store as necessary
 	//
 	// When the save completes, the last-synced revision is updated in
 	// the local store
-	private mergeAndSyncItem(storeItem: item_store.ItemAndContent,
-	                         vaultItem: item_store.ItemAndContent,
+	private mergeAndSyncItem(localItem: item_store.ItemAndContent,
+	                         remoteItem: item_store.ItemAndContent,
 	                         lastSynced: item_store.ItemAndContent) {
 
 		var updatedStoreItem: item_store.Item;
@@ -339,56 +340,56 @@ export class AgileKeychainSyncer implements Syncer {
 
 		var clonedItem: item_store.Item;
 
-		if (!vaultItem) {
-			syncLog('syncing new item %s from store -> vault', storeItem.item.uuid);
+		if (!remoteItem) {
+			syncLog('syncing new item %s from local -> remote store', localItem.item.uuid);
 
 			// new item in local store
-			clonedItem = item_store.cloneItem(storeItem, storeItem.item.uuid).item;
-			revision = storeItem.item.revision;
-			updatedStoreItem = storeItem.item;
-			saved = this.vault.saveItem(clonedItem, item_store.ChangeSource.Sync);
-		} else if (!storeItem) {
-			syncLog('syncing new item %s from vault -> store', vaultItem.item.uuid);
+			clonedItem = item_store.cloneItem(localItem, localItem.item.uuid).item;
+			revision = localItem.item.revision;
+			updatedStoreItem = localItem.item;
+			saved = this.cloudStore.saveItem(clonedItem, item_store.ChangeSource.Sync);
+		} else if (!localItem) {
+			syncLog('syncing new item %s from remote -> local store', remoteItem.item.uuid);
 
-			// new item in vault
-			clonedItem = item_store.cloneItem(vaultItem, vaultItem.item.uuid).item;
-			saved = this.store.saveItem(clonedItem, item_store.ChangeSource.Sync).then(() => {
+			// new item in remote store
+			clonedItem = item_store.cloneItem(remoteItem, remoteItem.item.uuid).item;
+			saved = this.localStore.saveItem(clonedItem, item_store.ChangeSource.Sync).then(() => {
 				revision = clonedItem.revision;
 				updatedStoreItem = clonedItem;
 			});
-		} else if (itemUpdateTimesEqual(vaultItem.item.updatedAt, lastSynced.item.updatedAt)) {
-			syncLog('syncing updated item %s from store -> vault', storeItem.item.uuid);
+		} else if (itemUpdateTimesEqual(remoteItem.item.updatedAt, lastSynced.item.updatedAt)) {
+			syncLog('syncing updated item %s from local -> remote store', localItem.item.uuid);
 
 			// item updated in local store
-			clonedItem = item_store.cloneItem(storeItem, storeItem.item.uuid).item;
-			revision = storeItem.item.revision;
-			updatedStoreItem = storeItem.item;
-			saved = this.vault.saveItem(clonedItem, item_store.ChangeSource.Sync);
-		} else if (itemUpdateTimesEqual(storeItem.item.updatedAt, lastSynced.item.updatedAt)) {
-			syncLog('syncing updated item %s from vault -> store', vaultItem.item.uuid);
+			clonedItem = item_store.cloneItem(localItem, localItem.item.uuid).item;
+			revision = localItem.item.revision;
+			updatedStoreItem = localItem.item;
+			saved = this.cloudStore.saveItem(clonedItem, item_store.ChangeSource.Sync);
+		} else if (itemUpdateTimesEqual(localItem.item.updatedAt, lastSynced.item.updatedAt)) {
+			syncLog('syncing updated item %s from remote -> local store', remoteItem.item.uuid);
 
-			// item updated in vault
-			clonedItem = item_store.cloneItem(vaultItem, vaultItem.item.uuid).item;
-			saved = this.store.saveItem(clonedItem, item_store.ChangeSource.Sync).then(() => {
-				assert.notEqual(clonedItem.revision, storeItem.item.revision);
+			// item updated in remote store
+			clonedItem = item_store.cloneItem(remoteItem, remoteItem.item.uuid).item;
+			saved = this.localStore.saveItem(clonedItem, item_store.ChangeSource.Sync).then(() => {
+				assert.notEqual(clonedItem.revision, localItem.item.revision);
 
 				revision = clonedItem.revision;
 				updatedStoreItem = clonedItem;
 			});
 		} else {
-			// item updated in both local store and vault
-			syncLog('merging store and vault changes for item %s', storeItem.item.uuid);
+			// item updated in both local and remote stores
+			syncLog('merging local and remote changes for item %s', localItem.item.uuid);
 
-			var mergedStoreItem = item_merge.merge(storeItem, vaultItem, lastSynced);
+			var mergedStoreItem = item_merge.merge(localItem, remoteItem, lastSynced);
 			mergedStoreItem.item.updateTimestamps();
 
-			var mergedVaultItem = item_store.cloneItem(mergedStoreItem, mergedStoreItem.item.uuid);
+			var mergedRemoteItem = item_store.cloneItem(mergedStoreItem, mergedStoreItem.item.uuid);
 
 			saved = Q.all([
-			  this.store.saveItem(mergedStoreItem.item, item_store.ChangeSource.Sync),
-			  this.vault.saveItem(mergedVaultItem.item, item_store.ChangeSource.Sync)
+			  this.localStore.saveItem(mergedStoreItem.item, item_store.ChangeSource.Sync),
+			  this.cloudStore.saveItem(mergedRemoteItem.item, item_store.ChangeSource.Sync)
 			]).then(() => {
-				assert.notEqual(mergedStoreItem.item.revision, storeItem.item.revision);
+				assert.notEqual(mergedStoreItem.item.revision, localItem.item.revision);
 
 				revision = mergedStoreItem.item.revision;
 				updatedStoreItem = mergedStoreItem.item;
@@ -396,7 +397,7 @@ export class AgileKeychainSyncer implements Syncer {
 		}
 		return saved.then(() => {
 			assert(revision, 'saved item does not have a revision');
-			this.store.setLastSyncedRevision(updatedStoreItem, revision);
+			this.localStore.setLastSyncedRevision(updatedStoreItem, revision);
 		});
 	}
 }

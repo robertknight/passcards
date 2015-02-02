@@ -124,7 +124,7 @@ export class App {
 				var vault = new onepass.Vault(this.fs, account.storePath, this.services.keyAgent);
 				var localDatabaseName = this.databaseKeyForAccount(account);
 				var store = new local_store.Store(itemDatabase, localDatabaseName, this.services.keyAgent);
-				var syncer = new sync.AgileKeychainSyncer(store, vault);
+				var syncer = new sync.CloudStoreSyncer(store, vault);
 				syncer.syncKeys().then(() => {
 					console.log('Encryption keys synced')
 				}).catch((err) => {
