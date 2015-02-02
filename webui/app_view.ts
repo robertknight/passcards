@@ -106,9 +106,12 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 		this.componentWillUpdate(this.props, this.state);
 	}
 
-	componentDidUnmount() {
+	componentWillUnmount() {
 		if (this.state.syncer) {
-			this.state.syncer.onProgress.ignore(this.state.syncListener);
+			this.state.syncer.onProgress.ignoreContext(this);
+		}
+		if (this.state.store) {
+			this.state.store.onItemUpdated.ignoreContext(this);
 		}
 	}
 
@@ -127,10 +130,10 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 
 		if (nextState.syncer !== this.state.syncer) {
 			if (this.state.syncer) {
-				this.state.syncer.onProgress.ignore(this.state.syncListener);
+				this.state.syncer.onProgress.ignoreContext(this);
 			}
 			if (nextState.syncer) {
-				nextState.syncer.onProgress.listen(this.state.syncListener);
+				nextState.syncer.onProgress.listen(this.state.syncListener, this);
 			}
 		}
 

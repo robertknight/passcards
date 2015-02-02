@@ -183,19 +183,30 @@ export class App {
 		});
 
 		// create main app view
+		var appWindow = rootInputElement.ownerDocument.defaultView;
 		var stateChanged = new event_stream.EventStream<app_view.AppViewState>();
 		var appView = app_view.AppViewF({
 			services: this.services,
 			stateChanged: stateChanged,
-			viewportRect: this.getViewportRect(rootInputElement.ownerDocument.defaultView)
+			viewportRect: this.getViewportRect(appWindow)
 		});
 		stateChanged.listen((state: app_view.AppViewState) => {
 			// save app state for when the app's view is mounted
 			// via renderInto()
 			this.savedState = underscore.clone(state);
-		});
+		}, this);
 		this.activeAppView = react.render(appView, element);
 		this.updateState(this.savedState);
+
+		// in the Chrome extension, the app runs in a background
+		// page but the UI is rendered into a popup window
+		// which is unloaded when dismissed by the user.
+		//
+		// In the Firefox add-on, the popup's HTML page
+		// persists when the popup is dismissed.
+		appWindow.addEventListener('unload', () => {
+			react.unmountComponentAtNode(element);
+		});
 
 		if (!env.isTouchDevice()) {
 			// the main item list only renders visible items,
