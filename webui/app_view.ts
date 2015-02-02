@@ -370,7 +370,11 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 				focus: this.state.selectedItem != null,
 
 				// make the details view expand from the entry
-				// in the item list
+				// in the item list, but only if we switch to it
+				// after the app is initially shown
+
+				animateEntry: this.isMounted(),
+
 				entryRect: {
 					left: appRect.left,
 					right: appRect.right,

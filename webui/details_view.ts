@@ -209,6 +209,7 @@ export enum ItemEditMode {
 export interface DetailsViewProps {
 	entryRect?: reactutil.Rect;
 	viewportRect: reactutil.Rect;
+	animateEntry: boolean;
 
 	item: item_store.Item;
 	iconProvider: item_icons.IconProvider;
@@ -237,7 +238,7 @@ interface DetailsViewState {
 	didEditItem?: boolean;
 	transition?: reactutil.TransitionState;
 
-	autofocusField?: any; /* item_store.ItemField | item_store.ItemUrl | item_store.ItemSection */
+	autofocusField?: item_store.ItemField | item_store.ItemUrl | item_store.ItemSection;
 
 	addingField?: AddingFieldState;
 	editingFieldLabel?: item_store.ItemField;
@@ -249,11 +250,17 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 
 	getInitialState() {
 		var isEditing = this.props.editMode === ItemEditMode.AddItem;
+		var transitionState: reactutil.TransitionState;
+		if (this.props.animateEntry) {
+			transitionState = reactutil.TransitionState.Entering;
+		} else {
+			transitionState = reactutil.TransitionState.Entered;
+		}
 
 		return {
 			isEditing: isEditing,
 			didEditItem: isEditing,
-			transition: reactutil.TransitionState.Entering
+			transition: transitionState
 		};
 	}
 
