@@ -12,6 +12,7 @@ import fonts = require('./controls/fonts');
 import reactutil = require('./base/reactutil');
 import ripple = require('./controls/ripple');
 import settings = require('./settings');
+import status_message = require('./status');
 import style_util = require('./base/style_util');
 import text_field = require('./controls/text_field');
 import toaster = require('./controls/toaster');
@@ -349,7 +350,7 @@ interface SetupViewState {
 	accountInfo?: vfs.AccountInfo;
 	currentScreen?: Screen;
 	newStore?: NewStoreOptions;
-	toasterMessage?: string;
+	status?: status_message.Status;
 }
 
 /** App setup and onboarding screen.
@@ -409,11 +410,11 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 	}
 
 	private reportError(err: string | Error) {
-		if (typeof err === 'string') {
-			this.setState({toasterMessage: err});
-		} else {
-			this.setState({toasterMessage: err.message});
-		}
+		var status = status_message.Status.withError(err);
+		status.expired.listen(() => {
+			this.setState({status: null});
+		});
+		this.setState({status: status});
 	}
 
 	private renderWelcomeScreen() {

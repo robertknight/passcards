@@ -20,34 +20,13 @@ import page_access = require('./page_access');
 import reactutil = require('./base/reactutil');
 import settings = require('./settings');
 import setup_view = require('./setup_view');
+import status_message = require('./status');
 import sync = require('../lib/sync');
 import theme = require('./theme');
 import toaster = require('./controls/toaster');
 import unlock_view = require('./unlock_view');
 import url_util = require('../lib/base/url_util');
 import vfs = require('../lib/vfs/vfs');
-
-enum StatusType {
-	Success,
-	Error
-}
-
-class Status {
-	type: StatusType;
-	text: string;
-
-	expired: event_stream.EventStream<void>;
-
-	constructor(type: StatusType, text: string) {
-		var DEFAULT_TIMEOUT = 2000;
-		this.type = type;
-		this.text = text;
-		this.expired = new event_stream.EventStream<void>();
-		setTimeout(() => {
-			this.expired.publish(null);
-		}, DEFAULT_TIMEOUT);
-	}
-}
 
 export interface AppViewState {
 	store?: item_store.Store;
@@ -61,7 +40,7 @@ export interface AppViewState {
 	isLocked?: boolean;
 	currentUrl?: string;
 
-	status?: Status;
+	status?: status_message.Status;
 	syncState?: sync.SyncProgress;
 	syncListener?: event_stream.EventListener<sync.SyncProgress>;
 
@@ -195,12 +174,12 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 	private showError(error: Error) {
 		assert(error.message);
 
-		var status = new Status(StatusType.Error, error.message);
+		var status = new status_message.Status(status_message.StatusType.Error, error.message);
 		this.showStatus(status);
 		console.log('App error:', error.message, error.stack);
 	}
 
-	private showStatus(status: Status) {
+	private showStatus(status: status_message.Status) {
 		status.expired.listen(() => {
 			if (this.state.status == status) {
 				this.setState({status: null});
@@ -358,7 +337,8 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 					}).then(() => {
 						return this.state.syncer.syncItems();
 					}).then(() => {
-						this.showStatus(new Status(StatusType.Success, 'Changes saved and synced'))
+						this.showStatus(new status_message.Status(status_message.StatusType.Success,
+						  'Changes saved and synced'))
 					}).catch((err) => {
 						this.showError(err);
 					});
