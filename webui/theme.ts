@@ -260,8 +260,8 @@ var styles = style.create({
 			width: '100%',
 			marginTop: 5,
 			color: 'white',
-			fontSize: fonts.BODY1_TEXT_SIZE,
-			fontWeight: fonts.MEDIUM_WEIGHT
+			fontSize: fonts.body1.size,
+			fontWeight: fonts.body1.weight
 		}
 	},
 
@@ -376,11 +376,11 @@ var styles = style.create({
 				marginLeft: 16,
 
 				title: {
-					fontSize: fonts.ITEM_LIST_PRIMARY_TEXT_SIZE
+					fontSize: fonts.itemPrimary.size
 				},
 
 				account: {
-					fontSize: fonts.ITEM_LIST_SECONDARY_TEXT_SIZE,
+					fontSize: fonts.itemSecondary.size,
 					color: colors.MATERIAL_TEXT_SECONDARY
 				}
 			}
@@ -404,9 +404,9 @@ var styles = style.create({
 
 		section: {
 			title: {
-				fontSize: fonts.CAPTION_TEXT_SIZE,
+				fontSize: fonts.caption.size,
+				fontWeight: fonts.caption.weight,
 				color: colors.MATERIAL_TEXT_SECONDARY,
-				fontWeight: fonts.REGULAR_WEIGHT,
 				height: 48,
 
 				display: 'flex',
@@ -552,11 +552,11 @@ var styles = style.create({
 			},
 
 			title: {
-				fontSize: fonts.HEADLINE_TEXT_SIZE
+				fontSize: fonts.headline.size
 			},
 
 			account: {
-				fontSize: fonts.ITEM_LIST_SECONDARY_TEXT_SIZE
+				fontSize: fonts.itemSecondary.size
 			}
 		},
 	}

@@ -120,8 +120,8 @@ var theme = style.create({
 		},
 
 		label: {
-			fontWeight: fonts.MEDIUM_WEIGHT,
-			fontSize: fonts.BUTTON_TEXT_SIZE,
+			fontWeight: fonts.button.weight,
+			fontSize: fonts.button.size,
 			textTransform: 'uppercase',
 
 			userSelect: 'none'

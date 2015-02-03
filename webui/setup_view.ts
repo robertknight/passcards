@@ -61,17 +61,17 @@ var theme = style.create({
 			userSelect: 'none',
 
 			path: {
-				fontSize: fonts.ITEM_LIST_PRIMARY_TEXT_SIZE,
+				fontSize: fonts.itemPrimary.size,
 				color: colors.MATERIAL_TEXT_PRIMARY
 			},
 
 			store: {
-				fontSize: fonts.ITEM_LIST_SECONDARY_TEXT_SIZE,
+				fontSize: fonts.itemSecondary.size,
 				color: colors.MATERIAL_TEXT_SECONDARY
 			},
 
 			addStore: {
-				fontSize: fonts.ITEM_LIST_PRIMARY_TEXT_SIZE,
+				fontSize: fonts.itemPrimary.size,
 				textTransform: 'uppercase',
 				color: colors.MATERIAL_COLOR_PRIMARY
 			}
@@ -133,9 +133,11 @@ var theme = style.create({
 	},
 
 	header: {
-		fontSize: 16,
+		fontSize: fonts.title.size,
+		fontWeight: fonts.title.weight,
 		marginTop: 10,
-		marginBottom: 15
+		marginBottom: 15,
+		textAlign: 'center'
 	}
 });
 
@@ -297,7 +299,7 @@ enum Screen {
 	Welcome,
 	StoreList,
 	NewStore,
-	SelectStore
+	CloudStoreList
 }
 
 interface NewStoreOptions {
@@ -387,7 +389,7 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 		case Screen.NewStore:
 			currentScreen = SlideF({key: 'screen-new-store'}, this.renderNewStoreScreen());
 			break;
-		case Screen.SelectStore:
+		case Screen.CloudStoreList:
 			currentScreen = SlideF({key: 'screen-cloud-store-list'}, this.renderCloudStoreList());
 			break;
 		}
@@ -446,7 +448,7 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 		}).then((accountInfo) => {
 			this.setState({
 				accountInfo: accountInfo,
-				currentScreen: Screen.SelectStore
+				currentScreen: Screen.CloudStoreList
 			});
 		}).catch((err) => {
 			this.reportError(err);
@@ -524,7 +526,7 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 			react.DOM.div(style.mixin(theme.screenButtons),
 				NavButtonF({
 					label: 'Back',
-					onClick: () => this.setState({currentScreen: Screen.SelectStore})
+					onClick: () => this.setState({currentScreen: Screen.CloudStoreList})
 				}),
 				NavButtonF({
 					label: 'Create Store',

@@ -23,7 +23,7 @@ var theme = style.create({
 		marginBottom: 40,
 
 		header: {
-			fontSize: fonts.BODY1_TEXT_SIZE,
+			fontSize: fonts.body1.size,
 			borderBottom: '1px solid #ccc',
 			paddingBottom: 5,
 			marginBottom: 10
