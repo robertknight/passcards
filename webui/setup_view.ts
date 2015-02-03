@@ -40,18 +40,20 @@ var theme = style.create({
 		}
 	},
 
-	accountList: {
+	storeList: {
 		marginTop: 10,
 		marginBottom: 10,
 		borderRadius: 3,
 		backgroundColor: 'white',
 		color: colors.MATERIAL_COLOR_PRIMARY,
-		minHeight: 40,
 
 		item: {
 			padding: 15,
 			paddingTop: 10,
 			paddingBottom: 10,
+			boxSizing: 'border-box',
+			minHeight: 40,
+
 			cursor: 'pointer',
 			position: 'relative',
 			overflow: 'hidden',
@@ -67,7 +69,7 @@ var theme = style.create({
 				color: colors.MATERIAL_TEXT_SECONDARY
 			},
 
-			addAccount: {
+			addStore: {
 				fontSize: fonts.ITEM_LIST_PRIMARY_TEXT_SIZE,
 				textTransform: 'uppercase',
 				color: colors.MATERIAL_COLOR_PRIMARY
@@ -75,7 +77,7 @@ var theme = style.create({
 		}
 	},
 
-	storeList: {
+	cloudStoreList: {
 		marginTop: 10,
 		marginBottom: 10,
 		borderRadius: 3,
@@ -159,7 +161,7 @@ class NavButton extends typed_react.Component<NavButtonProps,{}> {
 }
 var NavButtonF = reactutil.createFactory(NavButton);
 
-interface StoreListProps {
+interface CloudStoreListProps {
 	vfs: vfs.VFS;
 	onSelectStore: (path: string) => void;
 }
@@ -168,13 +170,13 @@ interface Store {
 	path: string;
 }
 
-interface StoreListState {
+interface CloudStoreListState {
 	stores?: Store[];
 	error?: Error;
 }
 
 /** Displays a list of available password stores in a cloud file system */
-class StoreList extends typed_react.Component<StoreListProps, StoreListState> {
+class CloudStoreList extends typed_react.Component<CloudStoreListProps, CloudStoreListState> {
 	getInitialState() {
 		return {};
 	}
@@ -206,7 +208,7 @@ class StoreList extends typed_react.Component<StoreListProps, StoreListState> {
 	render() {
 		if (!this.state.stores) {
 			if (this.state.error) {
-				return react.DOM.div(style.mixin(theme.storeList),
+				return react.DOM.div(style.mixin(theme.cloudStoreList),
 				  `Unable to search Dropbox for existing stores: ${this.state.error.message}`,
 					  react.DOM.div(style.mixin(theme.screenButtons),
 						button.ButtonF({
@@ -221,14 +223,14 @@ class StoreList extends typed_react.Component<StoreListProps, StoreListState> {
 					)
 				);
 			} else {
-				return react.DOM.div(style.mixin(theme.storeList), 
-					react.DOM.div(style.mixin(theme.storeList.item), 'Searching for existing stores...')
+				return react.DOM.div(style.mixin(theme.cloudStoreList), 
+					react.DOM.div(style.mixin(theme.cloudStoreList.item), 'Searching for existing stores...')
 				);
 			}
 		} else {
-			return react.DOM.div(style.mixin(theme.storeList), this.state.stores.map((store) => {
+			return react.DOM.div(style.mixin(theme.cloudStoreList), this.state.stores.map((store) => {
 				var displayPath = store.path.slice(1);
-				return react.DOM.div(style.mixin(theme.storeList.item, {
+				return react.DOM.div(style.mixin(theme.cloudStoreList.item, {
 					key: store.path,
 					onClick: () => {
 						this.props.onSelectStore(store.path);
@@ -239,19 +241,19 @@ class StoreList extends typed_react.Component<StoreListProps, StoreListState> {
 	}
 }
 
-var StoreListF = reactutil.createFactory(StoreList);
+var CloudStoreListF = reactutil.createFactory(CloudStoreList);
 
-interface AccountListProps {
-	accounts: settings.AccountMap;
-	onSelectAccount: (account: settings.Account) => void;
-	onAddAccount: () => void;
+interface StoreListProps {
+	stores: settings.AccountMap;
+	onSelectStore: (account: settings.Account) => void;
+	onAddStore: () => void;
 }
 
-class AccountList extends typed_react.Component<AccountListProps, {}> {
+class StoreList extends typed_react.Component<StoreListProps, {}> {
 	render() {
-		var accounts: React.ReactElement<any>[] = [];
-		Object.keys(this.props.accounts).forEach((id) => {
-			var account = this.props.accounts[id];
+		var stores: React.ReactElement<any>[] = [];
+		Object.keys(this.props.stores).forEach((id) => {
+			var account = this.props.stores[id];
 			var suffixPos = account.storePath.lastIndexOf('.');
 
 			// trim leading '/' and directory/file extension
@@ -259,30 +261,30 @@ class AccountList extends typed_react.Component<AccountListProps, {}> {
 
 			var cloudService = settings.CloudService[account.cloudService];
 
-			accounts.push(react.DOM.div(style.mixin(theme.accountList.item, {
-				onClick: () => this.props.onSelectAccount(account)
+			stores.push(react.DOM.div(style.mixin(theme.storeList.item, {
+				onClick: () => this.props.onSelectStore(account)
 			}),
-				react.DOM.div(style.mixin(theme.accountList.item.path), displayPath),
-				react.DOM.div(style.mixin(theme.accountList.item.store),
+				react.DOM.div(style.mixin(theme.storeList.item.path), displayPath),
+				react.DOM.div(style.mixin(theme.storeList.item.store),
 					`in ${account.name}'s ${cloudService}`),
 				ripple.InkRippleF({})
 			));
 		});
 
-		accounts.push(react.DOM.div(style.mixin(theme.accountList.item, {
-			onClick: () => this.props.onAddAccount()
+		stores.push(react.DOM.div(style.mixin(theme.storeList.item, {
+			onClick: () => this.props.onAddStore()
 		}),
-			react.DOM.div(style.mixin(theme.accountList.item.addAccount), 'Add Account'),
+			react.DOM.div(style.mixin(theme.storeList.item.addStore), 'Add Store'),
 			ripple.InkRippleF({})
 		));
 
-		return react.DOM.div(style.mixin(theme.accountList),
-			accounts
+		return react.DOM.div(style.mixin(theme.storeList),
+			stores
 		);
 	}
 }
 
-var AccountListF = reactutil.createFactory(AccountList);
+var StoreListF = reactutil.createFactory(StoreList);
 
 export interface SetupViewProps {
 	settings: settings.Store;
@@ -292,7 +294,7 @@ export interface SetupViewProps {
 // active screen in the setup / onboarding dialog
 enum Screen {
 	Welcome,
-	AccountList,
+	StoreList,
 	NewStore,
 	SelectStore
 }
@@ -355,7 +357,7 @@ interface SetupViewState {
 export class SetupView extends typed_react.Component<SetupViewProps, SetupViewState> {
 	getInitialState() {
 		return {
-			currentScreen: Screen.AccountList
+			currentScreen: Screen.StoreList
 		};
 	}
 
@@ -378,21 +380,21 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 		case Screen.Welcome:
 			currentScreen = SlideF({key: 'screen-welcome'}, this.renderWelcomeScreen());
 			break;
-		case Screen.AccountList:
-			currentScreen = SlideF({key: 'screen-account-list'}, this.renderAccountList());
+		case Screen.StoreList:
+			currentScreen = SlideF({key: 'screen-store-list'}, this.renderStoreList());
 			break;
 		case Screen.NewStore:
 			currentScreen = SlideF({key: 'screen-new-store'}, this.renderNewStoreScreen());
 			break;
 		case Screen.SelectStore:
-			currentScreen = SlideF({key: 'screen-select-store'}, this.renderSelectStoreScreen());
+			currentScreen = SlideF({key: 'screen-cloud-store-list'}, this.renderCloudStoreList());
 			break;
 		}
 
 		var message: React.ReactElement<toaster.ToasterProps>;
-		if (this.state.toasterMessage) {
+		if (this.state.status) {
 			message = toaster.ToasterF({
-				message: this.state.toasterMessage
+				message: this.state.status.text
 			});
 		}
 
@@ -421,7 +423,7 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 				NavButtonF({
 					label: 'Continue',
 					onClick: () => {
-						this.setState({currentScreen: Screen.AccountList});
+						this.setState({currentScreen: Screen.StoreList});
 					}
 				})
 			)
@@ -450,9 +452,9 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 		});
 	}
 
-	private renderAccountList() {
-		var accounts = <settings.AccountMap>this.props.settings.get(settings.Setting.Accounts) || {};
-		var addAccountHandler = () => {
+	private renderStoreList() {
+		var stores = <settings.AccountMap>this.props.settings.get(settings.Setting.Accounts) || {};
+		var addStoreHandler = () => {
 			this.props.fs.login().then(() => {
 				// depending on the environment, the login
 				// will either complete in this instance of the app,
@@ -465,13 +467,13 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 		};
 
 		return react.DOM.div({},
-			react.DOM.div(style.mixin(theme.header), 'Select Account'),
-			AccountListF({
-				accounts: accounts,
-				onSelectAccount: (account) => {
+			react.DOM.div(style.mixin(theme.header), 'Select Store'),
+			StoreListF({
+				stores: stores,
+				onSelectStore: (account) => {
 					this.props.settings.set(settings.Setting.ActiveAccount, account.id);
 				},
-				onAddAccount: addAccountHandler
+				onAddStore: addStoreHandler
 			})
 		);
 	}
@@ -557,13 +559,13 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 		account.id = settings.accountKey(account);
 
 		var appSettings = this.props.settings;
-		var accounts = <settings.AccountMap>appSettings.get(settings.Setting.Accounts) || {};
-		accounts[account.id] = account;
-		appSettings.set(settings.Setting.Accounts, accounts);
+		var stores = <settings.AccountMap>appSettings.get(settings.Setting.Accounts) || {};
+		stores[account.id] = account;
+		appSettings.set(settings.Setting.Accounts, stores);
 		appSettings.set(settings.Setting.ActiveAccount, account.id);
 	}
 
-	private renderSelectStoreScreen() {
+	private renderCloudStoreList() {
 		var accountName = 'your';
 		if (this.state.accountInfo) {
 			accountName = `${this.state.accountInfo.name}'s`;
@@ -571,7 +573,7 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 
 		return react.DOM.div({},
 			react.DOM.div(style.mixin(theme.header), `Select store in ${accountName} Dropbox`),
-			StoreListF({
+			CloudStoreListF({
 				vfs: this.props.fs,
 				onSelectStore: (path) => {
 					this.onSelectStore(path);
@@ -582,7 +584,7 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 					label: 'Back',
 					onClick: () => {
 						this.props.fs.logout().then(() => {
-							this.setState({currentScreen: Screen.AccountList});
+							this.setState({currentScreen: Screen.StoreList});
 						});
 					}
 				}),
