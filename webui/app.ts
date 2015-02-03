@@ -205,6 +205,7 @@ export class App {
 		// persists when the popup is dismissed.
 		appWindow.addEventListener('unload', () => {
 			react.unmountComponentAtNode(element);
+			this.activeAppView = null;
 		});
 
 		if (!env.isTouchDevice()) {
