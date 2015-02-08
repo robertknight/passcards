@@ -10,6 +10,8 @@ you'll need to enable Dropbox syncing within the official 1Password apps.
 
 ## Installation
 
+[![Join the chat at https://gitter.im/robertknight/passcards](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/robertknight/passcards?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 passcards is available as a browser add-on for Firefox and Chrome, a web app and a command-line
 app.
 
