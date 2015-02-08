@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/robertknight/passcards.png?branch=master)](https://travis-ci.org/robertknight/passcards)
+[![Build Status](https://travis-ci.org/robertknight/passcards.png?branch=master)](https://travis-ci.org/robertknight/passcards) [![Join the chat at https://gitter.im/robertknight/passcards](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/robertknight/passcards?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 *passcards* is a web, browser extension and command-line based password manager under development.
 
@@ -9,8 +9,6 @@ The passcards apps are designed for use with Dropbox. To use them with an existi
 you'll need to enable Dropbox syncing within the official 1Password apps.
 
 ## Installation
-
-[![Join the chat at https://gitter.im/robertknight/passcards](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/robertknight/passcards?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 passcards is available as a browser add-on for Firefox and Chrome, a web app and a command-line
 app.
