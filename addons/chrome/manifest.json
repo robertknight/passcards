@@ -15,7 +15,7 @@
   ],
 
   "browser_action": {
-    "default_icon": "data/icons/icon-32.png",
+    "default_icon": "data/dist/icons/icon-32.png",
     "default_popup": "data/panel.html"
   },
   "commands" : {
@@ -26,8 +26,8 @@
 	}
   },
   "icons": {
-    "32": "data/icons/icon-32.png",
-    "64": "data/icons/icon-64.png"
+    "32": "data/dist/icons/icon-32.png",
+    "64": "data/dist/icons/icon-64.png"
   },
   "web_accessible_resources": [
     "data/chrome_dropbox_oauth_receiver.html"
