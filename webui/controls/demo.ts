@@ -113,6 +113,12 @@ class ControlDemoApp extends typed_react.Component<ControlDemoAppProps, ControlD
 			onClick: () => {},
 			style: button.Style.Icon,
 			iconUrl: '/webui/icons/icons.svg#input'
+			}),
+			button.ButtonF({
+				value: 'Flat Button (Disabled)',
+				disabled: true,
+				onClick: () => {},
+				style: button.Style.Rectangular
 			})
 		);
 	}

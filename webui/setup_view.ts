@@ -6,6 +6,7 @@ import style = require('ts-style');
 import typed_react = require('typed-react');
 
 import agile_keychain = require('../lib/agile_keychain');
+import assign = require('../lib/base/assign');
 import button = require('./controls/button');
 import colors = require('./controls/colors');
 import fonts = require('./controls/fonts');
@@ -145,6 +146,7 @@ interface NavButtonProps {
 	label: string;
 	onClick: () => void;
 	iconUrl?: string;
+	disabled?: boolean;
 }
 
 /** Button displayed at the bottom of the setup view
@@ -158,7 +160,8 @@ class NavButton extends typed_react.Component<NavButtonProps,{}> {
 			value: this.props.label,
 			iconUrl: this.props.iconUrl,
 			color: 'black',
-			onClick: this.props.onClick
+			onClick: this.props.onClick,
+			disabled: this.props.disabled
 		});
 	}
 }
@@ -348,6 +351,113 @@ class Slide extends typed_react.Component<SlideProps, SlideState> {
 
 var SlideF = reactutil.createFactory(Slide, transition_mixin.TransitionMixinM);
 
+interface NewStoreFormProps {
+	onGoBack: () => void;
+	onCreate: (options: NewStoreOptions) => Q.Promise<void>;
+}
+
+interface NewStoreFormState {
+	options?: NewStoreOptions;
+	creatingStore?: boolean;
+}
+
+class NewStoreForm extends typed_react.Component<NewStoreFormProps, NewStoreFormState> {
+	getInitialState() {
+		return {
+			options: {
+				path: 'Passcards/Passcards.agilekeychain',
+				password: '',
+				confirmPassword: '',
+				hint: ''
+			},
+			creatingStore: false
+		};
+	}
+
+	render() {
+		var canCreateStore = !this.state.creatingStore &&
+		  this.state.options.path.length > 0 &&
+		  this.state.options.password.length > 0 &&
+		  this.state.options.password == this.state.options.confirmPassword &&
+		  this.state.options.hint.length > 0;
+
+		return react.DOM.div({},
+			react.DOM.div(style.mixin(theme.header), 'Setup new store'),
+			react.DOM.div(style.mixin(theme.newStore),
+				text_field.TextFieldF({
+					type: 'text',
+					defaultValue: this.state.options.path,
+					floatingLabel: true,
+					placeHolder: 'Location in Dropbox',
+					onChange: (e) => {
+						this.setState({
+							options: assign(this.state.options, {
+								path: (<HTMLInputElement>e.target).value
+							})
+						});
+					}
+				}),
+				text_field.TextFieldF({
+					type: 'password',
+					floatingLabel: true,
+					placeHolder: 'Master Password',
+					onChange: (e) => {
+						this.setState({
+							options: assign<NewStoreOptions>(this.state.options, {
+								password: (<HTMLInputElement>e.target).value
+							})
+						});
+					}
+				}),
+				text_field.TextFieldF({
+					type: 'password',
+					floatingLabel: true,
+					placeHolder: 'Re-enter Master Password',
+					onChange: (e) => {
+						this.setState({
+							options: assign<NewStoreOptions>(this.state.options, {
+								confirmPassword: (<HTMLInputElement>e.target).value
+							})
+						});
+					}
+				}),
+				text_field.TextFieldF({
+					type: 'text',
+					floatingLabel: true,
+					placeHolder: 'Master password hint',
+					onChange: (e) => {
+						this.setState({
+							options: assign<NewStoreOptions>(this.state.options, {
+								hint: (<HTMLInputElement>e.target).value
+							})
+						});
+					}
+				})
+			),
+			react.DOM.div(style.mixin(theme.screenButtons),
+				NavButtonF({
+					label: 'Back',
+					onClick: () => {
+						this.props.onGoBack();
+					}
+				}),
+				NavButtonF({
+					label: 'Create Store',
+					disabled: !canCreateStore,
+					onClick: () => {
+						this.setState({creatingStore: true});
+						this.props.onCreate(this.state.options).catch((err) => {
+							this.setState({creatingStore: false});
+						});
+					}
+				})
+			)
+		);
+	}
+}
+
+var NewStoreFormF = reactutil.createFactory(NewStoreForm);
+
 interface SetupViewState {
 	accountInfo?: vfs.AccountInfo;
 	currentScreen?: Screen;
@@ -482,73 +592,21 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 	}
 
 	private renderNewStoreScreen() {
-		var newStore: NewStoreOptions = {
-			path: 'Passcards/Passcards.agilekeychain'
-		};
-
-		return react.DOM.div({},
-			react.DOM.div(style.mixin(theme.header), 'Setup new store'),
-			react.DOM.div(style.mixin(theme.newStore),
-				text_field.TextFieldF({
-					type: 'text',
-					defaultValue: newStore.path,
-					floatingLabel: true,
-					placeHolder: 'Location in Dropbox',
-					onChange: (e) => {
-						newStore.path = (<HTMLInputElement>e.target).value;
-					}
-				}),
-				text_field.TextFieldF({
-					type: 'password',
-					floatingLabel: true,
-					placeHolder: 'Master Password',
-					onChange: (e) => {
-						newStore.password = (<HTMLInputElement>e.target).value;
-					}
-				}),
-				text_field.TextFieldF({
-					type: 'password',
-					floatingLabel: true,
-					placeHolder: 'Re-enter Master Password',
-					onChange: (e) => {
-						newStore.confirmPassword = (<HTMLInputElement>e.target).value;
-					}
-				}),
-				text_field.TextFieldF({
-					type: 'text',
-					floatingLabel: true,
-					placeHolder: 'Master password hint',
-					onChange: (e) => {
-						newStore.hint = (<HTMLInputElement>e.target).value;
-					}
-				})
-			),
-			react.DOM.div(style.mixin(theme.screenButtons),
-				NavButtonF({
-					label: 'Back',
-					onClick: () => this.setState({currentScreen: Screen.CloudStoreList})
-				}),
-				NavButtonF({
-					label: 'Create Store',
-					onClick: () => {
-						if (newStore.password !== newStore.confirmPassword) {
-							// TODO - Display a message in the UI
-							console.log('Passwords do not match');
-							return;
-						}
-
-						var store = agile_keychain.Vault.createVault(this.props.fs,
-						  newStore.path, newStore.password, newStore.hint);
-						store.then((store) => {
-							this.onSelectStore(newStore.path);
-						}).catch((err) => {
-							// TODO - Display a message in the UI
-							console.log('Failed to create store');
-						});
-					}
-				})
-			)
-		);
+		return NewStoreFormF({
+			onGoBack: () => {
+				this.setState({currentScreen: Screen.CloudStoreList});
+			},
+			onCreate: (options) => {
+				var store = agile_keychain.Vault.createVault(this.props.fs,
+				  options.path, options.password, options.hint);
+				
+				return store.then((store) => {
+					this.onSelectStore(options.path);
+				}).catch((err) => {
+					this.reportError(err);
+				});
+			}
+		});
 	}
 
 	private onSelectStore(path: string) {

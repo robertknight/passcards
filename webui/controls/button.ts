@@ -167,6 +167,9 @@ export interface ButtonProps {
 	/** The URL of the SVG icon for this button */
 	iconUrl?: string;
 
+	/** Prevents interaction with the button */
+	disabled?: boolean;
+
 	children?: any;
 }
 
@@ -212,7 +215,10 @@ export class Button extends typed_react.Component<ButtonProps,{}> {
 		if (this.props.style === Style.RaisedRectangular ||
 			this.props.style === Style.FloatingAction ||
 			this.props.style === Style.MiniFloatingAction) {
-			containerStyles.push(theme.button.raised);
+
+			if (!this.props.disabled) {
+				containerStyles.push(theme.button.raised);
+			}
 		}
 
 		if (this.props.backgroundColor) {
@@ -226,6 +232,9 @@ export class Button extends typed_react.Component<ButtonProps,{}> {
 		var labelStyles: any[] = [theme.button.label];
 		if (this.props.color) {
 			labelStyles.push({color: this.props.color});
+		}
+		if (this.props.disabled) {
+			labelStyles.push({opacity: 0.26});
 		}
 
 		var buttonIcon: React.ReactElement<any>;
@@ -262,7 +271,8 @@ export class Button extends typed_react.Component<ButtonProps,{}> {
 			tabIndex: 0,
 			onClick: (e: React.MouseEvent) => this.props.onClick(e),
 			title: this.props.value,
-			type: 'button'
+			type: 'button',
+			disabled: this.props.disabled
 		}),
 			ripple.InkRippleF({
 				radius: rippleRadius,
