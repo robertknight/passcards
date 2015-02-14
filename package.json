@@ -24,7 +24,7 @@
     "btoa": ">=1.1",
     "clone": "^0.1.19",
     "crypto-js": "^3.1.2",
-    "dropbox": "https://github.com/robertknight/dropbox-js/archive/c2b797baaa65280d2a59c7086b339f63a9cc842d.tar.gz",
+    "dropbox": "https://github.com/robertknight/dropbox-js/archive/22f99376936b4d2d5ca320649744b1f22d975c32.tar.gz",
     "es6-collections": "^0.3.4",
     "es6-shim": "^0.18.0",
     "fastclick": "~1.0.2",
