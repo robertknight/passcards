@@ -1,4 +1,5 @@
 import assert = require('assert');
+import Q = require('q');
 import react = require('react');
 import style = require('ts-style');
 import typed_react = require('typed-react');
@@ -27,25 +28,14 @@ import toaster = require('./controls/toaster');
 import unlock_view = require('./unlock_view');
 import url_util = require('../lib/base/url_util');
 import vfs = require('../lib/vfs/vfs');
+import ui_item_store = require('./stores/items');
 
 export interface AppViewState {
-	store?: item_store.Store;
-	syncer?: sync.Syncer;
-	items?: item_store.Item[];
-
-	selectedItem?: item_store.Item;
 	selectedItemRect?: reactutil.Rect;
 
-	itemEditMode?: details_view.ItemEditMode;
-	isLocked?: boolean;
-	currentUrl?: string;
-
 	status?: status_message.Status;
-	syncState?: sync.SyncProgress;
-	syncListener?: event_stream.EventListener<sync.SyncProgress>;
 
 	appMenuSourceRect?: reactutil.Rect;
-
 	viewportRect?: reactutil.Rect;
 }
 
@@ -60,115 +50,27 @@ export interface AppServices {
 }
 
 export interface AppViewProps {
-	/** Initial state of the app view. This is used to save and restore
-	  * the state of the app when reloaded into a different view when the
-	  * user closes and reopens the Chrome extension popup.
-	  *
-	  * TODO - Replace this with data in a store which flows around
-	  * the app in a Flux-y style?
-	  */
-	initialState: AppViewState;
-
 	services: AppServices;
-	stateChanged: event_stream.EventStream<AppViewState>;
 	viewportRect: reactutil.Rect;
+	itemStore: ui_item_store.Store;
 }
 
 /** The main top-level app view. */
 class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 	getInitialState() {
-		var syncListener = (progress: sync.SyncProgress) => {
-			this.setState({ syncState: progress });
-		};
-
-		var state = {
-			items: <item_store.Item[]>[],
-			isLocked: true,
-			syncListener: syncListener,
-			itemEditMode: details_view.ItemEditMode.EditItem,
+		return {
 			viewportRect: this.props.viewportRect
 		};
-
-		if (this.props.initialState) {
-			assign(state, this.props.initialState);
-		}
-
-		return state;
 	}
 
-	componentDidMount() {
-		this.componentWillUpdate(this.props, this.state);
+	componentWillMount() {
+		this.props.itemStore.stateChanged.listen((state) => {
+			this.forceUpdate();
+		}, this);
 	}
 
 	componentWillUnmount() {
-		if (this.state.syncer) {
-			this.state.syncer.onProgress.ignoreContext(this);
-		}
-		if (this.state.store) {
-			this.state.store.onItemUpdated.ignoreContext(this);
-		}
-	}
-
-	componentWillUpdate(nextProps: AppViewProps, nextState: AppViewState) {
-		var doRefresh = false;
-
-		if (nextState.currentUrl !== this.state.currentUrl) {
-			nextState.selectedItem = null;
-		}
-
-		if (nextState.isLocked !== this.state.isLocked &&
-			nextState.isLocked === false) {
-			nextState.selectedItem = null;
-			doRefresh = true;
-		}
-
-		if (nextState.syncer !== this.state.syncer) {
-			if (this.state.syncer) {
-				this.state.syncer.onProgress.ignoreContext(this);
-			}
-			if (nextState.syncer) {
-				nextState.syncer.onProgress.listen(this.state.syncListener, this);
-			}
-		}
-
-		// listen for updates to items in the store
-		if (nextState.store !== this.state.store) {
-			var debouncedRefresh = underscore.debounce(() => {
-				if (this.state.store && !this.state.isLocked) {
-					this.refreshItems();
-				}
-			}, 300);
-
-			if (this.state.store) {
-				this.state.store.onItemUpdated.ignoreContext(this);
-			}
-			if (nextState.store) {
-				nextState.store.onItemUpdated.listen(debouncedRefresh, this);
-			}
-		}
-
-		if (doRefresh) {
-			this.refreshItems();
-		}
-	}
-
-	componentDidUpdate() {
-		this.props.stateChanged.publish(this.state);
-	}
-
-	private refreshItems() {
-		if (!this.state.store) {
-			return;
-		}
-		this.state.store.listItems().then((items) => {
-			var state = this.state;
-			state.items = underscore.filter(items, (item) => {
-				return item.isRegularItem() && !item.trashed;
-			});
-			this.setState(state);
-		}).catch((err) => {
-			console.log('Error listing items: ', err);
-		});
+		this.props.itemStore.stateChanged.ignoreContext(this);
 	}
 
 	private showError(error: Error) {
@@ -200,9 +102,8 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 	}
 
 	private setSelectedItem(item: item_store.Item, rect?: reactutil.Rect) {
-		var state = <AppViewState>{
+		var state = <ui_item_store.State>{
 			selectedItem: item,
-			selectedItemRect: rect
 		};
 		if (item) {
 			if (item.isSaved()) {
@@ -211,11 +112,12 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 				state.itemEditMode = details_view.ItemEditMode.AddItem;
 			}
 		}
-		this.setState(state);
+		this.props.itemStore.update(state);
+		this.setState({selectedItemRect: rect});
 	}
 
 	render() : React.ReactElement<any> {
-		if (!this.state.store) {
+		if (!this.props.itemStore.state.store) {
 			return setup_view.SetupViewF({
 				settings: this.props.services.settings,
 				fs: this.props.services.fs
@@ -223,14 +125,15 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 		}
 
 		var children: React.ComponentElement<any>[] = [];
+		var itemStoreState = this.props.itemStore.state;
 
 		children.push(unlock_view.UnlockViewF({
 			key: 'unlockPane',
-			store: this.state.store,
-			isLocked: this.state.isLocked,
-			focus: this.state.isLocked,
+			store: itemStoreState.store,
+			isLocked: itemStoreState.isLocked,
+			focus: itemStoreState.isLocked,
 			onUnlock: () => {
-				this.setState({isLocked: false});
+				this.props.itemStore.update({isLocked: false});
 			},
 			onUnlockErr: (err) => {
 				this.showError(err);
@@ -262,13 +165,15 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 				message: this.state.status.text
 			}));
 		}
-		if (this.state.syncState &&
-		    this.state.syncState.state !== sync.SyncState.Idle) {
+
+		var syncState = this.props.itemStore.state.syncState
+		if (syncState &&
+		    syncState.state !== sync.SyncState.Idle) {
 			toasters.push(toaster.ToasterF({
 				key: 'sync-toaster',
 				message: 'Syncing...',
-				progressValue: this.state.syncState.updated,
-				progressMax: this.state.syncState.total
+				progressValue: syncState.updated,
+				progressMax: syncState.total
 			}));
 		}
 		return reactutil.TransitionGroupF({key: 'toasterList'},
@@ -277,34 +182,32 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 	}
 
 	private renderItemList() {
+		var itemStoreState = this.props.itemStore.state;
 		return item_list.ItemListViewF({
 			key: 'itemList',
 			ref: 'itemList',
-			items: this.state.items,
-			selectedItem: this.state.selectedItem,
+			items: itemStoreState.items,
+			selectedItem: itemStoreState.selectedItem,
 			onSelectedItemChanged: (item, rect) => { 
 				this.setSelectedItem(item, rect); 
 			},
-			currentUrl: this.state.currentUrl,
+			currentUrl: itemStoreState.currentUrl,
 			iconProvider: this.props.services.iconProvider,
 			onLockClicked: () => this.props.services.keyAgent.forgetKeys(),
 			onMenuClicked: (e) => {
 				this.setState({appMenuSourceRect: e.itemRect});
 			},
-			focus: !this.state.isLocked && !this.state.selectedItem
+			focus: !itemStoreState.isLocked && !itemStoreState.selectedItem
 		});
 	}
 
-	private renderItemDetails() {
-		var detailsViewTransition: string;
-		if (this.state.itemEditMode == details_view.ItemEditMode.EditItem) {
-			detailsViewTransition = style.classes(theme.animations.slideFromLeft);
-		} else {
-			detailsViewTransition = style.classes(theme.animations.slideFromBottom);
-		}
+	private itemStoreState() {
+		return this.props.itemStore.state;
+	}
 
+	private renderItemDetails() {
 		var detailsView: React.ComponentElement<any>;
-		if (this.state.selectedItem) {
+		if (this.itemStoreState().selectedItem) {
 			var appRect = this.state.viewportRect;
 
 			var selectedItemRect = this.state.selectedItemRect;
@@ -321,10 +224,10 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 
 			detailsView = details_view.DetailsViewF({
 				key: 'detailsView',
-				item: this.state.selectedItem,
-				editMode: this.state.itemEditMode,
+				item: this.itemStoreState().selectedItem,
+				editMode: this.itemStoreState().itemEditMode,
 				iconProvider: this.props.services.iconProvider,
-				currentUrl: this.state.currentUrl,
+				currentUrl: this.itemStoreState().currentUrl,
 				onGoBack: () => {
 					this.setSelectedItem(null);
 				},
@@ -333,9 +236,9 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 					// transitioned out
 					var SAVE_DELAY = 1000;
 					Q.delay(SAVE_DELAY).then(() => {
-						return updatedItem.item.saveTo(this.state.store);
+						return updatedItem.item.saveTo(this.itemStoreState().store);
 					}).then(() => {
-						return this.state.syncer.syncItems();
+						return this.itemStoreState().syncer.syncItems();
 					}).then(() => {
 						this.showStatus(new status_message.Status(status_message.StatusType.Success,
 						  'Changes saved and synced'))
@@ -344,10 +247,10 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 					});
 				},
 				autofill: () => {
-					this.autofill(this.state.selectedItem);
+					this.autofill(this.itemStoreState().selectedItem);
 				},
 				clipboard: this.props.services.clipboard,
-				focus: this.state.selectedItem != null,
+				focus: this.itemStoreState().selectedItem != null,
 
 				// make the details view expand from the entry
 				// in the item list, but only if we switch to it
@@ -372,7 +275,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 		// use the most common account (very likely the user's email address)
 		// as the default account login for new items
 		var accountFreq: {[id:string]: number} = {};
-		this.state.items.forEach((item) => {
+		this.itemStoreState().items.forEach((item) => {
 			if (!accountFreq.hasOwnProperty(item.account)) {
 				accountFreq[item.account] = 1;
 			} else {
@@ -401,11 +304,11 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 		// Avoid prefilling for special browser pages (eg. 'about:version',
 		// 'chrome://settings') or blank tabs
 		var AUTOFILL_URL_SCHEMES = ['http:', 'https:', 'ftp:'];
-		var currentUrlProtocol = url.parse(this.state.currentUrl).protocol;
+		var currentUrlProtocol = url.parse(this.itemStoreState().currentUrl).protocol;
 
 		if (AUTOFILL_URL_SCHEMES.indexOf(currentUrlProtocol) !== -1) {
-			builder.setTitle(url_util.topLevelDomain(this.state.currentUrl));
-			builder.addUrl(this.state.currentUrl);
+			builder.setTitle(url_util.topLevelDomain(this.itemStoreState().currentUrl));
+			builder.addUrl(this.itemStoreState().currentUrl);
 		} else {
 			builder.setTitle('New Login');
 		}
@@ -415,7 +318,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 
 	private renderMenu(key: string) {
 		var menuItems: menu.MenuItem[] = [];
-		if (!this.state.isLocked) {
+		if (!this.itemStoreState().isLocked) {
 			menuItems = menuItems.concat([{
 				label: 'Add Item',
 				onClick: () => {
@@ -428,9 +331,9 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 			label: 'Clear Offline Storage',
 			onClick: () => {
 				return this.props.services.keyAgent.forgetKeys().then(() => {
-					return this.state.store.clear();
+					return this.itemStoreState().store.clear();
 				}).then(() => {
-					return this.state.syncer.syncKeys();
+					return this.itemStoreState().syncer.syncKeys();
 				}).catch((err) => {
 					this.showError(err);
 				});

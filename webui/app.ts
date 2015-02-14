@@ -24,6 +24,7 @@ import settings = require('./settings');
 import siteinfo_client = require('../lib/siteinfo/client');
 import sync = require('../lib/sync');
 import vfs = require('../lib/vfs/vfs');
+import ui_item_store = require('./stores/items');
 
 declare var firefoxAddOn: page_access.ExtensionConnector;
 
@@ -36,7 +37,7 @@ export class App {
 	// a reference to the rendered AppView instance
 	private activeAppView: any;
 
-	private savedState: app_view.AppViewState;
+	private itemStore: ui_item_store.Store;
 	private services: app_view.AppServices;
 	private fs: vfs.VFS;
 
@@ -62,8 +63,10 @@ export class App {
 		};
 
 		this.services.keyAgent.onLock().listen(() => {
-			this.updateState({isLocked: true});
+			this.itemStore.update({isLocked: true});
 		});
+
+		this.itemStore = new ui_item_store.Store();
 
 		onepass_crypto.CryptoJsCrypto.initWorkers();
 
@@ -78,10 +81,10 @@ export class App {
 		});
 
 		// update the initial URL when the app is loaded
-		this.updateState({currentUrl: browserExt.pageAccess.currentUrl});
+		this.itemStore.update({currentUrl: browserExt.pageAccess.currentUrl});
 
 		browserExt.pageAccess.pageChanged.listen((url) => {
-			this.updateState({currentUrl: url});
+			this.itemStore.update({currentUrl: url});
 		});
 
 		// handle login/logout events
@@ -95,7 +98,7 @@ export class App {
 					this.initAccount(account);
 				} else {
 					keyAgent.forgetKeys();
-					this.updateState({store: null, syncer: null});
+					this.itemStore.update({store: null, syncer: null});
 				}
 			}
 		});
@@ -134,10 +137,7 @@ export class App {
 					syncer.syncItems();
 				});
 
-				this.updateState({
-					store: store,
-					syncer: syncer
-				});
+				this.itemStore.update({store: store, syncer: syncer});
 			} catch (err) {
 				console.log('vault setup failed', err, err.stack);
 			}
@@ -185,16 +185,10 @@ export class App {
 		var appWindow = rootInputElement.ownerDocument.defaultView;
 		var stateChanged = new event_stream.EventStream<app_view.AppViewState>();
 		var appView = app_view.AppViewF({
-			initialState: this.savedState,
 			services: this.services,
-			stateChanged: stateChanged,
-			viewportRect: this.getViewportRect(appWindow)
+			viewportRect: this.getViewportRect(appWindow),
+			itemStore: this.itemStore
 		});
-		stateChanged.listen((state: app_view.AppViewState) => {
-			// save app state for when the app's view is mounted
-			// via renderInto()
-			this.savedState = underscore.clone(state);
-		}, this);
 		this.activeAppView = react.render(appView, element);
 
 		// in the Chrome extension, the app runs in a background
@@ -294,18 +288,5 @@ export class App {
 			pageAccess: pageAccess,
 			clipboard: clipboard
 		};
-	}
-
-	private updateState(state: app_view.AppViewState) {
-		if (this.activeAppView) {
-			this.activeAppView.setState(state);
-		} else {
-			// save app state for when the app's view is mounted
-			// via renderInto()
-			if (!this.savedState) {
-				this.savedState = {};
-			}
-			underscore.extend(this.savedState, state);
-		}
 	}
 }
