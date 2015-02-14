@@ -88,37 +88,40 @@ class ControlDemoApp extends typed_react.Component<ControlDemoAppProps, ControlD
 		return componentSection('Buttons',
 			button.ButtonF({
 				value: 'Flat Button',
-				onClick: () => {
-				},
+				onClick: () => {},
 				style: button.Style.Rectangular
-			}),
-			button.ButtonF({
-				value: 'Floating Action',
-			onClick: () => {
-			},
-			style: button.Style.FloatingAction,
-			backgroundColor: '#FF4081',
-			rippleColor: 'white',
-			color: 'rgba(255,255,255,0.95)',
-			iconUrl: '/webui/icons/icons.svg#input'
-			}),
-			button.ButtonF({
-				value: 'Raised Button',
-			onClick: () => {
-			},
-			style: button.Style.RaisedRectangular
-			}),
-			button.ButtonF({
-				value: 'Icon Button',
-			onClick: () => {},
-			style: button.Style.Icon,
-			iconUrl: '/webui/icons/icons.svg#input'
 			}),
 			button.ButtonF({
 				value: 'Flat Button (Disabled)',
 				disabled: true,
 				onClick: () => {},
 				style: button.Style.Rectangular
+			}),
+			button.ButtonF({
+				value: 'Floating Action',
+				onClick: () => {},
+				style: button.Style.FloatingAction,
+				backgroundColor: '#FF4081',
+				rippleColor: 'white',
+				color: 'rgba(255,255,255,0.95)',
+				iconUrl: '/webui/icons/icons.svg#input'
+			}),
+			button.ButtonF({
+				value: 'Raised Button',
+				onClick: () => {},
+				style: button.Style.RaisedRectangular
+			}),
+			button.ButtonF({
+				value: 'Raised Button (Disabled)',
+				onClick: () => {},
+				style: button.Style.RaisedRectangular,
+				disabled: true
+			}),
+			button.ButtonF({
+				value: 'Icon Button',
+				onClick: () => {},
+				style: button.Style.Icon,
+				iconUrl: '/webui/icons/icons.svg#input'
 			})
 		);
 	}

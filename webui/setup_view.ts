@@ -159,7 +159,6 @@ class NavButton extends typed_react.Component<NavButtonProps,{}> {
 			backgroundColor: 'white',
 			value: this.props.label,
 			iconUrl: this.props.iconUrl,
-			color: 'black',
 			onClick: this.props.onClick,
 			disabled: this.props.disabled
 		});

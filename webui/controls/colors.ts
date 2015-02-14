@@ -15,6 +15,8 @@ function premultiplyColor(r: number, g: number, b: number, alpha: number) {
 
 // see http://www.google.com/design/spec/style/typography.html
 var colors = {
+	premultiplyColor: premultiplyColor,
+
 	MATERIAL_COLOR_PRIMARY: '#e91e63',
 	MATERIAL_COLOR_HEADER: '#fff',
 	MATERIAL_COLOR_ACCENT1: '#fce4ec',

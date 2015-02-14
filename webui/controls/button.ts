@@ -3,6 +3,7 @@ import style = require('ts-style');
 import typed_react = require('typed-react');
 
 import controls_theme = require('./theme');
+import colors = require('./colors');
 import fonts = require('./fonts');
 import reactutil = require('../base/reactutil');
 import ripple = require('./ripple');
@@ -124,12 +125,19 @@ var theme = style.create({
 			fontSize: fonts.button.size,
 			textTransform: 'uppercase',
 
-			userSelect: 'none'
+			userSelect: 'none',
+			color: colors.MATERIAL_TEXT_PRIMARY
 		},
 
 		// styles applied to buttons which have custom children
 		customContent: {
 			height: 'initial'
+		},
+
+		disabled: {
+			label: {
+				color: colors.premultiplyColor(0,0,0,0.26)
+			}
 		}
 	},
 });
@@ -230,11 +238,11 @@ export class Button extends typed_react.Component<ButtonProps,{}> {
 		}
 
 		var labelStyles: any[] = [theme.button.label];
+		if (this.props.disabled) {
+			labelStyles.push(theme.button.disabled.label);
+		}
 		if (this.props.color) {
 			labelStyles.push({color: this.props.color});
-		}
-		if (this.props.disabled) {
-			labelStyles.push({opacity: 0.26});
 		}
 
 		var buttonIcon: React.ReactElement<any>;
