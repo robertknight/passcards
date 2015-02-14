@@ -144,7 +144,7 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 				style: button.Style.Rectangular,
 				value: this.props.deleteLabel || 'Delete',
 				key: 'delete',
-				color: colors.MATERIAL_RED_P400,
+				color: colors.MATERIAL_RED_P500,
 				onClick: (e) => {
 					e.preventDefault();
 					this.props.onDelete();
@@ -717,7 +717,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				var isTrashed = updatedItem.item.trashed;
 				itemActions.push(button.ButtonF({
 					style: button.Style.Rectangular,
-					color: isTrashed ? colors.MATERIAL_COLOR_PRIMARY : colors.MATERIAL_RED_P400,
+					color: isTrashed ? colors.MATERIAL_COLOR_PRIMARY : colors.MATERIAL_RED_P500,
 					value: isTrashed ? 'Restore from Trash' : 'Move to Trash',
 					onClick: () => {
 						updatedItem.item.trashed = !isTrashed;

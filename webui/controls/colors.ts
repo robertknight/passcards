@@ -29,7 +29,7 @@ var colors = {
 	MATERIAL_GREY_P200: '#eeeeee',
 	MATERIAL_GREY_P500: '#9e9e9e',
 
-	MATERIAL_RED_P400: '#e84e40',
+	MATERIAL_RED_P500: '#f44336',
 
 	MATERIAL_TEXT_PRIMARY: premultiplyColor(0,0,0,0.87),
 	MATERIAL_TEXT_SECONDARY: premultiplyColor(0,0,0,0.54),

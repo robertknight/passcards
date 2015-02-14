@@ -80,11 +80,11 @@ var theme = style.create({
 		},
 
 		errorUnderline: {
-			backgroundColor: colors.MATERIAL_RED_P400
+			backgroundColor: colors.MATERIAL_RED_P500
 		},
 
 		errorLabel: {
-			color: colors.MATERIAL_RED_P400,
+			color: colors.MATERIAL_RED_P500,
 			fontSize: fonts.caption.size,
 			marginTop: 8
 		},
@@ -105,7 +105,11 @@ var theme = style.create({
 		},
 
 		floatingLabel: {
-			top: 27
+			top: 27,
+
+			error: {
+				color: colors.MATERIAL_RED_P500
+			}
 		},
 
 		container: {
@@ -270,6 +274,9 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 				placeHolderStyling.push(styles.placeholderTop);
 				if (this.state.focus) {
 					placeHolderStyling.push({ color: FOCUS_COLOR });
+					if (this.props.error) {
+						placeHolderStyling.push(styles.floatingLabel.error);
+					}
 				}
 			} else {
 				placeHolderStyling.push({ opacity: '0' });
