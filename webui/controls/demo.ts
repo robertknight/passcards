@@ -72,14 +72,17 @@ class ControlDemoApp extends typed_react.Component<ControlDemoAppProps, ControlD
 	private renderTextFields() {
 		return componentSection('Text Fields',
 			text_field.TextFieldF({
-				type: 'text',
 				placeHolder: 'Text Field',
 				showUnderline: true
 			}),
 			text_field.TextFieldF({
-				type: 'text',
 				placeHolder: 'Text Field with Floating Label',
 				floatingLabel: true
+			}),
+			text_field.TextFieldF({
+				showUnderline: true,
+				placeHolder: 'Text field with validation error',
+				error: 'There is something wrong with the input'
 			})
 		);
 	}

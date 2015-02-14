@@ -374,11 +374,17 @@ class NewStoreForm extends typed_react.Component<NewStoreFormProps, NewStoreForm
 	}
 
 	render() {
+		var passwordsMatch = this.state.options.password == this.state.options.confirmPassword;
 		var canCreateStore = !this.state.creatingStore &&
 		  this.state.options.path.length > 0 &&
 		  this.state.options.password.length > 0 &&
-		  this.state.options.password == this.state.options.confirmPassword &&
+		  passwordsMatch &&
 		  this.state.options.hint.length > 0;
+		var confirmPasswordError = '';
+
+		if (this.state.options.confirmPassword.length > 0 && !passwordsMatch) {
+			confirmPasswordError = 'Passwords do not match';
+		}
 
 		return react.DOM.div({},
 			react.DOM.div(style.mixin(theme.header), 'Setup new store'),
@@ -418,7 +424,8 @@ class NewStoreForm extends typed_react.Component<NewStoreFormProps, NewStoreForm
 								confirmPassword: (<HTMLInputElement>e.target).value
 							})
 						});
-					}
+					},
+					error: confirmPasswordError
 				}),
 				text_field.TextFieldF({
 					type: 'text',

@@ -28,6 +28,7 @@ import typed_react = require('typed-react');
 import style = require('ts-style');
 
 import colors = require('./colors');
+import fonts = require('./fonts');
 import reactutil = require('../base/reactutil');
 
 // Color of floating label and underline when focused
@@ -52,7 +53,7 @@ var theme = style.create({
 			margin: TEXT_MARGIN
 		},
 
-		underlineContainerStyle: {
+		underlineContainer: {
 			position: 'relative',
 			left: 0,
 			right: 0,
@@ -60,14 +61,14 @@ var theme = style.create({
 			overflow: 'visible'
 		},
 
-		underlineStyle: {
+		underline: {
 			backgroundColor: LABEL_COLOR,
 			height: 1
 		},
 
 		// style used for the underline when the input
 		// has focus
-		focusedUnderlineStyle: {
+		focusedUnderline: {
 			backgroundColor: FOCUS_COLOR,
 			height: 2,
 			position: 'absolute',
@@ -78,15 +79,21 @@ var theme = style.create({
 			transition: 'left ' + TRANSITION_DURATION + ' ease-out, right ' + TRANSITION_DURATION + ' ease-out'
 		},
 
-		errorUnderlineStyle: {
+		errorUnderline: {
 			backgroundColor: colors.MATERIAL_RED_P400
+		},
+
+		errorLabel: {
+			color: colors.MATERIAL_RED_P400,
+			fontSize: fonts.caption.size,
+			marginTop: 8
 		},
 
 		fullWidthTextFieldStyle: {
 			width: '100%'
 		},
 
-		placeHolderStyling: {
+		placeholder: {
 			color: LABEL_COLOR,
 			fontSize: 16,
 			left: 1,
@@ -97,16 +104,16 @@ var theme = style.create({
 			margin: TEXT_MARGIN
 		},
 
-		floatingLabelPlaceHolderStyling: {
+		floatingLabel: {
 			top: 27
 		},
 
-		containerStyling: {
+		container: {
 			position: 'relative',
 			paddingBottom: 8
 		},
 
-		placeHolderTopStyling: {
+		placeholderTop: {
 			fontSize: 12,
 			top: 4
 		},
@@ -174,7 +181,10 @@ export interface TextFieldProps {
 	  */
 	floatingLabel?: boolean;
 
-	error?: boolean;
+	/** A validation error string displayed beneath
+	 * the input area.
+	 */
+	error?: string;
 
 	/** Label that is displayed in the field when empty.
 	  * If floatingLabel is enabeld, this value will also float above
@@ -249,15 +259,15 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 		var scrollLeft = 0;
 		var scrollWidth = -1;
 		var width = -1;
-		var placeHolderStyling: any[] = [styles.placeHolderStyling];
+		var placeHolderStyling: any[] = [styles.placeholder];
 
 		if (props.floatingLabel) {
-			placeHolderStyling.push(styles.floatingLabelPlaceHolderStyling);
+			placeHolderStyling.push(styles.floatingLabel);
 		}
 
 		if (this.state.focus || this.effectiveValue().length > 0) {
 			if (props.floatingLabel) {
-				placeHolderStyling.push(styles.placeHolderTopStyling);
+				placeHolderStyling.push(styles.placeholderTop);
 				if (this.state.focus) {
 					placeHolderStyling.push({ color: FOCUS_COLOR });
 				}
@@ -273,7 +283,7 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 			width = textfieldDOMNode.offsetWidth;
 		}
 
-		var containerStyling: any[] = [styles.containerStyling];
+		var containerStyling: any[] = [styles.container];
 		if (props.floatingLabel) {
 			containerStyling.push({ height: '66px' });
 		}
@@ -287,19 +297,21 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 			textFieldStyling.push({ paddingTop: 25 });
 		}
 
-		var focusedUnderlineStyling: any[] = [styles.focusedUnderlineStyle];
-		if (this.state.focus) {
+		var focusedUnderlineStyling: any[] = [styles.focusedUnderline];
+		if (this.state.focus || this.props.error) {
 			focusedUnderlineStyling.push({ opacity: 1 });
 		}
 
+		var errorLabel: React.ReactElement<any>;
 		if (props.error) {
-			focusedUnderlineStyling.push(styles.errorUnderlineStyle);
+			focusedUnderlineStyling.push(styles.errorUnderline);
+			errorLabel = div(style.mixin(styles.errorLabel), props.error);
 		}
 
 		var underline: React.ReactElement<any>;
 		if (props.showUnderline) {
-			underline = div(style.mixin(styles.underlineContainerStyle, { ref: 'underlineContainer' }),
-					div(style.mixin(styles.underlineStyle, { ref: 'underline' })),
+			underline = div(style.mixin(styles.underlineContainer, { ref: 'underlineContainer' }),
+					div(style.mixin(styles.underline, { ref: 'underline' })),
 					div(style.mixin(focusedUnderlineStyling, { ref: 'focusedUnderline' }))
 					);
 		}
@@ -322,6 +334,7 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 				readOnly: this.props.readOnly
 			})),
 			underline,
+			errorLabel,
 			div(style.mixin(
 				[scrollLeft ? { opacity: '1' } : null,
 					this.state.focus ? styles.focusStyle : null,
