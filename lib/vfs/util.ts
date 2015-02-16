@@ -1,4 +1,5 @@
 import Q = require('q');
+import Path = require('path');
 
 import asyncutil = require('../base/asyncutil');
 import vfs = require('./vfs');
@@ -103,5 +104,20 @@ export function searchIn(fs: vfs.VFS, path: string, namePattern: string,
 	}, (error) => {
 		cb(error, null);
 	}).done();
+}
+
+export function mktemp(fs: vfs.VFS, path: string, template: string = 'tmp.XXX') {
+	var baseName = template.replace(/X{3,}/, (match) => {
+		var randomized = '';
+		for (var i=0; i < match.length; i++) {
+			randomized += String.fromCharCode(97 /* 'a' */ + Math.round(Math.random() * 26));
+		}
+		return randomized;
+	});
+
+	var tempPath = Path.join(path, baseName);
+	return fs.mkpath(tempPath).then(() => {
+		return tempPath;
+	});
 }
 
