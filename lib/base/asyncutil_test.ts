@@ -37,3 +37,17 @@ testLib.addAsyncTest('async while loop', (assert) => {
 	});
 });
 
+testLib.addAsyncTest('promise to result', (assert) => {
+	var resolvedPromise = Q('hello');
+	var rejectedPromise = Q.reject<string>(new Error('failed'));
+
+	return asyncutil.result<string,Error>(resolvedPromise).then((result) => {
+		assert.equal(result.value, 'hello');
+		assert.equal(result.error, null);
+		return asyncutil.result<string,Error>(rejectedPromise);
+	}).then((result) => {
+		assert.equal(result.value, null);
+		assert.ok(result.error instanceof Error);
+	});
+});
+

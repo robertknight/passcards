@@ -1,10 +1,11 @@
 import Q = require('q');
 
-import testLib = require('../test');
-
+import asyncutil = require('../base/asyncutil');
 import localstoragefs = require('./localstorage');
 import nodefs = require('./node');
+import testLib = require('../test');
 import vfs = require('./vfs');
+import vfs_util = require('./util');
 
 class StorageEntry {
 	key: string;
@@ -63,11 +64,11 @@ class FakeLocalStorage {
 var createNodeFs = () => {
 	var TEST_DIR = '/tmp/vfs-test';
 	var fs = new nodefs.FileVFS(TEST_DIR);
-	return vfs.VFSUtil.rmrf(fs, '')
+	return vfs_util.rmrf(fs, '')
 	.then(() => {
 		return fs.mkpath(TEST_DIR);
 	}).then(() => {
-		return vfs.VFSUtil.listRecursive(fs, '')
+		return vfs_util.listRecursive(fs, '')
 	}).then((files) => {
 		if (files.length > 0) {
 			throw new Error('Failed to remove all files');
@@ -193,12 +194,12 @@ function addTests(fsName: string, createFs: () => Q.Promise<vfs.VFS>) {
 		}).then(() => {
 			return fs.stat('src');
 		}).then((srcFolder) => {
-			return vfs.VFSUtil.cp(fs, srcFolder, 'dest');
+			return vfs_util.cp(fs, srcFolder, 'dest');
 		}).then(() => {
-			return vfs.VFSUtil.listRecursive(fs, 'dest');
+			return vfs_util.listRecursive(fs, 'dest');
 		}).then((_destFiles) => {
 			destFiles = _destFiles;
-			return vfs.VFSUtil.listRecursive(fs, 'src');
+			return vfs_util.listRecursive(fs, 'src');
 		}).then((srcFiles) => {
 			srcFiles.sort((a,b) => {
 				return a.path.localeCompare(b.path);
@@ -250,6 +251,25 @@ function addTests(fsName: string, createFs: () => Q.Promise<vfs.VFS>) {
 			return fs.read('test-file-conflict');
 		}).then((content) => {
 			assert.ok(content == 'content-v2-a' || content == 'content-v2-b-b');
+		});
+	});
+
+	testLib.addAsyncTest(fsName + ': mkpath', (assert) => {
+		var fs: vfs.VFS;
+		return createFs().then((_fs) => {
+			fs = _fs;
+			// create a nested path, this should succeed
+			return fs.mkpath('/foo/bar');
+		}).then(() => {
+			// check that the dir was created
+			return fs.stat('/foo/bar');
+		}).then((info) => {
+			assert.ok(info.isDir);
+			// attempt to recreate the directory.
+			// This should fail
+			return asyncutil.result(fs.mkpath('/foo/bar'));
+		}).then((result) => {
+			assert.ok(result.error instanceof Error);
 		});
 	});
 }

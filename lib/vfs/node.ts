@@ -4,6 +4,7 @@ import Path = require('path');
 import Q = require('q');
 
 import vfs = require('./vfs');
+import vfs_util = require('./util');
 
 /** VFS implementation which operates on the local filesystem */
 export class FileVFS implements vfs.VFS {
@@ -63,7 +64,7 @@ export class FileVFS implements vfs.VFS {
 	}
 
 	search(namePattern: string, cb: (error: Error, files: vfs.FileInfo[]) => any) : void {
-		vfs.VFSUtil.searchIn(this, '', namePattern, cb);
+		vfs_util.searchIn(this, '', namePattern, cb);
 	}
 
 	read(path: string) : Q.Promise<string> {
@@ -197,15 +198,42 @@ export class FileVFS implements vfs.VFS {
 		// unused
 	}
 
-	mkpath(path: string) : Q.Promise<void> {
+	mkpath(path: string, allowExisting?: boolean) : Q.Promise<void> {
 		var result = Q.defer<void>();
-		mkdirp(this.absPath(path), (err, made) => {
+
+		path = this.absPath(path);
+		fs.mkdir(path, 511 /* 0777 */, (err) => {
 			if (err) {
-				result.reject(err);
-				return;
+				if (err.code === 'ENOENT') {
+					// parent dir does not exist. Try to create the parent dir
+					// and then retry creation of the current dir
+					return this.mkpath(Path.dirname(path), true).then(() => {
+						this.mkpath(path, allowExisting).then(() => {
+							result.resolve(null);
+						}).catch((err) => {
+							result.reject(err);
+						});
+					});
+				} else if (err.code === 'EEXIST') {
+					if (allowExisting) {
+						return this.stat(path).then((existingFile) => {
+							if (existingFile.isDir) {
+								result.resolve(null);
+							} else {
+								result.reject(err);
+							}
+						});
+					} else {
+						result.reject(err);
+					}
+				} else {
+					result.reject(err);
+				}
+			} else {
+				result.resolve(null);
 			}
-			result.resolve(null);
 		});
+
 		return result.promise;
 	}
 

@@ -14,10 +14,11 @@ import http = require('http');
 import underscore = require('underscore');
 import url = require('url');
 
-import vfs = require('./vfs');
 import http_client = require('../http_client');
 import streamutil = require('../base/streamutil');
 import stringutil = require('../base/stringutil');
+import vfs = require('./vfs');
+import vfs_util = require('./util');
 
 /** VFS which accesses a file system exposed over HTTP
  * via a simple REST-like API:
@@ -86,7 +87,7 @@ export class Client implements vfs.VFS {
 	}
 
 	search(namePattern: string, cb: (error: Error, files: vfs.FileInfo[]) => any) : void {
-		vfs.VFSUtil.searchIn(this, '', namePattern, cb);
+		vfs_util.searchIn(this, '', namePattern, cb);
 	}
 
 	read(path: string) : Q.Promise<string> {

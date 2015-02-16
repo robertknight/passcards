@@ -73,3 +73,30 @@ export function until(func: () => Q.Promise<boolean>) : Q.Promise<boolean> {
 	});
 }
 
+/** Represents the result of a promise,
+  * which was either resolved with a T or
+  * rejected with an Error.
+  */
+export interface Result<T,Error> {
+	value?: T;
+	error?: Error;
+}
+
+/** Takes a promise which will either be fulfilled with a T or
+  * rejected with an Error and returns a promise which is fulfilled
+  * with a Result<T,Error> which has either the value or the error
+  * set.
+  *
+  * This is useful if you want to be able to handle the result
+  * of the promise in the same function whether it succeeded
+  * or failed.
+  */
+export function result<T,Error>(promise: Q.Promise<T>) {
+	return promise.then((value) => {
+		return <Result<T,Error>>{value: value};
+	}).catch((error) => {
+		return <Result<T,Error>>{error: error};
+	});
+}
+
+

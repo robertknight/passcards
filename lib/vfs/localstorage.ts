@@ -8,6 +8,7 @@ import underscore = require('underscore');
 import assert = require('assert');
 import stringutil = require('../base/stringutil');
 import vfs = require('./vfs');
+import vfs_util = require('./util');
 
 interface FSEntry {
 	// filename of this entry
@@ -74,7 +75,7 @@ export class FS implements vfs.VFS {
 	}
 
 	search(namePattern: string, cb: (error: Error, files: vfs.FileInfo[]) => any) : void {
-		vfs.VFSUtil.searchIn(this, '.', namePattern, cb);
+		vfs_util.searchIn(this, '.', namePattern, cb);
 	}
 
 	read(path: string) : Q.Promise<string> {
@@ -171,30 +172,41 @@ export class FS implements vfs.VFS {
 	}
 
 	mkpath(path: string) : Q.Promise<void> {
+		path = Path.normalize(path);
+		if (path[0] == '/') {
+			path = path.slice(1);
+		}
+
 		var components = path.split('/');
 		var currentPath = '';
 		var prevDirEntry = this.entryForPath('/');
 
-		components.forEach((component) => {
-			currentPath += '/' + component;
+		try {
+			components.forEach((component, index) => {
+				currentPath += '/' + component;
 
-			var dirEntry = this.entryForPath(currentPath);
-			if (!dirEntry) {
-				dirEntry = <FSEntry>{
-					name : component,
-					isDir : true,
-					entries : [],
-					parent : prevDirEntry
-				};
-				prevDirEntry.entries.push(dirEntry);
-				this.writeDirIndex(prevDirEntry);
-			} else if (!dirEntry.isDir) {
-				return Q.reject(currentPath + ' exists and is not a directory');
-			}
+				var dirEntry = this.entryForPath(currentPath);
+				if (!dirEntry) {
+					dirEntry = <FSEntry>{
+						name : component,
+						isDir : true,
+						entries : [],
+						parent : prevDirEntry
+					};
+					prevDirEntry.entries.push(dirEntry);
+					this.writeDirIndex(prevDirEntry);
+				} else if (!dirEntry.isDir) {
+					throw new Error(currentPath + ' exists and is not a directory');
+				} else if (index == components.length-1) {
+					throw new Error('Path already exists');
+				}
 
-			prevDirEntry = dirEntry;
-		});
-		return Q<void>(null);
+				prevDirEntry = dirEntry;
+			});
+			return Q<void>(null);
+		} catch (err) {
+			return Q.reject<void>(err);
+		}
 	}
 
 	private updateParent(entries: FSEntry[], parent: FSEntry) {

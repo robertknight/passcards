@@ -11,6 +11,7 @@ import key_agent = require('../lib/key_agent');
 import nodefs = require('../lib/vfs/node');
 import testLib = require('../lib/test')
 import vfs = require('../lib/vfs/vfs');
+import vfs_util = require('../lib/vfs/util');
 
 interface PromptReply {
 	match: RegExp
@@ -132,10 +133,10 @@ var TEST_VAULT_PATH = 'lib/test-data/test.agilekeychain';
 function cloneVault(vaultPath: string) : Q.Promise<string> {
 	var fs = new nodefs.FileVFS('/');
 	var tempPath = path.join(<string>(<any>os).tmpdir(), 'test-vault');
-	return vfs.VFSUtil.rmrf(fs, tempPath).then(() => {
+	return vfs_util.rmrf(fs, tempPath).then(() => {
 		return fs.stat(path.resolve(vaultPath));
 	}).then((srcFolder) => {
-		return vfs.VFSUtil.cp(fs, srcFolder, tempPath);
+		return vfs_util.cp(fs, srcFolder, tempPath);
 	}).then(() => {
 		return tempPath;
 	});
@@ -517,7 +518,7 @@ testLib.addAsyncTest('create new vault with relative path', (assert) => {
 		assert.ok(env.fakeTerm.didPrint(/New vault created/));
 
 		var fs = new nodefs.FileVFS('/');
-		return vfs.VFSUtil.rmrf(fs, path.resolve(relativePath + '.agilekeychain'));
+		return vfs_util.rmrf(fs, path.resolve(relativePath + '.agilekeychain'));
 	});
 });
 
