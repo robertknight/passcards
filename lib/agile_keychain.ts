@@ -656,23 +656,26 @@ export class Vault implements item_store.Store {
 
 		var masterKey = crypto.randomBytes(1024);
 		var salt = crypto.randomBytes(8);
-		var derivedKey = key_agent.keyFromPasswordSync(password, salt, passIterations);
-		var encryptedKey = key_agent.encryptKey(derivedKey, masterKey);
+		var keyList: agile_keychain_entries.EncryptionKeyList;
+		
+		return key_agent.keyFromPassword(password, salt, passIterations).then((derivedKey) => {
+			var encryptedKey = key_agent.encryptKey(derivedKey, masterKey);
 
-		var masterKeyEntry = {
-			data: btoa('Salted__' + salt + encryptedKey.key),
-			identifier: crypto.newUUID(),
-			iterations: passIterations,
-			level: 'SL5',
-			validation: btoa(encryptedKey.validation)
-		};
+			var masterKeyEntry = {
+				data: btoa('Salted__' + salt + encryptedKey.key),
+				identifier: crypto.newUUID(),
+				iterations: passIterations,
+				level: 'SL5',
+				validation: btoa(encryptedKey.validation)
+			};
 
-		var keyList = <agile_keychain_entries.EncryptionKeyList>{
-			list: [masterKeyEntry],
-			SL5: masterKeyEntry.identifier
-		};
+			keyList = {
+				list: [masterKeyEntry],
+				SL5: masterKeyEntry.identifier
+			};
 
-		return fs.mkpath(vault.dataFolderPath()).then(() => {
+			return fs.mkpath(vault.dataFolderPath());
+		}).then(() => {
 			var keysSaved = vault.writeKeys(keyList, hint);
 			var contentsSaved = fs.write(vault.contentsFilePath(), '[]');
 			return Q.all([keysSaved, contentsSaved]);

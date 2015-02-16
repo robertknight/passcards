@@ -14,6 +14,7 @@ import reactutil = require('./base/reactutil');
 import ripple = require('./controls/ripple');
 import settings = require('./settings');
 import status_message = require('./status');
+import stringutil = require('../lib/base/stringutil');
 import style_util = require('./base/style_util');
 import text_field = require('./controls/text_field');
 import toaster = require('./controls/toaster');
@@ -103,7 +104,12 @@ var theme = style.create({
 		marginBottom: 10,
 		padding: 10,
 		backgroundColor: 'white',
-		borderRadius: 3
+		borderRadius: 3,
+
+		creatingStoreLabel: {
+			color: colors.MATERIAL_TEXT_PRIMARY,
+			fontSize: fonts.subhead.size
+		}
 	},
 
 	screen: {
@@ -234,7 +240,10 @@ class CloudStoreList extends typed_react.Component<CloudStoreListProps, CloudSto
 			}
 		} else {
 			return react.DOM.div(style.mixin(theme.cloudStoreList), this.state.stores.map((store) => {
-				var displayPath = store.path.slice(1);
+				var displayPath = store.path;
+				if (stringutil.startsWith(displayPath, '/')) {
+					displayPath = displayPath.slice(1);
+				}
 				return react.DOM.div(style.mixin(theme.cloudStoreList.item, {
 					key: store.path,
 					onClick: () => {
@@ -262,7 +271,11 @@ class StoreList extends typed_react.Component<StoreListProps, {}> {
 			var suffixPos = account.storePath.lastIndexOf('.');
 
 			// trim leading '/' and directory/file extension
-			var displayPath = account.storePath.slice(1, suffixPos);
+			var dirStartPos = 0;
+			if (stringutil.startsWith(account.storePath, '/')) {
+				dirStartPos = 1;
+			}
+			var displayPath = account.storePath.slice(dirStartPos, suffixPos);
 
 			var cloudService = settings.CloudService[account.cloudService];
 
@@ -373,6 +386,66 @@ class NewStoreForm extends typed_react.Component<NewStoreFormProps, NewStoreForm
 		};
 	}
 
+	private renderForm() {
+		var confirmPasswordError = '';
+		if (this.state.options.confirmPassword.length > 0 &&
+		    this.state.options.password !== this.state.options.confirmPassword) {
+			confirmPasswordError = 'Passwords do not match';
+		}
+		return react.DOM.div(style.mixin(theme.newStore),
+				text_field.TextFieldF({
+					type: 'text',
+				defaultValue: this.state.options.path,
+				floatingLabel: true,
+				placeHolder: 'Location in Dropbox',
+				onChange: (e) => {
+					this.setState({
+						options: assign(this.state.options, {
+							path: (<HTMLInputElement>e.target).value
+						})
+					});
+				}
+				}),
+				text_field.TextFieldF({
+					type: 'password',
+				floatingLabel: true,
+				placeHolder: 'Master Password',
+				onChange: (e) => {
+					this.setState({
+						options: assign<NewStoreOptions>(this.state.options, {
+							password: (<HTMLInputElement>e.target).value
+						})
+					});
+				}
+				}),
+				text_field.TextFieldF({
+					type: 'password',
+				floatingLabel: true,
+				placeHolder: 'Re-enter Master Password',
+				onChange: (e) => {
+					this.setState({
+						options: assign<NewStoreOptions>(this.state.options, {
+							confirmPassword: (<HTMLInputElement>e.target).value
+						})
+					});
+				},
+				error: confirmPasswordError
+				}),
+				text_field.TextFieldF({
+					type: 'text',
+				floatingLabel: true,
+				placeHolder: 'Master password hint',
+				onChange: (e) => {
+					this.setState({
+						options: assign<NewStoreOptions>(this.state.options, {
+							hint: (<HTMLInputElement>e.target).value
+						})
+					});
+				}
+				})
+		);
+	}
+
 	render() {
 		var passwordsMatch = this.state.options.password == this.state.options.confirmPassword;
 		var canCreateStore = !this.state.creatingStore &&
@@ -380,69 +453,23 @@ class NewStoreForm extends typed_react.Component<NewStoreFormProps, NewStoreForm
 		  this.state.options.password.length > 0 &&
 		  passwordsMatch &&
 		  this.state.options.hint.length > 0;
-		var confirmPasswordError = '';
 
-		if (this.state.options.confirmPassword.length > 0 && !passwordsMatch) {
-			confirmPasswordError = 'Passwords do not match';
+		var form: React.ReactElement<any>;
+		if (this.state.creatingStore) {
+			form = react.DOM.div(style.mixin(theme.newStore),
+			  react.DOM.div(style.mixin(theme.newStore.creatingStoreLabel), 'Creating store...')
+			);
+		} else {
+			form = this.renderForm();
 		}
 
 		return react.DOM.div({},
 			react.DOM.div(style.mixin(theme.header), 'Setup new store'),
-			react.DOM.div(style.mixin(theme.newStore),
-				text_field.TextFieldF({
-					type: 'text',
-					defaultValue: this.state.options.path,
-					floatingLabel: true,
-					placeHolder: 'Location in Dropbox',
-					onChange: (e) => {
-						this.setState({
-							options: assign(this.state.options, {
-								path: (<HTMLInputElement>e.target).value
-							})
-						});
-					}
-				}),
-				text_field.TextFieldF({
-					type: 'password',
-					floatingLabel: true,
-					placeHolder: 'Master Password',
-					onChange: (e) => {
-						this.setState({
-							options: assign<NewStoreOptions>(this.state.options, {
-								password: (<HTMLInputElement>e.target).value
-							})
-						});
-					}
-				}),
-				text_field.TextFieldF({
-					type: 'password',
-					floatingLabel: true,
-					placeHolder: 'Re-enter Master Password',
-					onChange: (e) => {
-						this.setState({
-							options: assign<NewStoreOptions>(this.state.options, {
-								confirmPassword: (<HTMLInputElement>e.target).value
-							})
-						});
-					},
-					error: confirmPasswordError
-				}),
-				text_field.TextFieldF({
-					type: 'text',
-					floatingLabel: true,
-					placeHolder: 'Master password hint',
-					onChange: (e) => {
-						this.setState({
-							options: assign<NewStoreOptions>(this.state.options, {
-								hint: (<HTMLInputElement>e.target).value
-							})
-						});
-					}
-				})
-			),
+			form,
 			react.DOM.div(style.mixin(theme.screenButtons),
 				NavButtonF({
 					label: 'Back',
+					disabled: this.state.creatingStore,
 					onClick: () => {
 						this.props.onGoBack();
 					}
@@ -607,9 +634,10 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 				  options.path, options.password, options.hint);
 				
 				return store.then((store) => {
-					this.onSelectStore(options.path);
+					this.onSelectStore(store.vaultPath());
 				}).catch((err) => {
 					this.reportError(err);
+					throw err;
 				});
 			}
 		});
