@@ -485,7 +485,11 @@ testLib.addAsyncTest('create new vault', (assert) => {
 	env.replyTo(/Hint for new/).with('vault pass hint');
 
 	var newVaultPath = path.join(<string>(<any>os).tmpdir(), 'new-vault');
-	return env.run('new-vault', '--iterations', '100', newVaultPath).then(() => {
+
+	var fs = new nodefs.FileVFS('/');
+	return vfs_util.rmrf(fs, newVaultPath + '.agilekeychain').then(() => {
+		return env.run('new-vault', '--iterations', '100', newVaultPath);
+	}).then(() => {
 		assert.ok(env.fakeTerm.didPrint(/New vault created/));
 
 		// A '.agilekeychain' suffix is added to the end of the path if

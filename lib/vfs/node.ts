@@ -8,8 +8,12 @@ import vfs_util = require('./util');
 
 /** VFS implementation which operates on the local filesystem */
 export class FileVFS implements vfs.VFS {
-	root : string;
+	root: string;
 
+	/** Construct a VFS implementation which operates on
+	  * the local filesystem, with all paths treated as
+	  * relative to @p _root
+	  */
 	constructor(_root: string) {
 		this.root = Path.normalize(_root);
 	}
@@ -44,23 +48,6 @@ export class FileVFS implements vfs.VFS {
 			result.resolve(fileInfo);
 		});
 		return result.promise;
-	}
-
-	searchIn(path: string, namePattern: string, cb: (error: Error, files: vfs.FileInfo[]) => any) : void {
-		var fileList = this.list(path);
-		fileList.then((files) => {
-			files.forEach((file : vfs.FileInfo) => {
-				if (file.name.indexOf(namePattern) != -1) {
-					cb(null, [file]);
-				}
-
-				if (file.isDir) {
-					this.searchIn(file.path, namePattern, cb);
-				}
-			});
-		}, (error) => {
-			cb(error, null);
-		}).done();
 	}
 
 	search(namePattern: string, cb: (error: Error, files: vfs.FileInfo[]) => any) : void {
@@ -120,7 +107,7 @@ export class FileVFS implements vfs.VFS {
 
 	list(path: string) : Q.Promise<vfs.FileInfo[]> {
 		var result = Q.defer<vfs.FileInfo[]>();
-		var absPath : string = this.absPath(path);
+		var absPath = this.absPath(path);
 		fs.readdir(absPath, (err, files) => {
 			if (err) {
 				result.reject(err);
@@ -129,7 +116,7 @@ export class FileVFS implements vfs.VFS {
 
 			var statOps : Q.Promise<vfs.FileInfo>[] = [];
 			files.forEach((name) => {
-				var filePath : string = Path.join(path, name);
+				var filePath = Path.join(path, name);
 				statOps.push(this.stat(filePath));
 			});
 			Q.all(statOps).then((fileInfoList) => {
@@ -198,17 +185,20 @@ export class FileVFS implements vfs.VFS {
 		// unused
 	}
 
-	mkpath(path: string, allowExisting?: boolean) : Q.Promise<void> {
+	mkpath(path: string) {
+		return this.mkpathInternal(path, false /* allowExisting */);
+	}
+	
+	private mkpathInternal(path: string, allowExisting?: boolean) : Q.Promise<void> {
 		var result = Q.defer<void>();
 
-		path = this.absPath(path);
-		fs.mkdir(path, 511 /* 0777 */, (err) => {
+		fs.mkdir(this.absPath(path), 511 /* 0777 */, (err) => {
 			if (err) {
 				if (err.code === 'ENOENT') {
 					// parent dir does not exist. Try to create the parent dir
 					// and then retry creation of the current dir
-					return this.mkpath(Path.dirname(path), true).then(() => {
-						this.mkpath(path, allowExisting).then(() => {
+					return this.mkpathInternal(Path.dirname(path), true).then(() => {
+						this.mkpathInternal(path, allowExisting).then(() => {
 							result.resolve(null);
 						}).catch((err) => {
 							result.reject(err);
@@ -237,16 +227,12 @@ export class FileVFS implements vfs.VFS {
 		return result.promise;
 	}
 
-	private absPath(path: string) : string {
-		if (path.indexOf(this.root) != 0) {
-			var fullPath = Path.normalize(Path.join(this.root, path));
-			if (fullPath.length < this.root.length) {
-				fullPath = this.root;
-			}
-			return fullPath;
-		} else {
-			return path;
+	private absPath(path: string) {
+		var fullPath = Path.normalize(Path.join(this.root, path));
+		if (fullPath.length < this.root.length) {
+			fullPath = this.root;
 		}
+		return fullPath;
 	}
 }
 

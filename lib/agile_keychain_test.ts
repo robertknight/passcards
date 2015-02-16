@@ -4,6 +4,7 @@
 import Q = require('q');
 import underscore = require('underscore');
 
+import asyncutil = require('./base/asyncutil');
 import crypto = require('./onepass_crypto');
 import env = require('./base/env');
 import exportLib = require('./export');
@@ -13,6 +14,7 @@ import nodefs = require('./vfs/node');
 import agile_keychain = require('./agile_keychain');
 import testLib = require('./test');
 import vfs = require('./vfs/vfs');
+import vfs_util = require('./vfs/util');
 
 require('es6-shim');
 
@@ -47,10 +49,10 @@ class ItemAndContent {
 function createTestVault() : Q.Promise<agile_keychain.Vault> {
 	var vault = Q.defer<agile_keychain.Vault>();
 	var fs = new nodefs.FileVFS('lib/test-data');
-	vfs.VFSUtil.rmrf(fs, 'copy.agilekeychain').then(() => {
+	vfs_util.rmrf(fs, 'copy.agilekeychain').then(() => {
 		return fs.stat('test.agilekeychain')
 	}).then((srcFolder) => {
-		return vfs.VFSUtil.cp(fs, srcFolder, 'copy.agilekeychain')
+		return vfs_util.cp(fs, srcFolder, 'copy.agilekeychain')
 	}).then(() => {
 		var newVault = new agile_keychain.Vault(fs, 'copy.agilekeychain');
 		newVault.unlock('logMEin').then(() => {
@@ -441,9 +443,11 @@ testLib.addAsyncTest('Create new vault', (assert) => {
 	var hint = 'the-password-hint';
 	var vault : agile_keychain.Vault;
 	var keyIterations = 100;
+	var vaultDir = '/new-vault';
 
-	return agile_keychain.Vault.createVault(fs, '/new-vault', pass, hint, keyIterations)
-	.then((vault_) => {
+	return vfs_util.rmrf(fs, vaultDir + '.agilekeychain').then(() => {
+		return agile_keychain.Vault.createVault(fs, vaultDir, pass, hint, keyIterations)
+	}).then((vault_) => {
 		vault = vault_;
 		return vault.unlock(pass)
 	}).then(() => {
@@ -560,5 +564,27 @@ testLib.addTest('Default item properties', (assert) => {
 	// check that new items get different IDs
 	var item2 = new item_store.Item();
 	assert.notEqual(item.uuid, item2.uuid);
+});
+
+testLib.addTest('createVault() fails if directory exists', (assert) => {
+	var fs = new nodefs.FileVFS('/tmp');
+	var pass = 'pass-1';
+	var hint = 'test-new-vault-hint';
+	var keyIterations = 100;
+	var path = '/new-vault-twice.agilekeychain';
+
+	var vault: agile_keychain.Vault;
+	return vfs_util.rmrf(fs, path).then(() => {
+		return agile_keychain.Vault.createVault(fs, path, pass, hint, keyIterations);
+	}).then((vault_) => {
+		vault = vault_;
+		var newPass = 'pass-2';
+		return asyncutil.result(agile_keychain.Vault.createVault(fs, path, pass, hint, keyIterations));
+	}).then((result) => {
+		assert.ok(result.error instanceof Error);
+
+		// check that the original vault has not been modified
+		return vault.unlock(pass);
+	});
 });
 

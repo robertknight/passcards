@@ -13,6 +13,7 @@ import sync = require('./sync');
 import temp_store = require('./temp_store');
 import testLib = require('./test');
 import vfs_node = require('./vfs/node');
+import vfs_util = require('./vfs/util');
 
 interface Env {
 	store: temp_store.Store;
@@ -26,9 +27,12 @@ function setup() : Q.Promise<Env> {
 
 	var fs = new vfs_node.FileVFS('/tmp');
 	var vault: onepass.Vault;
+	var vaultDir = '/tmp/sync-test-vault.agilekeychain';
 
-	return onepass.Vault.createVault(fs, '/tmp/sync-test-vault',
-	  VAULT_PASS, 'testhint', VAULT_PASS_ITERATIONS).then((_vault) => {
+	return vfs_util.rmrf(fs, vaultDir).then(() => {
+		return onepass.Vault.createVault(fs, vaultDir,
+		  VAULT_PASS, 'testhint', VAULT_PASS_ITERATIONS);
+	}).then((_vault) => {
 		vault = _vault;
 		return vault.unlock(VAULT_PASS);
 	}).then(() => {

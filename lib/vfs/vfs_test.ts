@@ -66,7 +66,7 @@ var createNodeFs = () => {
 	var fs = new nodefs.FileVFS(TEST_DIR);
 	return vfs_util.rmrf(fs, '')
 	.then(() => {
-		return fs.mkpath(TEST_DIR);
+		return fs.mkpath('');
 	}).then(() => {
 		return vfs_util.listRecursive(fs, '')
 	}).then((files) => {
