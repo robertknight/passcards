@@ -21,6 +21,29 @@ import toaster = require('./controls/toaster');
 import transition_mixin = require('./base/transition_mixin');
 import vfs = require('../lib/vfs/vfs');
 
+var mixins = style.create({
+	setupScreen: {
+		marginTop: 10,
+		marginBottom: 10,
+		backgroundColor: 'white',
+		borderRadius: 3,
+		color: colors.MATERIAL_TEXT_PRIMARY,
+		minHeight: 40,
+
+		padding: {
+			padding: 15,
+			paddingTop: 10,
+			paddingBottom: 10
+		}
+	},
+
+	hCenter: {
+		display: 'flex',
+		flexDirection: 'column',
+		alignItems: 'center'
+	}
+});
+
 var theme = style.create({
 	setupView: {
 		width: '100%',
@@ -44,11 +67,7 @@ var theme = style.create({
 	},
 
 	storeList: {
-		marginTop: 10,
-		marginBottom: 10,
-		borderRadius: 3,
-		backgroundColor: 'white',
-		color: colors.MATERIAL_COLOR_PRIMARY,
+		mixins: [mixins.setupScreen],
 
 		item: {
 			padding: 15,
@@ -81,12 +100,7 @@ var theme = style.create({
 	},
 
 	cloudStoreList: {
-		marginTop: 10,
-		marginBottom: 10,
-		borderRadius: 3,
-		backgroundColor: 'white',
-		color: colors.MATERIAL_TEXT_PRIMARY,
-		minHeight: 40,
+		mixins: [mixins.setupScreen],
 
 		item: {
 			padding: 15,
@@ -100,13 +114,13 @@ var theme = style.create({
 	},
 
 	newStore: {
-		marginTop: 10,
-		marginBottom: 10,
-		padding: 10,
-		backgroundColor: 'white',
-		borderRadius: 3,
+		mixins: [mixins.setupScreen, mixins.setupScreen.padding],
+		
+	},
 
-		creatingStoreLabel: {
+	creatingStore: {
+		mixins: [mixins.setupScreen],
+		label: {
 			color: colors.MATERIAL_TEXT_PRIMARY,
 			fontSize: fonts.subhead.size
 		}
@@ -115,7 +129,7 @@ var theme = style.create({
 	screen: {
 		transition: style_util.transitionOn({
 			transform: .3,
-			opacity: .6
+			opacity: .3
 		}),
 		position: 'absolute',
 		left: 10,
@@ -129,14 +143,6 @@ var theme = style.create({
 	screenButtons: {
 		display: 'flex',
 		flexDirection: 'row'
-	},
-
-	cloudServiceList: {
-		padding: 20,
-		marginTop: 50,
-		display: 'flex',
-		flexDirection: 'column',
-		alignItems: 'center'
 	},
 
 	header: {
@@ -263,6 +269,9 @@ interface StoreListProps {
 	onAddStore: () => void;
 }
 
+/** Displays a list of password stores which have been synced to the
+  * current app.
+  */
 class StoreList extends typed_react.Component<StoreListProps, {}> {
 	render() {
 		var stores: React.ReactElement<any>[] = [];
@@ -280,6 +289,7 @@ class StoreList extends typed_react.Component<StoreListProps, {}> {
 			var cloudService = settings.CloudService[account.cloudService];
 
 			stores.push(react.DOM.div(style.mixin(theme.storeList.item, {
+				key: `${cloudService}.${account.id}.${displayPath}`,
 				onClick: () => this.props.onSelectStore(account)
 			}),
 				react.DOM.div(style.mixin(theme.storeList.item.path), displayPath),
@@ -290,7 +300,8 @@ class StoreList extends typed_react.Component<StoreListProps, {}> {
 		});
 
 		stores.push(react.DOM.div(style.mixin(theme.storeList.item, {
-			onClick: () => this.props.onAddStore()
+			onClick: () => this.props.onAddStore(),
+			key: 'add-store'
 		}),
 			react.DOM.div(style.mixin(theme.storeList.item.addStore), 'Add Store'),
 			ripple.InkRippleF({})
@@ -314,7 +325,8 @@ enum Screen {
 	Welcome,
 	StoreList,
 	NewStore,
-	CloudStoreList
+	CloudStoreList,
+	CloudServiceList
 }
 
 interface NewStoreOptions {
@@ -326,34 +338,20 @@ interface NewStoreOptions {
 
 interface SlideProps {
 	children?: React.ReactElement<any>[];
+
+	xTranslation: number;
+	opacity: number;
 }
 
-interface SlideState extends transition_mixin.TransitionMixinState {
-}
-
-class Slide extends typed_react.Component<SlideProps, SlideState> {
-	getInitialState() {
-		return {
-			transitionProperty: 'transform'
-		}
-	}
-
+class Slide extends typed_react.Component<SlideProps, {}> {
 	render() {
-		var screenStyles: any[] = [theme.screen];
-		switch (this.state.transition) {
-		case reactutil.TransitionState.Entering:
-			screenStyles.push({
-				transform: 'translateX(100%)',
-				opacity: 0.1
-			});
-			break;
-		case reactutil.TransitionState.Leaving:
-			screenStyles.push({
-				transform: 'translateX(-100%)',
-				opacity: 0.1
-			});
-			break;
-		}
+		var screenStyles: any[] = [
+			theme.screen,
+			{
+				transform: `translateX(${this.props.xTranslation * 100}%)`,
+				opacity: this.props.opacity
+			}
+		];
 
 		return react.DOM.div(style.mixin(screenStyles),
 			this.props.children
@@ -361,7 +359,7 @@ class Slide extends typed_react.Component<SlideProps, SlideState> {
 	}
 }
 
-var SlideF = reactutil.createFactory(Slide, transition_mixin.TransitionMixinM);
+var SlideF = reactutil.createFactory(Slide);
 
 interface NewStoreFormProps {
 	onGoBack: () => void;
@@ -457,7 +455,7 @@ class NewStoreForm extends typed_react.Component<NewStoreFormProps, NewStoreForm
 		var form: React.ReactElement<any>;
 		if (this.state.creatingStore) {
 			form = react.DOM.div(style.mixin(theme.newStore),
-			  react.DOM.div(style.mixin(theme.newStore.creatingStoreLabel), 'Creating store...')
+			  react.DOM.div(style.mixin(theme.creatingStore.label), 'Creating store...')
 			);
 		} else {
 			form = this.renderForm();
@@ -493,9 +491,11 @@ var NewStoreFormF = reactutil.createFactory(NewStoreForm);
 
 interface SetupViewState {
 	accountInfo?: vfs.AccountInfo;
-	currentScreen?: Screen;
 	newStore?: NewStoreOptions;
 	status?: status_message.Status;
+	
+	screenStack?: Screen[];
+	currentScreen?: number;
 }
 
 /** App setup and onboarding screen.
@@ -503,7 +503,8 @@ interface SetupViewState {
 export class SetupView extends typed_react.Component<SetupViewProps, SetupViewState> {
 	getInitialState() {
 		return {
-			currentScreen: Screen.StoreList
+			screenStack: [Screen.StoreList],
+			currentScreen: 0
 		};
 	}
 
@@ -520,21 +521,62 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 		}
 	}
 
+	private pushScreen(screen: Screen) {
+		var screens = this.state.screenStack.slice(0, this.state.currentScreen+1);
+		screens.push(screen);
+		this.setState({
+			screenStack: screens
+		});
+		setTimeout(() => {
+			this.setState({currentScreen: this.state.currentScreen + 1});
+		}, 100);
+	}
+
+	private popScreen() {
+		if (this.state.currentScreen === 0) {
+			return;
+		}
+		this.setState({
+			currentScreen: this.state.currentScreen-1
+		});
+	}
+
 	render() {
-		var currentScreen: React.ReactElement<any>;
-		switch (this.state.currentScreen) {
-		case Screen.Welcome:
-			currentScreen = SlideF({key: 'screen-welcome'}, this.renderWelcomeScreen());
-			break;
-		case Screen.StoreList:
-			currentScreen = SlideF({key: 'screen-store-list'}, this.renderStoreList());
-			break;
-		case Screen.NewStore:
-			currentScreen = SlideF({key: 'screen-new-store'}, this.renderNewStoreScreen());
-			break;
-		case Screen.CloudStoreList:
-			currentScreen = SlideF({key: 'screen-cloud-store-list'}, this.renderCloudStoreList());
-			break;
+		var screens: React.ReactElement<any>[] = [];
+		for (var i=0; i < this.state.screenStack.length; i++) {
+			var xTranslation = i - this.state.currentScreen;
+			var opacity = i == this.state.currentScreen ? 1.0 : 0.0;
+			var screenKey: string;
+			var screenContent: React.ReactElement<any>;
+
+			switch (this.state.screenStack[i]) {
+			case Screen.Welcome:
+				screenKey = 'screen-welcome';
+				screenContent = this.renderWelcomeScreen();
+				break;
+			case Screen.StoreList:
+				screenKey = 'screen-store-list';
+				screenContent = this.renderStoreList();
+				break;
+			case Screen.NewStore:
+				screenKey = 'screen-new-store';
+				screenContent = this.renderNewStoreScreen();
+				break;
+			case Screen.CloudStoreList:
+				screenKey = 'screen-cloud-store-list';
+				screenContent = this.renderCloudStoreList();
+				break;
+			case Screen.CloudServiceList:
+				screenKey = 'screen-cloud-service-list';
+				screenContent = this.renderCloudServiceList();
+				break;
+			}
+
+			screens.push(SlideF({
+				key: screenKey,
+				xTranslation: xTranslation,
+				opacity: opacity
+			}, screenContent));
 		}
 
 		var message: React.ReactElement<toaster.ToasterProps>;
@@ -546,9 +588,7 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 
 		return react.DOM.div(style.mixin(theme.setupView),
 			react.DOM.div(style.mixin(theme.setupView.inner),
-				reactutil.TransitionGroupF({},
-					currentScreen
-				),
+				screens,
 				reactutil.TransitionGroupF({}, message)
 			)
 		);
@@ -569,7 +609,26 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 				NavButtonF({
 					label: 'Continue',
 					onClick: () => {
-						this.setState({currentScreen: Screen.StoreList});
+						this.pushScreen(Screen.StoreList);
+					}
+				})
+			)
+		);
+	}
+
+	private renderCloudServiceList() {
+		return react.DOM.div({},
+			react.DOM.div(style.mixin(theme.screenButtons),
+				NavButtonF({
+					label: 'Back',
+					onClick: () => {
+						this.popScreen();
+					}
+				}),
+				NavButtonF({
+					label: 'Connect to Dropbox',
+					onClick: () => {
+						this.connectToDropbox();
 					}
 				})
 			)
@@ -590,9 +649,21 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 			return this.props.fs.accountInfo()
 		}).then((accountInfo) => {
 			this.setState({
-				accountInfo: accountInfo,
-				currentScreen: Screen.CloudStoreList
+				accountInfo: accountInfo
 			});
+			this.pushScreen(Screen.CloudStoreList);
+		}).catch((err) => {
+			this.reportError(err);
+		});
+	}
+
+	private connectToDropbox() {
+		this.props.fs.login().then(() => {
+			// depending on the environment, the login
+			// will either complete in this instance of the app,
+			// or the app will reload and the login completion
+			// will be handled by componentDidMount()
+			this.completeCloudServiceLogin();
 		}).catch((err) => {
 			this.reportError(err);
 		});
@@ -600,18 +671,6 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 
 	private renderStoreList() {
 		var stores = <settings.AccountMap>this.props.settings.get(settings.Setting.Accounts) || {};
-		var addStoreHandler = () => {
-			this.props.fs.login().then(() => {
-				// depending on the environment, the login
-				// will either complete in this instance of the app,
-				// or the app will reload and the login completion
-				// will be handled by componentDidMount()
-				this.completeCloudServiceLogin();
-			}).catch((err) => {
-				this.reportError(err);
-			});
-		};
-
 		return react.DOM.div({},
 			react.DOM.div(style.mixin(theme.header), 'Select Store'),
 			StoreListF({
@@ -619,7 +678,9 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 				onSelectStore: (account) => {
 					this.props.settings.set(settings.Setting.ActiveAccount, account.id);
 				},
-				onAddStore: addStoreHandler
+				onAddStore: () => {
+					this.pushScreen(Screen.CloudServiceList);
+				}
 			})
 		);
 	}
@@ -627,7 +688,7 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 	private renderNewStoreScreen() {
 		return NewStoreFormF({
 			onGoBack: () => {
-				this.setState({currentScreen: Screen.CloudStoreList});
+				this.popScreen();
 			},
 			onCreate: (options) => {
 				var store = agile_keychain.Vault.createVault(this.props.fs,
@@ -679,14 +740,14 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 					label: 'Back',
 					onClick: () => {
 						this.props.fs.logout().then(() => {
-							this.setState({currentScreen: Screen.StoreList});
+							this.popScreen();
 						});
 					}
 				}),
 				NavButtonF({
 					label: 'Create New Store',
 					onClick: () => {
-						this.setState({currentScreen: Screen.NewStore});
+						this.pushScreen(Screen.NewStore);
 					}
 				})
 			)
