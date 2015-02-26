@@ -142,7 +142,11 @@ var theme = style.create({
 
 	screenButtons: {
 		display: 'flex',
-		flexDirection: 'row'
+		flexDirection: 'row',
+
+		spacer: {
+			flexGrow: 1
+		}
 	},
 
 	header: {
@@ -325,6 +329,8 @@ enum Screen {
 	Welcome,
 	StoreList,
 	NewStore,
+	CloudStoreLogin,
+	CloudStoreSignout,
 	CloudStoreList,
 	CloudServiceList
 }
@@ -489,21 +495,45 @@ class NewStoreForm extends typed_react.Component<NewStoreFormProps, NewStoreForm
 
 var NewStoreFormF = reactutil.createFactory(NewStoreForm);
 
+interface ScreenOptions {
+	temporary?: boolean;
+}
+
+interface SetupViewScreen {
+	id: Screen;
+	options: ScreenOptions;
+}
+
 interface SetupViewState {
 	accountInfo?: vfs.AccountInfo;
 	newStore?: NewStoreOptions;
 	status?: status_message.Status;
 	
-	screenStack?: Screen[];
+	screenStack?: SetupViewScreen[];
 	currentScreen?: number;
+}
+
+function isResumingOAuthLogin() {
+	return window.location.hash.indexOf('access_token') !== -1;
 }
 
 /** App setup and onboarding screen.
   */
 export class SetupView extends typed_react.Component<SetupViewProps, SetupViewState> {
-	getInitialState() {
+	getInitialState(): SetupViewState {
+		var screenStack = [{
+			id: Screen.StoreList,
+			options: {}
+		}];
+		if (isResumingOAuthLogin()) {
+			screenStack.push({
+				id: Screen.CloudStoreLogin,
+				options: {}
+			});
+		}
+
 		return {
-			screenStack: [Screen.StoreList],
+			screenStack: screenStack,
 			currentScreen: 0
 		};
 	}
@@ -515,15 +545,17 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 			});
 		}
 
-		if (window.location.hash.indexOf('access_token') !== -1) {
-			// resume OAuth login flow
+		if (isResumingOAuthLogin()) {
 			this.completeCloudServiceLogin();
 		}
 	}
 
-	private pushScreen(screen: Screen) {
+	private pushScreen(screen: Screen, options?: ScreenOptions) {
 		var screens = this.state.screenStack.slice(0, this.state.currentScreen+1);
-		screens.push(screen);
+		screens.push({
+			id: screen,
+			options: options || {}
+		});
 		this.setState({
 			screenStack: screens
 		});
@@ -533,11 +565,12 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 	}
 
 	private popScreen() {
-		if (this.state.currentScreen === 0) {
-			return;
+		var nextScreen = this.state.currentScreen - 1;
+		while (this.state.screenStack[nextScreen].options.temporary) {
+			--nextScreen;
 		}
 		this.setState({
-			currentScreen: this.state.currentScreen-1
+			currentScreen: nextScreen
 		});
 	}
 
@@ -549,7 +582,7 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 			var screenKey: string;
 			var screenContent: React.ReactElement<any>;
 
-			switch (this.state.screenStack[i]) {
+			switch (this.state.screenStack[i].id) {
 			case Screen.Welcome:
 				screenKey = 'screen-welcome';
 				screenContent = this.renderWelcomeScreen();
@@ -561,6 +594,14 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 			case Screen.NewStore:
 				screenKey = 'screen-new-store';
 				screenContent = this.renderNewStoreScreen();
+				break;
+			case Screen.CloudStoreLogin:
+				screenKey = 'screen-cloud-store-login';
+				screenContent = this.renderProgressSlide('Connecting to Dropbox...');
+				break;
+			case Screen.CloudStoreSignout:
+				screenKey = 'screen-cloud-store-signout';
+				screenContent = this.renderProgressSlide('Signing out of Dropbox...');
 				break;
 			case Screen.CloudStoreList:
 				screenKey = 'screen-cloud-store-list';
@@ -653,11 +694,15 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 			});
 			this.pushScreen(Screen.CloudStoreList);
 		}).catch((err) => {
+			// go back to store list
+			this.popScreen();
 			this.reportError(err);
 		});
 	}
 
 	private connectToDropbox() {
+		this.pushScreen(Screen.CloudStoreLogin, {temporary: true});
+
 		this.props.fs.login().then(() => {
 			// depending on the environment, the login
 			// will either complete in this instance of the app,
@@ -665,6 +710,8 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 			// will be handled by componentDidMount()
 			this.completeCloudServiceLogin();
 		}).catch((err) => {
+			// go back to store list
+			this.popScreen();
 			this.reportError(err);
 		});
 	}
@@ -721,6 +768,10 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 		appSettings.set(settings.Setting.ActiveAccount, account.id);
 	}
 
+	private renderProgressSlide(text: string) {
+		return react.DOM.div(style.mixin(theme.header), text);
+	}
+
 	private renderCloudStoreList() {
 		var accountName = 'your';
 		if (this.state.accountInfo) {
@@ -739,15 +790,27 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 				NavButtonF({
 					label: 'Back',
 					onClick: () => {
-						this.props.fs.logout().then(() => {
-							this.popScreen();
-						});
+						this.popScreen();
 					}
 				}),
 				NavButtonF({
 					label: 'Create New Store',
 					onClick: () => {
 						this.pushScreen(Screen.NewStore);
+					}
+				}),
+				react.DOM.div(style.mixin(theme.screenButtons.spacer)),
+				NavButtonF({
+					label: 'Sign Out',
+					onClick: () => {
+						this.popScreen();
+						this.pushScreen(Screen.CloudStoreSignout, {temporary: true});
+						this.props.fs.logout().then(() => {
+							this.popScreen();
+						}).catch((err) => {
+							this.popScreen();
+							this.reportError(err);
+						});
 					}
 				})
 			)

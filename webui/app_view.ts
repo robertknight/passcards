@@ -339,7 +339,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 				});
 			}
 		},{
-			label: 'Switch Account',
+			label: 'Switch Store',
 			onClick: () => {
 				this.props.services.settings.clear(settings.Setting.ActiveAccount)
 			}
