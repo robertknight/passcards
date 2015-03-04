@@ -18,7 +18,6 @@ import stringutil = require('../lib/base/stringutil');
 import style_util = require('./base/style_util');
 import text_field = require('./controls/text_field');
 import toaster = require('./controls/toaster');
-import transition_mixin = require('./base/transition_mixin');
 import vfs = require('../lib/vfs/vfs');
 
 var mixins = style.create({
@@ -289,7 +288,6 @@ class StoreList extends typed_react.Component<StoreListProps, {}> {
 				dirStartPos = 1;
 			}
 			var displayPath = account.storePath.slice(dirStartPos, suffixPos);
-
 			var cloudService = settings.CloudService[account.cloudService];
 
 			stores.push(react.DOM.div(style.mixin(theme.storeList.item, {

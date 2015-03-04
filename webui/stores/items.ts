@@ -21,6 +21,10 @@ export interface State {
 
 /** Maintains the state of the currently
   * opened password item store.
+  *
+  * FIXME: This store currently manages a mix of item state
+  * and app state (current URL, selected items etc.). That state
+  * should live elsewhere.
   */
 export class Store {
 	stateChanged: event_stream.EventStream<State>;
@@ -88,8 +92,8 @@ export class Store {
 			this.refreshItems();
 		}
 		
-		this.state = assign(this.state, state);
-		this.stateChanged.publish(state);
+		this.state = nextState;
+		this.stateChanged.publish(nextState);
 	}
 
 	private refreshItems() {

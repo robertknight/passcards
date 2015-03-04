@@ -183,7 +183,6 @@ export class App {
 
 		// create main app view
 		var appWindow = rootInputElement.ownerDocument.defaultView;
-		var stateChanged = new event_stream.EventStream<app_view.AppViewState>();
 		var appView = app_view.AppViewF({
 			services: this.services,
 			viewportRect: this.getViewportRect(appWindow),
