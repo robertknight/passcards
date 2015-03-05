@@ -68,8 +68,12 @@ export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockVie
 						ref:'unlockPaneForm',
 						onSubmit: (e) => {
 							e.preventDefault();
-							var masterPass = (<HTMLInputElement>this.refs['masterPassField'].getDOMNode()).value;
-							this.tryUnlock(masterPass);
+							var passwordInputField = <HTMLInputElement>this.refs['masterPassField'].getDOMNode();
+							var masterPass = passwordInputField.value;
+							this.tryUnlock(masterPass).then(() => {
+								// clear input field after attempt completes
+								passwordInputField.value = '';
+							});
 						}
 					},
 						react.DOM.div(style.mixin(theme.unlockView.passwordRow),
@@ -112,7 +116,7 @@ export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockVie
 
 	private tryUnlock(password: string) {
 		this.setState({unlockState: UnlockState.Unlocking});
-		this.props.store.unlock(password).then(() => {
+		return this.props.store.unlock(password).then(() => {
 			this.setState({unlockState: UnlockState.Success});
 			this.props.onUnlock();
 		})
