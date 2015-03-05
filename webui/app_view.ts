@@ -124,7 +124,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 			});
 		}
 
-		var children: React.ComponentElement<any>[] = [];
+		var children: React.ReactElement<any>[] = [];
 		var itemStoreState = this.props.itemStore.state;
 
 		children.push(unlock_view.UnlockViewF({
@@ -158,7 +158,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 	}
 
 	private renderToasters() {
-		var toasters: React.ComponentElement<toaster.ToasterProps>[] = [];
+		var toasters: React.ReactElement<toaster.ToasterProps>[] = [];
 		if (this.state.status) {
 			toasters.push(toaster.ToasterF({
 				key: 'status-toaster',
@@ -206,7 +206,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 	}
 
 	private renderItemDetails() {
-		var detailsView: React.ComponentElement<any>;
+		var detailsView: React.ReactElement<{}>;
 		if (this.itemStoreState().selectedItem) {
 			var appRect = this.state.viewportRect;
 

@@ -435,5 +435,5 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 	}
 }
 
-export var TextFieldF: React.Factory<TextFieldProps> = reactutil.createFactory(TextField);
+export var TextFieldF = reactutil.createFactory(TextField);
 

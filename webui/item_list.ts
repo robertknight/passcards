@@ -233,7 +233,7 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 		focused: boolean;
 		index: number;
 		offsetTop: number;
-	}) : React.ComponentElement<ItemProps> {
+	}) : React.ReactElement<ItemProps> {
 		return ItemF({
 			key: item.uuid,
 			item: item,

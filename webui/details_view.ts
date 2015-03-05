@@ -95,9 +95,9 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 		}
 
 
-		var actions: React.ComponentElement<any>[] = [];
+		var actions: React.ReactElement<{}>[] = [];
 		if (this.state.selected) {
-			var copyButton: React.ComponentElement<button.ButtonProps>;
+			var copyButton: React.ReactElement<button.ButtonProps>;
 			if (this.props.clipboard.clipboardAvailable()) {
 				copyButton = button.ButtonF({
 					style: button.Style.Rectangular,
@@ -337,9 +337,9 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 	}
 
 	private renderSections(item: item_store.ItemAndContent, onSave: () => void, editing: boolean) {
-		var sections: React.ReactElement<any>[] = [];
+		var sections: React.ReactElement<{}>[] = [];
 		item.content.sections.forEach((section, sectionIndex) => {
-			var fields: React.ComponentElement<any>[] = [];
+			var fields: React.ReactElement<{}>[] = [];
 			section.fields.forEach((field, fieldIndex) => {
 				var autofocus = this.state.autofocusField === field;
 				var labelChangeHandler: (newValue: string) => boolean;
@@ -449,7 +449,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 	}
 
 	private renderWebsites(item: item_store.ItemAndContent, onSave: () => void, editing: boolean) {
-		var websites: React.ComponentElement<any>[] = [];
+		var websites: React.ReactElement<{}>[] = [];
 		item.content.urls.forEach((url, urlIndex) => {
 			var autofocus = this.state.autofocusField === url;
 			websites.push(ItemFieldF({
@@ -493,7 +493,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 	}
 
 	private renderCoreFields(item: item_store.ItemAndContent, onSave: () => void, editing: boolean) {
-		var coreFields: React.ComponentElement<any>[] = [];
+		var coreFields: React.ReactElement<{}>[] = [];
 
 		var accountField = item.content.accountField();
 		var passwordField = item.content.passwordField();
@@ -618,7 +618,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		}
 		toolbarControls.push(react.DOM.div(style.mixin(theme.detailsView.toolbarSpacer)));
 
-		var editOrSave: React.ComponentElement<button.ButtonProps>;
+		var editOrSave: React.ReactElement<button.ButtonProps>;
 		if (this.state.isEditing) {
 			editOrSave = toolbar.createButton({
 				value: 'Save',
@@ -706,13 +706,13 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				contentKey += '-editing';
 			}
 
-			var sectionDivider: React.ReactElement<any>;
+			var sectionDivider: React.ReactElement<{}>;
 			if (websites.length > 0 && sections.length > 0) {
 				sectionDivider = react.DOM.div(style.mixin(theme.detailsView.divider));
 			}
 
-			var itemActionDivider: React.ReactElement<any>;
-			var itemActions: React.ComponentElement<any>[] = [];
+			var itemActionDivider: React.ReactElement<{}>;
+			var itemActions: React.ReactElement<{}>[] = [];
 			if (editing && this.props.editMode === ItemEditMode.EditItem) {
 				var isTrashed = updatedItem.item.trashed;
 				itemActions.push(button.ButtonF({
@@ -811,7 +811,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			contentStyles.push({opacity: 1});
 		}
 
-		var autofillButton: React.ComponentElement<any>;
+		var autofillButton: React.ReactElement<{}>;
 		var autofillSupported = env.isFirefoxAddon() || env.isChromeExtension();
 		if (!this.state.isEditing && autofillSupported) {
 			autofillButton = react.DOM.div(style.mixin({
