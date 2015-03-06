@@ -39,7 +39,7 @@
     "shallow-equals": "0.0.0",
     "sprintf": "^0.1.5",
     "through2": "^0.6.3",
-    "ts-style": "^0.5.0",
+    "ts-style": "^0.5.1",
     "typed-react": "^3.2.0",
     "underscore": "^1.8.2",
     "urlrouter": ">=0.5.4"
