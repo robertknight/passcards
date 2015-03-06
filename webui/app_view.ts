@@ -6,12 +6,14 @@ import typed_react = require('typed-react');
 import url = require('url');
 import underscore = require('underscore');
 
+import app_theme = require('./theme');
 import assign = require('../lib/base/assign');
 import autofill = require('./autofill');
+import colors = require('./controls/colors');
 import details_view = require('./details_view');
 import event_stream = require('../lib/base/event_stream');
 import item_builder = require('../lib/item_builder');
-import item_list = require('./item_list');
+import item_list = require('./item_list_view');
 import item_icons = require('./item_icons');
 import item_store = require('../lib/item_store');
 import key_agent = require('../lib/key_agent');
@@ -23,12 +25,20 @@ import settings = require('./settings');
 import setup_view = require('./setup_view');
 import status_message = require('./status');
 import sync = require('../lib/sync');
-import theme = require('./theme');
 import toaster = require('./controls/toaster');
 import unlock_view = require('./unlock_view');
 import url_util = require('../lib/base/url_util');
 import vfs = require('../lib/vfs/vfs');
 import ui_item_store = require('./stores/items');
+
+var theme = style.create({
+	appView: {
+		width: '100%',
+		height: '100%',
+		userSelect: 'none',
+		color: colors.MATERIAL_TEXT_PRIMARY
+	}
+}, __filename);
 
 export interface AppViewState {
 	selectedItemRect?: reactutil.Rect;
@@ -358,7 +368,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 			onDismiss: () => {
 			   this.setState({appMenuSourceRect: null});
 			},
-			zIndex: theme.zLayers.MENU_LAYER
+			zIndex: app_theme.Z_LAYERS.MENU_LAYER
 		});
 	}
 }

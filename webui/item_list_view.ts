@@ -8,8 +8,11 @@ import style = require('ts-style');
 import typed_react = require('typed-react');
 import underscore = require('underscore');
 
+import app_theme = require('./theme');
+import colors = require('./controls/colors');
 import env = require('../lib/base/env');
 import focus_mixin = require('./base/focus_mixin');
+import fonts = require('./controls/fonts');
 import keycodes = require('./base/keycodes');
 import item_icons = require('./item_icons');
 import item_search = require('../lib/item_search');
@@ -17,8 +20,129 @@ import item_store = require('../lib/item_store');
 import reactutil = require('./base/reactutil');
 import ripple = require('./controls/ripple');
 import svg_icon = require('./controls/svg_icon');
-import theme = require('./theme');
 import toolbar = require('./toolbar');
+
+var ITEM_LIST_VIEW_Z_LAYER = 1;
+
+export var theme = style.create({
+	toolbar: {
+		mixins: [app_theme.mixins.materialDesign.header],
+
+		borderBottom: '1px solid #bbb',
+		paddingRight: 20,
+		height: 56,
+		flexShrink: 0,
+		zIndex: app_theme.Z_LAYERS.TOOLBAR,
+
+		width: '100%',
+		position: 'fixed',
+		display: 'flex',
+		flexDirection: 'row',
+		alignItems: 'center',
+
+		searchIcon: {
+			marginLeft: 20,
+			flexShrink: '0',
+			flexGrow: '0'
+		},
+
+		searchField: {
+			flexGrow: '1',
+			paddingLeft: 5,
+			marginLeft: 20,
+			height: 30,
+			border: 0,
+			color: colors.MATERIAL_COLOR_HEADER,
+			backgroundColor: colors.MATERIAL_COLOR_PRIMARY,
+			fontSize: 20,
+			outline: 'none',
+
+			/* enable the search field to shrink
+			   when the width of the toolbar is collapsed
+			   in Firefox
+			*/
+			overflow: 'hidden',
+
+			'::-webkit-input-placeholder': {
+				color: '#fff',
+				opacity: '0.8'
+			}
+		},
+
+		iconGroup: {
+			marginLeft: 10,
+			marginRight: 10,
+			flexShrink: '0',
+			flexGrow: '0',
+			display: 'flex',
+			height: '100%',
+			alignItems: 'center'
+		},
+	},
+
+	container: {
+		display: 'flex',
+		flexDirection: 'column',
+		height: '100%',
+		position: 'relative',
+		zIndex: ITEM_LIST_VIEW_Z_LAYER
+	},
+
+	list: {
+		marginTop: 56,
+		height: '100%',
+		backgroundColor: 'white',
+		position: 'relative',
+
+		overflow: 'auto',
+		overflowScrolling: 'auto',
+		WebkitOverflowScrolling: 'touch',
+
+		footer: {
+			position: 'absolute',
+			color: 'rgba(0,0,0,0)'
+		}
+	},
+
+	item: {
+		display: 'flex',
+		flexDirection: 'row',
+		alignItems: 'center',
+		cursor: 'pointer',
+		paddingLeft: 16,
+		paddingRight: 5,
+		position: 'absolute',
+		width: '100%',
+		boxSizing: 'border-box',
+
+		// total item height is 72px,
+		// 48px icon + 1px border around icon + 11px margin top/bottom
+		marginTop: 11,
+		marginBottom: 11,
+
+		focusIndicator: {
+			position: 'absolute',
+			left: 3,
+			top: '50%',
+			transform: 'translateY(-50%)',
+			fontSize: 10,
+			opacity: '0.3'
+		},
+
+		details: {
+			marginLeft: 16,
+
+			title: {
+				fontSize: fonts.itemPrimary.size
+			},
+
+			account: {
+				fontSize: fonts.itemSecondary.size,
+				color: colors.MATERIAL_TEXT_SECONDARY
+			}
+		}
+	}
+}, __filename);
 
 export interface ToolbarClickEvent {
 	itemRect: reactutil.Rect;
@@ -80,7 +204,7 @@ export class ItemListView extends typed_react.Component<ItemListViewProps, ItemL
 			filterUrl = this.props.currentUrl;
 		}
 
-		return react.DOM.div(style.mixin(theme.itemList.container, {
+		return react.DOM.div(style.mixin(theme.container, {
 				tabIndex: 0,
 				onFocus: () => {
 					this.setFocus();
@@ -155,7 +279,7 @@ export class Item extends typed_react.Component<ItemProps, {}> {
 	render() {
 		var focusIndicator: React.ReactElement<any>;
 		if (this.props.isFocused) {
-			focusIndicator = react.DOM.div(style.mixin(theme.itemList.item.focusIndicator), '>');
+			focusIndicator = react.DOM.div(style.mixin(theme.item.focusIndicator), '>');
 		}
 
 		// positioning a rendered item within its parent list could be
@@ -167,7 +291,7 @@ export class Item extends typed_react.Component<ItemProps, {}> {
 		var offset = this.props.offsetTop.toString() + 'px';
 		var translation = 'translate3d(0px,' + offset + ',0px)';
 
-		return react.DOM.div(style.mixin(theme.itemList.item, {
+		return react.DOM.div(style.mixin(theme.item, {
 				ref: 'itemOverview',
 				onClick: () => this.props.onSelected(),
 				style: reactutil.prefix({transform: translation})
@@ -178,9 +302,9 @@ export class Item extends typed_react.Component<ItemProps, {}> {
 				iconProvider: this.props.iconProvider,
 				isFocused: this.props.isFocused
 			}),
-			react.DOM.div(style.mixin(theme.itemList.item.details),
-				react.DOM.div(style.mixin(theme.itemList.item.details.title), this.props.item.title),
-				react.DOM.div(style.mixin(theme.itemList.item.details.account), this.props.item.account)
+			react.DOM.div(style.mixin(theme.item.details),
+				react.DOM.div(style.mixin(theme.item.details.title), this.props.item.title),
+				react.DOM.div(style.mixin(theme.item.details.account), this.props.item.account)
 			),
 			focusIndicator
 		);
@@ -338,7 +462,7 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 		});
 			
 		var listHeight = this.state.matchingItems.length * this.state.itemHeight;
-		return react.DOM.div(style.mixin(theme.itemList.list, {
+		return react.DOM.div(style.mixin(theme.list, {
 			ref: 'itemList',
 			onScroll: () => {
 				// In iOS 8 multiple scroll events may be delivered
@@ -364,7 +488,7 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 			// add placeholder item at the bottom of the list to ensure
 			// that the scrollbar has a suitable range to allow the user
 			// to scroll the whole list
-			react.DOM.div(style.mixin([theme.itemList.list.footer, {
+			react.DOM.div(style.mixin([theme.list.footer, {
 				top: listHeight.toString()
 			}]), 'placeholder')
 		);
@@ -518,16 +642,16 @@ class ItemListToolbar extends typed_react.Component<ItemListToolbarProps, {}> {
 			searchPlaceholder = 'Search items...';
 		}
 
-		return react.DOM.div(style.mixin([theme.toolbar, theme.itemList.toolbar]),
+		return react.DOM.div(style.mixin(theme.toolbar),
 				svg_icon.SvgIconF({
-					className: style.classes(theme.itemList.toolbar.searchIcon),
+					className: style.classes(theme.toolbar.searchIcon),
 					href: 'dist/icons/icons.svg#search',
 					width: 20,
 					height: 20,
 					viewBox: iconViewBox,
 					fill: 'white'
 				}),
-				react.DOM.input({className: style.classes(theme.itemList.toolbar.searchField),
+				react.DOM.input({className: style.classes(theme.toolbar.searchField),
 					type: 'text',
 					placeholder: searchPlaceholder,
 					ref: 'searchField',
@@ -538,7 +662,7 @@ class ItemListToolbar extends typed_react.Component<ItemListToolbarProps, {}> {
 						updateQuery();
 					}
 				}),
-				react.DOM.div(style.mixin(theme.itemList.toolbar.iconGroup),
+				react.DOM.div(style.mixin(theme.toolbar.iconGroup),
 					toolbar.createButton({
 						iconUrl: 'dist/icons/icons.svg#lock-outline',
 						value: 'Lock',

@@ -9,8 +9,10 @@ import colors = require('./controls/colors');
 import crypto = require('../lib/onepass_crypto');
 import env = require('../lib/base/env');
 import focus_mixin = require('./base/focus_mixin');
+import fonts = require('./controls/fonts');
 import item_builder = require('../lib/item_builder');
 import item_icons = require('./item_icons');
+import item_list = require('./item_list_view');
 import item_store = require('../lib/item_store');
 import keycodes = require('./base/keycodes');
 import menu = require('./controls/menu');
@@ -19,9 +21,184 @@ import reactutil = require('./base/reactutil');
 import shortcut = require('./base/shortcut');
 import style_util = require('./base/style_util');
 import text_field = require('./controls/text_field');
-import theme = require('./theme');
 import toolbar = require('./toolbar');
 import url_util = require('../lib/base/url_util');
+
+var DIVIDER_BORDER_STYLE = '1px solid ' + colors.MATERIAL_COLOR_DIVIDER;
+var DETAILS_VIEW_Z_LAYER = 2;
+
+var theme = style.create({
+	toolbarSpacer: {
+		flexGrow: '1'
+	},
+
+	content: {
+		flexGrow: 1
+	},
+
+	coreFields: {
+		paddingTop: 5,
+		paddingBottom: 5
+	},
+
+	section: {
+		title: {
+			fontSize: fonts.caption.size,
+			fontWeight: fonts.caption.weight,
+			color: colors.MATERIAL_TEXT_SECONDARY,
+			height: 48,
+
+			display: 'flex',
+			flexDirection: 'column',
+			justifyContent: 'center',
+
+			// add negative margin below title to get
+			// even spacing between divider line separating
+			// this from the previous section and the label
+			// of the first field in this section
+			marginBottom: -12
+		},
+
+		divider: {
+			width: '100%',
+			borderBottom: DIVIDER_BORDER_STYLE
+		}
+	},
+
+	divider: {
+		width: '100%',
+		borderBottom: DIVIDER_BORDER_STYLE,
+		marginTop: 12,
+		marginBottom: 12
+	},
+
+	field: {
+		display: 'flex',
+		flexDirection: 'column',
+		paddingRight: 20,
+		maxWidth: 300,
+
+		actions: {
+			display: 'flex',
+			flexDirection: 'row',
+			order: 3,
+			justifyContent: 'center'
+		}
+	},
+
+	itemActionBar: {
+		paddingLeft: 10,
+		paddingRight: 10,
+		paddingTop: 10,
+		paddingBottom: 5,
+		marginBottom: 10
+	},
+
+	container: {
+		backgroundColor: 'white',
+		position: 'absolute',
+		transition: style_util.transitionOn({
+			left: .3,
+			top: .3,
+			width: .3,
+			height: .3
+		}),
+		zIndex: DETAILS_VIEW_Z_LAYER,
+		display: 'flex',
+		flexDirection: 'column',
+
+		// disable the focus ring around the
+		// edge of the details view when focused
+		':focus': {
+			outline: 0
+		}
+	},
+
+	header: {
+		backgroundColor: 'transparent',
+		flexShrink: 0,
+		boxShadow: 'none',
+
+		// padding chosen to match icon padding in item list
+		// for item list -> details view transition
+		paddingLeft: 16,
+		transition: style_util.transitionOn({
+			all: .2,
+			color: .01
+		}),
+
+		toolbar: {
+			position: 'absolute',
+			left: 0,
+			top: 0,
+			right: 0,
+			height: 40,
+
+			display: 'flex',
+			flexDirection: 'row',
+			alignItems: 'center'
+		},
+
+		iconAndDetails: {
+			display: 'flex',
+			flexDirection: 'row',
+
+			details: {
+				marginLeft: 16,
+				display: 'flex',
+				flexDirection: 'column',
+				position: 'relative',
+				flexGrow: 1,
+
+				// style for the container of the title and account fields
+				// at the start of the entry transition for the details
+				// view
+				itemList: {
+					position: 'absolute',
+					left: 0,
+					right: 0,
+					top: 0,
+					bottom: 0,
+					transition: style_util.transitionOn({opacity: .2}),
+					opacity: 1,
+					display: 'flex',
+					flexDirection: 'column',
+					justifyContent: 'center'
+				},
+
+				// style for the container of the title and account
+				// fields in the details view
+				detailsView: {
+					position: 'relative',
+					right: 0,
+					top: 0,
+					bottom: 0,
+					color: 'white',
+					transition: style_util.transitionOn({opacity: .2}),
+					opacity: 0,
+					display: 'flex',
+					flexDirection: 'column',
+					justifyContent: 'center'
+				}
+			},
+		},
+
+		entered: {
+			backgroundColor: colors.MATERIAL_COLOR_PRIMARY,
+			paddingTop: 40,
+			paddingBottom: 15,
+			boxShadow: 'rgba(0, 0, 0, 0.26) 0px 2px 5px 0px'
+		},
+
+		title: {
+			fontSize: fonts.headline.size
+		},
+
+		account: {
+			fontSize: fonts.itemSecondary.size
+		}
+	},
+}, __filename);
 
 enum FieldType {
 	Text,
@@ -176,7 +353,7 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 			focusField = false;
 		}
 
-		return react.DOM.div(style.mixin(theme.detailsView.field, {ref: 'itemField'}),
+		return react.DOM.div(style.mixin(theme.field, {ref: 'itemField'}),
 			labelEditor,
 			text_field.TextFieldF({
 				floatingLabel: this.props.onChangeLabel == null,
@@ -194,7 +371,7 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 				focus: focusField,
 				ref: 'textField'
 			}),
-			react.DOM.div(style.mixin(theme.detailsView.field.actions), actions)
+			react.DOM.div(style.mixin(theme.field.actions), actions)
 		);
 	}
 }
@@ -372,7 +549,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				}));
 			});
 			if (sectionIndex > 0) {
-				sections.push(react.DOM.div(style.mixin(theme.detailsView.section.divider)));
+				sections.push(react.DOM.div(style.mixin(theme.section.divider)));
 			}
 			if (section.title || editing) {
 				if (editing) {
@@ -397,7 +574,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 						focused: autofocus
 					}));
 				} else {
-					sections.push(react.DOM.div(style.mixin(theme.detailsView.section.title),
+					sections.push(react.DOM.div(style.mixin(theme.section.title),
 						section.title)
 					);
 				}
@@ -616,7 +793,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				key: 'cancel'
 			}));
 		}
-		toolbarControls.push(react.DOM.div(style.mixin(theme.detailsView.toolbarSpacer)));
+		toolbarControls.push(react.DOM.div(style.mixin(theme.toolbarSpacer)));
 
 		var editOrSave: React.ReactElement<button.ButtonProps>;
 		if (this.state.isEditing) {
@@ -651,7 +828,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				key: 'edit',
 			});
 		}
-		toolbarControls.push(react.DOM.div(style.mixin([theme.itemList.toolbar.iconGroup, {
+		toolbarControls.push(react.DOM.div(style.mixin([item_list.theme.toolbar.iconGroup, {
 				position: 'relative',
 				width: 45,
 				overflow: 'hidden'
@@ -659,7 +836,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			editOrSave
 		));
 
-		return react.DOM.div(style.mixin(theme.detailsView.header.toolbar),
+		return react.DOM.div(style.mixin(theme.header.toolbar),
 			toolbarControls
 		);
 	}
@@ -708,7 +885,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 
 			var sectionDivider: React.ReactElement<{}>;
 			if (websites.length > 0 && sections.length > 0) {
-				sectionDivider = react.DOM.div(style.mixin(theme.detailsView.divider));
+				sectionDivider = react.DOM.div(style.mixin(theme.divider));
 			}
 
 			var itemActionDivider: React.ReactElement<{}>;
@@ -727,12 +904,12 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			}
 
 			if (itemActions.length > 0) {
-				itemActionDivider = react.DOM.div(style.mixin(theme.detailsView.divider));
+				itemActionDivider = react.DOM.div(style.mixin(theme.divider));
 			}
 
-			detailsContent = react.DOM.div(style.mixin(theme.detailsView.content, {key: contentKey}),
+			detailsContent = react.DOM.div(style.mixin(theme.content, {key: contentKey}),
 				titleField,
-				react.DOM.div(style.mixin(theme.detailsView.coreFields), coreFields),
+				react.DOM.div(style.mixin(theme.coreFields), coreFields),
 				react.DOM.div({}, websites),
 				sectionDivider,
 				react.DOM.div({}, sections),
@@ -750,7 +927,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 
 	render() {
 		var viewStyles: any[] = [];
-		viewStyles.push(theme.detailsView.container);
+		viewStyles.push(theme.container);
 
 		// expand the details view starting from the rect
 		// for the selected item
@@ -780,13 +957,13 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		}
 
 		var headerStyles: any[] = [];
-		headerStyles.push(theme.detailsView.header);
+		headerStyles.push(theme.header);
 
 		if (this.state.transition === reactutil.TransitionState.Entered) {
-			headerStyles.push(theme.detailsView.header.entered);
+			headerStyles.push(theme.header.entered);
 		}
 
-		var headerTheme = theme.detailsView.header;
+		var headerTheme = theme.header;
 		var itemListDetailsStyle: any[] = [headerTheme.iconAndDetails.details.itemList];
 		var detailsViewDetailsStyle: any[] = [headerTheme.iconAndDetails.details.detailsView];
 
@@ -856,13 +1033,13 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 					react.DOM.div(style.mixin(headerTheme.iconAndDetails.details),
 						// item title and account at start of entry transition
 						react.DOM.div(style.mixin(itemListDetailsStyle),
-							react.DOM.div(style.mixin(theme.itemList.item.details.title), updatedItem.title),
-							react.DOM.div(style.mixin(theme.itemList.item.details.account), updatedItem.account)
+							react.DOM.div(style.mixin(item_list.theme.item.details.title), updatedItem.title),
+							react.DOM.div(style.mixin(item_list.theme.item.details.account), updatedItem.account)
 						),
 						// item title and account at end of entry transition
 						react.DOM.div(style.mixin(detailsViewDetailsStyle),
-							react.DOM.div(style.mixin(theme.detailsView.header.title), updatedItem.title),
-							react.DOM.div(style.mixin(theme.detailsView.header.account), updatedItem.account)
+							react.DOM.div(style.mixin(theme.header.title), updatedItem.title),
+							react.DOM.div(style.mixin(theme.header.account), updatedItem.account)
 						)
 					)
 				)

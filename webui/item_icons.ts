@@ -18,8 +18,67 @@ import image = require('../lib/siteinfo/image');
 import key_value_store = require('../lib/base/key_value_store');
 import reactutil = require('./base/reactutil');
 import site_info = require('../lib/siteinfo/site_info');
-import theme = require('./theme');
 import url_util = require('../lib/base/url_util');
+
+var theme = style.create({
+	action: {
+		cursor: 'pointer'
+	},
+
+	container: {
+		width: 48,
+		height: 48,
+		backgroundColor: 'white',
+		border: '1px solid #bbb',
+
+		// make icon circular
+		borderRadius: '50%',
+		overflow: 'hidden',
+
+		focused: {
+			boxShadow: '0px 0px 2px 2px rgba(0,0,0,0.2)'
+		},
+
+		flexShrink: 0,
+
+		// fix an issue in WebKit / Blink (tested in iOS 8,
+		// Chrome 39 on Linux) where the border-radius clipping
+		// would not be applied to the child <img> for the icon
+		// when a transition was being applied to a nearby element.
+		//
+		// Forcing the icon container and its descendants into their
+		// own compositing layer resolves the issue
+		//
+		// Possibly related to https://code.google.com/p/chromium/issues/detail?id=430184
+		transform: 'translate3d(0,0,0)'
+	},
+
+	icon: {
+		// horizontally center icon in outline.
+		// Limit to max size of 48x48 but prefer
+		// intrinsic size
+		maxWidth: 48,
+		maxHeight: 48,
+		marginLeft: 'auto',
+		marginRight: 'auto',
+
+		// vertically center icon in outline
+		display: 'block',
+		position: 'relative',
+		top: '50%',
+		transform: 'translateY(-50%)',
+
+		// for images that are smaller than the 48px max width,
+		// make the image circular, so that the image and the
+		// container have the same shape.
+		//
+		// If the image already fills the container then
+		// the container's border-radius will make it circular.
+		rounded: {
+			borderRadius: '50%'
+		}
+	}
+}, __filename);
 
 /** Fetch state for an icon returned by IconProvider query.
   */
@@ -341,22 +400,22 @@ export class IconControl extends typed_react.Component<IconControlProps, {}> {
 	render() {
 		var icon = this.props.iconProvider.query(this.props.location);
 
-		var imgStyles: any[] = [theme.itemIcon.icon];
+		var imgStyles: any[] = [theme.icon];
 		if (icon.width < 48) {
 			// make image rounded if it doesn't fill the container.
 			// For images that do fill the container, we get smoother
 			// anti-aliased rounding for the icon if we only
 			// apply border-radius to the container and not to both
 			// the container and the icon
-			imgStyles.push(theme.itemIcon.icon.rounded);
+			imgStyles.push(theme.icon.rounded);
 		}
 
-		var containerStyles: any[] = [theme.itemIcon.container];
+		var containerStyles: any[] = [theme.container];
 		if (this.props.isFocused) {
-			containerStyles.push(theme.itemIcon.container.focused);
+			containerStyles.push(theme.container.focused);
 		}
 		if (this.props.onClick) {
-			containerStyles.push(theme.itemIcon.action);
+			containerStyles.push(theme.action);
 		}
 
 		return react.DOM.div(style.mixin(containerStyles, {
