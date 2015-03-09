@@ -16,7 +16,7 @@ export class Cached<T> {
 	  * @p setter.
 	  */
 	constructor(getter: () => Q.Promise<T>,
-	            setter: (value: T) => Q.Promise<void>) {
+		setter: (value: T) => Q.Promise<void>) {
 		this.getter = getter;
 		this.setter = setter;
 	}
@@ -26,7 +26,7 @@ export class Cached<T> {
 	  * the result. Subsequent calls retrieve the cached
 	  * result.
 	  */
-	get() : Q.Promise<T> {
+	get(): Q.Promise<T> {
 		if (this.cached) {
 			return Q(this.cached);
 		} else if (this.reading) {
@@ -45,7 +45,7 @@ export class Cached<T> {
 	  * the cached value and then invokes the setter
 	  * passed to the constructor to set the value.
 	  */
-	set(value: T) : Q.Promise<void> {
+	set(value: T): Q.Promise<void> {
 		this.cached = value;
 		return this.setter(value);
 	}

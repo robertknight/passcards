@@ -94,11 +94,11 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 	private showStatus(status: status_message.Status) {
 		status.expired.listen(() => {
 			if (this.state.status == status) {
-				this.setState({status: null});
+				this.setState({ status: null });
 			}
 		});
 
-		this.setState({status: status});
+		this.setState({ status: status });
 	}
 
 	private autofill(item: item_store.Item) {
@@ -123,10 +123,10 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 			}
 		}
 		this.props.itemStore.update(state);
-		this.setState({selectedItemRect: rect});
+		this.setState({ selectedItemRect: rect });
 	}
 
-	render() : React.ReactElement<any> {
+	render(): React.ReactElement<any> {
 		if (!this.props.itemStore.state.store) {
 			return setup_view.SetupViewF({
 				settings: this.props.services.settings,
@@ -143,13 +143,13 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 			isLocked: itemStoreState.isLocked,
 			focus: itemStoreState.isLocked,
 			onUnlock: () => {
-				this.props.itemStore.update({isLocked: false});
+				this.props.itemStore.update({ isLocked: false });
 			},
 			onUnlockErr: (err) => {
 				this.showError(err);
 			},
 			onMenuClicked: (rect) => {
-				this.setState({appMenuSourceRect: rect});
+				this.setState({ appMenuSourceRect: rect });
 			}
 		}));
 
@@ -158,13 +158,13 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 		children.push(this.renderToasters());
 
 		var menu = reactutil.TransitionGroupF({},
-		  this.state.appMenuSourceRect ? this.renderMenu('menu') : null
-		);
+			this.state.appMenuSourceRect ? this.renderMenu('menu') : null
+			);
 		children.push(menu);
 
-		return react.DOM.div(style.mixin(theme.appView, {ref: 'app'}),
+		return react.DOM.div(style.mixin(theme.appView, { ref: 'app' }),
 			children
-		);
+			);
 	}
 
 	private renderToasters() {
@@ -178,7 +178,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 
 		var syncState = this.props.itemStore.state.syncState
 		if (syncState &&
-		    syncState.state !== sync.SyncState.Idle) {
+			syncState.state !== sync.SyncState.Idle) {
 			toasters.push(toaster.ToasterF({
 				key: 'sync-toaster',
 				message: 'Syncing...',
@@ -186,9 +186,9 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 				progressMax: syncState.total
 			}));
 		}
-		return reactutil.TransitionGroupF({key: 'toasterList'},
-		  toasters
-		);
+		return reactutil.TransitionGroupF({ key: 'toasterList' },
+			toasters
+			);
 	}
 
 	private renderItemList() {
@@ -198,14 +198,14 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 			ref: 'itemList',
 			items: itemStoreState.items,
 			selectedItem: itemStoreState.selectedItem,
-			onSelectedItemChanged: (item, rect) => { 
-				this.setSelectedItem(item, rect); 
+			onSelectedItemChanged: (item, rect) => {
+				this.setSelectedItem(item, rect);
 			},
 			currentUrl: itemStoreState.currentUrl,
 			iconProvider: this.props.services.iconProvider,
 			onLockClicked: () => this.props.services.keyAgent.forgetKeys(),
 			onMenuClicked: (e) => {
-				this.setState({appMenuSourceRect: e.itemRect});
+				this.setState({ appMenuSourceRect: e.itemRect });
 			},
 			focus: !itemStoreState.isLocked && !itemStoreState.selectedItem
 		});
@@ -251,7 +251,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 						return this.itemStoreState().syncer.syncItems();
 					}).then(() => {
 						this.showStatus(new status_message.Status(status_message.StatusType.Success,
-						  'Changes saved and synced'))
+							'Changes saved and synced'))
 					}).catch((err) => {
 						this.showError(err);
 					});
@@ -284,7 +284,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 	private createNewItemTemplate() {
 		// use the most common account (very likely the user's email address)
 		// as the default account login for new items
-		var accountFreq: {[id:string]: number} = {};
+		var accountFreq: { [id: string]: number } = {};
 		this.itemStoreState().items.forEach((item) => {
 			if (!accountFreq.hasOwnProperty(item.account)) {
 				accountFreq[item.account] = 1;
@@ -307,8 +307,8 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 
 		var randomPassword = onepass_crypto.generatePassword(12);
 		var builder = new item_builder.Builder(item_store.ItemTypes.LOGIN)
-		  .addLogin(defaultAccount)
-		  .addPassword(randomPassword);
+		.addLogin(defaultAccount)
+		.addPassword(randomPassword);
 
 		// prefill the new item with the current URL for web pages.
 		// Avoid prefilling for special browser pages (eg. 'about:version',
@@ -336,7 +336,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 				}
 			}]);
 		}
-		
+
 		menuItems = menuItems.concat([{
 			label: 'Clear Offline Storage',
 			onClick: () => {
@@ -348,25 +348,25 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 					this.showError(err);
 				});
 			}
-		},{
-			label: 'Switch Store',
-			onClick: () => {
-				this.props.services.settings.clear(settings.Setting.ActiveAccount)
-			}
-		},{
-			label: 'Help',
-			onClick: () => {
-				var win = window.open('https://robertknight.github.io/passcards', '_blank');
-				win.focus();
-			}
-		}]);
+		}, {
+				label: 'Switch Store',
+				onClick: () => {
+					this.props.services.settings.clear(settings.Setting.ActiveAccount)
+				}
+			}, {
+				label: 'Help',
+				onClick: () => {
+					var win = window.open('https://robertknight.github.io/passcards', '_blank');
+					win.focus();
+				}
+			}]);
 		return menu.MenuF({
 			key: key,
 			items: menuItems,
 			sourceRect: this.state.appMenuSourceRect,
 			viewportRect: this.state.viewportRect,
 			onDismiss: () => {
-			   this.setState({appMenuSourceRect: null});
+				this.setState({ appMenuSourceRect: null });
 			},
 			zIndex: app_theme.Z_LAYERS.MENU_LAYER
 		});

@@ -66,8 +66,8 @@ var theme = style.create({
 		},
 
 		icon: {
-			 width: 24,
-			 height: 24
+			width: 24,
+			height: 24
 		},
 
 		floatingAction: {
@@ -136,7 +136,7 @@ var theme = style.create({
 
 		disabled: {
 			label: {
-				color: colors.premultiplyColor(0,0,0,0.26)
+				color: colors.premultiplyColor(0, 0, 0, 0.26)
 			}
 		}
 	},
@@ -181,7 +181,7 @@ export interface ButtonProps {
 	children?: any;
 }
 
-export class Button extends typed_react.Component<ButtonProps,{}> {
+export class Button extends typed_react.Component<ButtonProps, {}> {
 	componentDidMount() {
 		setTimeout(() => {
 			if (!this.isMounted()) {
@@ -201,7 +201,7 @@ export class Button extends typed_react.Component<ButtonProps,{}> {
 		var rippleRadius = 100;
 
 		var isRectangular = this.props.style === Style.Rectangular ||
-		                    this.props.style === Style.RaisedRectangular;
+			this.props.style === Style.RaisedRectangular;
 
 		var containerStyles: any[] = [theme.button.base];
 		if (this.props.style === Style.FloatingAction ||
@@ -230,7 +230,7 @@ export class Button extends typed_react.Component<ButtonProps,{}> {
 		}
 
 		if (this.props.backgroundColor) {
-			containerStyles.push({backgroundColor: this.props.backgroundColor});
+			containerStyles.push({ backgroundColor: this.props.backgroundColor });
 		}
 
 		if (this.props.children) {
@@ -242,7 +242,7 @@ export class Button extends typed_react.Component<ButtonProps,{}> {
 			labelStyles.push(theme.button.disabled.label);
 		}
 		if (this.props.color) {
-			labelStyles.push({color: this.props.color});
+			labelStyles.push({ color: this.props.color });
 		}
 
 		var buttonIcon: React.ReactElement<any>;
@@ -267,7 +267,7 @@ export class Button extends typed_react.Component<ButtonProps,{}> {
 						height: 24
 					}
 				}))
-			);
+				);
 		}
 
 		var label: React.ReactElement<any>;
@@ -290,7 +290,7 @@ export class Button extends typed_react.Component<ButtonProps,{}> {
 			buttonIcon,
 			label,
 			this.props.children
-		);
+			);
 	}
 }
 

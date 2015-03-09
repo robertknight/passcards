@@ -11,7 +11,7 @@
 
 // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-object.assign
 
-function assign<T>(target: Object, ...sources: Object[]) : T {
+function assign<T>(target: Object, ...sources: Object[]): T {
 	if (target == null) {
 		throw new TypeError('Object.assign target cannot be null or undefined');
 	}

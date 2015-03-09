@@ -34,7 +34,7 @@ import onepass_crypto = require('./onepass_crypto');
 // JSON structure that stores the current overview
 // data and revision IDs for all items in the database
 interface OverviewMap {
-	[index: string] : ItemIndexEntry;
+	[index: string]: ItemIndexEntry;
 }
 
 // JSON structure used to store item revisions
@@ -101,7 +101,7 @@ export class Store implements item_store.SyncableStore {
 
 		this.onItemUpdated = new event_stream.EventStream<item_store.Item>();
 		this.onUnlock = new event_stream.EventStream<void>();
-		
+
 		this.initDatabase();
 
 		this.indexUpdateQueue = new collectionutil.BatchedUpdateQueue((updates: item_store.Item[]) => {
@@ -111,7 +111,7 @@ export class Store implements item_store.SyncableStore {
 		this.itemIndex = new cached.Cached<OverviewMap>(
 			() => { return this.readItemIndex() },
 			(update) => { return this.writeItemIndex(update) }
-		);
+			);
 		this.keyAgent.onLock().listen(() => {
 			this.itemIndex.clear();
 		});
@@ -139,7 +139,7 @@ export class Store implements item_store.SyncableStore {
 		});
 	}
 
-	unlock(pwd: string) : Q.Promise<void> {
+	unlock(pwd: string): Q.Promise<void> {
 		// FIXME - This duplicates onepass.Vault.unlock()
 		return this.listKeys().then((keys) => {
 			if (keys.length == 0) {
@@ -157,7 +157,7 @@ export class Store implements item_store.SyncableStore {
 		});
 	}
 
-	listItems(opts: item_store.ListItemsOptions = {}) : Q.Promise<item_store.Item[]> {
+	listItems(opts: item_store.ListItemsOptions = {}): Q.Promise<item_store.Item[]> {
 		return this.itemIndex.get().then((overviewMap) => {
 			var items: item_store.Item[] = [];
 			Object.keys(overviewMap).forEach((key) => {
@@ -172,7 +172,7 @@ export class Store implements item_store.SyncableStore {
 		});
 	}
 
-	private getLastSyncEntries(ids: string[]) : Q.Promise<LastSyncEntry[]> {
+	private getLastSyncEntries(ids: string[]): Q.Promise<LastSyncEntry[]> {
 		return Q.all(ids.map((id) => {
 			return this.itemStore.get<LastSyncEntry>('lastSynced/' + id);
 		}));
@@ -185,7 +185,7 @@ export class Store implements item_store.SyncableStore {
 		});
 
 		return Q.all([this.itemIndex.get(), this.getLastSyncEntries(updatedItemIds)])
-		  .then((result) => {
+		.then((result) => {
 			overviewMap = <OverviewMap>result[0];
 			if (!overviewMap) {
 				overviewMap = {};
@@ -211,7 +211,7 @@ export class Store implements item_store.SyncableStore {
 		item.trashed = overview.trashed;
 		item.typeName = overview.typeName;
 		item.openContents = overview.openContents;
-		
+
 		item.account = overview.account;
 		item.locations = overview.locations;
 
@@ -238,7 +238,7 @@ export class Store implements item_store.SyncableStore {
 		};
 	}
 
-	loadItem(uuid: string, revision?: string) : Q.Promise<item_store.Item> {
+	loadItem(uuid: string, revision?: string): Q.Promise<item_store.Item> {
 		if (revision) {
 			return Q.all([this.overviewKey(), this.itemStore.get<string>('revisions/' + revision)])
 			.then((keyAndRevision) => {
@@ -264,7 +264,7 @@ export class Store implements item_store.SyncableStore {
 		}
 	}
 
-	saveItem(item: item_store.Item, source: item_store.ChangeSource) : Q.Promise<void> {
+	saveItem(item: item_store.Item, source: item_store.ChangeSource): Q.Promise<void> {
 		if (source !== item_store.ChangeSource.Sync) {
 			// set last-modified time to current time
 			item.updateTimestamps();
@@ -282,7 +282,7 @@ export class Store implements item_store.SyncableStore {
 		}).then((content) => {
 			item.updateOverviewFromContent(content);
 			item.parentRevision = item.revision;
-			item.revision = item_store.generateRevisionId({item: item, content: content});
+			item.revision = item_store.generateRevisionId({ item: item, content: content });
 
 			var overview = this.overviewFromItem(item);
 			var revision = {
@@ -300,7 +300,7 @@ export class Store implements item_store.SyncableStore {
 		});
 	}
 
-	getContent(item: item_store.Item) : Q.Promise<item_store.ItemContent> {
+	getContent(item: item_store.Item): Q.Promise<item_store.ItemContent> {
 		var key: string;
 		return this.keyForItem(item).then((_key) => {
 			key = _key;
@@ -316,11 +316,11 @@ export class Store implements item_store.SyncableStore {
 		});
 	}
 
-	getRawDecryptedData(item: item_store.Item) : Q.Promise<string> {
+	getRawDecryptedData(item: item_store.Item): Q.Promise<string> {
 		return Q.reject<string>(new Error('getRawDecryptedData() is not implemented'));
 	}
 
-	listKeys() : Q.Promise<key_agent.Key[]> {
+	listKeys(): Q.Promise<key_agent.Key[]> {
 		return this.keyStore.list(KEY_ID_PREFIX).then((keyIds) => {
 			var keys: Q.Promise<key_agent.Key>[] = [];
 			keyIds.forEach((id) => {
@@ -330,7 +330,7 @@ export class Store implements item_store.SyncableStore {
 		});
 	}
 
-	saveKeys(keys: key_agent.Key[], hint: string) : Q.Promise<void> {
+	saveKeys(keys: key_agent.Key[], hint: string): Q.Promise<void> {
 		return this.keyStore.list(KEY_ID_PREFIX).then((keyIds) => {
 			// remove existing keys
 			var removeOps = keyIds.map((id) => {
@@ -348,19 +348,19 @@ export class Store implements item_store.SyncableStore {
 		});
 	}
 
-	passwordHint() : Q.Promise<string> {
+	passwordHint(): Q.Promise<string> {
 		return this.keyStore.get<string>('hint');
 	}
 
 	getLastSyncedRevision(item: item_store.Item) {
 		return this.itemStore.get<LastSyncEntry>('lastSynced/' + item.uuid)
-		  .then((entry) => {
-			  if (entry) {
-				  return entry.revision;
-			  } else {
-				  return null;
-			  }
-		  });
+		.then((entry) => {
+			if (entry) {
+				return entry.revision;
+			} else {
+				return null;
+			}
+		});
 	}
 
 	setLastSyncedRevision(item: item_store.Item, revision: string) {
@@ -374,7 +374,7 @@ export class Store implements item_store.SyncableStore {
 	}
 
 	lastSyncTimestamps() {
-		var timestamps: Map<string,Date> = new collectionutil.PMap<string,Date>();
+		var timestamps: Map<string, Date> = new collectionutil.PMap<string, Date>();
 		return this.itemIndex.get().then((itemIndex) => {
 			Object.keys(itemIndex).forEach((id) => {
 				var lastSyncedAt = itemIndex[id].lastSyncedAt;
@@ -432,7 +432,7 @@ export class Store implements item_store.SyncableStore {
 		return this.keyAgent.encrypt(key, JSON.stringify(data), cryptoParams);
 	}
 
-	private decrypt<T>(key: string, data: string) : Q.Promise<T> {
+	private decrypt<T>(key: string, data: string): Q.Promise<T> {
 		var cryptoParams = new key_agent.CryptoParams(key_agent.CryptoAlgorithm.AES128_OpenSSLKey);
 		return this.keyAgent.decrypt(key, data, cryptoParams).then((decrypted) => {
 			return <T>JSON.parse(decrypted);

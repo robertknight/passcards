@@ -33,11 +33,11 @@ export class Client implements vfs.VFS {
 	constructor(public url: string) {
 	}
 
-	login() : Q.Promise<vfs.Credentials> {
+	login(): Q.Promise<vfs.Credentials> {
 		return Q({});
 	}
 
-	isLoggedIn() : boolean {
+	isLoggedIn(): boolean {
 		return true;
 	}
 
@@ -49,7 +49,7 @@ export class Client implements vfs.VFS {
 		return {};
 	}
 
-	setCredentials(credentials: vfs.Credentials) : void {
+	setCredentials(credentials: vfs.Credentials): void {
 		// unused
 	}
 
@@ -57,12 +57,12 @@ export class Client implements vfs.VFS {
 		return Q.reject<vfs.AccountInfo>(new Error('Not implemented'));
 	}
 
-	stat(path: string) : Q.Promise<vfs.FileInfo> {
+	stat(path: string): Q.Promise<vfs.FileInfo> {
 		// stat() is implemented by listing the parent dir
 		// and returning the corresponding FileInfo object from
 		// that
 		while (stringutil.endsWith(path, '/')) {
-			path = path.slice(0, path.length-1);
+			path = path.slice(0, path.length - 1);
 		}
 		var fileNameSep = path.lastIndexOf('/');
 		var parentDir = path;
@@ -86,11 +86,11 @@ export class Client implements vfs.VFS {
 		});
 	}
 
-	search(namePattern: string, cb: (error: Error, files: vfs.FileInfo[]) => any) : void {
+	search(namePattern: string, cb: (error: Error, files: vfs.FileInfo[]) => any): void {
 		vfs_util.searchIn(this, '', namePattern, cb);
 	}
 
-	read(path: string) : Q.Promise<string> {
+	read(path: string): Q.Promise<string> {
 		if (stringutil.endsWith(path, '/')) {
 			return Q.reject<string>(new Error(`Cannot read file. ${path} is a directory`));
 		}
@@ -99,7 +99,7 @@ export class Client implements vfs.VFS {
 		});
 	}
 
-	write(path: string, content: string) : Q.Promise<void> {
+	write(path: string, content: string): Q.Promise<void> {
 		if (stringutil.endsWith(path, '/')) {
 			return Q.reject<void>(new Error(`Cannot write file. ${path} is a directory`));
 		}
@@ -108,7 +108,7 @@ export class Client implements vfs.VFS {
 		});
 	}
 
-	list(path: string) : Q.Promise<vfs.FileInfo[]> {
+	list(path: string): Q.Promise<vfs.FileInfo[]> {
 		if (!stringutil.endsWith(path, '/')) {
 			path += '/';
 		}
@@ -118,13 +118,13 @@ export class Client implements vfs.VFS {
 		});
 	}
 
-	rm(path: string) : Q.Promise<void> {
+	rm(path: string): Q.Promise<void> {
 		return http_client.expect(this.request('DELETE', path), 200).then(() => {
 			return <void>null;
 		});
 	}
 
-	mkpath(path: string) : Q.Promise<void> {
+	mkpath(path: string): Q.Promise<void> {
 		if (!stringutil.endsWith(path, '/')) {
 			path += '/';
 		}
@@ -133,7 +133,7 @@ export class Client implements vfs.VFS {
 		});
 	}
 
-	private request(method: string, path: string, data?: any) : Q.Promise<http_client.Reply> {
+	private request(method: string, path: string, data?: any): Q.Promise<http_client.Reply> {
 		var reqUrl = this.url;
 		if (!stringutil.startsWith(path, '/')) {
 			reqUrl += '/';
@@ -212,12 +212,12 @@ export class Server {
 		this.server = http.createServer(router);
 	}
 
-	listen(port: number) : Q.Promise<void> {
+	listen(port: number): Q.Promise<void> {
 		var ready = Q.defer<void>();
 		this.server.listen(port, () => {
 			ready.resolve(null);
 		});
-		this.server.on('clientError', (ex:any) => {
+		this.server.on('clientError', (ex: any) => {
 			console.log('server client connection err', ex);
 		});
 		return ready.promise;

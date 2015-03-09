@@ -8,13 +8,13 @@ testLib.addTest('merge props', (assert) => {
 		id: 'instanceId',
 		className: 'instanceClass',
 		onClick: 'event handler'
-	},{
-		className: 'componentClass'
-	}),{
-		id: 'instanceId',
-		className: 'componentClass instanceClass',
-		onClick: 'event handler'
-	});
+	}, {
+			className: 'componentClass'
+		}), {
+			id: 'instanceId',
+			className: 'componentClass instanceClass',
+			onClick: 'event handler'
+		});
 });
 
 testLib.addTest('object changes', (assert) => {
@@ -22,11 +22,11 @@ testLib.addTest('object changes', (assert) => {
 		a: { a: 1, b: 2 },
 		b: { a: 1, b: 2 },
 		expectChanged: false
-	},{
-		a: { a: 1, b: 2 },
-		b: { a: 1, b: 3 },
-		expectChanged: true
-	}];
+	}, {
+			a: { a: 1, b: 2 },
+			b: { a: 1, b: 3 },
+			expectChanged: true
+		}];
 
 	testCases.forEach((testCase) => {
 		assert.equal(reactutil.objectChanged(testCase.a, testCase.b), testCase.expectChanged);

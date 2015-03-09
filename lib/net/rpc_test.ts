@@ -18,14 +18,14 @@ class FakePort implements rpc.MessagePort<rpc.CallMessage, rpc.ReplyMessage> {
 		}
 	}
 
-	on(method: string, handler: (data: any) => any) : void {
+	on(method: string, handler: (data: any) => any): void {
 		this.handlers.push({
 			method: method,
 			callback: handler
 		});
 	}
 
-	emit(method: string, data: Object) : void {
+	emit(method: string, data: Object): void {
 		this.receiver.handlers.forEach((handler) => {
 			if (handler.method == method) {
 				handler.callback(data);
@@ -91,7 +91,7 @@ testLib.addAsyncTest('rpc error', (assert) => {
 		if (b === 0) {
 			throw new Error('divide-by-zero');
 		}
-		return a/b;
+		return a / b;
 	});
 	client.call('divide', [4, 0], (err, result) => {
 		assert.ok(err instanceof Error);
@@ -108,7 +108,7 @@ testLib.addAsyncTest('rpc async call and reply', (assert) => {
 	var server = new rpc.RpcHandler(serverPort);
 
 	server.onAsync('add', (done, a, b) => {
-		done(null, a+b);
+		done(null, a + b);
 	});
 
 	client.call('add', [5, 6], (err, sum) => {
@@ -129,7 +129,7 @@ testLib.addAsyncTest('rpc async error', (assert) => {
 		if (b === 0) {
 			done(new Error('divide-by-zero'), null);
 		} else {
-			done(null, a/b);
+			done(null, a / b);
 		}
 	});
 
@@ -138,7 +138,7 @@ testLib.addAsyncTest('rpc async error', (assert) => {
 		if (b === 0) {
 			throw new Error('divide-by-zero');
 		} else {
-			done(null, a/b);
+			done(null, a / b);
 		}
 	});
 

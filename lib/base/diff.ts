@@ -61,8 +61,8 @@ export interface DiffOp<T> {
   */
 export function isSet<T>(a: T[]) {
 	var sorted = a.slice(0).sort();
-	for (var i=1; i < sorted.length; i++) {
-		if (sorted[i-1] === sorted[i]) {
+	for (var i = 1; i < sorted.length; i++) {
+		if (sorted[i - 1] === sorted[i]) {
 			return false;
 		}
 	}
@@ -72,7 +72,7 @@ export function isSet<T>(a: T[]) {
 /** Compare two lists and return a set of changes required
   * to transform the first list into the second list.
   */
-export function diffLists<T>(a: T[], b: T[]) : DiffOp<T>[] {
+export function diffLists<T>(a: T[], b: T[]): DiffOp<T>[] {
 	var diff = adiff.diff(a, b);
 	var diffOps: DiffOp<T>[] = [];
 
@@ -82,14 +82,14 @@ export function diffLists<T>(a: T[], b: T[]) : DiffOp<T>[] {
 		var inserted: any[] = change.slice(2);
 
 		var i = 0;
-		for (i=0; i < deleted; i++) {
+		for (i = 0; i < deleted; i++) {
 			diffOps.push({
 				type: OpType.Remove,
 				pos: index + i,
 				value: a[index + i]
 			});
 		}
-		for (i=0; i < inserted.length; i++) {
+		for (i = 0; i < inserted.length; i++) {
 			diffOps.push({
 				type: OpType.Insert,
 				pos: index,
@@ -97,7 +97,7 @@ export function diffLists<T>(a: T[], b: T[]) : DiffOp<T>[] {
 			});
 		}
 	});
-	
+
 	return diffOps;
 }
 
@@ -108,7 +108,7 @@ export function diffLists<T>(a: T[], b: T[]) : DiffOp<T>[] {
   * The diff operations for a set can include insertion, removal
   * and movement of elements.
   */
-export function diffSets<T>(a: T[], b: T[]) : DiffOp<T>[] {
+export function diffSets<T>(a: T[], b: T[]): DiffOp<T>[] {
 	assert(isSet(a));
 	assert(isSet(b));
 
@@ -129,7 +129,7 @@ export function diffSets<T>(a: T[], b: T[]) : DiffOp<T>[] {
 
 		var aIndex = a.indexOf(op.value);
 		if (op.type == OpType.Insert &&
-		    aIndex == -1) {
+			aIndex == -1) {
 			// element added in 'b'
 			diffSetOps.push(op);
 			return;
@@ -194,17 +194,17 @@ function transformPatch<T>(patch: DiffOp<T>, applied: DiffOp<T>[]) {
   * version. The patches can be created using the diffSets()
   * or diffLists() functions.
   */
-export function patch<T>(base: T[], patch_: DiffOp<T>[]) : T[] {
+export function patch<T>(base: T[], patch_: DiffOp<T>[]): T[] {
 	var patched = base.slice(0);
 
 	// convert moves into insert + remove combinations
 	var patch = patch_.slice();
-	for (var i=0; i < patch.length; i++) {
+	for (var i = 0; i < patch.length; i++) {
 		if (patch[i].type == OpType.Move) {
 			patch.splice(i, 1,
-			  { type: OpType.Insert, value: patch[i].value, pos: patch[i].pos },
-			  { type: OpType.Remove, value: patch[i].value, pos: patch[i].prevPos }
-			);
+				{ type: OpType.Insert, value: patch[i].value, pos: patch[i].pos },
+				{ type: OpType.Remove, value: patch[i].value, pos: patch[i].prevPos }
+				);
 		}
 	}
 
@@ -244,14 +244,14 @@ export function patch<T>(base: T[], patch_: DiffOp<T>[]) : T[] {
   *
   * Where 'base' is the common ancestor of 'a' and 'b'.
   */
-export function mergeSetDiffs<T>(a: DiffOp<T>[], b: DiffOp<T>[]) : DiffOp<T>[] {
+export function mergeSetDiffs<T>(a: DiffOp<T>[], b: DiffOp<T>[]): DiffOp<T>[] {
 	// annotate diff ops with the source diff they came from
 	var combined: DiffOp<T>[] = [];
 	a.forEach((e) => {
-		combined.push({type: e.type, pos: e.pos, prevPos: e.prevPos, value: e.value, source: 0});
+		combined.push({ type: e.type, pos: e.pos, prevPos: e.prevPos, value: e.value, source: 0 });
 	});
 	b.forEach((e) => {
-		combined.push({type: e.type, pos: e.pos, prevPos: e.prevPos, value: e.value, source: 1});
+		combined.push({ type: e.type, pos: e.pos, prevPos: e.prevPos, value: e.value, source: 1 });
 	});
 
 	var seen = new Set();

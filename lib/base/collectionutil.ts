@@ -1,6 +1,6 @@
 import Q = require('q');
 
-interface BiDiMapEntry<T1,T2> {
+interface BiDiMapEntry<T1, T2> {
 	key1: T1;
 	key2: T2;
 }
@@ -9,12 +9,12 @@ interface BiDiMapEntry<T1,T2> {
   * as key => value dictionaries.
   */
 export interface OMap<T> {
-	[index: string] : T
+	[index: string]: T
 }
 
 /** A basic polyfill for ES6 maps */
-export class PMap<K,V> implements Map<K,V> {
-	private map : OMap<V>;
+export class PMap<K, V> implements Map<K, V> {
+	private map: OMap<V>;
 
 	size: number;
 
@@ -52,7 +52,7 @@ export class PMap<K,V> implements Map<K,V> {
 		return this.map.hasOwnProperty(this.propName(key));
 	}
 
-	forEach(callback: (value: V, index?: K, map?: Map<K,V>) => any) {
+	forEach(callback: (value: V, index?: K, map?: Map<K, V>) => any) {
 		for (var key in this.map) {
 			callback(this.map[key], key.slice(1), this);
 		}
@@ -67,20 +67,20 @@ export class PMap<K,V> implements Map<K,V> {
   *
   * Currently only suitable for small maps.
   */
-export class BiDiMap<T1,T2> {
-	private entries: BiDiMapEntry<T1,T2>[]
+export class BiDiMap<T1, T2> {
+	private entries: BiDiMapEntry<T1, T2>[]
 
 	constructor() {
 		this.entries = [];
 	}
 
-	add(key1: T1, key2: T2) : BiDiMap<T1,T2> {
-		this.entries.push({key1:key1, key2:key2});
+	add(key1: T1, key2: T2): BiDiMap<T1, T2> {
+		this.entries.push({ key1: key1, key2: key2 });
 		return this;
 	}
 
-	get(key1: T1) : T2 {
-		for (var i=0; i < this.entries.length; i++) {
+	get(key1: T1): T2 {
+		for (var i = 0; i < this.entries.length; i++) {
 			if (this.entries[i].key1 == key1) {
 				return this.entries[i].key2;
 			}
@@ -88,8 +88,8 @@ export class BiDiMap<T1,T2> {
 		return null;
 	}
 
-	get2(key2 : T2) : T1 {
-		for (var i=0; i < this.entries.length; i++) {
+	get2(key2: T2): T1 {
+		for (var i = 0; i < this.entries.length; i++) {
 			if (this.entries[i].key2 == key2) {
 				return this.entries[i].key1;
 			}
@@ -98,7 +98,7 @@ export class BiDiMap<T1,T2> {
 	}
 }
 
-export function prettyJSON(object: any) : string {
+export function prettyJSON(object: any): string {
 	return JSON.stringify(object, null /* replacer */, 2);
 }
 
@@ -113,17 +113,17 @@ export interface AbstractBuffer {
 /** Copy the contents of @p src to @p dest. */
 export function copyBuffer(dest: AbstractBuffer, src: AbstractBuffer) {
 	var sharedLength = Math.min(src.length, dest.length);
-	for (var i=0; i < sharedLength; i++) {
+	for (var i = 0; i < sharedLength; i++) {
 		dest[i] = src[i];
 	}
 }
 
 /** Produce a hex representation of the data in a typed array */
-export function hexlify(buf: ArrayBufferView, len?: number) : string {
+export function hexlify(buf: ArrayBufferView, len?: number): string {
 	var hex = '';
 	var byteBuf = new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength);
 	len = len || byteBuf.length;
-	for (var i=0; i < len; i++) {
+	for (var i = 0; i < len; i++) {
 		if (byteBuf[i] < 16) {
 			hex += '0';
 		}
@@ -133,18 +133,18 @@ export function hexlify(buf: ArrayBufferView, len?: number) : string {
 };
 
 /** Convert a string containing binary data into a typed array */
-export function bufferFromString(str: string) : Uint8Array {
+export function bufferFromString(str: string): Uint8Array {
 	var destBuf = new Uint8Array(str.length);
-	for (var i=0; i < str.length; i++) {
+	for (var i = 0; i < str.length; i++) {
 		destBuf[i] = str.charCodeAt(i);
 	}
 	return destBuf;
 }
 
 /** Convert a buffer into a binary string. */
-export function stringFromBuffer(buf: AbstractBuffer) : string {
+export function stringFromBuffer(buf: AbstractBuffer): string {
 	var str = '';
-	for (var i=0; i < buf.length; i++) {
+	for (var i = 0; i < buf.length; i++) {
 		str += String.fromCharCode(buf[i]);
 	}
 	return str;
@@ -153,9 +153,9 @@ export function stringFromBuffer(buf: AbstractBuffer) : string {
 /** Convert a Node buffer or typed array into an ordinary
   * JS array.
   */
-export function bufferToArray(buffer: AbstractBuffer) : number[] {
+export function bufferToArray(buffer: AbstractBuffer): number[] {
 	var result: number[] = [];
-	for (var i=0; i < buffer.length; i++) {
+	for (var i = 0; i < buffer.length; i++) {
 		result.push(buffer[i]);
 	}
 	return result;
@@ -165,9 +165,9 @@ export function bufferToArray(buffer: AbstractBuffer) : number[] {
   * a value < 0 if the first mismatching value is less in @p first or a value > 0
   * otherwise.
   */
-export function compare(first: AbstractBuffer, second: AbstractBuffer, length: number) : number {
+export function compare(first: AbstractBuffer, second: AbstractBuffer, length: number): number {
 	var sharedLength = Math.min(first.length, second.length);
-	for (var i=0; i < sharedLength; i++) {
+	for (var i = 0; i < sharedLength; i++) {
 		var diff = first[i] - second[i];
 		if (diff != 0) {
 			return diff;
@@ -225,8 +225,8 @@ export class LittleEndianDataView {
   * Throws an exception if @p keyFunc returns the same key for more
   * than one item.
   */
-export function listToMap<K,T>(list: T[], keyFunc: (item: T) => K) {
-	var map = new PMap<K,T>();
+export function listToMap<K, T>(list: T[], keyFunc: (item: T) => K) {
+	var map = new PMap<K, T>();
 	list.forEach((item) => {
 		var key = keyFunc(item);
 		if (map.has(key)) {
@@ -296,7 +296,7 @@ export class BatchedUpdateQueue<T> {
 	  * Updates are collected together and passed to the processing function
 	  * in batches.
 	  */
-	push(update: T) : Q.Promise<void> {
+	push(update: T): Q.Promise<void> {
 		this.pendingUpdates.push(update);
 		if (this.nextFlush) {
 			return this.nextFlush.promise;

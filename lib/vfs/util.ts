@@ -9,12 +9,12 @@ import vfs = require('./vfs');
   */
 
 /** Remove the directory @p path and all of its contents, if it exists. */
-export function rmrf(fs: vfs.VFS, path: string) : Q.Promise<void> {
+export function rmrf(fs: vfs.VFS, path: string): Q.Promise<void> {
 	var result = Q.defer<void>();
 
 	fs.stat(path).then(() => {
 		var fileList = fs.list(path);
-		var removeOps : Q.Promise<any>[] = [];
+		var removeOps: Q.Promise<any>[] = [];
 		fileList.then((files) => {
 			files.forEach((file) => {
 				if (file.isDir) {
@@ -29,20 +29,20 @@ export function rmrf(fs: vfs.VFS, path: string) : Q.Promise<void> {
 			}), null);
 		}).done();
 	}, (err) => {
-		// TODO - Only resolve the promise if
-		// the error is that the file does not exist
-		result.resolve(null);
-	}).done();
+			// TODO - Only resolve the promise if
+			// the error is that the file does not exist
+			result.resolve(null);
+		}).done();
 
 	return result.promise;
 }
 
 /** Recursively enumerate the contents of @p path */
-export function listRecursive(fs: vfs.VFS, src: string) : Q.Promise<vfs.FileInfo[]> {
+export function listRecursive(fs: vfs.VFS, src: string): Q.Promise<vfs.FileInfo[]> {
 	var result = Q.defer<vfs.FileInfo[]>();
 
 	fs.list(src).then((files) => {
-		var listOps : Q.Promise<vfs.FileInfo[]>[] = [];
+		var listOps: Q.Promise<vfs.FileInfo[]>[] = [];
 		files.forEach((file) => {
 			if (file.isDir) {
 				listOps.push(listRecursive(fs, file.path));
@@ -62,13 +62,13 @@ export function listRecursive(fs: vfs.VFS, src: string) : Q.Promise<vfs.FileInfo
 }
 
 /** Copy the directory @p path and all of its contents to a new location */
-export function cp(fs: vfs.VFS, src: vfs.FileInfo, dest: string) : Q.Promise<void> {
+export function cp(fs: vfs.VFS, src: vfs.FileInfo, dest: string): Q.Promise<void> {
 	if (src.isDir) {
 		return fs.mkpath(dest).then(() => {
 			return fs.list(src.path);
 		})
 		.then((srcFiles) => {
-			var copyOps : Q.Promise<void>[] = [];
+			var copyOps: Q.Promise<void>[] = [];
 			srcFiles.forEach((srcFile) => {
 				var destPath = dest + '/' + srcFile.name;
 				copyOps.push(cp(fs, srcFile, destPath));
@@ -89,7 +89,7 @@ export function cp(fs: vfs.VFS, src: vfs.FileInfo, dest: string) : Q.Promise<voi
   * some vfs.VFS implementations may use a faster method.
   */
 export function searchIn(fs: vfs.VFS, path: string, namePattern: string,
-				cb: (error: Error, files: vfs.FileInfo[]) => any) : void {
+				cb: (error: Error, files: vfs.FileInfo[]) => any): void {
 	var fileList = fs.list(path);
 	fileList.then((files) => {
 		files.forEach((file) => {
@@ -102,14 +102,14 @@ export function searchIn(fs: vfs.VFS, path: string, namePattern: string,
 			}
 		});
 	}, (error) => {
-		cb(error, null);
-	}).done();
+			cb(error, null);
+		}).done();
 }
 
 export function mktemp(fs: vfs.VFS, path: string, template: string = 'tmp.XXX') {
 	var baseName = template.replace(/X{3,}/, (match) => {
 		var randomized = '';
-		for (var i=0; i < match.length; i++) {
+		for (var i = 0; i < match.length; i++) {
 			randomized += String.fromCharCode(97 /* 'a' */ + Math.round(Math.random() * 26));
 		}
 		return randomized;

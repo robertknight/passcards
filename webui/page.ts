@@ -17,7 +17,7 @@ if (env.isChromeExtension()) {
 	portRpc = new rpc.RpcHandler(selfWorker.port);
 }
 
-function inputFieldType(typeStr: string) : forms.FieldType {
+function inputFieldType(typeStr: string): forms.FieldType {
 	switch (typeStr.toLowerCase()) {
 		case 'email':
 			return forms.FieldType.Email;
@@ -47,18 +47,18 @@ interface InputField {
 // Set of fields returned in the most recent RPC call
 // from the extension to collect the set of fields in the
 // document
-var lastFields : HTMLInputElement[] = [];
+var lastFields: HTMLInputElement[] = [];
 
-function collectFieldsInDocument(document: Document) : InputField[] {
+function collectFieldsInDocument(document: Document): InputField[] {
 	var fieldElements = document.getElementsByTagName('input');
 	var fields: InputField[] = [];
 	var i = 0;
 
 	// collect fields from current document
-	for (i=0; i < fieldElements.length; i++) {
+	for (i = 0; i < fieldElements.length; i++) {
 		var elt = fieldElements.item(i);
 
-		var field : InputField = {
+		var field: InputField = {
 			element: elt,
 			field: {
 				key: fields.length,
@@ -84,7 +84,7 @@ function collectFieldsInDocument(document: Document) : InputField[] {
 	// and retrieve input fields. We'll also need suitable security checks to verify
 	// the relation between the child <iframe> and the main document.
 	var frames = document.querySelectorAll('iframe');
-	for (i=0; i < frames.length; i++) {
+	for (i = 0; i < frames.length; i++) {
 		// in Firefox (v.32+), the contentDocument property is missing for cross-origin
 		// iframes. In Chrome (v.37+), attempting to access the property results in
 		// a SecurityException error
@@ -105,7 +105,7 @@ function collectFieldsInDocument(document: Document) : InputField[] {
 	return fields;
 }
 
-function parentForm(input: HTMLInputElement) : HTMLFormElement {
+function parentForm(input: HTMLInputElement): HTMLFormElement {
 	var elt: Node = input;
 	while (elt) {
 		if (elt instanceof HTMLFormElement) {
@@ -133,7 +133,7 @@ portRpc.on('find-fields', () => {
 	inputFields.forEach((field) => {
 		var formElement = parentForm(field.element);
 		var form: InputForm;
-		for (var i=0; i < forms.length; i++) {
+		for (var i = 0; i < forms.length; i++) {
 			if (forms[i].formElement === formElement) {
 				form = forms[i];
 			}

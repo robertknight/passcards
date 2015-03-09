@@ -13,7 +13,7 @@ class StorageEntry {
 }
 
 class FakeLocalStorage {
-	private data : StorageEntry[];
+	private data: StorageEntry[];
 
 	length: number;
 
@@ -24,36 +24,36 @@ class FakeLocalStorage {
 		this.clear();
 	}
 
-	getItem(key: string) : any {
-		for (var i=0; i < this.data.length; i++) {
+	getItem(key: string): any {
+		for (var i = 0; i < this.data.length; i++) {
 			if (this.data[i].key == key) {
 				return this.data[i].value;
 			}
 		}
 	}
 
-	setItem(key: string, data: any) : void {
-		for (var i=0; i < this.data.length; i++) {
+	setItem(key: string, data: any): void {
+		for (var i = 0; i < this.data.length; i++) {
 			if (this.data[i].key == key) {
 				this.data[i].value = data;
 				return;
 			}
 		}
-		this.data.push({key: key, value: data});
+		this.data.push({ key: key, value: data });
 		this.length = this.data.length;
 	}
 
-	clear() : void {
+	clear(): void {
 		this.data = [];
 		this.length = 0;
 		this.remainingSpace = 0;
 	}
 
-	removeItem(key: string) : void {
+	removeItem(key: string): void {
 		this.setItem(key, undefined);
 	}
 
-	key(index: number) : string {
+	key(index: number): string {
 		return this.data[index].key;
 	}
 
@@ -201,14 +201,14 @@ function addTests(fsName: string, createFs: () => Q.Promise<vfs.VFS>) {
 			destFiles = _destFiles;
 			return vfs_util.listRecursive(fs, 'src');
 		}).then((srcFiles) => {
-			srcFiles.sort((a,b) => {
+			srcFiles.sort((a, b) => {
 				return a.path.localeCompare(b.path);
 			});
-			destFiles.sort((a,b) => {
+			destFiles.sort((a, b) => {
 				return a.path.localeCompare(b.path);
 			});
 			srcFiles.forEach((srcFile) => {
-				srcFile.path.replace('src/','dest/');
+				srcFile.path.replace('src/', 'dest/');
 			});
 			testLib.assertEqual(assert, srcFiles, destFiles);
 		});
@@ -237,7 +237,7 @@ function addTests(fsName: string, createFs: () => Q.Promise<vfs.VFS>) {
 			var attemptB = fs.write('test-file-conflict', 'content-v2-b-b', writeOpts);
 			return Q.allSettled([attemptA, attemptB]);
 		}).then((states) => {
-			states.sort((a,b) => { 
+			states.sort((a, b) => {
 				if (a.state == b.state) {
 					return 0;
 				} else if (a.state < b.state) {

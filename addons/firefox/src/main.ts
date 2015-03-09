@@ -19,12 +19,12 @@ interface PageWorker extends ContentWorker {
 
 var mainPanel: panel.Panel;
 var toolbarButton: buttons.ToggleButton;
-var tabWorkers: {[index: string]: PageWorker} = {};
+var tabWorkers: { [index: string]: PageWorker } = {};
 var panelRpc: rpc.RpcHandler;
 
 function getTabWorker(tab: Tab) {
 	if (!tabWorkers[tab.id]) {
-		var worker : PageWorker = tab.attach({
+		var worker: PageWorker = tab.attach({
 			contentScriptFile: self_.data.url('dist/scripts/page_bundle.js')
 		});
 		worker.rpc = new rpc.RpcHandler(worker.port, timers);
@@ -74,14 +74,14 @@ function main() {
 			mainPanel = new panel.Panel({
 				width: 400,
 				height: 400,
-				contentURL : self_.data.url('index.html'),
+				contentURL: self_.data.url('index.html'),
 				contentScriptFile: self_.data.url('scripts/panel_content.js'),
 				contentScriptWhen: 'start',
 				contentScriptOptions: {
 				},
 				onHide: onPanelHidden
 			});
-			
+
 			panelRpc = new rpc.RpcHandler(mainPanel.port, timers);
 
 			mainPanel.port.on('oauth-credentials-received', (hash: string) => {
@@ -108,12 +108,12 @@ function main() {
 			panelRpc.on('hide-panel', () => {
 				mainPanel.hide();
 			});
-			
+
 			panelRpc.onAsync('fetch-url', (done: (err: any, result: any) => void, url: string) => {
 				// copied from collectionutil.ts
-				function stringFromBuffer(buf: any) : string {
+				function stringFromBuffer(buf: any): string {
 					var str = '';
-					for (var i=0; i < buf.length; i++) {
+					for (var i = 0; i < buf.length; i++) {
 						str += String.fromCharCode(buf[i]);
 					}
 					return str;
@@ -154,8 +154,8 @@ function main() {
 		id: 'passcards-icon',
 		label: 'passcards Password Manager',
 		icon: {
-			'32' : self_.data.url('dist/icons/icon-32.png'),
-			'64' : self_.data.url('dist/icons/icon-64.png')
+			'32': self_.data.url('dist/icons/icon-32.png'),
+			'64': self_.data.url('dist/icons/icon-64.png')
 		},
 		onChange: showPanel
 	});

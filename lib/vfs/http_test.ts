@@ -13,7 +13,7 @@ var fileVfs = new nodefs.FileVFS(fsRoot);
 var httpVfsServer = new http_vfs.Server(fileVfs);
 var httpVfs = new http_vfs.Client('http://127.0.0.1:' + PORT);
 
-function setup() : Q.Promise<void> {
+function setup(): Q.Promise<void> {
 	return fileVfs.mkpath('.').then(() => {
 		return fileVfs.mkpath('test-dir');
 	}).then(() => {

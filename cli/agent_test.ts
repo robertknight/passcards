@@ -26,7 +26,7 @@ testLib.addAsyncTest('store keys', (assert) => {
 testLib.addAsyncTest('decrypt data', (assert) => {
 	var httpAgent = new agent.HttpKeyAgent();
 
-	var itemData = JSON.stringify({secret: 'secret-data'});
+	var itemData = JSON.stringify({ secret: 'secret-data' });
 
 	// note: The item password below contains bytes
 	// legal in UTF-8 to test exchange of binary key data with the
@@ -47,14 +47,14 @@ testLib.addAsyncTest('decrypt data', (assert) => {
 testLib.addAsyncTest('encrypt data', (assert) => {
 	var httpAgent = new agent.HttpKeyAgent();
 
-	var itemData = JSON.stringify({secret: 'secret-data'});
+	var itemData = JSON.stringify({ secret: 'secret-data' });
 	var itemPass = 'the master key';
 	var params = new key_agent.CryptoParams(key_agent.CryptoAlgorithm.AES128_OpenSSLKey);
 
 	return httpAgent.addKey('key2', itemPass).then(() => {
 		return httpAgent.encrypt('key2', itemData, params);
 	}).then((encrypted) => {
-		assert.equal(encrypted.slice(0,8), 'Salted__');
+		assert.equal(encrypted.slice(0, 8), 'Salted__');
 		assert.ok(encrypted != itemData);
 		return httpAgent.decrypt('key2', encrypted, params);
 	}).then((decrypted) => {

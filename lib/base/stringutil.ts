@@ -1,23 +1,23 @@
-export function startsWith(str: string, prefix: string) : boolean {
+export function startsWith(str: string, prefix: string): boolean {
 	return str.indexOf(prefix) == 0;
 }
 
-export function endsWith(str: string, suffix: string) : boolean {
+export function endsWith(str: string, suffix: string): boolean {
 	return str.length >= suffix.length && str.lastIndexOf(suffix) == str.length - suffix.length;
 }
 
-export function indexOfIgnoreCase(haystack: string, needle: string) : number {
+export function indexOfIgnoreCase(haystack: string, needle: string): number {
 	return haystack.toLowerCase().indexOf(needle.toLowerCase());
 }
 
-export function equalIgnoreCase(a: string, b: string) : boolean {
+export function equalIgnoreCase(a: string, b: string): boolean {
 	return indexOfIgnoreCase(a, b) == 0 && a.length == b.length;
 }
 
 /** Returns the part of @p str after the last occurence of @p delimiter
   * or the whole string otherwise.
   */
-export function suffix(str: string, delimiter: string) : string {
+export function suffix(str: string, delimiter: string): string {
 	var idx = str.lastIndexOf(delimiter);
 	if (idx == -1) {
 		idx = 0;
@@ -30,8 +30,8 @@ export function suffix(str: string, delimiter: string) : string {
 /** Returns a space-separated list of all the keys in @p obj which
   * have truthy values assigned to them.
   */
-export function truthyKeys(obj: Object) : string {
-	var keys : string[] = [];
+export function truthyKeys(obj: Object): string {
+	var keys: string[] = [];
 	Object.keys(obj).forEach((key) => {
 		if ((<any>obj)[key]) {
 			keys.push(key);
@@ -41,7 +41,7 @@ export function truthyKeys(obj: Object) : string {
 }
 
 /** Replace the last occurrence of @p pattern in @p subject with @p replacement */
-export function replaceLast(subject: string, pattern: string, replacement: string) : string {
+export function replaceLast(subject: string, pattern: string, replacement: string): string {
 	var index = subject.lastIndexOf(pattern);
 	if (index == -1) {
 		return subject;
@@ -57,14 +57,14 @@ export function replaceLast(subject: string, pattern: string, replacement: strin
   *
   * eg. parseCommandLine('one "two three" four\ five six') => ['one', 'two three', 'four five', 'six]
   */
-export function parseCommandLine(str: string) : string[] {
-	var tokens : string[] = [];
+export function parseCommandLine(str: string): string[] {
+	var tokens: string[] = [];
 	var token = '';
 
 	var escapeNext = false;
 	var quoteChar = '';
 
-	for (var i=0; i < str.length; i++) {
+	for (var i = 0; i < str.length; i++) {
 		if (escapeNext) {
 			token += str[i];
 			escapeNext = false;
@@ -98,9 +98,9 @@ export function parseCommandLine(str: string) : string[] {
 /** Return a string consisting of @p count consecutive repetition of
   * @p str.
   */
-export function repeat(str: string, count: number) : string {
+export function repeat(str: string, count: number): string {
 	var result = '';
-	for (var i=0; i < count; i++) {
+	for (var i = 0; i < count; i++) {
 		result += str;
 	}
 	return result;

@@ -32,16 +32,16 @@ export interface Options {
 	receiverPage: string;
 }
 
-function convertError(error: dropbox.ApiError) : err_util.ApiError {
+function convertError(error: dropbox.ApiError): err_util.ApiError {
 	return new err_util.ApiError(error.url, error.status, error.responseText);
 }
 
 export class DropboxVFS implements vfs.VFS {
-	private client : dropbox.Client;
+	private client: dropbox.Client;
 
 	constructor(options?: Options) {
 		var clientOpts = {
-			key : "3lq6pyowxfvad8z"
+			key: "3lq6pyowxfvad8z"
 		};
 		this.client = new dropbox.Client(clientOpts);
 
@@ -91,7 +91,7 @@ export class DropboxVFS implements vfs.VFS {
 		return account.promise;
 	}
 
-	isLoggedIn() : boolean {
+	isLoggedIn(): boolean {
 		return this.client.isAuthenticated();
 	}
 
@@ -124,7 +124,7 @@ export class DropboxVFS implements vfs.VFS {
 		return result.promise;
 	}
 
-	stat(path: string) : Q.Promise<vfs.FileInfo> {
+	stat(path: string): Q.Promise<vfs.FileInfo> {
 		var result = Q.defer<vfs.FileInfo>();
 		this.client.stat(path, {}, (err, stat) => {
 			if (err) {
@@ -142,7 +142,7 @@ export class DropboxVFS implements vfs.VFS {
 				cb(convertError(err), null);
 				return;
 			}
-			var fileList : vfs.FileInfo[] = [];
+			var fileList: vfs.FileInfo[] = [];
 			files.forEach((file) => {
 				fileList.push(this.toVfsFile(file));
 			});
@@ -150,7 +150,7 @@ export class DropboxVFS implements vfs.VFS {
 		});
 	}
 
-	read(path: string) : Q.Promise<string> {
+	read(path: string): Q.Promise<string> {
 		var result = Q.defer<string>();
 		this.client.readFile(path, {}, (error, content) => {
 			if (error) {
@@ -162,7 +162,7 @@ export class DropboxVFS implements vfs.VFS {
 		return result.promise;
 	}
 
-	write(path: string, content: string, options: vfs.WriteOptions = {}) : Q.Promise<void> {
+	write(path: string, content: string, options: vfs.WriteOptions = {}): Q.Promise<void> {
 		var result = Q.defer<void>();
 		var dropboxWriteOpts: dropbox.WriteFileOptions = {};
 
@@ -182,14 +182,14 @@ export class DropboxVFS implements vfs.VFS {
 		return result.promise;
 	}
 
-	list(path: string) : Q.Promise<vfs.FileInfo[]> {
+	list(path: string): Q.Promise<vfs.FileInfo[]> {
 		var result = Q.defer<vfs.FileInfo[]>();
 		this.client.readdir(path, {}, (error, names, folderInfo, files) => {
 			if (error) {
 				result.reject(convertError(error));
 				return;
 			}
-			var fileList : vfs.FileInfo[] = [];
+			var fileList: vfs.FileInfo[] = [];
 			files.forEach((file) => {
 				fileList.push(this.toVfsFile(file));
 			});
@@ -198,7 +198,7 @@ export class DropboxVFS implements vfs.VFS {
 		return result.promise;
 	}
 
-	rm(path: string) : Q.Promise<void> {
+	rm(path: string): Q.Promise<void> {
 		var result = Q.defer<void>();
 		this.client.remove(path, (error) => {
 			if (error) {
@@ -218,7 +218,7 @@ export class DropboxVFS implements vfs.VFS {
 		this.client.setCredentials(credentials);
 	}
 
-	mkpath(path: string) : Q.Promise<void> {
+	mkpath(path: string): Q.Promise<void> {
 		var result = Q.defer<void>();
 		this.client.mkdir(path, (err, stat) => {
 			if (err) {
@@ -230,7 +230,7 @@ export class DropboxVFS implements vfs.VFS {
 		return result.promise;
 	}
 
-	private toVfsFile(file: dropbox.File.Stat) : vfs.FileInfo {
+	private toVfsFile(file: dropbox.File.Stat): vfs.FileInfo {
 		return {
 			name: file.name,
 			path: file.path,

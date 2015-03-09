@@ -2,14 +2,14 @@ import item_search = require('./item_search');
 import item_store = require('./item_store');
 import testLib = require('./test');
 
-function itemWithTitleAndUrl(title: string, url: string) : item_store.Item {
+function itemWithTitleAndUrl(title: string, url: string): item_store.Item {
 	var item = new item_store.Item();
 	item.title = title;
 	item.locations.push(url);
 	return item;
 }
 
-function formField(name: string, type: item_store.FormFieldType, value: string) : item_store.WebFormField {
+function formField(name: string, type: item_store.FormFieldType, value: string): item_store.WebFormField {
 	var field = new item_store.WebFormField;
 	field.name = name;
 	field.type = type;

@@ -60,87 +60,87 @@ export class ItemTypes {
 }
 
 /** Map of item type codes to human-readable item type names */
-export var ITEM_TYPES : ItemTypeMap = {
+export var ITEM_TYPES: ItemTypeMap = {
 	"webforms.WebForm": {
-		name:       "Login",
+		name: "Login",
 		shortAlias: "login",
 	},
 	"wallet.financial.CreditCard": {
-		name:       "Credit Card",
+		name: "Credit Card",
 		shortAlias: "card",
 	},
 	"wallet.computer.Router": {
-		name:       "Wireless Router",
+		name: "Wireless Router",
 		shortAlias: "router",
 	},
 	"securenotes.SecureNote": {
-		name:       "Secure Note",
+		name: "Secure Note",
 		shortAlias: "note",
 	},
 	"passwords.Password": {
-		name:       "Password",
+		name: "Password",
 		shortAlias: "pass",
 	},
 	"wallet.onlineservices.Email.v2": {
-		name:       "Email Account",
+		name: "Email Account",
 		shortAlias: "email",
 	},
 	"system.folder.Regular": {
-		name:       "Folder",
+		name: "Folder",
 		shortAlias: "folder",
 	},
 	"system.folder.SavedSearch": {
-		name:       "Smart Folder",
+		name: "Smart Folder",
 		shortAlias: "smart-folder",
 	},
 	"wallet.financial.BankAccountUS": {
-		name:       "Bank Account",
+		name: "Bank Account",
 		shortAlias: "bank",
 	},
 	"wallet.computer.Database": {
-		name:       "Database",
+		name: "Database",
 		shortAlias: "db",
 	},
 	"wallet.government.DriversLicense": {
-		name:       "Driver's License",
+		name: "Driver's License",
 		shortAlias: "driver",
 	},
 	"wallet.membership.Membership": {
-		name:       "Membership",
+		name: "Membership",
 		shortAlias: "membership",
 	},
 	"wallet.government.HuntingLicense": {
-		name:       "Outdoor License",
+		name: "Outdoor License",
 		shortAlias: "outdoor",
 	},
 	"wallet.government.Passport": {
-		name:       "Passport",
+		name: "Passport",
 		shortAlias: "passport",
 	},
 	"wallet.membership.RewardProgram": {
-		name:       "Reward Program",
+		name: "Reward Program",
 		shortAlias: "reward",
 	},
 	"wallet.computer.UnixServer": {
-		name:       "Unix Server",
+		name: "Unix Server",
 		shortAlias: "server",
 	},
 	"wallet.government.SsnUS": {
-		name:       "Social Security Number",
+		name: "Social Security Number",
 		shortAlias: "social",
 	},
 	"wallet.computer.License": {
-		name:       "Software License",
+		name: "Software License",
 		shortAlias: "software",
 	},
 	"identities.Identity": {
-		name:       "Identity",
+		name: "Identity",
 		shortAlias: "id",
 	},
 	// internal entry type created for items
 	// that have been removed from the trash
 	"system.Tombstone": {
-		name:       "Tombstone",
+		name: "Tombstone",
 		shortAlias: "tombstone",
 	},
 };
@@ -154,13 +154,13 @@ export interface ItemAndContent {
 }
 
 export interface ItemTypeInfo {
-	name : string;
-	shortAlias : string;
+	name: string;
+	shortAlias: string;
 }
 
 export interface ItemTypeMap {
 	// map of ItemType -> ItemTypeInfo
-	[index: string] : ItemTypeInfo;
+	[index: string]: ItemTypeInfo;
 }
 
 export class UnsavedItemError extends err_util.BaseError {
@@ -203,7 +203,7 @@ export class Item {
 	typeName: ItemType;
 	title: string;
 	openContents: ItemOpenContents;
-	
+
 	locations: string[];
 	account: string;
 
@@ -211,7 +211,7 @@ export class Item {
 	  * via setContent() or decrypted on-demand by
 	  * getContent()
 	  */
-	private content : ItemContent;
+	private content: ItemContent;
 
 	/** Create a new item. @p store is the store
 	  * to associate the new item with. This can
@@ -222,7 +222,7 @@ export class Item {
 	  * Otherwise a random new UUID will be allocated for
 	  * the item.
 	  */
-	constructor(store? : Store, uuid? : string) {
+	constructor(store?: Store, uuid?: string) {
 		this.store = store;
 
 		this.uuid = uuid || crypto.newUUID();
@@ -245,7 +245,7 @@ export class Item {
 	  * The item's store must be unlocked using Store.unlock() before
 	  * item content can be retrieved.
 	  */
-	getContent() : Q.Promise<ItemContent> {
+	getContent(): Q.Promise<ItemContent> {
 		if (this.content) {
 			return Q(this.content);
 		} else if (!this.store) {
@@ -263,7 +263,7 @@ export class Item {
 	/** Return the raw decrypted JSON data for an item.
 	  * This is only available for saved items.
 	  */
-	getRawDecryptedData() : Q.Promise<string> {
+	getRawDecryptedData(): Q.Promise<string> {
 		if (!this.store) {
 			return Q.reject<string>(new UnsavedItemError());
 		}
@@ -271,7 +271,7 @@ export class Item {
 	}
 
 	/** Save this item to its associated store */
-	save() : Q.Promise<void> {
+	save(): Q.Promise<void> {
 		if (!this.store) {
 			return Q.reject<void>(new UnsavedItemError());
 		}
@@ -279,7 +279,7 @@ export class Item {
 	}
 
 	/** Save this item to the specified store */
-	saveTo(store: Store) : Q.Promise<void> {
+	saveTo(store: Store): Q.Promise<void> {
 		if (!this.content && !this.isSaved()) {
 			return Q.reject<void>(new Error('Unable to save new item, no content set'));
 		}
@@ -291,7 +291,7 @@ export class Item {
 	  * This erases all of the item's data and leaves behind a 'tombstone'
 	  * entry for syncing purposes.
 	  */
-	remove() : Q.Promise<void> {
+	remove(): Q.Promise<void> {
 		if (!this.store) {
 			return Q.reject<void>(new UnsavedItemError());
 		}
@@ -314,26 +314,26 @@ export class Item {
 	  * These 'tombstone' markers are preserved so that deletions are synced between
 	  * different 1Password clients.
 	  */
-	isTombstone() : boolean {
+	isTombstone(): boolean {
 		return this.typeName == ItemTypes.TOMBSTONE;
 	}
 
 	/** Returns true if this is a regular item - ie. not a folder,
 	  * tombstone or saved search.
 	  */
-	isRegularItem() : boolean {
+	isRegularItem(): boolean {
 		return !stringutil.startsWith(<string>this.typeName, 'system.');
 	}
 
 	/** Returns a shortened version of the item's UUID, suitable for disambiguation
 	  * between different items with the same type and title.
 	  */
-	shortID() : string {
-		return this.uuid.slice(0,4);
+	shortID(): string {
+		return this.uuid.slice(0, 4);
 	}
 
 	/** Returns the human-readable type name for this item's type. */
-	typeDescription() : string {
+	typeDescription(): string {
 		if (ITEM_TYPES[<string>this.typeName]) {
 			return ITEM_TYPES[<string>this.typeName].name;
 		} else {
@@ -342,7 +342,7 @@ export class Item {
 	}
 
 	/** Returns true if this item has been saved to a store. */
-	isSaved() : boolean {
+	isSaved(): boolean {
 		return this.store && this.updatedAt != null;
 	}
 
@@ -372,7 +372,7 @@ export class Item {
 	/** Returns the main URL associated with this item or an empty
 	  * string if there are no associated URLs.
 	  */
-	primaryLocation() : string {
+	primaryLocation(): string {
 		if (this.locations.length > 0) {
 			return this.locations[0];
 		} else {
@@ -399,13 +399,13 @@ export class Item {
   * encrypted in a vault.
   */
 export class ItemContent {
-	sections : ItemSection[];
-	urls : ItemUrl[];
-	notes : string;
-	formFields : WebFormField[];
-	htmlMethod : string;
-	htmlAction : string;
-	htmlId : string;
+	sections: ItemSection[];
+	urls: ItemUrl[];
+	notes: string;
+	formFields: WebFormField[];
+	htmlMethod: string;
+	htmlAction: string;
+	htmlId: string;
 
 	constructor() {
 		this.sections = [];
@@ -424,12 +424,12 @@ export class ItemContent {
 	  *
 	  * Returns an empty string if the item has no associated account.
 	  */
-	account() : string {
+	account(): string {
 		var field = this.accountField();
 		return field ? field.value : '';
 	}
 
-	accountField() : WebFormField {
+	accountField(): WebFormField {
 		var accountFields = underscore.filter(this.formFields, (field) => {
 			return field.designation == 'username';
 		});
@@ -444,12 +444,12 @@ export class ItemContent {
 	  * Returns an empty password if the item has no associated
 	  * account.
 	  */
-	password() : string {
+	password(): string {
 		var field = this.passwordField();
 		return field ? field.value : '';
 	}
 
-	passwordField() : WebFormField {
+	passwordField(): WebFormField {
 		var passFields = underscore.filter(this.formFields, (field) => {
 			return field.designation == 'password';
 		});
@@ -461,22 +461,22 @@ export class ItemContent {
   * as part of the overview data.
   */
 export class ItemOpenContents {
-	tags : string[];
+	tags: string[];
 
 	/** Indicates where this item will be displayed.
 	  * Known values are 'Always' (show everywhere)
 	  * and 'Never' (never shown in browser)
 	  */
-	scope : string;
+	scope: string;
 }
 
 export class ItemSection {
 	/** Internal name of the section. */
-	name : string;
+	name: string;
 
 	/** User-visible title for the section. */
-	title : string;
-	fields : ItemField[];
+	title: string;
+	fields: ItemField[];
 
 	constructor() {
 		this.fields = [];
@@ -486,21 +486,21 @@ export class ItemSection {
 }
 
 export class ItemField {
-	kind : FieldType;
-	name : string;
-	title : string;
-	value : any;
+	kind: FieldType;
+	name: string;
+	title: string;
+	value: any;
 
-	valueString() : string {
+	valueString(): string {
 		switch (this.kind) {
-		case FieldType.Date:
-			return dateutil.dateFromUnixTimestamp(this.value).toString();
-		case FieldType.MonthYear:
-			var month = this.value % 100;
-			var year = (this.value / 100) % 100;
-			return sprintf('%02d/%d', month, year);
-		default:
-			return this.value;
+			case FieldType.Date:
+				return dateutil.dateFromUnixTimestamp(this.value).toString();
+			case FieldType.MonthYear:
+				var month = this.value % 100;
+				var year = (this.value / 100) % 100;
+				return sprintf('%02d/%d', month, year);
+			default:
+				return this.value;
 		}
 	}
 }
@@ -515,27 +515,27 @@ export enum FormFieldType {
 
 /** Saved value of an input field in a web form. */
 export class WebFormField {
-	value : string;
+	value: string;
 
 	/** 'id' attribute of the <input> element */
-	id : string;
+	id: string;
 
 	/** Name of the field. For web forms this is the 'name'
 	  * attribute of the <input> element.
 	  */
-	name : string;
+	name: string;
 
 	/** Type of input element used for this form field */
-	type : FormFieldType;
+	type: FormFieldType;
 
 	/** Purpose of the field. Known values are 'username', 'password' */
-	designation : string;
+	designation: string;
 }
 
 /** Entry in an item's 'Websites' list. */
 export class ItemUrl {
-	label : string;
-	url : string;
+	label: string;
+	url: string;
 }
 
 export enum FieldType {
@@ -576,57 +576,57 @@ export interface Store {
 	onUnlock: event_stream.EventStream<void>;
 
 	/** Unlock the vault */
-	unlock(password: string) : Q.Promise<void>;
+	unlock(password: string): Q.Promise<void>;
 
 	/** List all of the items in the store */
-	listItems(opts?: ListItemsOptions) : Q.Promise<Item[]>;
+	listItems(opts?: ListItemsOptions): Q.Promise<Item[]>;
 
 	/** Load the item with a specific ID.
 	  * If a revision is specified, load a specific version of an item,
 	  * otherwise load the current version of the item.
 	  */
-	loadItem(uuid: string, revision?: string) : Q.Promise<Item>;
+	loadItem(uuid: string, revision?: string): Q.Promise<Item>;
 
 	/** Save changes to the overview data and item content
 	  * back to the store. The @p source specifies whether
 	  * this update is a result of syncing changes
 	  * with another store or a local modification.
 	  */
-	saveItem(item: Item, source?: ChangeSource) : Q.Promise<void>;
+	saveItem(item: Item, source?: ChangeSource): Q.Promise<void>;
 
 	/** Fetch and decrypt the item's secure contents. */
-	getContent(item: Item) : Q.Promise<ItemContent>;
+	getContent(item: Item): Q.Promise<ItemContent>;
 
 	/** Fetch and decrypt item's secure contents and return
 	  * as a raw string - ie. without parsing the data and converting
 	  * to an ItemContent instance.
 	  */
-	getRawDecryptedData(item: Item) : Q.Promise<string>;
+	getRawDecryptedData(item: Item): Q.Promise<string>;
 
 	/** Retrieve the master encryption keys for this store. */
-	listKeys() : Q.Promise<key_agent.Key[]>;
+	listKeys(): Q.Promise<key_agent.Key[]>;
 
 	/** Update the encryption keys in this store. */
-	saveKeys(keys: key_agent.Key[], hint: string) : Q.Promise<void>;
+	saveKeys(keys: key_agent.Key[], hint: string): Q.Promise<void>;
 
 	/** Clear the store. This can be used to wipe stores
 	  * which cache data for offline use.
 	  */
-	clear() : Q.Promise<void>;
+	clear(): Q.Promise<void>;
 
 	/** Return the user-provided password hint. */
-	passwordHint() : Q.Promise<string>;
+	passwordHint(): Q.Promise<string>;
 }
 
 export interface SyncableStore extends Store {
 	/** Returns the last-synced revision of an item. */
-	getLastSyncedRevision(item: Item) : Q.Promise<string>;
-	setLastSyncedRevision(item: Item, revision: string) : Q.Promise<void>;
+	getLastSyncedRevision(item: Item): Q.Promise<string>;
+	setLastSyncedRevision(item: Item, revision: string): Q.Promise<void>;
 
 	/** Retrieve a map of (item ID -> last-sync timestamp) for
 	  * each item.
 	  */
-	lastSyncTimestamps() : Q.Promise<Map<string,Date>>;
+	lastSyncTimestamps(): Q.Promise<Map<string, Date>>;
 }
 
 /** Copy an item and its contents. If @p uuid is set it is
@@ -656,7 +656,7 @@ export function cloneItem(itemAndContent: ItemAndContent, uuid?: string) {
 	var clonedContent = <ItemContent>clone(itemAndContent.content);
 	clonedItem.setContent(clonedContent);
 
-	return {item: clonedItem, content: clonedContent};
+	return { item: clonedItem, content: clonedContent };
 }
 
 /** Generate a content-based revision ID for an item.

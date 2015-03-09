@@ -19,8 +19,8 @@ import site_info_service = require('./service');
 import stringutil = require('../base/stringutil');
 import testLib = require('../test');
 
-var urlFetcher : site_info_service.UrlFetcher = {
-	fetch(url: string) : Q.Promise<site_info_service.UrlResponse> {
+var urlFetcher: site_info_service.UrlFetcher = {
+	fetch(url: string): Q.Promise<site_info_service.UrlResponse> {
 		return http_client.request('GET', url).then((reply) => {
 			return {
 				status: reply.status,
@@ -31,7 +31,7 @@ var urlFetcher : site_info_service.UrlFetcher = {
 };
 
 var TEST_SITE_PATH = path.join(stringutil.replaceLast(path.dirname(module.filename), 'build/', ''),
-  '../test-data/site-icons');
+	'../test-data/site-icons');
 
 testLib.addTest('extract page links', (assert) => {
 	var extractor = new site_info_service.PageLinkFetcher(urlFetcher);
@@ -45,26 +45,26 @@ testLib.addTest('extract page links', (assert) => {
 			type: site_info_service.MetaTagType.Meta,
 			rel: 'og:image',
 			url: 'testicon.png'
-		},{
-			type: site_info_service.MetaTagType.Link,
-			rel: 'shortcut icon',
-			url: 'http://www.foobar.com/icon.png'
-		}]
-	},{
-		content: '<LINK REL="shortcut ICON" HREF=favicon.png>',
-		links: [{
-			type: site_info_service.MetaTagType.Link,
-			rel: 'shortcut icon',
-			url: 'favicon.png'
-		}]
-	},{
-		content:'<link\nrel="shortcut icon" href="ico.png">',
-		links: [{
-			type: site_info_service.MetaTagType.Link,
-			rel: 'shortcut icon',
-			url: 'ico.png'
-		}]
-	}];
+		}, {
+				type: site_info_service.MetaTagType.Link,
+				rel: 'shortcut icon',
+				url: 'http://www.foobar.com/icon.png'
+			}]
+	}, {
+			content: '<LINK REL="shortcut ICON" HREF=favicon.png>',
+			links: [{
+				type: site_info_service.MetaTagType.Link,
+				rel: 'shortcut icon',
+				url: 'favicon.png'
+			}]
+		}, {
+			content: '<link\nrel="shortcut icon" href="ico.png">',
+			links: [{
+				type: site_info_service.MetaTagType.Link,
+				rel: 'shortcut icon',
+				url: 'ico.png'
+			}]
+		}];
 
 	testCases.forEach((testCase) => {
 		var links = extractor.extractLinks(testCase.content);
@@ -72,7 +72,7 @@ testLib.addTest('extract page links', (assert) => {
 	});
 });
 
-function extractIconLinks(contentFilePath: string) : site_info_service.PageLink[] {
+function extractIconLinks(contentFilePath: string): site_info_service.PageLink[] {
 	var extractor = new site_info_service.PageLinkFetcher(urlFetcher);
 	var content = fs.readFileSync(path.join(TEST_SITE_PATH, contentFilePath)).toString();
 	return underscore.filter(extractor.extractLinks(content), (link) => {
@@ -122,11 +122,11 @@ testLib.addTest('read JPEG icon', (assert) => {
 		path: 'wikipedia/wikipedia.jpg',
 		width: 144,
 		height: 144
-	},{
-		path: 'wikipedia/wikipedia-progressive.jpg',
-		width: 183,
-		height: 200
-	}];
+	}, {
+			path: 'wikipedia/wikipedia-progressive.jpg',
+			width: 183,
+			height: 200
+		}];
 
 	icons.forEach((icon) => {
 		var iconPath = path.join(TEST_SITE_PATH, icon.path);
@@ -144,9 +144,9 @@ testLib.addTest('read ICO icon', (assert) => {
 	assert.equal(icons.length, 3);
 
 	var expectedIcons = [
-	  { width: 16, height: 16, data: 'wikipedia/linked-icons/favicon-16x16.bmp' },
-	  { width: 32, height: 32, data: 'wikipedia/linked-icons/favicon-32x32.bmp' },
-	  { width: 48, height: 48, data: 'wikipedia/linked-icons/favicon-48x48.bmp' }
+		{ width: 16, height: 16, data: 'wikipedia/linked-icons/favicon-16x16.bmp' },
+		{ width: 32, height: 32, data: 'wikipedia/linked-icons/favicon-32x32.bmp' },
+		{ width: 48, height: 48, data: 'wikipedia/linked-icons/favicon-48x48.bmp' }
 	];
 
 	icons.forEach((icon, index) => {
@@ -194,7 +194,7 @@ testLib.addTest('extract largest ICO icon', (assert) => {
 
 	var expectedData = fs.readFileSync(path.join(TEST_SITE_PATH, 'wikipedia/linked-icons/favicon-48x48.bmp'));
 	assert.deepEqual(collection_util.bufferToArray(icon.data),
-	                 collection_util.bufferToArray(expectedData));
+		collection_util.bufferToArray(expectedData));
 });
 
 interface ServeFetchResult {
@@ -203,7 +203,7 @@ interface ServeFetchResult {
 	provider: site_info.SiteInfoProvider;
 }
 
-function serveAndFetchIcons(port: number, siteRoot: string, queryPath: string) : Q.Promise<ServeFetchResult> {
+function serveAndFetchIcons(port: number, siteRoot: string, queryPath: string): Q.Promise<ServeFetchResult> {
 	var server = new http_vfs.Server(new node_vfs.FileVFS(siteRoot));
 	var provider = new site_info_service.SiteInfoService(urlFetcher);
 	var result: site_info.QueryResult;
@@ -232,7 +232,7 @@ function serveAndFetchIcons(port: number, siteRoot: string, queryPath: string) :
 }
 
 var maxPort = 8561;
-function allocatePort() : number {
+function allocatePort(): number {
 	var port = maxPort;
 	++maxPort;
 	return port;
@@ -249,7 +249,7 @@ testLib.addAsyncTest('fail to fetch icons', (assert) => {
 
 testLib.addAsyncTest('fetch static links', (assert) => {
 	var sitePath = path.join(TEST_SITE_PATH, 'wikipedia/standard-icons');
-	return serveAndFetchIcons(allocatePort(), sitePath,'/').then((result) => {
+	return serveAndFetchIcons(allocatePort(), sitePath, '/').then((result) => {
 		assert.equal(result.queryResult.state, site_info.QueryState.Ready);
 		assert.equal(result.queryResult.info.icons.length, 2);
 		result.server.close();
@@ -258,7 +258,7 @@ testLib.addAsyncTest('fetch static links', (assert) => {
 
 testLib.addAsyncTest('fetch page links', (assert) => {
 	var sitePath = path.join(TEST_SITE_PATH, 'wikipedia/linked-icons');
-	return serveAndFetchIcons(allocatePort(), sitePath,'/index.html').then((result) => {
+	return serveAndFetchIcons(allocatePort(), sitePath, '/index.html').then((result) => {
 		assert.equal(result.queryResult.state, site_info.QueryState.Ready);
 		assert.equal(result.queryResult.info.icons.length, 3);
 		result.server.close();

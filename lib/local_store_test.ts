@@ -14,7 +14,7 @@ import stringutil = require('./base/stringutil');
 import testLib = require('./test');
 
 class FakeKeyValueDatabase implements key_value_store.Database {
-	stores: Map<string,FakeKeyValueStore>;
+	stores: Map<string, FakeKeyValueStore>;
 	version: number;
 
 	constructor() {
@@ -39,7 +39,7 @@ class FakeKeyValueDatabase implements key_value_store.Database {
 					});
 					return keys;
 				},
-				currentVersion : () => {
+				currentVersion: () => {
 					return this.version;
 				}
 			});
@@ -64,16 +64,16 @@ class FakeKeyValueDatabase implements key_value_store.Database {
 	}
 
 	private reset() {
-		this.stores = new collectionutil.PMap<string,FakeKeyValueStore>();
+		this.stores = new collectionutil.PMap<string, FakeKeyValueStore>();
 		this.version = 0;
 	}
 }
 
 class FakeKeyValueStore implements key_value_store.ObjectStore {
-	items: Map<string,any>;
+	items: Map<string, any>;
 
 	constructor() {
-		this.items = new collectionutil.PMap<string,any>();
+		this.items = new collectionutil.PMap<string, any>();
 	}
 
 	set<T>(key: string, value: T) {
@@ -111,7 +111,7 @@ interface Env {
 }
 
 // TODO - Move to onepass_crypto
-function generateKey(password: string, iterations: number) : key_agent.Key {
+function generateKey(password: string, iterations: number): key_agent.Key {
 	var masterKey = crypto.randomBytes(1024);
 	var salt = crypto.randomBytes(8);
 	var derivedKey = key_agent.keyFromPasswordSync(password, salt, iterations);
@@ -127,7 +127,7 @@ function generateKey(password: string, iterations: number) : key_agent.Key {
 	return key;
 }
 
-function setupEnv() : Env {
+function setupEnv(): Env {
 	var keyAgent = new key_agent.SimpleKeyAgent();
 	var database = new FakeKeyValueDatabase();
 
@@ -183,12 +183,12 @@ testLib.addAsyncTest('save and load keys and hint', (assert) => {
 
 function makeItem() {
 	return new item_builder.Builder(item_store.ItemTypes.LOGIN)
-	 .setTitle('test item')
-	 .addLogin('foo.bar@gmail.com')
-	 .addPassword('pass3')
-	 .addUrl('acme.org')
-	 .addUrl('foo.acme.org')
-	 .item();
+	.setTitle('test item')
+	.addLogin('foo.bar@gmail.com')
+	.addPassword('pass3')
+	.addUrl('acme.org')
+	.addUrl('foo.acme.org')
+	.item();
 }
 
 testLib.addAsyncTest('save and load items', (assert) => {
@@ -196,7 +196,7 @@ testLib.addAsyncTest('save and load items', (assert) => {
 	var store = new local_store.Store(env.database, env.databaseName, env.keyAgent);
 	var item = makeItem();
 
-	return store.saveKeys([env.masterKey],'').then(() => {
+	return store.saveKeys([env.masterKey], '').then(() => {
 		return store.unlock(env.masterPass);
 	}).then(() => {
 		return item.saveTo(store);
@@ -216,9 +216,9 @@ testLib.addAsyncTest('save and load items', (assert) => {
 	}).then((content) => {
 		assert.deepEqual(content.urls, [{
 			label: 'website', url: 'acme.org'
-		},{
-			label: 'website', url: 'foo.acme.org'
-		}]);
+		}, {
+				label: 'website', url: 'foo.acme.org'
+			}]);
 	});
 });
 
@@ -295,7 +295,7 @@ testLib.addAsyncTest('clear store', (assert) => {
 testLib.addAsyncTest('unlock store with no keys', (assert) => {
 	var env = setupEnv();
 	var store = new local_store.Store(env.database, env.databaseName, env.keyAgent);
-	
+
 	return store.unlock(env.masterPass).then(() => {
 		return false;
 	}).catch((err) => {

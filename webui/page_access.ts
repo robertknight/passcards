@@ -19,7 +19,7 @@ class ExtensionUrlFetcher {
 		this.rpc = rpc;
 	}
 
-	fetch(url: string) : Q.Promise<site_info_service.UrlResponse> {
+	fetch(url: string): Q.Promise<site_info_service.UrlResponse> {
 		var result = Q.defer<site_info_service.UrlResponse>();
 		this.rpc.call('fetch-url', [url], result.makeNodeResolver());
 		return result.promise;
@@ -27,8 +27,8 @@ class ExtensionUrlFetcher {
 }
 
 export interface ClipboardAccess {
-	clipboardAvailable() : boolean;
-	copy(type: string, data: string) : void;
+	clipboardAvailable(): boolean;
+	copy(type: string, data: string): void;
 }
 
 /** Interface for interacting with forms in the current web page
@@ -43,15 +43,15 @@ export interface PageAccess {
 	  * disallowed, so a redirect back to a dummy http://
 	  * URL is used, which is intercepted by the add-on.
 	  */
-	oauthRedirectUrl() : string;
+	oauthRedirectUrl(): string;
 
 	/** Fetch a list of auto-fillable fields on the current page. */
-	findForms(callback: (formList: forms.FieldGroup[]) => void) : void;
+	findForms(callback: (formList: forms.FieldGroup[]) => void): void;
 
 	/** Auto-fill fields on the current page.
 	  * Returns a promise for the number of fields that were auto-filled.
 	  */
-	autofill(fields: forms.AutoFillEntry[]) : Q.Promise<number>;
+	autofill(fields: forms.AutoFillEntry[]): Q.Promise<number>;
 	
 	/** Emits events when the extension's UI is shown. */
 	showEvents: event_stream.EventStream<void>;
@@ -67,7 +67,7 @@ export interface PageAccess {
 	/** Interface to retrieve info about URLs associated
 	  * with items.
 	  */
-	siteInfoProvider() : site_info.SiteInfoProvider;
+	siteInfoProvider(): site_info.SiteInfoProvider;
 
 	/** Hide the passcards item list panel. */
 	hidePanel(): void;
@@ -143,13 +143,13 @@ export class ExtensionPageAccess implements PageAccess, ClipboardAccess {
 		return this.connector.oauthRedirectUrl;
 	}
 
-	autofill(fields: forms.AutoFillEntry[]) : Q.Promise<number> {
+	autofill(fields: forms.AutoFillEntry[]): Q.Promise<number> {
 		var filled = Q.defer<number>();
 		this.rpc.call('autofill', [fields], filled.makeNodeResolver());
 		return filled.promise;
 	}
 
-	siteInfoProvider() : site_info.SiteInfoProvider {
+	siteInfoProvider(): site_info.SiteInfoProvider {
 		return this.siteInfoService;
 	}
 
@@ -174,7 +174,7 @@ export class ExtensionPageAccess implements PageAccess, ClipboardAccess {
   * from the popup
   */
 interface ChromeExtBackgroundWindow extends Window {
-	notifyPageChanged(tab: chrome.tabs.Tab) : void;
+	notifyPageChanged(tab: chrome.tabs.Tab): void;
 }
 
 /** Connector between the main app and the active tab in the Chrome
@@ -183,13 +183,13 @@ interface ChromeExtBackgroundWindow extends Window {
 export class ChromeExtensionPageAccess implements PageAccess, ClipboardAccess {
 	private siteInfoService: site_info_service.SiteInfoService;
 	private tabPorts: {
-		[index: number] : rpc.RpcHandler;
+		[index: number]: rpc.RpcHandler;
 	};
 
 	showEvents: event_stream.EventStream<void>;
 	pageChanged: event_stream.EventStream<string>;
 	currentUrl: string;
-	
+
 	constructor() {
 		this.currentUrl = '';
 		this.showEvents = new event_stream.EventStream<void>();
@@ -223,18 +223,18 @@ export class ChromeExtensionPageAccess implements PageAccess, ClipboardAccess {
 					file: 'data/dist/scripts/page_bundle.js'
 				});
 			}
-			
+
 			this.showEvents.publish(null);
 		};
 	}
 
-	oauthRedirectUrl() : string {
+	oauthRedirectUrl(): string {
 		// Chrome extension uses a custom driver
 		// instead of the standard redirect flow
 		return null;
 	}
 
-	findForms(callback: (formList: forms.FieldGroup[]) => void) : void {
+	findForms(callback: (formList: forms.FieldGroup[]) => void): void {
 		this.connectToCurrentTab().then((rpc) => {
 			rpc.call('find-fields', [], (err: any, forms: forms.FieldGroup[]) => {
 				if (err) {
@@ -247,19 +247,19 @@ export class ChromeExtensionPageAccess implements PageAccess, ClipboardAccess {
 		});
 	}
 
-	autofill(fields: forms.AutoFillEntry[]) : Q.Promise<number> {
+	autofill(fields: forms.AutoFillEntry[]): Q.Promise<number> {
 		var filled = Q.defer<number>();
 		this.connectToCurrentTab().then((rpc) => {
 			rpc.call('autofill', [fields], filled.makeNodeResolver());
 		});
 		return filled.promise;
 	}
-	
-	siteInfoProvider() : site_info.SiteInfoProvider {
+
+	siteInfoProvider(): site_info.SiteInfoProvider {
 		return this.siteInfoService;
 	}
 
-	hidePanel() : void {
+	hidePanel(): void {
 		chrome.browserAction.getPopup({}, (doc) => {
 			var appWindow = <any>window;
 			appWindow.hidePanel();
@@ -279,10 +279,10 @@ export class ChromeExtensionPageAccess implements PageAccess, ClipboardAccess {
 		return true;
 	}
 
-	private connectToCurrentTab() : Q.Promise<rpc.RpcHandler> {
+	private connectToCurrentTab(): Q.Promise<rpc.RpcHandler> {
 		var tabRpc = Q.defer<rpc.RpcHandler>();
 		chrome.windows.getCurrent((window) => {
-			chrome.tabs.query({active:true, windowId: window.id}, (tabs) => {
+			chrome.tabs.query({ active: true, windowId: window.id }, (tabs) => {
 				if (tabs.length == 0) {
 					tabRpc.reject(new Error('No tabs active'));
 					return;

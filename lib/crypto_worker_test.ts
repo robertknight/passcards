@@ -13,11 +13,11 @@ testLib.addAsyncTest('worker test', (assert) => {
 
 	var rpcHandler = new rpc.RpcHandler(new rpc.WindowMessagePort(worker, '*', 'crypto-worker', 'passcards'));
 	rpcHandler.call('pbkdf2Block', ['inputPass', 'inputSalt', 100 /* iterations */, 0 /* blockIndex */],
-	  (err: any, block: string) => {
-		assert.equal(err, null);
-		assert.equal(block.length, 20);
-		worker.terminate();
-		testLib.continueTests();
-	});
+		(err: any, block: string) => {
+			assert.equal(err, null);
+			assert.equal(block.length, 20);
+			worker.terminate();
+			testLib.continueTests();
+		});
 });
 

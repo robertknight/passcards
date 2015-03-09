@@ -7,7 +7,7 @@ export interface FocusMixinProps {
 }
 
 interface Focusable {
-	setFocus?() : void;
+	setFocus? (): void;
 }
 
 export class FocusMixin extends typed_react.Mixin<FocusMixinProps, {}> {

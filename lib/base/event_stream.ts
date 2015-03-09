@@ -1,7 +1,7 @@
 /// <reference path="../../typings/DefinitelyTyped/underscore/underscore.d.ts" />
 
 export interface EventListener<T> {
-	(event?: T) : void;
+	(event?: T): void;
 }
 
 interface ListenerAndContext<T> {
@@ -32,7 +32,7 @@ export class EventStream<T> {
 	  *
 	  * Listeners are invoked in the order they were registered.
 	  */
-	listen(callback: EventListener<T>, context?: any) : EventListener<T> {
+	listen(callback: EventListener<T>, context?: any): EventListener<T> {
 		if (this.listeners.length >= this.maxListeners) {
 			// if the number of listeners for a single event stream grows large,
 			// we may have a leak. Output a warning
@@ -55,7 +55,7 @@ export class EventStream<T> {
 	/** Remove all listeners which were added with the given
 	  * @p callback
 	  */
-	ignore(callback: EventListener<T>) : void {
+	ignore(callback: EventListener<T>): void {
 		this.listeners = this.listeners.filter((listener) => {
 			return listener.callback !== callback;
 		});
@@ -64,7 +64,7 @@ export class EventStream<T> {
 	/** Remove all listeners which were added with the given
 	  * @p context object
 	  */
-	ignoreContext(context: any) : void {
+	ignoreContext(context: any): void {
 		this.listeners = this.listeners.filter((listener) => {
 			return listener.context !== context;
 		});
@@ -73,7 +73,7 @@ export class EventStream<T> {
 	/** Publish an event to all registered listeners, in the order
 	  * they were registered.
 	  */
-	publish(event: T) : void {
+	publish(event: T): void {
 		this.listeners.forEach((listener) => {
 			listener.callback(event);
 		});

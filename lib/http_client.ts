@@ -15,7 +15,7 @@ export interface Reply {
 	url: string;
 	status: number;
 	body: string;
-	headers: {[index: string] : string};
+	headers: { [index: string]: string };
 }
 
 export class BaseError extends err_util.BaseError {
@@ -26,7 +26,7 @@ export class BaseError extends err_util.BaseError {
 		this.reply = reply;
 	}
 
-	status() : number {
+	status(): number {
 		return this.reply.status;
 	}
 }
@@ -47,7 +47,7 @@ export class RedirectLimitExceeded extends BaseError {
   * and returns a promise for the content of the reply if it has
   * an expected status code or rejects the promise otherwise.
   */
-export function expect(reply: Q.Promise<Reply>, status: number) : Q.Promise<string> {
+export function expect(reply: Q.Promise<Reply>, status: number): Q.Promise<string> {
 	return reply.then((reply) => {
 		if (reply.status == status) {
 			return reply.body;
@@ -65,7 +65,7 @@ export interface RequestOptions {
 	redirectLimit: number;
 }
 
-export function get(url: string, opts?: RequestOptions) : Q.Promise<Reply> {
+export function get(url: string, opts?: RequestOptions): Q.Promise<Reply> {
 	var currentUrl = url;
 	var finalReply: Reply;
 	var redirectCount = 0;
@@ -101,7 +101,7 @@ export function get(url: string, opts?: RequestOptions) : Q.Promise<Reply> {
 interface RequestOpts {
 };
 
-export function request<T>(method: string, url: string, data?: T) : Q.Promise<Reply> {
+export function request<T>(method: string, url: string, data?: T): Q.Promise<Reply> {
 	var urlParts = urlLib.parse(url);
 
 	var requestOpts = {
@@ -125,7 +125,7 @@ export function request<T>(method: string, url: string, data?: T) : Q.Promise<Re
 	// but http-browserify simply appends '://' to the protocol when forming the URL.
 	//
 	// Would be fixed by https://github.com/substack/http-browserify/pull/42
-	requestOpts.scheme = requestOpts.scheme.replace(/:$/,'');
+	requestOpts.scheme = requestOpts.scheme.replace(/:$/, '');
 
 	var requestFunc: (opts: any, callback: (resp: http.ClientResponse) => void) => http.ClientRequest;
 	if (requestOpts.scheme == 'https') {
@@ -145,8 +145,8 @@ export function request<T>(method: string, url: string, data?: T) : Q.Promise<Re
 				headers: resp.headers
 			});
 		}, (err) => {
-			response.reject(err);
-		}).done();
+				response.reject(err);
+			}).done();
 	});
 
 	if (env.isBrowser()) {

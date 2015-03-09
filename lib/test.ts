@@ -32,12 +32,12 @@ import env = require('./base/env');
   * failures and outputs diagnostics.
   */
 export interface Assert {
-	notEqual<T>(actual: T, notExpected: T, message?: string) : void;
-	equal<T>(actual: T, expected: T, message?: string) : void;
-	deepEqual<T>(actual: T, expected: T, message?: string) : void;
-	strictEqual<T>(actual: T, expected: T, message?: string) : void;
-	ok(result: boolean, message?: string) : void;
-	throws<T>(func: Function, expected?: T, message?: string) : void;
+	notEqual<T>(actual: T, notExpected: T, message?: string): void;
+	equal<T>(actual: T, expected: T, message?: string): void;
+	deepEqual<T>(actual: T, expected: T, message?: string): void;
+	strictEqual<T>(actual: T, expected: T, message?: string): void;
+	ok(result: boolean, message?: string): void;
+	throws<T>(func: Function, expected?: T, message?: string): void;
 }
 
 interface TestCase {
@@ -46,7 +46,7 @@ interface TestCase {
 	async: boolean;
 }
 
-var testList : TestCase[] = [];
+var testList: TestCase[] = [];
 var testStartTimer: number;
 
 function scheduleAutoStart() {
@@ -61,8 +61,8 @@ function scheduleAutoStart() {
   *
   * See qunit.test()
   */
-export function addTest(name : string, testFunc : (assert: Assert) => void) {
-	testList.push({name: name, testFunc: testFunc, async: false});
+export function addTest(name: string, testFunc: (assert: Assert) => void) {
+	testList.push({ name: name, testFunc: testFunc, async: false });
 	scheduleAutoStart();
 }
 
@@ -104,7 +104,7 @@ export function continueTests() {
 
 export interface TestStartParams {
 	name: string;
-	module : string;
+	module: string;
 }
 
 /** Add a setup function to invoke before each test case */
@@ -255,7 +255,7 @@ function run(tests: TestCase[]) {
  * expectedAdditions and expectedDeletions are arrays of '/'-separated paths
  * beginning with 'root/'
  */
-export function compareObjects(a: any, b: any, expectedAdditions?: string[], expectedDeletions?: string[]) : any[] {
+export function compareObjects(a: any, b: any, expectedAdditions?: string[], expectedDeletions?: string[]): any[] {
 	var diff = xdiff.diff(a, b);
 	if (!diff) {
 		// objects are exactly equal
@@ -266,8 +266,8 @@ export function compareObjects(a: any, b: any, expectedAdditions?: string[], exp
 	expectedDeletions = expectedDeletions || [];
 
 	return diff.filter((change: any[]) => {
-		var type : string = change[0];
-		var path : string = change[1].join('/');
+		var type: string = change[0];
+		var path: string = change[1].join('/');
 
 		if (type == 'set' && expectedAdditions.indexOf(path) != -1) {
 			return false;

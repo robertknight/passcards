@@ -14,7 +14,7 @@ function cssPropName(name: string) {
   * which provides an easy way to scale the duration
   * of all transitions created using this function.
   */
-export function transitionOn(props: {[prop: string]: number}) {
+export function transitionOn(props: { [prop: string]: number }) {
 	return Object.keys(props).map((prop) => {
 		var delay = props[prop] * TRANSITION_SCALE_FACTOR;
 		return cssPropName(prop) + ' ' + delay.toString() + 's ease-out';

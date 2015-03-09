@@ -114,7 +114,7 @@ var theme = style.create({
 
 	newStore: {
 		mixins: [mixins.setupScreen, mixins.setupScreen.padding],
-		
+
 	},
 
 	creatingStore: {
@@ -167,7 +167,7 @@ interface NavButtonProps {
 /** Button displayed at the bottom of the setup view
   * to go to the previous/next steps.
   */
-class NavButton extends typed_react.Component<NavButtonProps,{}> {
+class NavButton extends typed_react.Component<NavButtonProps, {}> {
 	render() {
 		return button.ButtonF({
 			style: button.Style.RaisedRectangular,
@@ -204,13 +204,13 @@ class CloudStoreList extends typed_react.Component<CloudStoreListProps, CloudSto
 	private startSearch() {
 		this.props.vfs.search('.agilekeychain', (error, files) => {
 			if (error) {
-				this.setState({error: error});
+				this.setState({ error: error });
 				return;
 			}
 
 			var stores = this.state.stores || <Store[]>[];
 			stores = stores.concat(files.map((file) => {
-				return {path: file.path};
+				return { path: file.path };
 			}));
 			stores.sort((a, b) => {
 				return a.path.localeCompare(b.path);
@@ -229,23 +229,23 @@ class CloudStoreList extends typed_react.Component<CloudStoreListProps, CloudSto
 		if (!this.state.stores) {
 			if (this.state.error) {
 				return react.DOM.div(style.mixin(theme.cloudStoreList),
-				  `Unable to search Dropbox for existing stores: ${this.state.error.message}`,
-					  react.DOM.div(style.mixin(theme.screenButtons),
+					`Unable to search Dropbox for existing stores: ${this.state.error.message}`,
+					react.DOM.div(style.mixin(theme.screenButtons),
 						button.ButtonF({
 							style: button.Style.Rectangular,
 							color: colors.MATERIAL_COLOR_PRIMARY,
 							value: 'Try Again',
 							onClick: () => {
-								this.setState({error: null});
+								this.setState({ error: null });
 								this.startSearch();
 							}
 						})
-					)
-				);
+						)
+					);
 			} else {
-				return react.DOM.div(style.mixin(theme.cloudStoreList), 
+				return react.DOM.div(style.mixin(theme.cloudStoreList),
 					react.DOM.div(style.mixin(theme.cloudStoreList.item), 'Searching for existing stores...')
-				);
+					);
 			}
 		} else {
 			return react.DOM.div(style.mixin(theme.cloudStoreList), this.state.stores.map((store) => {
@@ -298,7 +298,7 @@ class StoreList extends typed_react.Component<StoreListProps, {}> {
 				react.DOM.div(style.mixin(theme.storeList.item.store),
 					`in ${account.name}'s ${cloudService}`),
 				ripple.InkRippleF({})
-			));
+				));
 		});
 
 		stores.push(react.DOM.div(style.mixin(theme.storeList.item, {
@@ -307,11 +307,11 @@ class StoreList extends typed_react.Component<StoreListProps, {}> {
 		}),
 			react.DOM.div(style.mixin(theme.storeList.item.addStore), 'Add Store'),
 			ripple.InkRippleF({})
-		));
+			));
 
 		return react.DOM.div(style.mixin(theme.storeList),
 			stores
-		);
+			);
 	}
 }
 
@@ -359,7 +359,7 @@ class Slide extends typed_react.Component<SlideProps, {}> {
 
 		return react.DOM.div(style.mixin(screenStyles),
 			this.props.children
-		);
+			);
 	}
 }
 
@@ -391,12 +391,12 @@ class NewStoreForm extends typed_react.Component<NewStoreFormProps, NewStoreForm
 	private renderForm() {
 		var confirmPasswordError = '';
 		if (this.state.options.confirmPassword.length > 0 &&
-		    this.state.options.password !== this.state.options.confirmPassword) {
+			this.state.options.password !== this.state.options.confirmPassword) {
 			confirmPasswordError = 'Passwords do not match';
 		}
 		return react.DOM.div(style.mixin(theme.newStore),
-				text_field.TextFieldF({
-					type: 'text',
+			text_field.TextFieldF({
+				type: 'text',
 				defaultValue: this.state.options.path,
 				floatingLabel: true,
 				placeHolder: 'Location in Dropbox',
@@ -407,9 +407,9 @@ class NewStoreForm extends typed_react.Component<NewStoreFormProps, NewStoreForm
 						})
 					});
 				}
-				}),
-				text_field.TextFieldF({
-					type: 'password',
+			}),
+			text_field.TextFieldF({
+				type: 'password',
 				floatingLabel: true,
 				placeHolder: 'Master Password',
 				onChange: (e) => {
@@ -419,9 +419,9 @@ class NewStoreForm extends typed_react.Component<NewStoreFormProps, NewStoreForm
 						})
 					});
 				}
-				}),
-				text_field.TextFieldF({
-					type: 'password',
+			}),
+			text_field.TextFieldF({
+				type: 'password',
 				floatingLabel: true,
 				placeHolder: 'Re-enter Master Password',
 				onChange: (e) => {
@@ -432,9 +432,9 @@ class NewStoreForm extends typed_react.Component<NewStoreFormProps, NewStoreForm
 					});
 				},
 				error: confirmPasswordError
-				}),
-				text_field.TextFieldF({
-					type: 'text',
+			}),
+			text_field.TextFieldF({
+				type: 'text',
 				floatingLabel: true,
 				placeHolder: 'Master password hint',
 				onChange: (e) => {
@@ -444,23 +444,23 @@ class NewStoreForm extends typed_react.Component<NewStoreFormProps, NewStoreForm
 						})
 					});
 				}
-				})
-		);
+			})
+			);
 	}
 
 	render() {
 		var passwordsMatch = this.state.options.password == this.state.options.confirmPassword;
 		var canCreateStore = !this.state.creatingStore &&
-		  this.state.options.path.length > 0 &&
-		  this.state.options.password.length > 0 &&
-		  passwordsMatch &&
-		  this.state.options.hint.length > 0;
+			this.state.options.path.length > 0 &&
+			this.state.options.password.length > 0 &&
+			passwordsMatch &&
+			this.state.options.hint.length > 0;
 
 		var form: React.ReactElement<any>;
 		if (this.state.creatingStore) {
 			form = react.DOM.div(style.mixin(theme.newStore),
-			  react.DOM.div(style.mixin(theme.creatingStore.label), 'Creating store...')
-			);
+				react.DOM.div(style.mixin(theme.creatingStore.label), 'Creating store...')
+				);
 		} else {
 			form = this.renderForm();
 		}
@@ -480,14 +480,14 @@ class NewStoreForm extends typed_react.Component<NewStoreFormProps, NewStoreForm
 					label: 'Create Store',
 					disabled: !canCreateStore,
 					onClick: () => {
-						this.setState({creatingStore: true});
+						this.setState({ creatingStore: true });
 						this.props.onCreate(this.state.options).catch((err) => {
-							this.setState({creatingStore: false});
+							this.setState({ creatingStore: false });
 						});
 					}
 				})
-			)
-		);
+				)
+			);
 	}
 }
 
@@ -506,7 +506,7 @@ interface SetupViewState {
 	accountInfo?: vfs.AccountInfo;
 	newStore?: NewStoreOptions;
 	status?: status_message.Status;
-	
+
 	screenStack?: SetupViewScreen[];
 	currentScreen?: number;
 }
@@ -539,7 +539,7 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 	componentDidMount() {
 		if (this.props.fs.isLoggedIn()) {
 			this.props.fs.accountInfo().then((info) => {
-				this.setState({accountInfo: info});
+				this.setState({ accountInfo: info });
 			});
 		}
 
@@ -549,7 +549,7 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 	}
 
 	private pushScreen(screen: Screen, options?: ScreenOptions) {
-		var screens = this.state.screenStack.slice(0, this.state.currentScreen+1);
+		var screens = this.state.screenStack.slice(0, this.state.currentScreen + 1);
 		screens.push({
 			id: screen,
 			options: options || {}
@@ -558,7 +558,7 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 			screenStack: screens
 		});
 		setTimeout(() => {
-			this.setState({currentScreen: this.state.currentScreen + 1});
+			this.setState({ currentScreen: this.state.currentScreen + 1 });
 		}, 100);
 	}
 
@@ -574,41 +574,41 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 
 	render() {
 		var screens: React.ReactElement<any>[] = [];
-		for (var i=0; i < this.state.screenStack.length; i++) {
+		for (var i = 0; i < this.state.screenStack.length; i++) {
 			var xTranslation = i - this.state.currentScreen;
 			var opacity = i == this.state.currentScreen ? 1.0 : 0.0;
 			var screenKey: string;
 			var screenContent: React.ReactElement<any>;
 
 			switch (this.state.screenStack[i].id) {
-			case Screen.Welcome:
-				screenKey = 'screen-welcome';
-				screenContent = this.renderWelcomeScreen();
-				break;
-			case Screen.StoreList:
-				screenKey = 'screen-store-list';
-				screenContent = this.renderStoreList();
-				break;
-			case Screen.NewStore:
-				screenKey = 'screen-new-store';
-				screenContent = this.renderNewStoreScreen();
-				break;
-			case Screen.CloudStoreLogin:
-				screenKey = 'screen-cloud-store-login';
-				screenContent = this.renderProgressSlide('Connecting to Dropbox...');
-				break;
-			case Screen.CloudStoreSignout:
-				screenKey = 'screen-cloud-store-signout';
-				screenContent = this.renderProgressSlide('Signing out of Dropbox...');
-				break;
-			case Screen.CloudStoreList:
-				screenKey = 'screen-cloud-store-list';
-				screenContent = this.renderCloudStoreList();
-				break;
-			case Screen.CloudServiceList:
-				screenKey = 'screen-cloud-service-list';
-				screenContent = this.renderCloudServiceList();
-				break;
+				case Screen.Welcome:
+					screenKey = 'screen-welcome';
+					screenContent = this.renderWelcomeScreen();
+					break;
+				case Screen.StoreList:
+					screenKey = 'screen-store-list';
+					screenContent = this.renderStoreList();
+					break;
+				case Screen.NewStore:
+					screenKey = 'screen-new-store';
+					screenContent = this.renderNewStoreScreen();
+					break;
+				case Screen.CloudStoreLogin:
+					screenKey = 'screen-cloud-store-login';
+					screenContent = this.renderProgressSlide('Connecting to Dropbox...');
+					break;
+				case Screen.CloudStoreSignout:
+					screenKey = 'screen-cloud-store-signout';
+					screenContent = this.renderProgressSlide('Signing out of Dropbox...');
+					break;
+				case Screen.CloudStoreList:
+					screenKey = 'screen-cloud-store-list';
+					screenContent = this.renderCloudStoreList();
+					break;
+				case Screen.CloudServiceList:
+					screenKey = 'screen-cloud-service-list';
+					screenContent = this.renderCloudServiceList();
+					break;
 			}
 
 			screens.push(SlideF({
@@ -629,16 +629,16 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 			react.DOM.div(style.mixin(theme.setupView.inner),
 				screens,
 				reactutil.TransitionGroupF({}, message)
-			)
-		);
+				)
+			);
 	}
 
 	private reportError(err: string | Error) {
 		var status = status_message.Status.withError(err);
 		status.expired.listen(() => {
-			this.setState({status: null});
+			this.setState({ status: null });
 		});
-		this.setState({status: status});
+		this.setState({ status: status });
 	}
 
 	private renderWelcomeScreen() {
@@ -651,8 +651,8 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 						this.pushScreen(Screen.StoreList);
 					}
 				})
-			)
-		);
+				)
+			);
 	}
 
 	private renderCloudServiceList() {
@@ -670,8 +670,8 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 						this.connectToDropbox();
 					}
 				})
-			)
-		);
+				)
+			);
 	}
 
 	private completeCloudServiceLogin() {
@@ -699,7 +699,7 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 	}
 
 	private connectToDropbox() {
-		this.pushScreen(Screen.CloudStoreLogin, {temporary: true});
+		this.pushScreen(Screen.CloudStoreLogin, { temporary: true });
 
 		this.props.fs.login().then(() => {
 			// depending on the environment, the login
@@ -727,7 +727,7 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 					this.pushScreen(Screen.CloudServiceList);
 				}
 			})
-		);
+			);
 	}
 
 	private renderNewStoreScreen() {
@@ -737,8 +737,8 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 			},
 			onCreate: (options) => {
 				var store = agile_keychain.Vault.createVault(this.props.fs,
-				  options.path, options.password, options.hint);
-				
+					options.path, options.password, options.hint);
+
 				return store.then((store) => {
 					this.onSelectStore(store.vaultPath());
 				}).catch((err) => {
@@ -802,7 +802,7 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 					label: 'Sign Out',
 					onClick: () => {
 						this.popScreen();
-						this.pushScreen(Screen.CloudStoreSignout, {temporary: true});
+						this.pushScreen(Screen.CloudStoreSignout, { temporary: true });
 						this.props.fs.logout().then(() => {
 							this.popScreen();
 						}).catch((err) => {
@@ -811,8 +811,8 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 						});
 					}
 				})
-			)
-		);
+				)
+			);
 	}
 }
 

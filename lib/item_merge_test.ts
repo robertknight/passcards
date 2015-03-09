@@ -7,9 +7,9 @@ import testLib = require('./test');
 
 testLib.addTest('merge field changes', (assert) => {
 	var baseItem = new item_builder.Builder(item_store.ItemTypes.LOGIN)
-	  .setTitle('new item')
-	  .addLogin('jim.smith@gmail.com')
-	  .itemAndContent();
+	.setTitle('new item')
+	.addLogin('jim.smith@gmail.com')
+	.itemAndContent();
 
 	var itemA = item_store.cloneItem(baseItem, baseItem.item.uuid);
 	var itemB = item_store.cloneItem(baseItem, baseItem.item.uuid);
@@ -24,8 +24,8 @@ testLib.addTest('merge field changes', (assert) => {
 
 testLib.addTest('merge URL changes', (assert) => {
 	var baseItem = new item_builder.Builder(item_store.ItemTypes.LOGIN)
-	  .addUrl('signin.acme.org')
-	  .itemAndContent();
+	.addUrl('signin.acme.org')
+	.itemAndContent();
 
 	var itemA = item_store.cloneItem(baseItem, baseItem.item.uuid);
 	var itemB = item_store.cloneItem(baseItem, baseItem.item.uuid);
@@ -50,8 +50,8 @@ testLib.addTest('merge URL changes', (assert) => {
 
 testLib.addTest('merge URL changes with duplicate labels', (assert) => {
 	var baseItem = new item_builder.Builder(item_store.ItemTypes.LOGIN)
-	  .addUrl('signin.acme.org')
-	  .itemAndContent();
+	.addUrl('signin.acme.org')
+	.itemAndContent();
 
 	var itemA = item_store.cloneItem(baseItem, baseItem.item.uuid);
 	var itemB = item_store.cloneItem(baseItem, baseItem.item.uuid);
@@ -75,21 +75,21 @@ testLib.addTest('merge URL changes with duplicate labels', (assert) => {
 
 testLib.addTest('merge form fields', (assert) => {
 	var baseItem = new item_builder.Builder(item_store.ItemTypes.LOGIN)
-	  .addUrl('google.com')
-	  .itemAndContent();
+	.addUrl('google.com')
+	.itemAndContent();
 
 	var itemA = item_store.cloneItem(baseItem, baseItem.item.uuid);
 	var itemB = item_store.cloneItem(baseItem, baseItem.item.uuid);
 
 	itemA.content.formFields.push({
-		id:'',
+		id: '',
 		name: 'username',
 		designation: 'username',
 		type: item_store.FormFieldType.Text,
 		value: 'jimsmith@gmail.com'
 	});
 	itemB.content.formFields.push({
-		id:'',
+		id: '',
 		name: 'password',
 		designation: 'password',
 		type: item_store.FormFieldType.Password,
@@ -98,26 +98,26 @@ testLib.addTest('merge form fields', (assert) => {
 
 	var mergedItem = item_merge.merge(itemA, itemB, baseItem);
 	assert.deepEqual(mergedItem.content.formFields, [{
-		id:'',
+		id: '',
 		name: 'username',
 		designation: 'username',
 		type: item_store.FormFieldType.Text,
 		value: 'jimsmith@gmail.com'
-	},{
-		id:'',
-		name: 'password',
-		designation: 'password',
-		type: item_store.FormFieldType.Password,
-		value: 'secret'
-	}]);
+	}, {
+			id: '',
+			name: 'password',
+			designation: 'password',
+			type: item_store.FormFieldType.Password,
+			value: 'secret'
+		}]);
 });
 
 testLib.addTest('update form fields', (assert) => {
 	var baseItem = new item_builder.Builder(item_store.ItemTypes.LOGIN)
-	  .addUrl('google.com')
-	  .addLogin('jimsmith@gmail.com')
-	  .addPassword('secret')
-	  .itemAndContent();
+	.addUrl('google.com')
+	.addLogin('jimsmith@gmail.com')
+	.addPassword('secret')
+	.itemAndContent();
 
 	var itemA = item_store.cloneItem(baseItem, baseItem.item.uuid);
 	var itemB = item_store.cloneItem(baseItem, baseItem.item.uuid);
@@ -129,28 +129,28 @@ testLib.addTest('update form fields', (assert) => {
 
 	var mergedItem = item_merge.merge(itemA, itemB, baseItem);
 	assert.deepEqual(mergedItem.content.formFields, [{
-		id:'',
+		id: '',
 		name: 'username',
 		designation: 'username',
 		type: item_store.FormFieldType.Text,
 		value: 'jimsmith@gmail.com'
-	},{
-		id:'',
-		name: 'password',
-		designation: 'password',
-		type: item_store.FormFieldType.Password,
-		value: 'secret2'
-	}]);
+	}, {
+			id: '',
+			name: 'password',
+			designation: 'password',
+			type: item_store.FormFieldType.Password,
+			value: 'secret2'
+		}]);
 });
 
 testLib.addTest('merge sections', (assert) => {
 	var baseItem = new item_builder.Builder(item_store.ItemTypes.ROUTER)
-	  .itemAndContent();
+	.itemAndContent();
 
 	var sectionA = new item_builder.SectionBuilder('a', 'WiFi')
-	  .addField(item_store.FieldType.Text, 'Name', 'Cafe WiFi')
-	  .addField(item_store.FieldType.Password, 'Password', 'secret')
-	  .section();
+	.addField(item_store.FieldType.Text, 'Name', 'Cafe WiFi')
+	.addField(item_store.FieldType.Password, 'Password', 'secret')
+	.section();
 	baseItem.content.sections.push(sectionA);
 
 	var itemA = item_store.cloneItem(baseItem, baseItem.item.uuid);
@@ -162,8 +162,8 @@ testLib.addTest('merge sections', (assert) => {
 	itemA.content.sections[0] = updatedSectionA;
 
 	var sectionB = new item_builder.SectionBuilder('b', 'Admin')
-	  .addField(item_store.FieldType.Password, 'Admin Password', 'secret3')
-	  .section();
+	.addField(item_store.FieldType.Password, 'Admin Password', 'secret3')
+	.section();
 	itemB.content.sections.push(sectionB);
 
 	var mergedItem = item_merge.merge(itemA, itemB, baseItem);
@@ -174,16 +174,16 @@ testLib.addTest('merge sections', (assert) => {
 			kind: item_store.FieldType.Text,
 			title: 'Name',
 			value: 'Cafe Wifi'
-		},{
-			kind: item_store.FieldType.Password,
-			title: 'Password',
-			value: 'secret'
-		}],
+		}, {
+				kind: item_store.FieldType.Password,
+				title: 'Password',
+				value: 'secret'
+			}],
 		title: 'WiFi',
 		name: 'a'
 	};
 	assert.deepEqual(testLib.compareObjects(mergedItem.content.sections[0],
-	  expectedSectionA), []);
+		expectedSectionA), []);
 
 	var expectedSectionB = {
 		fields: [{
@@ -195,6 +195,6 @@ testLib.addTest('merge sections', (assert) => {
 		name: 'b'
 	};
 	assert.deepEqual(testLib.compareObjects(mergedItem.content.sections[1],
-	  expectedSectionB), []);
+		expectedSectionB), []);
 });
 

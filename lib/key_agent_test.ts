@@ -23,7 +23,7 @@ testLib.addAsyncTest('auto-lock', (assert) => {
 		// The agent should only re-lock once after
 		// the timeout expires
 		agent.addKey('key2', 'anotherkey');
-		for (var i=0; i < 10; i++) {
+		for (var i = 0; i < 10; i++) {
 			agent.resetAutoLock();
 		}
 		setTimeout(() => {

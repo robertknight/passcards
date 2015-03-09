@@ -5,9 +5,9 @@ import uri_js = require('URIjs');
 import stringutil = require('./stringutil');
 
 // Returns the part of a URL before the query string
-export function stripQuery(url: string) : string {
+export function stripQuery(url: string): string {
 	var queryOffset = url.indexOf('?');
-	var strippedUrl : string;
+	var strippedUrl: string;
 	if (queryOffset != -1) {
 		strippedUrl = url.slice(0, queryOffset);
 	} else {
@@ -24,7 +24,7 @@ export function stripQuery(url: string) : string {
  *
  * Returns an empty string if the input is empty.
  */
-export function normalize(url: string) : string {
+export function normalize(url: string): string {
 	url = url.trim();
 	if (url.length == 0) {
 		return '';
@@ -40,7 +40,7 @@ export function normalize(url: string) : string {
 /** Returns the domain from a URL or an empty string
   * if @p url does not contain a host.
   */
-export function domain(url: string) : string {
+export function domain(url: string): string {
 	if (!url) {
 		return '';
 	}

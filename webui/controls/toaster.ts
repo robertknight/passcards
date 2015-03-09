@@ -78,21 +78,21 @@ export class Toaster extends typed_react.Component<ToasterProps, ToasterState> {
 		var progressBar: React.ReactElement<any>;
 		if (this.props.progressMax) {
 			progressBar = react.DOM.div(style.mixin([theme.toaster.progressBar.outline, {
-					width: PROGRESS_WIDTH + 'px'
-				}]),
+				width: PROGRESS_WIDTH + 'px'
+			}]),
 				react.DOM.div(style.mixin([theme.toaster.progressBar.meter, {
 					width: meterWidth + 'px'
 				}]))
-			);
+				);
 		}
 
 		var transitionStyle = transition_mixin.fadeIn(this.state.transition);
 		return react.DOM.div(style.mixin([theme.toaster, transitionStyle], {}),
 			react.DOM.div({},
 				this.props.message
-			),
+				),
 			progressBar
-		);
+			);
 	}
 }
 

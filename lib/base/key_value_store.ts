@@ -12,7 +12,7 @@ import collectionutil = require('./collectionutil');
 import err_util = require('./err_util');
 import stringutil = require('./stringutil');
 
-function promisify<T>(req: IDBRequest) : Q.Promise<T> {
+function promisify<T>(req: IDBRequest): Q.Promise<T> {
 	var result = Q.defer<T>();
 	req.onsuccess = () => {
 		result.resolve(req.result);
@@ -24,33 +24,33 @@ function promisify<T>(req: IDBRequest) : Q.Promise<T> {
 }
 
 export interface DatabaseSchemaModifier {
-	createStore(name: string) : void;
-	deleteStore(name: string) : void;
-	storeNames() : string[];
+	createStore(name: string): void;
+	deleteStore(name: string): void;
+	storeNames(): string[];
 	currentVersion(): number;
 }
 
 export interface Database {
 	/** Open a database with a given name and version number. */
-	open(name: string, version: number, schemaUpdateCallback: (schemaUpdater: DatabaseSchemaModifier) => void) : Q.Promise<void>;
+	open(name: string, version: number, schemaUpdateCallback: (schemaUpdater: DatabaseSchemaModifier) => void): Q.Promise<void>;
 
 	/** Return an object store within the current database. */
-	store(name: string) : ObjectStore;
+	store(name: string): ObjectStore;
 
 	/** Close and remove the open database. */
-	delete() : Q.Promise<void>;
+	delete(): Q.Promise<void>;
 }
 
 export interface ObjectStore {
-	set<T>(key: string, value: T) : Q.Promise<void>;
-	get<T>(key: string) : Q.Promise<T>;
-	remove(key: string) : Q.Promise<void>;
-	list(prefix?: string) : Q.Promise<string[]>;
+	set<T>(key: string, value: T): Q.Promise<void>;
+	get<T>(key: string): Q.Promise<T>;
+	remove(key: string): Q.Promise<void>;
+	list(prefix?: string): Q.Promise<string[]>;
 }
 
 export class IndexedDBDatabase implements Database {
 	private database: Q.Promise<IDBDatabase>;
-	private stores: Map<string,IndexedDBStore>;
+	private stores: Map<string, IndexedDBStore>;
 
 	constructor() {
 		this.reset();
@@ -58,7 +58,7 @@ export class IndexedDBDatabase implements Database {
 
 	private reset() {
 		this.database = Q.reject<IDBDatabase>(new Error('Database not opened'));
-		this.stores = new collectionutil.PMap<string,IndexedDBStore>();
+		this.stores = new collectionutil.PMap<string, IndexedDBStore>();
 	}
 
 	open(name: string, version: number, schemaUpdateCallback: (schemaModifier: DatabaseSchemaModifier) => void) {
@@ -84,19 +84,19 @@ export class IndexedDBDatabase implements Database {
 				},
 				storeNames: () => {
 					var names: string[] = [];
-					for (var i=0; i < db.objectStoreNames.length; i++) {
+					for (var i = 0; i < db.objectStoreNames.length; i++) {
 						names.push(db.objectStoreNames.item(i));
 					}
 					return names;
 				},
-				currentVersion : () => {
+				currentVersion: () => {
 					// [WORKAROUND / iOS 8.0 / Bug #136888] - the initial current
 					// version reported for a new DB is a large positive value
 					// (specifically, the result of Math.pow(2,63)) instead of 0 or undefined.
 					//
 					// Set old version to 0 if it appears to be invalid so that
 					// correct schema upgrade steps are run.
-					var MAX_SCHEMA_VERSION = Math.pow(2,50);
+					var MAX_SCHEMA_VERSION = Math.pow(2, 50);
 					var oldVersion = e.oldVersion || 0;
 					if (oldVersion > MAX_SCHEMA_VERSION) {
 						oldVersion = 0;
@@ -119,7 +119,7 @@ export class IndexedDBDatabase implements Database {
 		return asyncutil.eraseResult(this.database);
 	}
 
-	store(name: string) : ObjectStore {
+	store(name: string): ObjectStore {
 		if (!this.stores.has(name)) {
 			this.stores.set(name, new IndexedDBStore(this.database, name));
 		}
@@ -181,25 +181,25 @@ class IndexedDBStore implements ObjectStore {
 		return this.transaction.objectStore(this.storeName);
 	}
 
-	set<T>(key: string, value: T) : Q.Promise<void> {
+	set<T>(key: string, value: T): Q.Promise<void> {
 		return this.db.then((db) => {
 			return promisify<void>(this.getStore(db).put(value, key));
 		});
 	}
 
-	get<T>(key: string) : Q.Promise<T> {
+	get<T>(key: string): Q.Promise<T> {
 		return this.db.then((db) => {
 			return promisify<T>(this.getStore(db).get(key));
 		});
 	}
 
-	remove(key: string) : Q.Promise<void> {
+	remove(key: string): Q.Promise<void> {
 		return this.db.then((db) => {
 			return promisify<void>(this.getStore(db).delete(key));
 		});
 	}
 
-	list(prefix: string = '') : Q.Promise<string[]> {
+	list(prefix: string = ''): Q.Promise<string[]> {
 		return this.db.then((db) => {
 			var store = this.getStore(db);
 			var req = store.openCursor(IDBKeyRange.lowerBound(prefix));

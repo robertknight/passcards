@@ -11,7 +11,7 @@ testLib.addAsyncTest('read / write cached value', (assert) => {
 			value = newValue;
 			return Q<void>(null);
 		}
-	);
+		);
 
 	return cachedValue.get().then((fetchedValue) => {
 		assert.equal(fetchedValue, value);
@@ -36,7 +36,7 @@ testLib.addAsyncTest('clear cached value', (assert) => {
 			value = newValue;
 			return Q<void>(null);
 		}
-	);
+		);
 
 	return cachedValue.get().then((fetchedValue) => {
 		assert.equal(fetchedValue, 7);

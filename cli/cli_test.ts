@@ -23,22 +23,22 @@ interface PromptReply {
   * inspection in tests.
   */
 class FakeIO implements consoleio.TermIO {
-	output : string[];
-	password : string;
-	passRequestCount : number;
-	replies : PromptReply[];
-	
+	output: string[];
+	password: string;
+	passRequestCount: number;
+	replies: PromptReply[];
+
 	constructor() {
 		this.output = [];
 		this.passRequestCount = 0;
 		this.replies = [];
 	}
 
-	print(text: string) : void {
+	print(text: string): void {
 		this.output.push(text);
 	}
 
-	readLine(prompt: string) : Q.Promise<string> {
+	readLine(prompt: string): Q.Promise<string> {
 		var reply = underscore.find(this.replies, (reply) => {
 			return prompt.match(reply.match) != null;
 		});
@@ -49,7 +49,7 @@ class FakeIO implements consoleio.TermIO {
 		}
 	}
 
-	readPassword(prompt: string) : Q.Promise<string> {
+	readPassword(prompt: string): Q.Promise<string> {
 		if (prompt.match('Master password')) {
 			++this.passRequestCount;
 			return Q(this.password);
@@ -58,7 +58,7 @@ class FakeIO implements consoleio.TermIO {
 		}
 	}
 
-	didPrint(pattern: RegExp) : boolean {
+	didPrint(pattern: RegExp): boolean {
 		var match = false;
 		this.output.forEach((line) => {
 			if (line.match(pattern)) {
@@ -74,35 +74,35 @@ class FakeIO implements consoleio.TermIO {
 // implementation updates keys synchronously
 class FakeKeyAgent extends key_agent.SimpleKeyAgent {
 
-	private delay() : Q.Promise<void> {
+	private delay(): Q.Promise<void> {
 		return Q.delay<void>(null, 0);
 	}
 
-	addKey(id: string, key: string) : Q.Promise<void> {
+	addKey(id: string, key: string): Q.Promise<void> {
 		return this.delay().then(() => {
 			return super.addKey(id, key);
 		});
 	}
-	
-	listKeys() : Q.Promise<string[]> {
+
+	listKeys(): Q.Promise<string[]> {
 		return this.delay().then(() => {
 			return super.listKeys();
 		});
 	}
 
-	forgetKeys() : Q.Promise<void> {
+	forgetKeys(): Q.Promise<void> {
 		return this.delay().then(() => {
 			return super.forgetKeys();
 		});
 	}
 
-	decrypt(id: string, cipherText: string, params: key_agent.CryptoParams) : Q.Promise<string> {
+	decrypt(id: string, cipherText: string, params: key_agent.CryptoParams): Q.Promise<string> {
 		return this.delay().then(() => {
 			return super.decrypt(id, cipherText, params);
 		});
 	}
 
-	encrypt(id: string, plainText: string, params: key_agent.CryptoParams) : Q.Promise<string> {
+	encrypt(id: string, plainText: string, params: key_agent.CryptoParams): Q.Promise<string> {
 		return this.delay().then(() => {
 			return super.encrypt(id, plainText, params);
 		});
@@ -130,7 +130,7 @@ class PromptMatcher {
 
 var TEST_VAULT_PATH = 'lib/test-data/test.agilekeychain';
 
-function cloneVault(vaultPath: string) : Q.Promise<string> {
+function cloneVault(vaultPath: string): Q.Promise<string> {
 	var fs = new nodefs.FileVFS('/');
 	var tempPath = path.join(<string>(<any>os).tmpdir(), 'test-vault');
 	return vfs_util.rmrf(fs, tempPath).then(() => {
@@ -151,11 +151,11 @@ function cloneVault(vaultPath: string) : Q.Promise<string> {
   * to modify items in the vault.
   */
 class CLITest {
-	fakeTerm : FakeIO;
-	keyAgent : FakeKeyAgent;
-	fakeClipboard : clipboard.FakeClipboard;
+	fakeTerm: FakeIO;
+	keyAgent: FakeKeyAgent;
+	fakeClipboard: clipboard.FakeClipboard;
 
-	private app : cli.CLI;
+	private app: cli.CLI;
 	private assert: testLib.Assert;
 	private vaultPath: string;
 
@@ -176,7 +176,7 @@ class CLITest {
 	/** Create a new writable vault for testing. Subsequent run() calls
 	  * will use this vault.
 	  */
-	newVault() : Q.Promise<string> {
+	newVault(): Q.Promise<string> {
 		return cloneVault(TEST_VAULT_PATH).then((path) => {
 			this.vaultPath = path;
 			return path;
@@ -184,12 +184,12 @@ class CLITest {
 	}
 
 	/** Run a CLI command, expecting it to exit successfully. */
-	run(...args: string[]) : Q.Promise<number> {
-		return this.runExpectingStatus.apply(this, (<any>[0]).concat(args));
+	run(...args: string[]): Q.Promise<number> {
+		return this.runExpectingStatus.apply(this,(<any>[0]).concat(args));
 	}
 
 	/** Run a CLI command, expecting a given exit status */
-	runExpectingStatus(expectedStatus: number, ...args: string[]) : Q.Promise<number> {
+	runExpectingStatus(expectedStatus: number, ...args: string[]): Q.Promise<number> {
 		var vaultArgs = ['--vault', this.vaultPath];
 		return this.app.exec(vaultArgs.concat(args)).then((status) => {
 			if (status != expectedStatus) {
@@ -206,7 +206,7 @@ class CLITest {
 	/** Create a matcher to set a canned reply to prompts from
 	  * the CLI matching @p query
 	  */
-	replyTo(query: RegExp) : PromptMatcher {
+	replyTo(query: RegExp): PromptMatcher {
 		return new PromptMatcher(this.fakeTerm.replies, query);
 	}
 }
@@ -542,7 +542,7 @@ testLib.addAsyncTest('repair items', (assert) => {
 
 testLib.addAsyncTest('edit item - rename', (assert) => {
 	var env = new CLITest(assert);
-	
+
 	return env.newVault().then(() => {
 		return env.run('edit', 'facebook', 'rename', 'newtitle');
 	}).then(() => {

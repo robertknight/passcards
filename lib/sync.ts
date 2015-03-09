@@ -163,11 +163,11 @@ export class CloudStoreSyncer implements Syncer {
 		Q.all([localItems, remoteItems, lastSyncTimes]).then((itemLists) => {
 			var localItems = <item_store.Item[]>itemLists[0];
 			var remoteItems = <item_store.Item[]>itemLists[1];
-			var lastSyncTimes = <Map<string,Date>>(itemLists[2]);
-		
+			var lastSyncTimes = <Map<string, Date>>(itemLists[2]);
+
 			syncLog('%d items in remote store, %d in local store', localItems.length, remoteItems.length);
 
-			var allItems: {[index: string]: boolean} = {};
+			var allItems: { [index: string]: boolean } = {};
 
 			var localItemMap = collectionutil.listToMap(localItems, (item) => {
 				allItems[item.uuid] = true;
@@ -187,7 +187,7 @@ export class CloudStoreSyncer implements Syncer {
 					!remoteItem || // item added locally
 					// item updated either in cloud or locally
 					!itemUpdateTimesEqual(remoteItem.updatedAt, lastSyncedAt) ||
-				    !itemUpdateTimesEqual(localItem.updatedAt, lastSyncedAt)) {
+					!itemUpdateTimesEqual(localItem.updatedAt, lastSyncedAt)) {
 					this.syncQueue.push({
 						localItem: localItem,
 						remoteItem: remoteItem
@@ -226,7 +226,7 @@ export class CloudStoreSyncer implements Syncer {
 	private syncNextBatch() {
 		var SYNC_MAX_ACTIVE_ITEMS = 10;
 		while (this.syncProgress.active < SYNC_MAX_ACTIVE_ITEMS &&
-		       this.syncQueue.length > 0) {
+			this.syncQueue.length > 0) {
 			var next = this.syncQueue.shift();
 			this.syncItem(next.localItem, next.remoteItem);
 		}
@@ -280,8 +280,8 @@ export class CloudStoreSyncer implements Syncer {
 			// merge changes between local/remote store items and update the
 			// last-synced revision
 			this.mergeAndSyncItem(contents[0] /* local item */,
-			                      contents[1] /* remote item */,
-			                      contents[2] /* last synced item */)
+				contents[1] /* remote item */,
+				contents[2] /* last synced item */)
 			.then(() => {
 				itemDone();
 			}).catch((err: Error) => {
@@ -298,7 +298,7 @@ export class CloudStoreSyncer implements Syncer {
 
 	// returns the item and content for the last-synced version of an item,
 	// or null if the item has not been synced before
-	private getLastSyncedItemRevision(item: item_store.Item) : Q.Promise<item_store.ItemAndContent> {
+	private getLastSyncedItemRevision(item: item_store.Item): Q.Promise<item_store.ItemAndContent> {
 		var lastSyncedItem: item_store.Item;
 		return this.localStore.getLastSyncedRevision(item).then((revision) => {
 			if (revision) {
@@ -329,8 +329,8 @@ export class CloudStoreSyncer implements Syncer {
 	// When the save completes, the last-synced revision is updated in
 	// the local store
 	private mergeAndSyncItem(localItem: item_store.ItemAndContent,
-	                         remoteItem: item_store.ItemAndContent,
-	                         lastSynced: item_store.ItemAndContent) {
+		remoteItem: item_store.ItemAndContent,
+		lastSynced: item_store.ItemAndContent) {
 
 		var updatedStoreItem: item_store.Item;
 		var saved: Q.Promise<void>;
@@ -386,8 +386,8 @@ export class CloudStoreSyncer implements Syncer {
 			var mergedRemoteItem = item_store.cloneItem(mergedStoreItem, mergedStoreItem.item.uuid);
 
 			saved = Q.all([
-			  this.localStore.saveItem(mergedStoreItem.item, item_store.ChangeSource.Sync),
-			  this.cloudStore.saveItem(mergedRemoteItem.item, item_store.ChangeSource.Sync)
+				this.localStore.saveItem(mergedStoreItem.item, item_store.ChangeSource.Sync),
+				this.cloudStore.saveItem(mergedRemoteItem.item, item_store.ChangeSource.Sync)
 			]).then(() => {
 				assert.notEqual(mergedStoreItem.item.revision, localItem.item.revision);
 

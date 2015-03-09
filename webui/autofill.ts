@@ -16,7 +16,7 @@ export interface AutoFillHandler {
 	/** Autofill fields on the current page with values from a given @p item.
 	  * Returns a promise for the auto-filled entries.
 	  */
-	autofill(item: item_store.Item) : Q.Promise<AutoFillResult>
+	autofill(item: item_store.Item): Q.Promise<AutoFillResult>
 }
 
 export class AutoFiller {
@@ -34,7 +34,7 @@ export class AutoFiller {
 		return keyMatch(field.id) || keyMatch(field.name) || keyMatch(field.ariaLabel) || keyMatch(field.placeholder);
 	}
 
-	autofill(item: item_store.Item) : Q.Promise<AutoFillResult> {
+	autofill(item: item_store.Item): Q.Promise<AutoFillResult> {
 		var result = Q.defer<AutoFillResult>();
 		var usernameKeys = ['email', 'user', 'account'];
 
@@ -96,7 +96,7 @@ export class AutoFiller {
 								return;
 							}
 							if (field.type === forms.FieldType.Text ||
-							    field.type === forms.FieldType.Email) {
+								field.type === forms.FieldType.Email) {
 
 								foundUsernameField = true;
 								autofillEntries.push({

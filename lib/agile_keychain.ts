@@ -21,27 +21,27 @@ import stringutil = require('./base/stringutil');
 import vfs = require('./vfs/vfs');
 
 var fieldKindMap = new collectionutil.BiDiMap<item_store.FieldType, string>()
- .add(item_store.FieldType.Text, 'string')
- .add(item_store.FieldType.Password, 'concealed')
- .add(item_store.FieldType.Address, 'address')
- .add(item_store.FieldType.Date, 'date')
- .add(item_store.FieldType.MonthYear, 'monthYear')
- .add(item_store.FieldType.URL, 'URL')
- .add(item_store.FieldType.CreditCardType, 'cctype')
- .add(item_store.FieldType.PhoneNumber, 'phone')
- .add(item_store.FieldType.Gender, 'gender')
- .add(item_store.FieldType.Email, 'email')
- .add(item_store.FieldType.Menu, 'menu');
+.add(item_store.FieldType.Text, 'string')
+.add(item_store.FieldType.Password, 'concealed')
+.add(item_store.FieldType.Address, 'address')
+.add(item_store.FieldType.Date, 'date')
+.add(item_store.FieldType.MonthYear, 'monthYear')
+.add(item_store.FieldType.URL, 'URL')
+.add(item_store.FieldType.CreditCardType, 'cctype')
+.add(item_store.FieldType.PhoneNumber, 'phone')
+.add(item_store.FieldType.Gender, 'gender')
+.add(item_store.FieldType.Email, 'email')
+.add(item_store.FieldType.Menu, 'menu');
 
 // mapping between input element types
 // and the single-char codes used to represent
 // them in .1password files
 var fieldTypeCodeMap = new collectionutil.BiDiMap<item_store.FormFieldType, string>()
- .add(item_store.FormFieldType.Text, 'T')
- .add(item_store.FormFieldType.Password, 'P')
- .add(item_store.FormFieldType.Email, 'E')
- .add(item_store.FormFieldType.Checkbox, 'C')
- .add(item_store.FormFieldType.Input, 'I');
+.add(item_store.FormFieldType.Text, 'T')
+.add(item_store.FormFieldType.Password, 'P')
+.add(item_store.FormFieldType.Email, 'E')
+.add(item_store.FormFieldType.Checkbox, 'C')
+.add(item_store.FormFieldType.Input, 'I');
 
 /** Default number of iterations to use in the PBKDF2 password
   * stretching function used to secure the master key.
@@ -61,7 +61,7 @@ var DEFAULT_AGILEKEYCHAIN_SECURITY_LEVEL = 'SL5';
 /** Convert an item to JSON data for serialization in a .1password file.
   * @p encryptedData is the encrypted version of the item's content.
   */
-export function toAgileKeychainItem(item: item_store.Item, encryptedData: string) : agile_keychain_entries.Item {
+export function toAgileKeychainItem(item: item_store.Item, encryptedData: string): agile_keychain_entries.Item {
 	var keychainItem: any = {};
 
 	keychainItem.createdAt = dateutil.unixTimestampFromDate(item.createdAt);
@@ -85,7 +85,7 @@ export function toAgileKeychainItem(item: item_store.Item, encryptedData: string
   * The item content is initially encrypted. The decrypted
   * contents can be retrieved using getContent()
   */
-export function fromAgileKeychainItem(vault: Vault, data: agile_keychain_entries.Item) : item_store.Item {
+export function fromAgileKeychainItem(vault: Vault, data: agile_keychain_entries.Item): item_store.Item {
 	var item = new item_store.Item(vault);
 	item.updatedAt = dateutil.dateFromUnixTimestamp(data.updatedAt);
 	item.title = data.title;
@@ -116,7 +116,7 @@ export function fromAgileKeychainItem(vault: Vault, data: agile_keychain_entries
 	return item;
 }
 
-export function toAgileKeychainField(field: item_store.ItemField) : agile_keychain_entries.ItemField {
+export function toAgileKeychainField(field: item_store.ItemField): agile_keychain_entries.ItemField {
 	var keychainField = new agile_keychain_entries.ItemField;
 	keychainField.k = fieldKindMap.get(field.kind);
 	keychainField.n = field.name;
@@ -125,7 +125,7 @@ export function toAgileKeychainField(field: item_store.ItemField) : agile_keycha
 	return keychainField;
 }
 
-export function fromAgileKeychainField(fieldData: agile_keychain_entries.ItemField) : item_store.ItemField {
+export function fromAgileKeychainField(fieldData: agile_keychain_entries.ItemField): item_store.ItemField {
 	var field = new item_store.ItemField;
 	field.kind = fieldKindMap.get2(fieldData.k);
 	field.name = fieldData.n;
@@ -137,7 +137,7 @@ export function fromAgileKeychainField(fieldData: agile_keychain_entries.ItemFie
 /** Convert an item_store.ItemContent entry into a `contents` blob for storage in
   * a 1Password item.
   */
-function toAgileKeychainContent(content: item_store.ItemContent) : agile_keychain_entries.ItemContent {
+function toAgileKeychainContent(content: item_store.ItemContent): agile_keychain_entries.ItemContent {
 	var keychainContent = new agile_keychain_entries.ItemContent();
 	if (content.sections) {
 		keychainContent.sections = [];
@@ -167,7 +167,7 @@ function toAgileKeychainContent(content: item_store.ItemContent) : agile_keychai
 /** Convert a decrypted JSON `contents` blob from a 1Password item
   * into an item_store.ItemContent instance.
   */
-function fromAgileKeychainContent(data: agile_keychain_entries.ItemContent) : item_store.ItemContent {
+function fromAgileKeychainContent(data: agile_keychain_entries.ItemContent): item_store.ItemContent {
 	var content = new item_store.ItemContent();
 	if (data.sections) {
 		data.sections.forEach((section) => {
@@ -200,7 +200,7 @@ function fromAgileKeychainContent(data: agile_keychain_entries.ItemContent) : it
 	return content;
 }
 
-function toAgileKeychainSection(section: item_store.ItemSection) : agile_keychain_entries.ItemSection {
+function toAgileKeychainSection(section: item_store.ItemSection): agile_keychain_entries.ItemSection {
 	var keychainSection = new agile_keychain_entries.ItemSection();
 	keychainSection.name = section.name;
 	keychainSection.title = section.title;
@@ -214,7 +214,7 @@ function toAgileKeychainSection(section: item_store.ItemSection) : agile_keychai
 /** Convert a section entry from the JSON contents blob for
   * an item into an item_store.ItemSection instance.
   */
-function fromAgileKeychainSection(data: agile_keychain_entries.ItemSection) : item_store.ItemSection {
+function fromAgileKeychainSection(data: agile_keychain_entries.ItemSection): item_store.ItemSection {
 	var section = new item_store.ItemSection();
 	section.name = data.name;
 	section.title = data.title;
@@ -227,7 +227,7 @@ function fromAgileKeychainSection(data: agile_keychain_entries.ItemSection) : it
 	return section;
 }
 
-function toAgileKeychainFormField(field: item_store.WebFormField) : agile_keychain_entries.WebFormField {
+function toAgileKeychainFormField(field: item_store.WebFormField): agile_keychain_entries.WebFormField {
 	var keychainField = new agile_keychain_entries.WebFormField();
 	keychainField.id = field.id;
 	keychainField.name = field.name;
@@ -237,7 +237,7 @@ function toAgileKeychainFormField(field: item_store.WebFormField) : agile_keycha
 	return keychainField;
 }
 
-function fromAgileKeychainFormField(keychainField: agile_keychain_entries.WebFormField) : item_store.WebFormField {
+function fromAgileKeychainFormField(keychainField: agile_keychain_entries.WebFormField): item_store.WebFormField {
 	var field = new item_store.WebFormField();
 	field.id = keychainField.id;
 	field.name = keychainField.name;
@@ -252,7 +252,7 @@ export class Vault implements item_store.Store {
 	private fs: vfs.VFS;
 	private path: string;
 	private keyAgent: key_agent.KeyAgent;
-	private keys : Q.Promise<agile_keychain_entries.EncryptionKeyEntry[]>;
+	private keys: Q.Promise<agile_keychain_entries.EncryptionKeyEntry[]>;
 
 	// map of (item ID -> Item) for items that have been
 	// modified and require the contents.js index file to be updated
@@ -270,35 +270,35 @@ export class Vault implements item_store.Store {
 	  * @p fs is the filesystem interface through which the
 	  * files that make up the vault are accessed.
 	  */
-	constructor(fs: vfs.VFS, path: string, agent? : key_agent.KeyAgent) {
+	constructor(fs: vfs.VFS, path: string, agent?: key_agent.KeyAgent) {
 		this.fs = fs;
 		this.path = path;
 		this.keyAgent = agent || new key_agent.SimpleKeyAgent(crypto.defaultCrypto);
 		this.onItemUpdated = new event_stream.EventStream<item_store.Item>();
 		this.onUnlock = new event_stream.EventStream<void>();
 
-		this.pendingIndexUpdates = new collectionutil.PMap<string,item_store.Item>();
+		this.pendingIndexUpdates = new collectionutil.PMap<string, item_store.Item>();
 		this.indexUpdated = Q<void>(null);
 		this.indexUpdatePending = false;
 	}
 
-	private getKeys() : Q.Promise<agile_keychain_entries.EncryptionKeyEntry[]> {
+	private getKeys(): Q.Promise<agile_keychain_entries.EncryptionKeyEntry[]> {
 		if (!this.keys) {
 			this.keys = this.loadKeys();
 		}
 		return this.keys;
 	}
 
-	private loadKeys() : Q.Promise<agile_keychain_entries.EncryptionKeyEntry[]> {
+	private loadKeys(): Q.Promise<agile_keychain_entries.EncryptionKeyEntry[]> {
 		var keys = Q.defer<agile_keychain_entries.EncryptionKeyEntry[]>();
 		var content = this.fs.read(Path.join(this.dataFolderPath(), 'encryptionKeys.js'));
-		content.then((content:string) => {
-			var keyList : agile_keychain_entries.EncryptionKeyList = JSON.parse(content);
+		content.then((content: string) => {
+			var keyList: agile_keychain_entries.EncryptionKeyList = JSON.parse(content);
 			if (!keyList.list) {
 				keys.reject('Missing `list` entry in encryptionKeys.js file');
 				return;
 			}
-			var vaultKeys : agile_keychain_entries.EncryptionKeyEntry[] = [];
+			var vaultKeys: agile_keychain_entries.EncryptionKeyEntry[] = [];
 			keyList.list.forEach((entry) => {
 				// Using 1Password v4, there are two entries in the
 				// encryptionKeys.js file, 'SL5' and 'SL3'.
@@ -310,14 +310,14 @@ export class Vault implements item_store.Store {
 			});
 			keys.resolve(vaultKeys);
 		}, (err) => {
-			keys.reject(err);
-		})
+				keys.reject(err);
+			})
 		.done();
 
 		return keys.promise;
 	}
 
-	private writeKeys(keyList: agile_keychain_entries.EncryptionKeyList, passHint: string) : Q.Promise<void> {
+	private writeKeys(keyList: agile_keychain_entries.EncryptionKeyList, passHint: string): Q.Promise<void> {
 		// FIXME - Improve handling of concurrent attempts to update encryptionKeys.js.
 		// If the file in the VFS has been modified since the original read, the operation
 		// should fail.
@@ -328,7 +328,7 @@ export class Vault implements item_store.Store {
 		return asyncutil.eraseResult(Q.all([keysSaved, hintSaved]));
 	}
 
-	listKeys() : Q.Promise<key_agent.Key[]> {
+	listKeys(): Q.Promise<key_agent.Key[]> {
 		return this.getKeys().then((keyEntries) => {
 			return keyEntries.map((keyEntry) => {
 				// TODO - The key's 'level' property is unused here
@@ -353,7 +353,7 @@ export class Vault implements item_store.Store {
 	/** Unlock the vault using the given master password.
 	  * This must be called before item contents can be decrypted.
 	  */
-	unlock(pwd: string) : Q.Promise<void> {
+	unlock(pwd: string): Q.Promise<void> {
 		return this.listKeys().then((keys) => {
 			return key_agent.decryptKeys(keys, pwd);
 		}).then((keys) => {
@@ -370,39 +370,39 @@ export class Vault implements item_store.Store {
 	/** Lock the vault. This discards decrypted master keys for the vault
 	  * created via a call to unlock()
 	  */
-	lock() : Q.Promise<void> {
+	lock(): Q.Promise<void> {
 		return this.keyAgent.forgetKeys();
 	}
 
 	/** Returns true if the vault was successfully unlocked using unlock().
 	  * Only once the vault is unlocked can item contents be retrieved using item_store.Item.getContents()
 	  */
-	isLocked() : Q.Promise<boolean> {
+	isLocked(): Q.Promise<boolean> {
 		return Q.all([this.keyAgent.listKeys(), this.getKeys()]).spread<boolean>(
 			(keyIDs: string[], keyEntries: agile_keychain_entries.EncryptionKeyEntry[]) => {
 
-			var locked = false;
-			keyEntries.forEach((entry) => {
-				if (keyIDs.indexOf(entry.identifier) == -1) {
-					locked = true;
-				}
+				var locked = false;
+				keyEntries.forEach((entry) => {
+					if (keyIDs.indexOf(entry.identifier) == -1) {
+						locked = true;
+					}
+				});
+				return locked;
 			});
-			return locked;
-		});
 	}
 
-	private itemPath(uuid: string) : string {
+	private itemPath(uuid: string): string {
 		return Path.join(this.path, 'data/default/' + uuid + '.1password')
 	}
 
-	loadItem(uuid: string) : Q.Promise<item_store.Item> {
+	loadItem(uuid: string): Q.Promise<item_store.Item> {
 		var content = this.fs.read(this.itemPath(uuid));
 		return content.then((content) => {
 			return fromAgileKeychainItem(this, JSON.parse(content));
 		});
 	}
 
-	saveItem(item: item_store.Item, source?: item_store.ChangeSource) : Q.Promise<void> {
+	saveItem(item: item_store.Item, source?: item_store.ChangeSource): Q.Promise<void> {
 		if (source !== item_store.ChangeSource.Sync) {
 			item.updateTimestamps();
 		}
@@ -414,8 +414,8 @@ export class Vault implements item_store.Store {
 			var contentJSON = JSON.stringify(toAgileKeychainContent(content));
 			return this.encryptItemData(DEFAULT_AGILEKEYCHAIN_SECURITY_LEVEL, contentJSON);
 		}).then((encryptedContent) => {
-				var itemPath = this.itemPath(item.uuid);
-				var keychainJSON = JSON.stringify(toAgileKeychainItem(item, encryptedContent));
+			var itemPath = this.itemPath(item.uuid);
+			var keychainJSON = JSON.stringify(toAgileKeychainItem(item, encryptedContent));
 			return this.fs.write(itemPath, keychainJSON);
 		});
 
@@ -466,7 +466,7 @@ export class Vault implements item_store.Store {
 			});
 			this.pendingIndexUpdates.clear();
 
-			var contentEntries : any[] = JSON.parse(contentsJSON);
+			var contentEntries: any[] = JSON.parse(contentsJSON);
 			updatedItems.forEach((item) => {
 				var entry = underscore.find(contentEntries, (entry) => { return entry[0] == item.uuid });
 				if (!entry) {
@@ -488,18 +488,18 @@ export class Vault implements item_store.Store {
 				parentRevision: revision
 			}));
 		});
-		
+
 		this.indexUpdatePending = true;
 		this.indexUpdated.then(() => {
 			this.indexUpdatePending = false;
 		});
 	}
 
-	private dataFolderPath() : string {
+	private dataFolderPath(): string {
 		return Path.join(this.path, 'data/default');
 	}
 
-	private contentsFilePath() : string {
+	private contentsFilePath(): string {
 		return Path.join(this.dataFolderPath(), 'contents.js');
 	}
 
@@ -515,12 +515,12 @@ export class Vault implements item_store.Store {
 	  *
 	  * FIXME: Use the type system to represent the above
 	  */
-	listItems(opts: item_store.ListItemsOptions = {}) : Q.Promise<item_store.Item[]> {
+	listItems(opts: item_store.ListItemsOptions = {}): Q.Promise<item_store.Item[]> {
 		var items = Q.defer<item_store.Item[]>();
 		var content = this.fs.read(this.contentsFilePath());
 		content.then((content) => {
 			var entries = JSON.parse(content);
-			var vaultItems : item_store.Item[] = [];
+			var vaultItems: item_store.Item[] = [];
 			entries.forEach((entry: any[]) => {
 				var item = new item_store.Item(this);
 				item.uuid = entry[0];
@@ -545,14 +545,14 @@ export class Vault implements item_store.Store {
 			});
 			items.resolve(vaultItems);
 		}, (err: any) => {
-			items.reject(err);
-		}).done();
+				items.reject(err);
+			}).done();
 		return items.promise;
 	}
 
-	decryptItemData(level: string, data: string) : Q.Promise<string> {
+	decryptItemData(level: string, data: string): Q.Promise<string> {
 		return this.getKeys().then((keys) => {
-			var result : Q.Promise<string>;
+			var result: Q.Promise<string>;
 			keys.forEach((key) => {
 				if (key.level == level) {
 					var cryptoParams = new key_agent.CryptoParams(key_agent.CryptoAlgorithm.AES128_OpenSSLKey);
@@ -568,9 +568,9 @@ export class Vault implements item_store.Store {
 		});
 	}
 
-	encryptItemData(level: string, data: string) : Q.Promise<string> {
+	encryptItemData(level: string, data: string): Q.Promise<string> {
 		return this.getKeys().then((keys) => {
-			var result : Q.Promise<string>;
+			var result: Q.Promise<string>;
 			keys.forEach((key) => {
 				if (key.level == level) {
 					var cryptoParams = new key_agent.CryptoParams(key_agent.CryptoAlgorithm.AES128_OpenSSLKey);
@@ -597,7 +597,7 @@ export class Vault implements item_store.Store {
 	  *  to use when generating an encryption key from @p newPass. If not specified,
 	  *  use the same number of iterations as the existing key.
 	  */
-	changePassword(oldPass: string, newPass: string, newPassHint: string, iterations?: number) : Q.Promise<void> {
+	changePassword(oldPass: string, newPass: string, newPassHint: string, iterations?: number): Q.Promise<void> {
 		return this.isLocked().then((locked) => {
 			if (locked) {
 				return Q.reject<agile_keychain_entries.EncryptionKeyEntry[]>(new Error('Vault must be unlocked before changing the password'));
@@ -614,7 +614,7 @@ export class Vault implements item_store.Store {
 					var newSalt = crypto.randomBytes(8);
 					var derivedKey = key_agent.keyFromPasswordSync(oldPass, oldSaltCipher.salt, key.iterations);
 					var oldKey = key_agent.decryptKey(derivedKey, oldSaltCipher.cipherText,
-					  atob(key.validation));
+						atob(key.validation));
 					var newKeyIterations = iterations || key.iterations;
 					var newDerivedKey = key_agent.keyFromPasswordSync(newPass, newSalt, newKeyIterations);
 					var newKey = key_agent.encryptKey(newDerivedKey, oldKey);
@@ -641,7 +641,7 @@ export class Vault implements item_store.Store {
 	  * a given master @p password.
 	  */
 	static createVault(fs: vfs.VFS, path: string, password: string, hint: string,
-	  passIterations: number = DEFAULT_VAULT_PASS_ITERATIONS) : Q.Promise<Vault> {
+		passIterations: number = DEFAULT_VAULT_PASS_ITERATIONS): Q.Promise<Vault> {
 		if (!stringutil.endsWith(path, '.agilekeychain')) {
 			path += '.agilekeychain';
 		}
@@ -657,7 +657,7 @@ export class Vault implements item_store.Store {
 		var masterKey = crypto.randomBytes(1024);
 		var salt = crypto.randomBytes(8);
 		var keyList: agile_keychain_entries.EncryptionKeyList;
-		
+
 		return key_agent.keyFromPassword(password, salt, passIterations).then((derivedKey) => {
 			var encryptedKey = key_agent.encryptKey(derivedKey, masterKey);
 
@@ -684,15 +684,15 @@ export class Vault implements item_store.Store {
 		});
 	}
 
-	passwordHint() : Q.Promise<string> {
+	passwordHint(): Q.Promise<string> {
 		return this.fs.read(Path.join(this.dataFolderPath(), '.password.hint'));
 	}
 
-	vaultPath() : string {
+	vaultPath(): string {
 		return this.path;
 	}
 
-	getRawDecryptedData(item: item_store.Item) : Q.Promise<string> {
+	getRawDecryptedData(item: item_store.Item): Q.Promise<string> {
 		var encryptedContent = this.fs.read(this.itemPath(item.uuid));
 		return encryptedContent.then((content) => {
 			var keychainItem = <agile_keychain_entries.Item>JSON.parse(content);
@@ -700,7 +700,7 @@ export class Vault implements item_store.Store {
 		});
 	}
 
-	getContent(item: item_store.Item) : Q.Promise<item_store.ItemContent> {
+	getContent(item: item_store.Item): Q.Promise<item_store.ItemContent> {
 		return this.getRawDecryptedData(item).then((data: string) => {
 			var content = <agile_keychain_entries.ItemContent>(JSON.parse(data));
 			return fromAgileKeychainContent(content);

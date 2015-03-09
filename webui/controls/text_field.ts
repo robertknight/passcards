@@ -297,7 +297,7 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 
 		var textFieldStyling: any[] = [styles.normalTextFieldStyle];
 		if (props.style && props.style.fontFamily) {
-			textFieldStyling.push({fontFamily: props.style.fontFamily});
+			textFieldStyling.push({ fontFamily: props.style.fontFamily });
 		}
 
 		if (props.floatingLabel) {
@@ -318,9 +318,9 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 		var underline: React.ReactElement<any>;
 		if (props.showUnderline) {
 			underline = div(style.mixin(styles.underlineContainer, { ref: 'underlineContainer' }),
-					div(style.mixin(styles.underline, { ref: 'underline' })),
-					div(style.mixin(focusedUnderlineStyling, { ref: 'focusedUnderline' }))
-					);
+				div(style.mixin(styles.underline, { ref: 'underline' })),
+				div(style.mixin(focusedUnderlineStyling, { ref: 'focusedUnderline' }))
+				);
 		}
 
 		return div(style.mixin(containerStyling),
@@ -347,12 +347,12 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 					this.state.focus ? styles.focusStyle : null,
 					styles.scrollBlocksStyle,
 					{ left: '6px' }]
-					)),
+				)),
 			div(style.mixin([(scrollWidth > (scrollLeft + width)) ?
-					{ opacity: '1' } : null,
-					this.state.focus ? styles.focusStyle : null,
-					styles.scrollBlocksStyle,
-					{ right: '6px' }]))
+				{ opacity: '1' } : null,
+				this.state.focus ? styles.focusStyle : null,
+				styles.scrollBlocksStyle,
+				{ right: '6px' }]))
 			);
 	}
 

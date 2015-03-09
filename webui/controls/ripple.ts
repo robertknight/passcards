@@ -70,7 +70,7 @@ function easeOut(max: number, value: number) {
   * the effect when touched. The ripple will expand to fill its positioned parent.
   */
 export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleState> {
-	private anim : {
+	private anim: {
 		context: CanvasRenderingContext2D;
 	};
 
@@ -101,8 +101,8 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 				animStartTime: animStartTime,
 				phaseStartTime: now
 			}, () => {
-				this.stepAnimation();
-			});
+					this.stepAnimation();
+				});
 		}
 	}
 
@@ -136,7 +136,7 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 		var canvas = <HTMLCanvasElement>(this.refs['canvas'].getDOMNode());
 
 		if (this.state.phase !== Phase.Idle) {
-				return;
+			return;
 		}
 
 		var cx = canvas.getBoundingClientRect().left;
@@ -172,18 +172,18 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 
 	private onTouchEnd(e: MouseEvent) {
 		if (this.state.phase === Phase.Touch) {
-			this.setState({phase: Phase.Release});
+			this.setState({ phase: Phase.Release });
 		}
 	}
 
 	render() {
-		return react.DOM.div(style.mixin(theme.inkRipple, {ref: 'container'}),
+		return react.DOM.div(style.mixin(theme.inkRipple, { ref: 'container' }),
 			react.DOM.canvas({
 				className: style.classes(theme.inkRipple),
 				ref: 'canvas'
 			}),
 			react.DOM.div(style.mixin(theme.inkRipple.container), this.props.children)
-		)
+			)
 	}
 
 	private updateCanvasSize() {
@@ -210,7 +210,7 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 
 		var elapsed = Date.now() - this.state.animStartTime;
 		var phaseElapsed = Date.now() - this.state.phaseStartTime;
-	
+
 		var touchDuration = Math.min(elapsed, TOUCH_PHASE_DURATION);
 		var maxDuration = TOUCH_PHASE_DURATION + RELEASE_PHASE_DURATION;
 		var rippleDuration = touchDuration;
@@ -218,7 +218,7 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 		if (this.state.phase === Phase.Release) {
 			rippleDuration += phaseElapsed;
 		}
-		
+
 		var radius = easeOut(this.props.radius, rippleDuration / maxDuration);
 
 		var MAX_BACKGROUND_ALPHA = 0.2;
@@ -233,7 +233,7 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 
 		var elem = <HTMLCanvasElement>(this.refs['container'].getDOMNode());
 		var ctx = this.anim.context;
-		ctx.clearRect(0,0, elem.offsetWidth, elem.offsetHeight);
+		ctx.clearRect(0, 0, elem.offsetWidth, elem.offsetHeight);
 		ctx.fillStyle = this.props.color;
 
 		// render background
@@ -254,7 +254,7 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 			});
 		} else if (this.state.phase === Phase.Release) {
 			ctx.clearRect(0, 0, elem.offsetWidth, elem.offsetHeight);
-			this.setState({phase: Phase.Idle});
+			this.setState({ phase: Phase.Idle });
 		}
 	}
 }

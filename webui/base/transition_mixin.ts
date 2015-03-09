@@ -37,12 +37,12 @@ class TransitionMixin extends typed_react.Mixin<TransitionMixinProps, Transition
 			console.warn('A component including TransitionMixin did not specify a transitionProperty');
 		}
 
-		this.setState({transition: reactutil.TransitionState.Entering});
+		this.setState({ transition: reactutil.TransitionState.Entering });
 		setTimeout(() => {
 			if (!this.isMounted()) {
 				return;
 			}
-			this.setState({transition: reactutil.TransitionState.Entered});
+			this.setState({ transition: reactutil.TransitionState.Entered });
 		}, 10);
 		var listener = new reactutil.TransitionEndListener(this, this.state.transitionProperty, () => {
 			callback();
@@ -51,9 +51,9 @@ class TransitionMixin extends typed_react.Mixin<TransitionMixinProps, Transition
 	}
 
 	componentWillLeave(callback: () => void) {
-		this.setState({transition: reactutil.TransitionState.Leaving});
+		this.setState({ transition: reactutil.TransitionState.Leaving });
 		var listener = new reactutil.TransitionEndListener(this, this.state.transitionProperty, () => {
-			this.setState({transition: reactutil.TransitionState.Left});
+			this.setState({ transition: reactutil.TransitionState.Left });
 			callback();
 			listener.remove();
 		});
@@ -67,18 +67,18 @@ export var TransitionMixinM = typed_react.createMixin(TransitionMixin);
   */
 export function fadeIn(state: reactutil.TransitionState) {
 	switch (state) {
-	case reactutil.TransitionState.Entering:
-		return {
-			opacity: 0.01
-		};
-	case reactutil.TransitionState.Entered:
-		return null;
-	case reactutil.TransitionState.Leaving:
+		case reactutil.TransitionState.Entering:
+			return {
+				opacity: 0.01
+			};
+		case reactutil.TransitionState.Entered:
+			return null;
+		case reactutil.TransitionState.Leaving:
 		// fall-through
-	case reactutil.TransitionState.Left:
-		return {
-			opacity: 0.01
-		};
+		case reactutil.TransitionState.Left:
+			return {
+				opacity: 0.01
+			};
 	}
 }
 

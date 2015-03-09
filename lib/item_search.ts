@@ -9,31 +9,31 @@ import stringutil = require('./base/stringutil');
 import url_util = require('./base/url_util');
 
 export class FieldMatch {
-	url : item_store.ItemUrl;
-	field : item_store.ItemField;
-	formField : item_store.WebFormField;
-	section : item_store.ItemSection;
+	url: item_store.ItemUrl;
+	field: item_store.ItemField;
+	formField: item_store.WebFormField;
+	section: item_store.ItemSection;
 
-	static fromURL(url: item_store.ItemUrl) : FieldMatch {
+	static fromURL(url: item_store.ItemUrl): FieldMatch {
 		var match = new FieldMatch;
 		match.url = url;
 		return match;
 	}
 
-	static fromField(section: item_store.ItemSection, field: item_store.ItemField) : FieldMatch {
+	static fromField(section: item_store.ItemSection, field: item_store.ItemField): FieldMatch {
 		var match = new FieldMatch;
 		match.field = field;
 		match.section = section;
 		return match;
 	}
 
-	static fromFormField(field: item_store.WebFormField) : FieldMatch {
+	static fromFormField(field: item_store.WebFormField): FieldMatch {
 		var match = new FieldMatch;
 		match.formField = field;
 		return match;
 	}
 
-	name() : string {
+	name(): string {
 		if (this.url) {
 			return this.url.label;
 		} else if (this.field) {
@@ -53,7 +53,7 @@ export class FieldMatch {
 		}
 	}
 
-	value() : string {
+	value(): string {
 		if (this.url) {
 			return this.url.url;
 		} else if (this.field) {
@@ -73,9 +73,9 @@ export class FieldMatch {
 		}
 	}
 
-	isPassword() : boolean {
+	isPassword(): boolean {
 		return this.field && this.field.kind == item_store.FieldType.Password ||
-		       this.formField && this.formField.type == item_store.FormFieldType.Password;
+			this.formField && this.formField.type == item_store.FormFieldType.Password;
 	}
 }
 
@@ -83,7 +83,7 @@ export class FieldMatch {
   *
   * Looks for matches in the title, ID and location of the item.
   */
-export function matchItem(item: item_store.Item, pattern: string) : boolean {
+export function matchItem(item: item_store.Item, pattern: string): boolean {
 	var tokens = stringutil.parseCommandLine(pattern).map((token) => {
 		return token.toLowerCase();
 	});
@@ -99,7 +99,7 @@ export function matchItem(item: item_store.Item, pattern: string) : boolean {
 			return true;
 		}
 
-		for (var i=0; i < item.locations.length; i++) {
+		for (var i = 0; i < item.locations.length; i++) {
 			var location = item.locations[i];
 			if (location.toLowerCase().indexOf(token) != -1) {
 				return true;
@@ -115,7 +115,7 @@ export function matchItem(item: item_store.Item, pattern: string) : boolean {
 }
 
 /** Returns a list of items in @p store which match a given pattern. */
-export function lookupItems(store: item_store.Store, pattern: string) : Q.Promise<item_store.Item[]> {
+export function lookupItems(store: item_store.Store, pattern: string): Q.Promise<item_store.Item[]> {
 	return store.listItems().then((items) => {
 		return underscore.filter(items, (item) => {
 			return matchItem(item, pattern);
@@ -137,19 +137,19 @@ function urlScore(itemUrl: string, url: string) {
 
 	// exact match
 	if (itemUrl.length > 0 &&
-	    itemUrl == url) {
+		itemUrl == url) {
 		return 1;
 	}
 
 	// full authority match
 	if (parsedItemUrl.authority().length > 0 &&
-	    parsedItemUrl.authority() == parsedUrl.authority()) {
+		parsedItemUrl.authority() == parsedUrl.authority()) {
 		return 0.8;
 	}
 
 	// primary domain match
 	if (parsedItemUrl.domain().length > 0 &&
-	    parsedItemUrl.domain() == parsedUrl.domain()) {
+		parsedItemUrl.domain() == parsedUrl.domain()) {
 		return 0.5;
 	}
 
@@ -172,7 +172,7 @@ export function itemUrlScore(item: item_store.Item, url: string) {
 }
 
 /** Returns a ranked list of items which may match a given URL. */
-export function filterItemsByUrl(items: item_store.Item[], url: string) : item_store.Item[] {
+export function filterItemsByUrl(items: item_store.Item[], url: string): item_store.Item[] {
 	var matches = underscore.filter(items, (item) => {
 		return itemUrlScore(item, url) > 0;
 	});
@@ -183,8 +183,8 @@ export function filterItemsByUrl(items: item_store.Item[], url: string) : item_s
 }
 
 /** Returns a list of fields in an item's content which match @p pattern */
-export function matchField(content: item_store.ItemContent, pattern: string) : FieldMatch[] {
-	var matches : FieldMatch[] = [];
+export function matchField(content: item_store.ItemContent, pattern: string): FieldMatch[] {
+	var matches: FieldMatch[] = [];
 	content.urls.forEach((url) => {
 		if (matchLabel(pattern, url.label)) {
 			matches.push(FieldMatch.fromURL(url));
@@ -205,21 +205,21 @@ export function matchField(content: item_store.ItemContent, pattern: string) : F
 	return matches;
 }
 
-export function matchSection(content: item_store.ItemContent, pattern: string) : item_store.ItemSection[] {
+export function matchSection(content: item_store.ItemContent, pattern: string): item_store.ItemSection[] {
 	return underscore.filter(content.sections, (section) => {
 		return stringutil.indexOfIgnoreCase(section.title, pattern) != -1;
 	});
 }
 
-function matchLabel(pattern: string, label: string) : boolean {
+function matchLabel(pattern: string, label: string): boolean {
 	return label && stringutil.indexOfIgnoreCase(label, pattern) != -1;
 }
 
-export function matchType(pattern: string) : item_store.ItemType[] {
+export function matchType(pattern: string): item_store.ItemType[] {
 	var typeKeys = underscore.filter(Object.keys(item_store.ItemTypes), (key) => {
 		return stringutil.indexOfIgnoreCase(key, pattern) != -1;
 	});
-	var typeCodes : item_store.ItemType[] = typeKeys.map((key) => {
+	var typeCodes: item_store.ItemType[] = typeKeys.map((key) => {
 		return (<any>item_store.ItemTypes)[key];
 	});
 	return typeCodes;

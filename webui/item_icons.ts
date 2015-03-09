@@ -125,8 +125,8 @@ export interface IconProvider {
 }
 
 export class BasicIconProvider implements IconProvider {
-	private tempCache: Map<string,Icon>;
-	private diskCache : Cache;
+	private tempCache: Map<string, Icon>;
+	private diskCache: Cache;
 	private provider: site_info.SiteInfoProvider;
 	private iconSize: number;
 
@@ -147,7 +147,7 @@ export class BasicIconProvider implements IconProvider {
 	  *                 size.
 	  */
 	constructor(cacheStore: key_value_store.ObjectStore, provider: site_info.SiteInfoProvider, iconSize: number) {
-		this.tempCache = new collectionutil.PMap<string,Icon>();
+		this.tempCache = new collectionutil.PMap<string, Icon>();
 		this.diskCache = new Cache(cacheStore);
 		this.provider = provider;
 		this.iconSize = iconSize;
@@ -181,10 +181,10 @@ export class BasicIconProvider implements IconProvider {
 	updateMatches(updateUrl: string, itemUrl: string) {
 		itemUrl = url_util.normalize(itemUrl);
 		return updateUrl == itemUrl ||
-		       updateUrl == this.fallbackUrlForIcon(itemUrl);
+			updateUrl == this.fallbackUrlForIcon(itemUrl);
 	}
 
-	query(url: string) : Icon {
+	query(url: string): Icon {
 		url = url_util.normalize(url);
 
 		if (url.length == 0) {
@@ -206,14 +206,14 @@ export class BasicIconProvider implements IconProvider {
 			}
 			return cachedIcon;
 		} else {
-			var icon : Icon = {
+			var icon: Icon = {
 				iconUrl: BasicIconProvider.LOADING_ICON,
 				state: IconFetchState.Fetching,
 				width: 48,
 				height: 48
 			};
 			this.tempCache.set(url, icon);
-			
+
 			this.diskCache.query(url).then((entry) => {
 				if (entry) {
 					this.updateCacheEntry(url, entry.icons);
@@ -260,7 +260,7 @@ export class BasicIconProvider implements IconProvider {
 	// data
 	private makeIconUrl(icons: site_info.Icon[], minSize: number) {
 		if (icons.length == 0) {
-			return {url: '', icon: null};
+			return { url: '', icon: null };
 		}
 
 		var iconsBySize = underscore.sortBy(icons, (icon) => {
@@ -271,7 +271,7 @@ export class BasicIconProvider implements IconProvider {
 		var squareIcon: site_info.Icon;
 		var nonSquareIcon: site_info.Icon;
 
-		for (var i=0; i < iconsBySize.length; i++) {
+		for (var i = 0; i < iconsBySize.length; i++) {
 			var candidate = iconsBySize[i];
 			if (candidate.width >= minSize) {
 				if (candidate.width == candidate.height) {
@@ -284,16 +284,16 @@ export class BasicIconProvider implements IconProvider {
 
 		var icon = squareIcon || nonSquareIcon;
 		if (!icon) {
-			icon = iconsBySize[iconsBySize.length-1];
+			icon = iconsBySize[iconsBySize.length - 1];
 		}
-		
+
 		var iconInfo = image.getInfo(icon.data);
 		var mimeType = iconInfo ? image.mimeType(iconInfo.type) : 'application/octet-stream';
 
-		var iconBlob = new Blob([icon.data], {type: mimeType});
+		var iconBlob = new Blob([icon.data], { type: mimeType });
 		var blobUrl = URL.createObjectURL(iconBlob);
 
-		return {url: blobUrl, icon: icon};
+		return { url: blobUrl, icon: icon };
 	}
 
 	// Returns a fallback URL to try if querying an item's URL does
@@ -327,25 +327,25 @@ class Cache {
 	  * Resolves with the cache entry if found or undefined
 	  * if no such entry exists.
 	  */
-	query(url: string) : Q.Promise<CacheEntry> {
+	query(url: string): Q.Promise<CacheEntry> {
 		return this.withKey(url, (key) => {
 			return this.store.get<CacheEntry>(key);
 		});
 	}
 
-	insert(url: string, icons: CacheEntry) : Q.Promise<void> {
+	insert(url: string, icons: CacheEntry): Q.Promise<void> {
 		return this.withKey(url, (key) => {
 			return this.store.set(key, icons);
 		});
 	}
 
-	clear(url: string) : Q.Promise<void> {
+	clear(url: string): Q.Promise<void> {
 		return this.withKey(url, (key) => {
 			return this.store.remove(key);
 		});
 	}
 
-	private withKey<T>(url: string, f: (key: string) => Q.Promise<T>) : Q.Promise<T> {
+	private withKey<T>(url: string, f: (key: string) => Q.Promise<T>): Q.Promise<T> {
 		var key = urijs(url_util.normalize(url)).hostname();
 		if (!key) {
 			return Q.reject<T>(new err_util.BaseError('Invalid URL'));
@@ -369,8 +369,8 @@ export class IconControl extends typed_react.Component<IconControlProps, {}> {
 		if (!this.iconUpdateListener) {
 			this.iconUpdateListener = (url) => {
 				if (this.props.location &&
-				    this.props.iconProvider.updateMatches(url, this.props.location) &&
-				    this.isMounted()) {
+					this.props.iconProvider.updateMatches(url, this.props.location) &&
+					this.isMounted()) {
 					this.forceUpdate();
 				}
 			};
@@ -422,8 +422,8 @@ export class IconControl extends typed_react.Component<IconControlProps, {}> {
 			onClick: this.props.onClick,
 			title: this.props.title
 		}),
-			react.DOM.img(style.mixin(imgStyles, {ref: 'img', src: icon.iconUrl}))
-		);
+			react.DOM.img(style.mixin(imgStyles, { ref: 'img', src: icon.iconUrl }))
+			);
 	}
 }
 

@@ -2,7 +2,7 @@ import event_stream = require('../lib/base/event_stream');
 
 export function accountKey(account: Account) {
 	var serviceName = CloudService[account.cloudService];
-	return `${serviceName.toLowerCase()}-${account.cloudAccountId}-${account.storePath}`;
+	return `${serviceName.toLowerCase() }-${account.cloudAccountId}-${account.storePath}`;
 }
 
 export enum CloudService {
@@ -38,15 +38,15 @@ export enum Setting {
 
 export interface Store {
 	onChanged: event_stream.EventStream<Setting>;
-	get<T>(setting: Setting) : T;
-	set(setting: Setting, value: any) : void;
-	clear(setting: Setting) : void;
+	get<T>(setting: Setting): T;
+	set(setting: Setting, value: any): void;
+	clear(setting: Setting): void;
 }
 
 export class SimpleStore implements Store {
 	onChanged: event_stream.EventStream<Setting>;
 
-	private settings: {[index: number] : any};
+	private settings: { [index: number]: any };
 
 	constructor() {
 		this.settings = {};

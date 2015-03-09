@@ -24,15 +24,15 @@ var colors = {
 	MATERIAL_COLOR_ACCENT3: '#f06292',
 
 	// http://www.google.com/design/spec/components/dividers.html#dividers-specs
-	MATERIAL_COLOR_DIVIDER: premultiplyColor(0,0,0,0.12),
+	MATERIAL_COLOR_DIVIDER: premultiplyColor(0, 0, 0, 0.12),
 
 	MATERIAL_GREY_P200: '#eeeeee',
 	MATERIAL_GREY_P500: '#9e9e9e',
 
 	MATERIAL_RED_P500: '#f44336',
 
-	MATERIAL_TEXT_PRIMARY: premultiplyColor(0,0,0,0.87),
-	MATERIAL_TEXT_SECONDARY: premultiplyColor(0,0,0,0.54),
+	MATERIAL_TEXT_PRIMARY: premultiplyColor(0, 0, 0, 0.87),
+	MATERIAL_TEXT_SECONDARY: premultiplyColor(0, 0, 0, 0.54),
 
 	TOOLBAR_ICON: 'white'
 };

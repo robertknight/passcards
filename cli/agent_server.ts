@@ -18,20 +18,20 @@ import key_agent = require('../lib/key_agent');
 import streamutil = require('../lib/base/streamutil');
 
 export interface DecryptRequest {
-	id : string;
-	algo : key_agent.CryptoAlgorithm;
-	cipherText : string
+	id: string;
+	algo: key_agent.CryptoAlgorithm;
+	cipherText: string
 }
 
 export interface EncryptRequest {
-	id : string;
-	algo : key_agent.CryptoAlgorithm;
-	plainText : string;
+	id: string;
+	algo: key_agent.CryptoAlgorithm;
+	plainText: string;
 }
 
 export interface AddKeyRequest {
-	id : string;
-	key : string;
+	id: string;
+	key: string;
 }
 
 export var AGENT_PORT = 4789;
@@ -41,7 +41,7 @@ var AGENT_PID_FILE = '/tmp/passcards-agent.pid';
 
 var KEY_TIMEOUT = 2 * 60 * 1000;
 
-function currentVersion() : string {
+function currentVersion(): string {
 	return fs.statSync(__filename).mtime.toString();
 }
 
@@ -60,10 +60,10 @@ function parseJSONRequest(req: http.ServerRequest, rsp: http.ServerResponse, cb:
 }
 
 class Server {
-	private crypto : crypto.Crypto;
-	private httpServer : http.Server;
-	private keys : {[id:string]: string};
-	private keyTimeout : NodeJS.Timer;
+	private crypto: crypto.Crypto;
+	private httpServer: http.Server;
+	private keys: { [id: string]: string };
+	private keyTimeout: NodeJS.Timer;
 
 	constructor() {
 		this.crypto = new crypto.CryptoJsCrypto();
@@ -97,7 +97,7 @@ class Server {
 							var plainText = crypto.decryptAgileKeychainItemData(this.crypto, this.keys[params.id], cipherText);
 
 							logf('Decrypted (%d => %d) bytes with key %s', cipherText.length,
-							  plainText.length, params.id);
+								plainText.length, params.id);
 
 							self.resetKeyTimeout();
 
@@ -124,7 +124,7 @@ class Server {
 							var cipherText = crypto.encryptAgileKeychainItemData(this.crypto, this.keys[params.id], plainText);
 
 							logf('Encrypted (%d => %d) bytes with key %s', plainText.length,
-							  cipherText.length, params.id);
+								cipherText.length, params.id);
 
 							self.resetKeyTimeout();
 
@@ -149,7 +149,7 @@ class Server {
 		this.httpServer = http.createServer(router);
 	}
 
-	listen(port: number) : Q.Promise<void> {
+	listen(port: number): Q.Promise<void> {
 		var ready = Q.defer<void>();
 		this.httpServer.listen(port, () => {
 			logf('Agent listening on port %d', port);
@@ -169,9 +169,9 @@ class Server {
 	}
 }
 
-function isCurrentVersionRunning() : Q.Promise<boolean> {
+function isCurrentVersionRunning(): Q.Promise<boolean> {
 	var result = Q.defer<boolean>();
-	var req = http.get({host: 'localhost', port: AGENT_PORT, path: '/version'}, (resp: http.ClientResponse) => {
+	var req = http.get({ host: 'localhost', port: AGENT_PORT, path: '/version' }, (resp: http.ClientResponse) => {
 		streamutil.readAll(resp).then((content) => {
 			if (content == currentVersion()) {
 				result.resolve(true);
@@ -186,7 +186,7 @@ function isCurrentVersionRunning() : Q.Promise<boolean> {
 	return result.promise;
 }
 
-export function agentPID() : number {
+export function agentPID(): number {
 	try {
 		var pid = parseInt(fs.readFileSync(AGENT_PID_FILE).toString());
 		return pid;
@@ -196,7 +196,7 @@ export function agentPID() : number {
 	}
 }
 
-function launchAgent() : Q.Promise<number> {
+function launchAgent(): Q.Promise<number> {
 	var pid = Q.defer<number>();
 
 	var agentOut = fs.openSync(AGENT_LOG, 'a');
@@ -206,9 +206,9 @@ function launchAgent() : Q.Promise<number> {
 		persistent: true,
 		interval: 5
 	}, () => {
-		fs.unwatchFile(AGENT_PID_FILE);
-		pid.resolve(agentPID());
-	});
+			fs.unwatchFile(AGENT_PID_FILE);
+			pid.resolve(agentPID());
+		});
 
 	var server = child_process.spawn('node', [path.join(__dirname, 'agent_server')], {
 		detached: true,
@@ -222,7 +222,7 @@ function launchAgent() : Q.Promise<number> {
 	return pid.promise;
 }
 
-export function startAgent() : Q.Promise<number> {
+export function startAgent(): Q.Promise<number> {
 	var existingPID = agentPID();
 	if (existingPID) {
 		var pid = Q.defer<number>();
@@ -241,7 +241,7 @@ export function startAgent() : Q.Promise<number> {
 	}
 }
 
-export function stopAgent() : Q.Promise<void> {
+export function stopAgent(): Q.Promise<void> {
 	var pid = agentPID();
 	if (!pid) {
 		return Q<void>(null);

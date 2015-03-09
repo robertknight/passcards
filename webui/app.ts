@@ -51,7 +51,7 @@ export class App {
 		keyAgent.setAutoLockTimeout(settingStore.get<number>(settings.Setting.AutoLockTimeout));
 
 		var iconProvider = this.setupItemIconProvider();
-		
+
 		this.services = {
 			iconProvider: iconProvider,
 			autofiller: new autofill.AutoFiller(browserExt.pageAccess),
@@ -63,7 +63,7 @@ export class App {
 		};
 
 		this.services.keyAgent.onLock().listen(() => {
-			this.itemStore.update({isLocked: true});
+			this.itemStore.update({ isLocked: true });
 		});
 
 		this.itemStore = new ui_item_store.Store();
@@ -81,10 +81,10 @@ export class App {
 		});
 
 		// update the initial URL when the app is loaded
-		this.itemStore.update({currentUrl: browserExt.pageAccess.currentUrl});
+		this.itemStore.update({ currentUrl: browserExt.pageAccess.currentUrl });
 
 		browserExt.pageAccess.pageChanged.listen((url) => {
-			this.itemStore.update({currentUrl: url});
+			this.itemStore.update({ currentUrl: url });
 		});
 
 		// handle login/logout events
@@ -98,7 +98,7 @@ export class App {
 					this.initAccount(account);
 				} else {
 					keyAgent.forgetKeys();
-					this.itemStore.update({store: null, syncer: null});
+					this.itemStore.update({ store: null, syncer: null });
 				}
 			}
 		});
@@ -137,7 +137,7 @@ export class App {
 					syncer.syncItems();
 				});
 
-				this.itemStore.update({store: store, syncer: syncer});
+				this.itemStore.update({ store: store, syncer: syncer });
 			} catch (err) {
 				console.log('vault setup failed', err, err.stack);
 			}
@@ -215,7 +215,7 @@ export class App {
 			// and can use it to avoid showing elements (eg. popup menus)
 			// underneath the keyboard
 			element.ownerDocument.defaultView.onresize = () => {
-				this.activeAppView.setState({viewportRect: this.getViewportRect(rootInputElement.ownerDocument.defaultView)});
+				this.activeAppView.setState({ viewportRect: this.getViewportRect(rootInputElement.ownerDocument.defaultView) });
 			};
 		}
 	}
@@ -232,7 +232,7 @@ export class App {
 		var ICON_SIZE = 48;
 
 		return new item_icons.BasicIconProvider(iconDiskCache.store('icon-cache'),
-		  siteInfoProvider, ICON_SIZE);
+			siteInfoProvider, ICON_SIZE);
 	}
 
 	// setup the connection to the cloud file system
@@ -278,7 +278,7 @@ export class App {
 				copy: (mimeType: string, data: string) => {
 					/* no-op */
 				},
-				clipboardAvailable : () => {
+				clipboardAvailable: () => {
 					return false;
 				}
 			};

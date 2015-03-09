@@ -8,65 +8,71 @@ import pbkdf2Lib = require('./pbkdf2');
 var parallel = require('paralleljs');
 
 var SHA1_TEST_VECTORS = [
-	{ msg : "abc",
-	  digest : "a9993e364706816aba3e25717850c26c9cd0d89d" },
-	{ msg : "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
-	  digest : "84983e441c3bd26ebaae4aa1f95129e5e54670f1" }
+	{
+		msg: "abc",
+		digest: "a9993e364706816aba3e25717850c26c9cd0d89d"
+	},
+	{
+		msg: "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
+		digest: "84983e441c3bd26ebaae4aa1f95129e5e54670f1"
+	}
 ];
 
 // from Wikipedia and RFC 2202
 var HMAC_TEST_VECTORS = [
-	{ key : "",
-	  message : "",
-	  hmac : "fbdb1d1b18aa6c08324b7d64b71fb76370690e1d"
+	{
+		key: "",
+		message: "",
+		hmac: "fbdb1d1b18aa6c08324b7d64b71fb76370690e1d"
 	},
-	{ key : "key",
-	  message : "The quick brown fox jumps over the lazy dog",
-	  hmac : "de7c9b85b8b78aa6bc8a7a36f70a90701c9db4d9"
+	{
+		key: "key",
+		message: "The quick brown fox jumps over the lazy dog",
+		hmac: "de7c9b85b8b78aa6bc8a7a36f70a90701c9db4d9"
     },
 	{
-	  key : "Jefe",
-	  message : "what do ya want for nothing?",
-	  hmac : "effcdf6ae5eb2fa2d27416d5f184df9c259a7c79"
+		key: "Jefe",
+		message: "what do ya want for nothing?",
+		hmac: "effcdf6ae5eb2fa2d27416d5f184df9c259a7c79"
 	}
 ];
 
 // from RFC 6070
 var PBKDF2_TEST_VECTORS = [
 	{
-		pass : "password",
-		salt : "salt",
-		iterations : 1,
-		dkLen : 20,
+		pass: "password",
+		salt: "salt",
+		iterations: 1,
+		dkLen: 20,
 		key: "0c60c80f961f0e71f3a9b524af6012062fe037a6"
 	},
 	{
-		pass : "password",
-		salt : "salt",
-		iterations : 2,
-		dkLen : 20,
-		key : "ea6c014dc72d6f8ccd1ed92ace1d41f0d8de8957"
+		pass: "password",
+		salt: "salt",
+		iterations: 2,
+		dkLen: 20,
+		key: "ea6c014dc72d6f8ccd1ed92ace1d41f0d8de8957"
 	},
 	{
-		pass : "password",
-		salt : "salt",
-		iterations : 3,
-		dkLen : 20,
-		key : "6b4e26125c25cf21ae35ead955f479ea2e71f6ff"
+		pass: "password",
+		salt: "salt",
+		iterations: 3,
+		dkLen: 20,
+		key: "6b4e26125c25cf21ae35ead955f479ea2e71f6ff"
 	},
 	{
-		pass : "password",
-		salt : "salt",
-		iterations : 4096,
-		dkLen : 20,
-		key : "4b007901b765489abead49d926f721d065a429c1"
+		pass: "password",
+		salt: "salt",
+		iterations: 4096,
+		dkLen: 20,
+		key: "4b007901b765489abead49d926f721d065a429c1"
 	},
 	{
-		pass : "passwordPASSWORDpassword",
-		salt : "saltSALTsaltSALTsaltSALTsaltSALTsalt",
-		iterations : 4096,
-		dkLen : 25,
-		key : "3d2eec4fe41c849b80c8d83662c0e44a8b291a964cf2f07038"
+		pass: "passwordPASSWORDpassword",
+		salt: "saltSALTsaltSALTsaltSALTsaltSALTsalt",
+		iterations: 4096,
+		dkLen: 25,
+		key: "3d2eec4fe41c849b80c8d83662c0e44a8b291a964cf2f07038"
 	}
 ];
 
@@ -118,20 +124,20 @@ interface PBKDF2BlockParams {
 
 testLib.addAsyncTest('pbkdf2Lib Parallel', (assert) => {
 	var params = {
-		pass : "passwordPASSWORDpassword",
-		salt : "saltSALTsaltSALTsaltSALTsaltSALTsalt",
-		iterations : 4096,
-		dkLen : 25,
+		pass: "passwordPASSWORDpassword",
+		salt: "saltSALTsaltSALTsaltSALTsaltSALTsalt",
+		iterations: 4096,
+		dkLen: 25,
 	};
 	var expectedKey = "3d2eec4fe41c849b80c8d83662c0e44a8b291a964cf2f07038"
 
 	var blocks = [
-		{ params : params, blockIndex : 0 },
-		{ params : params, blockIndex : 1 }
+		{ params: params, blockIndex: 0 },
+		{ params: params, blockIndex: 1 }
 	];
 
 	var pbkdfBlock = (blockParams: PBKDF2BlockParams) => {
-		var modPath : string;
+		var modPath: string;
 		if (typeof self == 'undefined') {
 			// running from NodeJS context, require
 			// the pbkdf2.js lib as normal
@@ -142,9 +148,9 @@ testLib.addAsyncTest('pbkdf2Lib Parallel', (assert) => {
 			modPath = 'pbkdf2';
 		}
 
-		function bufferFromString(str: string) : Uint8Array {
+		function bufferFromString(str: string): Uint8Array {
 			var destBuf = new Uint8Array(str.length);
-			for (var i=0; i < str.length; i++) {
+			for (var i = 0; i < str.length; i++) {
 				destBuf[i] = str.charCodeAt(i);
 			}
 			return destBuf;
@@ -155,10 +161,10 @@ testLib.addAsyncTest('pbkdf2Lib Parallel', (assert) => {
 		var passBuf = bufferFromString(blockParams.params.pass);
 		var saltBuf = bufferFromString(blockParams.params.salt);
 		var keyBlock = pbkdf2.keyBlock(passBuf,
-		  saltBuf,
-		  blockParams.params.iterations,
-		  blockParams.blockIndex
-		);
+			saltBuf,
+			blockParams.params.iterations,
+			blockParams.blockIndex
+			);
 		return new Uint8Array(keyBlock);
 	};
 
@@ -178,7 +184,7 @@ testLib.addAsyncTest('pbkdf2Lib Parallel', (assert) => {
 		var result = new Uint8Array(params.dkLen);
 		var resultIndex = 0;
 		blocks.forEach((block) => {
-			for (var i=0; resultIndex < params.dkLen && i < block.byteLength; i++) {
+			for (var i = 0; resultIndex < params.dkLen && i < block.byteLength; i++) {
 				result[resultIndex] = block[i];
 				++resultIndex;
 			}

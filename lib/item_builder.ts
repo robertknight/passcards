@@ -13,38 +13,38 @@ export class Builder {
 		this._item.setContent(this._content);
 	}
 
-	item() : item_store.Item {
+	item(): item_store.Item {
 		return this._item;
 	}
 
-	content() : item_store.ItemContent {
+	content(): item_store.ItemContent {
 		return this._content;
 	}
 
-	itemAndContent() : item_store.ItemAndContent {
+	itemAndContent(): item_store.ItemAndContent {
 		return {
 			item: this._item,
 			content: this._content
 		};
 	}
 
-	setTitle(title: string) : Builder {
+	setTitle(title: string): Builder {
 		this._item.title = title;
 		return this;
 	}
 
-	addLogin(username: string) : Builder {
+	addLogin(username: string): Builder {
 		this._content.formFields.push(Builder.createLoginField(username));
 		this._item.updateOverviewFromContent(this._content);
 		return this;
 	}
 
-	addPassword(password: string) : Builder {
+	addPassword(password: string): Builder {
 		this._content.formFields.push(Builder.createPasswordField(password));
 		return this;
 	}
 
-	addFormField(name: string, designation: string, type: item_store.FormFieldType, value: string) : Builder {
+	addFormField(name: string, designation: string, type: item_store.FormFieldType, value: string): Builder {
 		this._content.formFields.push({
 			id: '',
 			name: name,
@@ -55,7 +55,7 @@ export class Builder {
 		return this;
 	}
 
-	addUrl(url: string) : Builder {
+	addUrl(url: string): Builder {
 		this._content.urls.push({
 			label: 'website',
 			url: url
@@ -64,7 +64,7 @@ export class Builder {
 		return this;
 	}
 
-	static createLoginField(account: string) : item_store.WebFormField {
+	static createLoginField(account: string): item_store.WebFormField {
 		return {
 			id: '',
 			name: 'username',
@@ -74,7 +74,7 @@ export class Builder {
 		};
 	}
 
-	static createPasswordField(password: string) : item_store.WebFormField {
+	static createPasswordField(password: string): item_store.WebFormField {
 		return {
 			id: '',
 			name: 'password',
@@ -94,7 +94,7 @@ export class SectionBuilder {
 		this._section.title = title;
 	}
 
-	addField(kind: item_store.FieldType, title: string, value: any) : SectionBuilder {
+	addField(kind: item_store.FieldType, title: string, value: any): SectionBuilder {
 		var field = new item_store.ItemField();
 		field.kind = kind;
 		field.title = title;
@@ -103,7 +103,7 @@ export class SectionBuilder {
 		return this;
 	}
 
-	section() : item_store.ItemSection {
+	section(): item_store.ItemSection {
 		return this._section;
 	}
 }

@@ -26,7 +26,7 @@ export interface Client {
 	  * is used.
 	  */
 	call<R>(method: string, args: any[], callback?: (err: any, result: R) => void,
-	        timeout?: number) : void;
+		timeout?: number): void;
 }
 
 /** Provides an interface for handling an RPC call.
@@ -37,7 +37,7 @@ export interface Server {
 	  * arguments. Any exception thrown will be converted to an error returned
 	  * via the callback passed to Client.call()
 	  */
-	on<R>(method: string, handler: (...args: any[]) => R) : void;
+	on<R>(method: string, handler: (...args: any[]) => R): void;
 	/** Register an async RPC handler. This is similar to on() except that
 	  * instead of returning a value or throwing an exception, onAsync()
 	  * should call done() with the error or result when finished.
@@ -45,7 +45,7 @@ export interface Server {
 	  * If the handler throws an exception directly, that is equivalent to
 	  * calling done() with the exception.
 	  */
-	onAsync<R>(method: string, handler: (done: (err: any, result: R) => void, ...args: any[]) => void) : void;
+	onAsync<R>(method: string, handler: (done: (err: any, result: R) => void, ...args: any[]) => void): void;
 }
 
 export interface Message {
@@ -65,23 +65,23 @@ export interface ReplyMessage extends Message {
 /** Interface for sending and receiving messages to/from a remote
   * object such as a window or web worker.
   */
-export interface MessagePort<Call,Reply> {
-	on(method: string, handler: Function) : void;
-	on(method: 'rpc-call', handler: (call: Call) => void) : void;
-	on(method: 'rpc-reply', handler: (reply: Reply) => void) : void;
+export interface MessagePort<Call, Reply> {
+	on(method: string, handler: Function): void;
+	on(method: 'rpc-call', handler: (call: Call) => void): void;
+	on(method: 'rpc-reply', handler: (reply: Reply) => void): void;
 
-	emit(method: string, data: Object) : void;
-	emit(method: 'rpc-call', data: Call) : void;
-	emit(method: 'rpc-reply', data: Reply) : void;
+	emit(method: string, data: Object): void;
+	emit(method: 'rpc-call', data: Call): void;
+	emit(method: 'rpc-reply', data: Reply): void;
 }
 
 /** Subset of the DOM Window interface related to sending and receiving
   * messages to/from other windows.
   */
 export interface WindowMessageInterface {
-	addEventListener(event: string, handler: Function) : void;
-	addEventListener(event: 'message', handler: (ev: MessageEvent) => any) : void;
-	postMessage(message: any, targetOrigin: string) : void;
+	addEventListener(event: string, handler: Function): void;
+	addEventListener(event: 'message', handler: (ev: MessageEvent) => any): void;
+	postMessage(message: any, targetOrigin: string): void;
 }
 
 /** A MessagePort implementation which uses the Window.postMessage() and
@@ -95,15 +95,15 @@ export interface WindowMessageInterface {
   */
 export class WindowMessagePort {
 	constructor(public window: WindowMessageInterface,
-	            public targetOrigin: string,
-	            public sendTag: string,
-				public receiveTag: string) {
+		public targetOrigin: string,
+		public sendTag: string,
+		public receiveTag: string) {
 	}
 
-	on(method: string, handler: Function) : void {
+	on(method: string, handler: Function): void {
 		this.window.addEventListener('message', (ev: MessageEvent) => {
 			if (typeof ev.data.rpcMethod !== 'undefined' &&
-			    typeof ev.data.tag !== 'undefined' &&
+				typeof ev.data.tag !== 'undefined' &&
 				ev.data.rpcMethod == method &&
 				ev.data.tag == this.receiveTag) {
 				handler(ev.data.data);
@@ -111,7 +111,7 @@ export class WindowMessagePort {
 		});
 	}
 
-	emit(method: string, data: Object) : void {
+	emit(method: string, data: Object): void {
 		this.window.postMessage({
 			rpcMethod: method,
 			data: data,
@@ -127,16 +127,16 @@ export class WorkerMessagePort {
 	on(method: string, handler: Function) {
 		this.worker.addEventListener('message', (ev: MessageEvent) => {
 			if (typeof ev.data.rpcMethod !== 'undefined' &&
-			    typeof ev.data.tag !== 'undefined' &&
-			    ev.data.rpcMethod == method &&
-			    ev.data.tag == this.receiveTag) {
+				typeof ev.data.tag !== 'undefined' &&
+				ev.data.rpcMethod == method &&
+				ev.data.tag == this.receiveTag) {
 				handler(ev.data.data);
 			}
 		});
 	}
 
 	emit(method: string, data: Object) {
-		this.worker.postMessage({rpcMethod: method, data: data, tag: this.sendTag});
+		this.worker.postMessage({ rpcMethod: method, data: data, tag: this.sendTag });
 	}
 }
 
@@ -148,11 +148,11 @@ export class ChromeMessagePort {
 	constructor(public targetTab?: number) {
 	}
 
-	on(method: string, handler: Function) : void {
+	on(method: string, handler: Function): void {
 		var onMessage = <ChromeEvent>chrome.runtime.onMessage;
 		onMessage.addListener((msg, sender) => {
 			if (typeof msg.rpcMethod !== 'string' ||
-			    msg.rpcMethod != method) {
+				msg.rpcMethod != method) {
 				return;
 			}
 			if (this.targetTab) {
@@ -164,7 +164,7 @@ export class ChromeMessagePort {
 		});
 	}
 
-	emit(method: string, data: Object) : void {
+	emit(method: string, data: Object): void {
 		var payload = {
 			rpcMethod: method,
 			data: data
@@ -299,7 +299,7 @@ export class RpcHandler implements Client, Server {
 	}
 
 	call<R>(method: string, args: any[], callback?: (err: any, result: R) => void,
-	        timeout?: number) {
+		timeout?: number) {
 		var call = {
 			id: ++this.id,
 			method: method,
@@ -319,7 +319,7 @@ export class RpcHandler implements Client, Server {
 			};
 			pending.replyTimerId = this.timers.setTimeout(() => {
 				callback(new Error(`RPC call ${method} did not receive a reply within ${timeout} ms`),
-				  null);
+					null);
 				console.warn('rpc-call %s did not receive a reply within %d ms', method, timeout);
 			}, timeout)
 		}

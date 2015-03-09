@@ -29,7 +29,7 @@ export interface State {
 export class Store {
 	stateChanged: event_stream.EventStream<State>;
 	state: State;
-	
+
 	private syncListener: event_stream.EventListener<sync.SyncProgress>;
 
 	constructor() {
@@ -91,7 +91,7 @@ export class Store {
 		if (doRefresh) {
 			this.refreshItems();
 		}
-		
+
 		this.state = nextState;
 		this.stateChanged.publish(nextState);
 	}
@@ -104,7 +104,7 @@ export class Store {
 			var visibleItems = items.filter((item) => {
 				return item.isRegularItem() && !item.trashed;
 			});
-			this.update({items: visibleItems});
+			this.update({ items: visibleItems });
 		}).catch((err) => {
 			console.log('Error listing items: ', err);
 		});

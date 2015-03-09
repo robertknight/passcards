@@ -5,7 +5,7 @@ import Q = require('q');
 /** Resolve or reject promise @p a with the result of promise @p b.
   * Returns the promise associated with @p a
   */
-export function resolveWith<T>(a: Q.Deferred<T>, b: Q.Promise<T>) : Q.Promise<T> {
+export function resolveWith<T>(a: Q.Deferred<T>, b: Q.Promise<T>): Q.Promise<T> {
 	b.then((result) => {
 		a.resolve(result);
 	})
@@ -20,7 +20,7 @@ export function resolveWith<T>(a: Q.Deferred<T>, b: Q.Promise<T>) : Q.Promise<T>
   *
   * Returns the promise associated with @p a
   */
-export function resolveWithValue<T, U>(a: Q.Deferred<T>, b: Q.Promise<U>, value: T) : Q.Promise<T> {
+export function resolveWithValue<T, U>(a: Q.Deferred<T>, b: Q.Promise<U>, value: T): Q.Promise<T> {
 	b.then(() => {
 		a.resolve(value);
 	})
@@ -35,7 +35,7 @@ export function resolveWithValue<T, U>(a: Q.Deferred<T>, b: Q.Promise<U>, value:
   * Note: This doesn't actually modify the passed promise at all,
   * it just exists as a helper for type checking.
   */
-export function eraseResult<T>(p: Q.Promise<T>) : Q.Promise<void> {
+export function eraseResult<T>(p: Q.Promise<T>): Q.Promise<void> {
 	return <any>p;
 }
 
@@ -43,7 +43,7 @@ export function eraseResult<T>(p: Q.Promise<T>) : Q.Promise<void> {
   *
   * Returns an array containing the results of each operation.
   */
-export function series(funcs: Array<() => Q.Promise<any>>, results?: any[]) : Q.Promise<any[]> {
+export function series(funcs: Array<() => Q.Promise<any>>, results?: any[]): Q.Promise<any[]> {
 	results = results || [];
 	if (funcs.length == 0) {
 		return Q(results);
@@ -63,7 +63,7 @@ export function series(funcs: Array<() => Q.Promise<any>>, results?: any[]) : Q.
   * is resolved with true, the loop exits, otherwise the next iteration
   * begins by invoking func() again.
   */
-export function until(func: () => Q.Promise<boolean>) : Q.Promise<boolean> {
+export function until(func: () => Q.Promise<boolean>): Q.Promise<boolean> {
 	return func().then((done) => {
 		if (done) {
 			return Q(true);
@@ -77,7 +77,7 @@ export function until(func: () => Q.Promise<boolean>) : Q.Promise<boolean> {
   * which was either resolved with a T or
   * rejected with an Error.
   */
-export interface Result<T,Error> {
+export interface Result<T, Error> {
 	value?: T;
 	error?: Error;
 }
@@ -91,11 +91,11 @@ export interface Result<T,Error> {
   * of the promise in the same function whether it succeeded
   * or failed.
   */
-export function result<T,Error>(promise: Q.Promise<T>) {
+export function result<T, Error>(promise: Q.Promise<T>) {
 	return promise.then((value) => {
-		return <Result<T,Error>>{value: value};
+		return <Result<T, Error>>{ value: value };
 	}).catch((error) => {
-		return <Result<T,Error>>{error: error};
+		return <Result<T, Error>>{ error: error };
 	});
 }
 

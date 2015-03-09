@@ -7,9 +7,9 @@ import Q = require('q');
 import asyncutil = require('../lib/base/asyncutil');
 
 export interface Clipboard {
-	setData(content: string) : Q.Promise<void>;
-	getData() : Q.Promise<string>;
-	clear() : Q.Promise<void>;
+	setData(content: string): Q.Promise<void>;
+	getData(): Q.Promise<string>;
+	clear(): Q.Promise<void>;
 }
 
 export class FakeClipboard implements Clipboard {
@@ -19,16 +19,16 @@ export class FakeClipboard implements Clipboard {
 		this.data = '';
 	}
 
-	setData(content: string) : Q.Promise<void> {
+	setData(content: string): Q.Promise<void> {
 		this.data = content;
 		return Q<void>(null);
 	}
 
-	getData() : Q.Promise<string> {
+	getData(): Q.Promise<string> {
 		return Q(this.data);
 	}
 
-	clear() : Q.Promise<void> {
+	clear(): Q.Promise<void> {
 		this.data = '';
 		return Q<void>(null);
 	}
@@ -36,7 +36,7 @@ export class FakeClipboard implements Clipboard {
 
 // run an external command, feeding it 'input' if non-null and return
 // a promise for the output
-function exec(command: string, input?: string) : Q.Promise<string> {
+function exec(command: string, input?: string): Q.Promise<string> {
 	var stdout = Q.defer<string>();
 	var child = child_process.exec(command, (err, _stdout, stderr) => {
 		if (err) {
@@ -58,34 +58,34 @@ function exec(command: string, input?: string) : Q.Promise<string> {
 export class X11Clipboard implements Clipboard {
 	// TODO - Improve error handling if xsel is not installed
 
-	setData(content: string) : Q.Promise<void> {
+	setData(content: string): Q.Promise<void> {
 		return asyncutil.eraseResult(exec('xsel --clipboard --input', content));
 	}
 
-	getData() : Q.Promise<string> {
+	getData(): Q.Promise<string> {
 		return exec('xsel --clipboard --output');
 	}
 
-	clear() : Q.Promise<void> {
+	clear(): Q.Promise<void> {
 		return asyncutil.eraseResult(exec('xsel --clipboard --clear'));
 	}
 }
 
 export class MacClipboard implements Clipboard {
-	setData(content: string) : Q.Promise<void> {
+	setData(content: string): Q.Promise<void> {
 		return asyncutil.eraseResult(exec('pbcopy', content));
 	}
 
-	getData() : Q.Promise<string> {
+	getData(): Q.Promise<string> {
 		return exec('pbpaste');
 	}
 
-	clear() : Q.Promise<void> {
+	clear(): Q.Promise<void> {
 		return asyncutil.eraseResult(exec('pbcopy', ''));
 	}
 }
 
-export function createPlatformClipboard() : Clipboard {
+export function createPlatformClipboard(): Clipboard {
 	if (os.type() == 'Linux' && process.env.DISPLAY) {
 		return new X11Clipboard();
 	} else if (os.type() == 'Darwin') {

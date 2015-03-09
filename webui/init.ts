@@ -2,7 +2,7 @@ import app = require('./app');
 import env = require('../lib/base/env');
 
 interface AppWindow extends Window {
-	renderApp(element: HTMLElement) : void;
+	renderApp(element: HTMLElement): void;
 }
 
 document.addEventListener('DOMContentLoaded', () => {

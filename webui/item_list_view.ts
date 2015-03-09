@@ -199,17 +199,17 @@ export class ItemListView extends typed_react.Component<ItemListViewProps, ItemL
 	}
 
 	render() {
-		var filterUrl : string;
+		var filterUrl: string;
 		if (!this.state.filter && this.props.currentUrl) {
 			filterUrl = this.props.currentUrl;
 		}
 
 		return react.DOM.div(style.mixin(theme.container, {
-				tabIndex: 0,
-				onFocus: () => {
-					this.setFocus();
-				}
-			}),
+			tabIndex: 0,
+			onFocus: () => {
+				this.setFocus();
+			}
+		}),
 			ItemListToolbarF({
 				filterUrl: this.props.currentUrl,
 
@@ -232,7 +232,8 @@ export class ItemListView extends typed_react.Component<ItemListViewProps, ItemL
 				onLockClicked: () => this.props.onLockClicked(),
 				onMenuClicked: (e) => this.props.onMenuClicked(e)
 			}),
-			ItemListF({items: this.props.items, filter: this.state.filter,
+			ItemListF({
+				items: this.props.items, filter: this.state.filter,
 				filterUrl: filterUrl,
 				onSelectedItemChanged: (item, rect) => {
 					if (!item) {
@@ -243,7 +244,7 @@ export class ItemListView extends typed_react.Component<ItemListViewProps, ItemL
 				ref: 'itemList',
 				iconProvider: this.props.iconProvider
 			})
-		);
+			);
 	}
 
 	private focusSearchField() {
@@ -273,7 +274,7 @@ export class Item extends typed_react.Component<ItemProps, {}> {
 		// onSelected() is a closure that changes on every render
 		// (see createListItem())
 		return reactutil.objectChanged(this.props, nextProps, 'onSelected') ||
-		       reactutil.objectChanged(this.state, nextState);
+			reactutil.objectChanged(this.state, nextState);
 	}
 
 	render() {
@@ -292,10 +293,10 @@ export class Item extends typed_react.Component<ItemProps, {}> {
 		var translation = 'translate3d(0px,' + offset + ',0px)';
 
 		return react.DOM.div(style.mixin(theme.item, {
-				ref: 'itemOverview',
-				onClick: () => this.props.onSelected(),
-				style: reactutil.prefix({transform: translation})
-			}),
+			ref: 'itemOverview',
+			onClick: () => this.props.onSelected(),
+			style: reactutil.prefix({ transform: translation })
+		}),
 			ripple.InkRippleF(),
 			item_icons.IconControlF({
 				location: this.props.item.primaryLocation(),
@@ -305,9 +306,9 @@ export class Item extends typed_react.Component<ItemProps, {}> {
 			react.DOM.div(style.mixin(theme.item.details),
 				react.DOM.div(style.mixin(theme.item.details.title), this.props.item.title),
 				react.DOM.div(style.mixin(theme.item.details.account), this.props.item.account)
-			),
+				),
 			focusIndicator
-		);
+			);
 	}
 }
 export var ItemF = reactutil.createFactory(Item);
@@ -319,7 +320,7 @@ interface ItemListState {
 	focusedIndex?: number;
 	matchingItems?: item_store.Item[];
 
-	visibleIndexes? : {
+	visibleIndexes?: {
 		first: number;
 		last: number;
 	};
@@ -357,7 +358,7 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 		focused: boolean;
 		index: number;
 		offsetTop: number;
-	}) : React.ReactElement<ItemProps> {
+	}): React.ReactElement<ItemProps> {
 		return ItemF({
 			key: item.uuid,
 			item: item,
@@ -373,7 +374,7 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 	}
 
 	focusNextItem() {
-		if (this.state.focusedIndex < this.state.matchingItems.length-1) {
+		if (this.state.focusedIndex < this.state.matchingItems.length - 1) {
 			++this.state.focusedIndex;
 			this.setState(this.state);
 
@@ -416,7 +417,7 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 		return null;
 	}
 
-	itemRect(item: item_store.Item) : reactutil.Rect {
+	itemRect(item: item_store.Item): reactutil.Rect {
 		var itemRef = this.refs[item.uuid];
 		if (!itemRef) {
 			return null;
@@ -437,7 +438,7 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 
 	componentWillReceiveProps(nextProps: ItemListProps) {
 		if (!shallow_equals(this.props.items, nextProps.items) ||
-		    this.props.filter !== nextProps.filter ||
+			this.props.filter !== nextProps.filter ||
 			this.props.filterUrl !== nextProps.filterUrl) {
 			this.updateMatchingItems(nextProps);
 		}
@@ -460,7 +461,7 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 		}).filter((item) => {
 			return item != null;
 		});
-			
+
 		var listHeight = this.state.matchingItems.length * this.state.itemHeight;
 		return react.DOM.div(style.mixin(theme.list, {
 			ref: 'itemList',
@@ -491,7 +492,7 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 			react.DOM.div(style.mixin([theme.list.footer, {
 				top: listHeight.toString()
 			}]), 'placeholder')
-		);
+			);
 	}
 
 	private updateVisibleItems() {
@@ -505,7 +506,7 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 				bottom: itemList.scrollTop + itemList.getBoundingClientRect().height
 			};
 
-			for (var i=0; i < this.state.matchingItems.length; i++) {
+			for (var i = 0; i < this.state.matchingItems.length; i++) {
 				var itemRect = {
 					top: i * this.state.itemHeight,
 					bottom: (i * this.state.itemHeight) + this.state.itemHeight
@@ -524,8 +525,8 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 			}
 
 			if (!this.state.visibleIndexes ||
-			     topIndex != this.state.visibleIndexes.first ||
-				 bottomIndex != this.state.visibleIndexes.last) {
+				topIndex != this.state.visibleIndexes.first ||
+				bottomIndex != this.state.visibleIndexes.last) {
 				this.setState({
 					visibleIndexes: {
 						first: topIndex,
@@ -551,7 +552,7 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 		var runway = 10;
 		return {
 			first: Math.max(0, this.state.visibleIndexes.first - runway),
-			last: Math.min(this.state.matchingItems.length-1, this.state.visibleIndexes.last + runway)
+			last: Math.min(this.state.matchingItems.length - 1, this.state.visibleIndexes.last + runway)
 		};
 	}
 
@@ -643,42 +644,43 @@ class ItemListToolbar extends typed_react.Component<ItemListToolbarProps, {}> {
 		}
 
 		return react.DOM.div(style.mixin(theme.toolbar),
-				svg_icon.SvgIconF({
-					className: style.classes(theme.toolbar.searchIcon),
-					href: 'dist/icons/icons.svg#search',
-					width: 20,
-					height: 20,
-					viewBox: iconViewBox,
-					fill: 'white'
+			svg_icon.SvgIconF({
+				className: style.classes(theme.toolbar.searchIcon),
+				href: 'dist/icons/icons.svg#search',
+				width: 20,
+				height: 20,
+				viewBox: iconViewBox,
+				fill: 'white'
+			}),
+			react.DOM.input({
+				className: style.classes(theme.toolbar.searchField),
+				type: 'text',
+				placeholder: searchPlaceholder,
+				ref: 'searchField',
+				onKeyDown: (e) => {
+					this.handleSearchFieldKey(e);
+				},
+				onInput: (e) => {
+					updateQuery();
+				}
+			}),
+			react.DOM.div(style.mixin(theme.toolbar.iconGroup),
+				toolbar.createButton({
+					iconUrl: 'dist/icons/icons.svg#lock-outline',
+					value: 'Lock',
+					onClick: () => this.props.onLockClicked()
 				}),
-				react.DOM.input({className: style.classes(theme.toolbar.searchField),
-					type: 'text',
-					placeholder: searchPlaceholder,
-					ref: 'searchField',
-					onKeyDown: (e) => {
-						this.handleSearchFieldKey(e);
-					},
-					onInput: (e) => {
-						updateQuery();
+				toolbar.createButton({
+					iconUrl: 'dist/icons/icons.svg#menu',
+					value: 'Menu',
+					ref: 'menuButton',
+					onClick: () => {
+						var event = {
+							itemRect: (<HTMLElement>this.refs['menuButton'].getDOMNode()).getBoundingClientRect()
+						};
+						this.props.onMenuClicked(event);
 					}
-				}),
-				react.DOM.div(style.mixin(theme.toolbar.iconGroup),
-					toolbar.createButton({
-						iconUrl: 'dist/icons/icons.svg#lock-outline',
-						value: 'Lock',
-						onClick: () => this.props.onLockClicked()
-					}),
-					toolbar.createButton({
-						iconUrl: 'dist/icons/icons.svg#menu',
-						value: 'Menu',
-						ref: 'menuButton',
-						onClick: () => {
-							var event = {
-								itemRect: (<HTMLElement>this.refs['menuButton'].getDOMNode()).getBoundingClientRect()
-							};
-							this.props.onMenuClicked(event);
-						}
-					})
+				})
 				)
 			);
 	}

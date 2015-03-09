@@ -57,7 +57,7 @@ detectors.push((data) => {
 	if (collectionutil.compare(data, JPEG_SIG, JPEG_SIG.length) != 0) {
 		return null;
 	}
-	
+
 	var segmentInfo = new DataView(data.buffer, data.byteOffset);
 	var segmentStart = 2;
 
@@ -69,9 +69,9 @@ detectors.push((data) => {
 
 		var segmentType = segmentInfo.getUint8(segmentStart + 1);
 		var segmentLength = segmentInfo.getUint16(segmentStart + 2);
-		
+
 		var isStartOfFrame = segmentType >= 0xC0 && segmentType <= 0xCF &&
-		                     segmentType != 0xC4 && segmentType != 0xC8 && segmentType != 0xCC;
+			segmentType != 0xC4 && segmentType != 0xC8 && segmentType != 0xCC;
 		if (!isStartOfFrame) {
 			segmentStart = segmentStart + 2 + segmentLength;
 			continue;
@@ -120,8 +120,8 @@ detectors.push((data) => {
 	var FILE_HEADER_LENGTH = 14;
 
 	var bmpInfoHeader = new collectionutil.LittleEndianDataView(
-	  new DataView(data.buffer, data.byteOffset + FILE_HEADER_LENGTH)
-	);
+		new DataView(data.buffer, data.byteOffset + FILE_HEADER_LENGTH)
+		);
 	var biSize = bmpInfoHeader.getUint32(0);
 	if (biSize != 40 /* sizeof(BITMAPINFOHEADER) */) {
 		throw new DecodeError('Unsupported bitmap type: ' + biSize);
@@ -146,8 +146,8 @@ detectors.push((data) => {
   * Throws DecodeError if the image type is recognized but cannot
   * be decoded.
   */
-export function getInfo(data: Uint8Array) : ImageInfo {
-	for (var i=0; i < detectors.length; i++) {
+export function getInfo(data: Uint8Array): ImageInfo {
+	for (var i = 0; i < detectors.length; i++) {
 		var info = detectors[i](data);
 		if (info) {
 			return info;
@@ -157,7 +157,7 @@ export function getInfo(data: Uint8Array) : ImageInfo {
 }
 
 /** Returns the MIME type string for a given image type */
-export function mimeType(type: ImageType) : string {
+export function mimeType(type: ImageType): string {
 	switch (type) {
 		case ImageType.Png:
 			return 'image/png';

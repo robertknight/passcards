@@ -159,7 +159,7 @@ var theme = style.create({
 					right: 0,
 					top: 0,
 					bottom: 0,
-					transition: style_util.transitionOn({opacity: .2}),
+					transition: style_util.transitionOn({ opacity: .2 }),
 					opacity: 1,
 					display: 'flex',
 					flexDirection: 'column',
@@ -174,7 +174,7 @@ var theme = style.create({
 					top: 0,
 					bottom: 0,
 					color: 'white',
-					transition: style_util.transitionOn({opacity: .2}),
+					transition: style_util.transitionOn({ opacity: .2 }),
 					opacity: 0,
 					display: 'flex',
 					flexDirection: 'column',
@@ -224,9 +224,9 @@ interface ItemFieldProps {
 
 	deleteLabel?: string;
 
-	onChangeLabel?(newValue: string) : boolean;
-	onChange(newValue: string) : boolean;
-	onDelete?() : void;
+	onChangeLabel? (newValue: string): boolean;
+	onChange(newValue: string): boolean;
+	onDelete? (): void;
 }
 
 class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
@@ -242,17 +242,17 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 
 	componentWillReceiveProps(nextProps: ItemFieldProps) {
 		if (this.props.value !== nextProps.value || nextProps.readOnly) {
-			this.setState({value: nextProps.value});
+			this.setState({ value: nextProps.value });
 		}
 	}
 
 	componentDidMount() {
 		var field = <HTMLElement>this.refs['itemField'].getDOMNode();
 		this.focusListener = (e: FocusEvent) => {
-			this.setState({selected: field.contains(<HTMLElement>e.target)});
+			this.setState({ selected: field.contains(<HTMLElement>e.target) });
 		};
 		field.ownerDocument.addEventListener('focus', this.focusListener,
-		  true /* useCapture - non-capture focus events do not bubble */);
+			true /* useCapture - non-capture focus events do not bubble */);
 	}
 
 	componentWillUnmount() {
@@ -294,7 +294,7 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 					key: 'reveal',
 					onClick: (e) => {
 						e.preventDefault();
-						this.setState({revealed: !this.state.revealed});
+						this.setState({ revealed: !this.state.revealed });
 					}
 				});
 				actions.push(revealButton);
@@ -307,7 +307,7 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 						key: 'generate',
 						onClick: (e) => {
 							var newPassword = crypto.generatePassword(12);
-							this.setState({revealed: true});
+							this.setState({ revealed: true });
 							this.props.onChange(newPassword);
 						}
 					});
@@ -353,7 +353,7 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 			focusField = false;
 		}
 
-		return react.DOM.div(style.mixin(theme.field, {ref: 'itemField'}),
+		return react.DOM.div(style.mixin(theme.field, { ref: 'itemField' }),
 			labelEditor,
 			text_field.TextFieldF({
 				floatingLabel: this.props.onChangeLabel == null,
@@ -362,7 +362,7 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 				type: inputType,
 				onChange: (e) => {
 					var newValue = (<HTMLInputElement>e.target).value;
-					this.setState({value: newValue});
+					this.setState({ value: newValue });
 					this.props.onChange(newValue);
 				},
 				readOnly: this.props.readOnly,
@@ -372,7 +372,7 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 				ref: 'textField'
 			}),
 			react.DOM.div(style.mixin(theme.field.actions), actions)
-		);
+			);
 	}
 }
 
@@ -476,10 +476,10 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				this.props.autofill();
 			})
 		];
-		
+
 		if (this.state.transition !== reactutil.TransitionState.Entered) {
 			setTimeout(() => {
-				this.setState({transition: reactutil.TransitionState.Entered});
+				this.setState({ transition: reactutil.TransitionState.Entered });
 			}, 10);
 		}
 
@@ -503,14 +503,14 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			if (!this.isMounted()) {
 				return;
 			}
-			this.setState({itemContent: content});
-			this.resetEdits({item: item, content: content});
+			this.setState({ itemContent: content });
+			this.resetEdits({ item: item, content: content });
 		}).done();
 	}
 
 	private resetEdits(base: item_store.ItemAndContent) {
 		var editedItem = item_store.cloneItem(base, base.item.uuid);
-		this.setState({editedItem: editedItem});
+		this.setState({ editedItem: editedItem });
 	}
 
 	private renderSections(item: item_store.ItemAndContent, onSave: () => void, editing: boolean) {
@@ -576,13 +576,13 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				} else {
 					sections.push(react.DOM.div(style.mixin(theme.section.title),
 						section.title)
-					);
+						);
 				}
 			}
 
 			sections.push(react.DOM.div({},
 				fields
-			));
+				));
 
 			if (editing) {
 				var addButtonRef = sectionIndex + '.addField';
@@ -593,13 +593,15 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 					ref: addButtonRef,
 					onClick: (e) => {
 						var buttonRect = (<HTMLElement>this.refs[addButtonRef].getDOMNode()).getBoundingClientRect();
-						this.setState({addingField: {
-							pos: {
-								top: buttonRect.top,
-								left: buttonRect.left
-							},
-							section: section
-						}});
+						this.setState({
+							addingField: {
+								pos: {
+									top: buttonRect.top,
+									left: buttonRect.left
+								},
+								section: section
+							}
+						});
 					}
 				}));
 			}
@@ -615,8 +617,8 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 					newSection.name = crypto.newUUID();
 					newSection.title = 'New Section';
 					item.content.sections.push(newSection);
-					
-					this.setState({autofocusField: newSection});
+
+					this.setState({ autofocusField: newSection });
 					this.onChangeItem();
 				}
 			}));
@@ -648,7 +650,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				focused: autofocus
 			}));
 		});
-		
+
 		if (editing) {
 			websites.push(button.ButtonF({
 				value: 'Add Website',
@@ -660,7 +662,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 						url: this.props.currentUrl
 					};
 					this.state.editedItem.content.urls.push(newUrl);
-					this.setState({autofocusField: newUrl});
+					this.setState({ autofocusField: newUrl });
 					onSave();
 				}
 			}));
@@ -714,7 +716,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				readOnly: !editing
 			}));
 		}
-		
+
 		return coreFields;
 	}
 
@@ -739,12 +741,12 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			onClick: () => {
 				addField(item_store.FieldType.Text);
 			}
-		},{
-			label: 'Password',
-			onClick: () => {
-				addField(item_store.FieldType.Password);
-			}
-		}];
+		}, {
+				label: 'Password',
+				onClick: () => {
+					addField(item_store.FieldType.Password);
+				}
+			}];
 
 		var newFieldMenu: React.ReactElement<menu.MenuProps>;
 		if (this.state.addingField) {
@@ -758,7 +760,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				},
 				viewportRect: this.props.viewportRect,
 				onDismiss: () => {
-					this.setState({addingField: null});
+					this.setState({ addingField: null });
 				},
 				zIndex: 1
 			});
@@ -784,8 +786,8 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				iconUrl: 'dist/icons/icons.svg#clear',
 				onClick: () => {
 					if (this.props.editMode == ItemEditMode.EditItem) {
-						this.resetEdits({item: this.props.item, content: this.state.itemContent});
-						this.setState({isEditing: false, didEditItem: false});
+						this.resetEdits({ item: this.props.item, content: this.state.itemContent });
+						this.setState({ isEditing: false, didEditItem: false });
 					} else {
 						this.exit();
 					}
@@ -823,22 +825,22 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				value: 'Edit',
 				iconUrl: 'dist/icons/icons.svg#edit',
 				onClick: () => {
-					this.setState({isEditing:true});
+					this.setState({ isEditing: true });
 				},
 				key: 'edit',
 			});
 		}
 		toolbarControls.push(react.DOM.div(style.mixin([item_list.theme.toolbar.iconGroup, {
-				position: 'relative',
-				width: 45,
-				overflow: 'hidden'
-			}]),
+			position: 'relative',
+			width: 45,
+			overflow: 'hidden'
+		}]),
 			editOrSave
-		));
+			));
 
 		return react.DOM.div(style.mixin(theme.header.toolbar),
 			toolbarControls
-		);
+			);
 	}
 
 	private onChangeItem() {
@@ -851,7 +853,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 	}
 
 	private renderFields(editing: boolean) {
-		var detailsContent : React.ReactElement<any>;
+		var detailsContent: React.ReactElement<any>;
 		var updatedItem = this.state.editedItem;
 		if (updatedItem) {
 			var onChangeItem = () => {
@@ -907,7 +909,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				itemActionDivider = react.DOM.div(style.mixin(theme.divider));
 			}
 
-			detailsContent = react.DOM.div(style.mixin(theme.content, {key: contentKey}),
+			detailsContent = react.DOM.div(style.mixin(theme.content, { key: contentKey }),
 				titleField,
 				react.DOM.div(style.mixin(theme.coreFields), coreFields),
 				react.DOM.div({}, websites),
@@ -915,14 +917,14 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				react.DOM.div({}, sections),
 				itemActionDivider,
 				react.DOM.div({}, itemActions)
-			);
+				);
 		}
 
 		return detailsContent;
 	}
 
 	private exit() {
-		this.setState({transition: reactutil.TransitionState.Leaving});
+		this.setState({ transition: reactutil.TransitionState.Leaving });
 	}
 
 	render() {
@@ -977,15 +979,15 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			//
 			paddingLeft: 80,
 			opacity: 0,
-			transition: style_util.transitionOn({opacity: .5}),
+			transition: style_util.transitionOn({ opacity: .5 }),
 			overflowY: 'auto',
 			flexGrow: 1
 		}];
 
 		if (this.state.transition === reactutil.TransitionState.Entered) {
-			itemListDetailsStyle.push({opacity: 0});
-			detailsViewDetailsStyle.push({opacity: 1});
-			contentStyles.push({opacity: 1});
+			itemListDetailsStyle.push({ opacity: 0 });
+			detailsViewDetailsStyle.push({ opacity: 1 });
+			contentStyles.push({ opacity: 1 });
 		}
 
 		var autofillButton: React.ReactElement<{}>;
@@ -996,15 +998,15 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				right: 16,
 				bottom: 16
 			}), button.ButtonF({
-				style: button.Style.FloatingAction,
-				accessKey:'a',
-				backgroundColor: colors.MATERIAL_COLOR_PRIMARY,
-				color: colors.MATERIAL_COLOR_HEADER,
-				rippleColor: 'white',
-				onClick: () => this.props.autofill(),
-				value: 'Autofill',
-				iconUrl: 'dist/icons/icons.svg#input'
-			}));
+					style: button.Style.FloatingAction,
+					accessKey: 'a',
+					backgroundColor: colors.MATERIAL_COLOR_PRIMARY,
+					color: colors.MATERIAL_COLOR_HEADER,
+					rippleColor: 'white',
+					onClick: () => this.props.autofill(),
+					value: 'Autofill',
+					iconUrl: 'dist/icons/icons.svg#input'
+				}));
 		}
 
 		var updatedItem: item_store.Item;
@@ -1014,7 +1016,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			updatedItem = this.props.item;
 		}
 
-		return react.DOM.div(style.mixin(viewStyles, {tabIndex: 0}),
+		return react.DOM.div(style.mixin(viewStyles, { tabIndex: 0 }),
 			react.DOM.div(style.mixin(headerStyles),
 				this.renderToolbar(),
 				this.renderMenus(),
@@ -1028,27 +1030,27 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 							var siteWindow = window.open(url, '_blank');
 							siteWindow.focus();
 						},
-						title: `Open ${updatedItem.primaryLocation()} in a new tab`
+						title: `Open ${updatedItem.primaryLocation() } in a new tab`
 					}),
 					react.DOM.div(style.mixin(headerTheme.iconAndDetails.details),
 						// item title and account at start of entry transition
 						react.DOM.div(style.mixin(itemListDetailsStyle),
 							react.DOM.div(style.mixin(item_list.theme.item.details.title), updatedItem.title),
 							react.DOM.div(style.mixin(item_list.theme.item.details.account), updatedItem.account)
-						),
+							),
 						// item title and account at end of entry transition
 						react.DOM.div(style.mixin(detailsViewDetailsStyle),
 							react.DOM.div(style.mixin(theme.header.title), updatedItem.title),
 							react.DOM.div(style.mixin(theme.header.account), updatedItem.account)
+							)
 						)
 					)
-				)
-			),
+				),
 			react.DOM.div(style.mixin(contentStyles),
 				autofillButton,
 				this.renderFields(this.state.isEditing)
-			)
-		);
+				)
+			);
 	}
 }
 

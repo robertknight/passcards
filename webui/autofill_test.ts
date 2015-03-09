@@ -31,33 +31,33 @@ class FakePageAccess implements page_access.PageAccess {
 		return '';
 	}
 
-	findForms(callback: (formList: forms.FieldGroup[]) => void) : void {
+	findForms(callback: (formList: forms.FieldGroup[]) => void): void {
 		setTimeout(() => {
 			callback(this.formList);
 		}, 0);
 	}
 
-	autofill(fields: forms.AutoFillEntry[]) : Q.Promise<number> {
+	autofill(fields: forms.AutoFillEntry[]): Q.Promise<number> {
 		this.autofillEntries = fields;
 		return Q(fields.length);
 	}
 
-	siteInfoProvider() : site_info.SiteInfoProvider {
+	siteInfoProvider(): site_info.SiteInfoProvider {
 		return null;
 	}
 
-	hidePanel() : void {
+	hidePanel(): void {
 		/* no-op */
 	}
 }
 
-function itemWithUsernameAndPassword(user: string, password: string) : item_store.Item {
+function itemWithUsernameAndPassword(user: string, password: string): item_store.Item {
 	return new item_builder.Builder(item_store.ItemTypes.LOGIN)
-	  .setTitle('Test Item')
-	  .addLogin(user)
-	  .addPassword(password)
-	  .addUrl('mysite.com')
-	  .item();
+	.setTitle('Test Item')
+	.addLogin(user)
+	.addPassword(password)
+	.addUrl('mysite.com')
+	.item();
 }
 
 testLib.addAsyncTest('simple user/password autofill', (assert) => {
@@ -71,13 +71,13 @@ testLib.addAsyncTest('simple user/password autofill', (assert) => {
 			name: 'username',
 			type: forms.FieldType.Text,
 			visible: true
-		},{
-			key: 'f2',
-			id: '',
-			name: 'password',
-			type: forms.FieldType.Password,
-			visible: true
-		}]
+		}, {
+				key: 'f2',
+				id: '',
+				name: 'password',
+				type: forms.FieldType.Password,
+				visible: true
+			}]
 	};
 	fakePage.formList.push(form);
 
@@ -85,7 +85,7 @@ testLib.addAsyncTest('simple user/password autofill', (assert) => {
 	return autofiller.autofill(item).then((result) => {
 		assert.equal(result.count, 2);
 
-		fakePage.autofillEntries.sort((a,b) => {
+		fakePage.autofillEntries.sort((a, b) => {
 			return a.key.localeCompare(b.key);
 		});
 
@@ -100,15 +100,17 @@ testLib.addAsyncTest('ignore hidden fields', (assert) => {
 	var item = itemWithUsernameAndPassword('testuser@gmail.com', 'testpass');
 	var fakePage = new FakePageAccess();
 
-	var form = { fields: [{
-		key: 'f1',
-		type: forms.FieldType.Password,
-		visible: true
-	},{
-		key: 'f2',
-		type: forms.FieldType.Password,
-		visible: false
-	}] };
+	var form = {
+		fields: [{
+			key: 'f1',
+			type: forms.FieldType.Password,
+			visible: true
+		}, {
+				key: 'f2',
+				type: forms.FieldType.Password,
+				visible: false
+			}]
+	};
 	fakePage.formList.push(form);
 
 	var autofiller = new autofill.AutoFiller(fakePage);
@@ -124,15 +126,17 @@ testLib.addAsyncTest('find unlabeled username fields', (assert) => {
 	var item = itemWithUsernameAndPassword('testuser@gmail.com', 'testpass');
 	var fakePage = new FakePageAccess();
 
-	var form = { fields: [{
-		key: 'f1',
-		type: forms.FieldType.Text,
-		visible: true
-	},{
-		key: 'f2',
-		type: forms.FieldType.Password,
-		visible: true
-	}] };
+	var form = {
+		fields: [{
+			key: 'f1',
+			type: forms.FieldType.Text,
+			visible: true
+		}, {
+				key: 'f2',
+				type: forms.FieldType.Password,
+				visible: true
+			}]
+	};
 	fakePage.formList.push(form);
 
 	var autofiller = new autofill.AutoFiller(fakePage);

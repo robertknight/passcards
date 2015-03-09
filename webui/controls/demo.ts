@@ -61,7 +61,7 @@ function componentSection(name: string, ...children: React.ReactElement<any>[]) 
 	return react.DOM.div(style.mixin(theme.section, {}),
 		react.DOM.div(style.mixin(theme.section.header), name),
 		react.DOM.div(style.mixin(theme.section.content), children)
-	);
+		);
 }
 
 class ControlDemoApp extends typed_react.Component<ControlDemoAppProps, ControlDemoAppState> {
@@ -84,25 +84,25 @@ class ControlDemoApp extends typed_react.Component<ControlDemoAppProps, ControlD
 				placeHolder: 'Text field with validation error',
 				error: 'There is something wrong with the input'
 			})
-		);
+			);
 	}
 
 	private renderButtons() {
 		return componentSection('Buttons',
 			button.ButtonF({
 				value: 'Flat Button',
-				onClick: () => {},
+				onClick: () => { },
 				style: button.Style.Rectangular
 			}),
 			button.ButtonF({
 				value: 'Flat Button (Disabled)',
 				disabled: true,
-				onClick: () => {},
+				onClick: () => { },
 				style: button.Style.Rectangular
 			}),
 			button.ButtonF({
 				value: 'Floating Action',
-				onClick: () => {},
+				onClick: () => { },
 				style: button.Style.FloatingAction,
 				backgroundColor: '#FF4081',
 				rippleColor: 'white',
@@ -111,22 +111,22 @@ class ControlDemoApp extends typed_react.Component<ControlDemoAppProps, ControlD
 			}),
 			button.ButtonF({
 				value: 'Raised Button',
-				onClick: () => {},
+				onClick: () => { },
 				style: button.Style.RaisedRectangular
 			}),
 			button.ButtonF({
 				value: 'Raised Button (Disabled)',
-				onClick: () => {},
+				onClick: () => { },
 				style: button.Style.RaisedRectangular,
 				disabled: true
 			}),
 			button.ButtonF({
 				value: 'Icon Button',
-				onClick: () => {},
+				onClick: () => { },
 				style: button.Style.Icon,
 				iconUrl: '/webui/icons/icons.svg#input'
 			})
-		);
+			);
 	}
 
 	private renderMenus() {
@@ -135,13 +135,13 @@ class ControlDemoApp extends typed_react.Component<ControlDemoAppProps, ControlD
 			var menuItems = [{
 				label: 'Item One',
 				onClick: () => console.log('Item one clicked')
-			},{
-				label: 'Item Two',
-				onClick: () => console.log('Item two clicked')
-			},{
-				label: 'Item Three',
-				onClick: () => console.log('Item three clicked')
-			}];
+			}, {
+					label: 'Item Two',
+					onClick: () => console.log('Item two clicked')
+				}, {
+					label: 'Item Three',
+					onClick: () => console.log('Item three clicked')
+				}];
 			popupMenu = menu.MenuF({
 				items: menuItems,
 				viewportRect: this.props.viewportRect,
@@ -152,7 +152,7 @@ class ControlDemoApp extends typed_react.Component<ControlDemoAppProps, ControlD
 					bottom: this.state.menuPos.top
 				},
 				onDismiss: () => {
-					this.setState({menuPos: null});
+					this.setState({ menuPos: null });
 				},
 				zIndex: 1
 			});
@@ -163,11 +163,11 @@ class ControlDemoApp extends typed_react.Component<ControlDemoAppProps, ControlD
 				value: 'Show Menu',
 				style: button.Style.RaisedRectangular,
 				onClick: (e: React.MouseEvent) => {
-					this.setState({menuPos: {left: e.pageX, top: e.pageY}});
+					this.setState({ menuPos: { left: e.pageX, top: e.pageY } });
 				}
 			}),
 			reactutil.TransitionGroupF({}, popupMenu)
-		);
+			);
 	}
 
 	render() {
@@ -175,15 +175,15 @@ class ControlDemoApp extends typed_react.Component<ControlDemoAppProps, ControlD
 			componentSection('Ripple Effects',
 				react.DOM.div(style.mixin(theme.rippleContainer, {
 				}),
-					ripple.InkRippleF({color: '#808080'},
+					ripple.InkRippleF({ color: '#808080' },
 						'Ripple Child Element'
+						)
 					)
-				)
-			),
+				),
 			this.renderMenus(),
 			this.renderButtons(),
 			this.renderTextFields()
-		);
+			);
 	}
 }
 var ControlDemoAppF = reactutil.createFactory(ControlDemoApp);
@@ -192,7 +192,7 @@ function main() {
 	var elt = document.getElementById('app');
 	var body = elt.ownerDocument.body;
 
-	var rootView = react.render(ControlDemoAppF({viewportRect: body.getBoundingClientRect()}), elt);
+	var rootView = react.render(ControlDemoAppF({ viewportRect: body.getBoundingClientRect() }), elt);
 	elt.ownerDocument.defaultView.onresize = () => {
 		rootView.setProps({
 			viewportRect: body.getBoundingClientRect()

@@ -67,25 +67,25 @@ export interface VFS {
 	 */
 	credentials(): Credentials;
 	/** Sets the login credentials */
-	setCredentials(credentials: Credentials) : void;
+	setCredentials(credentials: Credentials): void;
 
 	/** Returns the metadata of the file at the given path */
-	stat(path: string) : Q.Promise<FileInfo>;
+	stat(path: string): Q.Promise<FileInfo>;
 	/** Search for files whose name contains @p namePattern */
-	search(namePattern: string, cb: (err: Error, files: FileInfo[]) => any) : void;
+	search(namePattern: string, cb: (err: Error, files: FileInfo[]) => any): void;
 	/** Read the contents of a file at @p path */
-	read(path: string) : Q.Promise<string>
+	read(path: string): Q.Promise<string>
 	/** Write the contents of a file at @p path */
-	write(path: string, content: string, options?: WriteOptions) : Q.Promise<void>;
+	write(path: string, content: string, options?: WriteOptions): Q.Promise<void>;
 	/** List the contents of a directory */
-	list(path: string) : Q.Promise<FileInfo[]>;
+	list(path: string): Q.Promise<FileInfo[]>;
 	/** Remove a file or directory */
-	rm(path: string) : Q.Promise<void>;
+	rm(path: string): Q.Promise<void>;
 	/** Create the directory @p path, creating any parent directories
 	  * that do not already exist if necessary.
 	  * 
 	  * Fails with an error if @p path already exists.
 	  */
-	mkpath(path: string) : Q.Promise<void>;
+	mkpath(path: string): Q.Promise<void>;
 }
 

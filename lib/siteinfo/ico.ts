@@ -45,7 +45,7 @@ export interface Icon {
 //
 // 'data' is the contents of a bitmap file, excluding the BITMAPFILEHEADER struct
 // at the beginning
-function bitmapFileHeader(data: Uint8Array) : Uint8Array {
+function bitmapFileHeader(data: Uint8Array): Uint8Array {
 	var srcDataView = new DataView(data.buffer);
 	var biSize = srcDataView.getUint32(data.byteOffset, true /* little-endian */);
 
@@ -66,7 +66,7 @@ function bitmapFileHeader(data: Uint8Array) : Uint8Array {
 }
 
 /** Returns true if the buffer contains a .ico file. */
-export function isIco(data: Uint8Array) : boolean {
+export function isIco(data: Uint8Array): boolean {
 	return data.length > 4 &&
 	       data[0] === 0 && data[1] === 0 &&
 	       data[2] === 1 && data[3] === 0;
@@ -75,12 +75,12 @@ export function isIco(data: Uint8Array) : boolean {
 var ICON_DIR_SIZE = 6;
 var ICON_DIR_ENTRY_SIZE = 16;
 
-function readNthIcon(leData: collectionutil.LittleEndianDataView, index: number) : Icon {
+function readNthIcon(leData: collectionutil.LittleEndianDataView, index: number): Icon {
 	// read icon entry header
 	var offset = ICON_DIR_SIZE + index * ICON_DIR_ENTRY_SIZE;
 
 	var width = leData.getUint8(offset);
-	var height = leData.getUint8(offset+1);
+	var height = leData.getUint8(offset + 1);
 	var imageDataLength = leData.getUint32(offset + 8);
 	var imageDataOffset = leData.getUint32(offset + 12);
 
@@ -146,7 +146,7 @@ function readNthIcon(leData: collectionutil.LittleEndianDataView, index: number)
 /** Reads a .ico file containing one or more icons and returns
   * an array of the icons found.
   */
-export function read(data: DataView) : Icon[] {
+export function read(data: DataView): Icon[] {
 	var leData = new collectionutil.LittleEndianDataView(data);
 
 	if (leData.getUint16(0) !== 0 || leData.getUint16(2) !== 1) {
@@ -156,7 +156,7 @@ export function read(data: DataView) : Icon[] {
 	var icons: Icon[] = [];
 	var imageCount = leData.getUint16(4);
 
-	for (var i=0; i < imageCount; i++) {
+	for (var i = 0; i < imageCount; i++) {
 		try {
 			icons.push(readNthIcon(leData, i));
 		} catch (ex) {

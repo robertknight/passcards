@@ -20,18 +20,18 @@ import site_info = require('./site_info');
 export var DEFAULT_PASSCARDS_SERVICE_URL = 'https://passcards-robknight.rhcloud.com';
 
 export class PasscardsClient implements site_info.SiteInfoProvider {
-	private cache: Map<string,site_info.QueryResult>;
+	private cache: Map<string, site_info.QueryResult>;
 	private rootUrl: string;
 
 	updated: event_stream.EventStream<string>;
 
 	constructor(serviceHost: string = DEFAULT_PASSCARDS_SERVICE_URL) {
-		this.cache = new collectionutil.PMap<string,site_info.QueryResult>();
+		this.cache = new collectionutil.PMap<string, site_info.QueryResult>();
 		this.rootUrl = serviceHost;
 		this.updated = new event_stream.EventStream<string>();
 	}
 
-	lookup(url: string) : site_info.QueryResult {
+	lookup(url: string): site_info.QueryResult {
 		var domain = this.domainForUrl(url);
 		if (!domain) {
 			return <site_info.QueryResult>{
@@ -67,7 +67,7 @@ export class PasscardsClient implements site_info.SiteInfoProvider {
 
 			selectedIcons = underscore.filter(selectedIcons, (icon) => {
 				return icon.width >= MIN_ICON_SIZE && icon.width <= MAX_ICON_SIZE &&
-				       icon.height >= MIN_ICON_SIZE && icon.height <= MAX_ICON_SIZE;
+					icon.height >= MIN_ICON_SIZE && icon.height <= MAX_ICON_SIZE;
 			});
 
 			if (selectedIcons.length == 0) {
@@ -110,7 +110,7 @@ export class PasscardsClient implements site_info.SiteInfoProvider {
 		this.cache.delete(url);
 	}
 
-	private queryDomainInfo(domain: string) : Q.Promise<client_api.LookupResponse> {
+	private queryDomainInfo(domain: string): Q.Promise<client_api.LookupResponse> {
 		var response: client_api.LookupResponse;
 		return asyncutil.until(() => {
 			return http_client.get(this.rootUrl + '/siteinfo/' + domain + '?timeout=3000').then((reply) => {

@@ -70,7 +70,7 @@ var theme = style.create({
 			height: 48,
 			textOverflow: 'ellipsis',
 
-			':hover' : {
+			':hover': {
 				backgroundColor: colors.MATERIAL_GREY_P200
 			},
 
@@ -162,9 +162,9 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 	}
 
 	componentWillEnter(callback: () => void) {
-		this.setState({transition: reactutil.TransitionState.Entering});
+		this.setState({ transition: reactutil.TransitionState.Entering });
 		setTimeout(() => {
-			this.setState({transition: reactutil.TransitionState.Entered});
+			this.setState({ transition: reactutil.TransitionState.Entered });
 		}, 10);
 
 		this.transitionListener = new reactutil.TransitionEndListener(this.refs['menu'], this.transitionProperty(), () => {
@@ -177,7 +177,7 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 	}
 
 	componentWillLeave(callback: () => void) {
-		this.setState({transition: reactutil.TransitionState.Leaving});
+		this.setState({ transition: reactutil.TransitionState.Leaving });
 		this.transitionListener = new reactutil.TransitionEndListener(this.refs['menu'], this.transitionProperty(), () => {
 			callback();
 		});
@@ -188,7 +188,7 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 	}
 
 	componentDidMount() {
-		this.setState({showTime: new Date});
+		this.setState({ showTime: new Date });
 	}
 
 	// returns true if this menu should be displayed
@@ -319,10 +319,10 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 						this.props.onDismiss();
 					}, 300);
 				}
-			}), 
-				ripple.InkRippleF({radius: 100}),
+			}),
+				ripple.InkRippleF({ radius: 100 }),
 				react.DOM.div(style.mixin(theme.menu.item.label), item.label)
-			);
+				);
 		});
 
 		var menuRect = this.getMenuRect();
@@ -339,14 +339,14 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 		if (this.displayAsSheet()) {
 			if (!enteringOrLeaving) {
 				// see http://www.google.co.uk/design/spec/components/bottom-sheets.html#bottom-sheets-specs
-				overlayStyles.push({opacity: .2});
+				overlayStyles.push({ opacity: .2 });
 			} else {
 				menuTransform = 'translateY(' + reactutil.rectHeight(menuRect) + 'px)';
 			}
 		}
 
 		return react.DOM.div(style.mixin([theme.menu.container, {
-			zIndex: this.props.zIndex	
+			zIndex: this.props.zIndex
 		}]),
 			react.DOM.div(style.mixin(overlayStyles, {
 				onClick: (e: React.MouseEvent) => {
@@ -364,7 +364,7 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 					transform: menuTransform
 				}),
 			}), menuItems)
-		);
+			);
 	}
 }
 

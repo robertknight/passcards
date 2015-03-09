@@ -22,10 +22,10 @@ testLib.addAsyncTest('default item content', (assert) => {
 // when core metadata fields and content changes
 testLib.addTest('item revision ID', (assert) => {
 	var item = new item_builder.Builder(item_store.ItemTypes.LOGIN)
-	  .setTitle('Facebook')
-	  .addLogin('jim.smith@gmail.com')
-	  .addPassword('secret')
-	  .itemAndContent();
+	.setTitle('Facebook')
+	.addLogin('jim.smith@gmail.com')
+	.addPassword('secret')
+	.itemAndContent();
 	var revA = item_store.generateRevisionId(item);
 
 	item.content.passwordField().value = 'secret2';

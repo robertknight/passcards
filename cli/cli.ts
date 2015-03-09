@@ -28,7 +28,7 @@ import agile_keychain = require('../lib/agile_keychain');
 import vfs = require('../lib/vfs/vfs');
 
 interface HandlerMap {
-	[index: string] : (args: any) => Q.Promise<any>;
+	[index: string]: (args: any) => Q.Promise<any>;
 }
 
 interface NewPass {
@@ -48,14 +48,14 @@ var NO_SUCH_FIELD_ERR = 'No fields matched the pattern';
 var ACTION_CANCELED_ERR = 'Action canceled';
 
 export class CLI {
-	private configDir : string;
-	private io : consoleio.TermIO;
-	private keyAgent : key_agent.KeyAgent;
-	private clipboard : clipboard.Clipboard;
-	private editCommand : cli_common.CommandHandler;
-	private passwordGenerator : () => string;
+	private configDir: string;
+	private io: consoleio.TermIO;
+	private keyAgent: key_agent.KeyAgent;
+	private clipboard: clipboard.Clipboard;
+	private editCommand: cli_common.CommandHandler;
+	private passwordGenerator: () => string;
 
-	constructor(io? : consoleio.TermIO, agent? : key_agent.KeyAgent, clipboardImpl?: clipboard.Clipboard) {
+	constructor(io?: consoleio.TermIO, agent?: key_agent.KeyAgent, clipboardImpl?: clipboard.Clipboard) {
 		this.configDir = process.env.HOME + "/.config/agile_keychain-web";
 		this.io = io || new consoleio.ConsoleIO();
 		this.keyAgent = agent || new key_agent.SimpleKeyAgent();
@@ -69,7 +69,7 @@ export class CLI {
 		consoleio.printf.apply(null, [this.io, format].concat(args));
 	}
 
-	private createParser() : argparse.ArgumentParser {
+	private createParser(): argparse.ArgumentParser {
 		var parser = new argparse.ArgumentParser({
 			description: '1Password command-line client'
 		});
@@ -86,13 +86,13 @@ export class CLI {
 			help: 'Enable debug output'
 		});
 
-		var subcommands = parser.addSubparsers({dest:'command'});
+		var subcommands = parser.addSubparsers({ dest: 'command' });
 
 		var listCommand = subcommands.addParser('list', {
 			description: 'List items in the vault'
 		});
 		listCommand.addArgument(['-p', '--pattern'], {
-			action:'store',
+			action: 'store',
 			dest: 'pattern',
 			nargs: 1,
 			type: 'string',
@@ -134,7 +134,7 @@ export class CLI {
 			nargs: '?',
 			defaultValue: 'password',
 			help: 'Pattern specifying the name of the field to copy (eg. "username"). ' +
-			      'Defaults to copying the password'
+			'Defaults to copying the password'
 		});
 
 		var addCommand = subcommands.addParser('add', {
@@ -181,7 +181,7 @@ export class CLI {
 		});
 
 		var newVaultCommand = subcommands.addParser('new-vault');
-		newVaultCommand.addArgument(['path'], {action:'store'});
+		newVaultCommand.addArgument(['path'], { action: 'store' });
 		newVaultCommand.addArgument(['--iterations'], {
 			action: 'store',
 			dest: 'iterations',
@@ -196,20 +196,20 @@ export class CLI {
 		return parser;
 	}
 
-	private findExistingVaultInDropbox(storage: vfs.VFS, dropboxRoot: string) : Q.Promise<string> {
+	private findExistingVaultInDropbox(storage: vfs.VFS, dropboxRoot: string): Q.Promise<string> {
 		var path = Q.defer<string>();
 		var settingsFilePath = pathLib.join(dropboxRoot, '.ws.agile.1Password.settings');
 		var rootFile = storage.read(settingsFilePath);
 		rootFile.then((content) => {
 			path.resolve(pathLib.join(dropboxRoot, content));
 		}, (err) => {
-			this.printf('Unable to find keychain path in %s, using default path', settingsFilePath);
-			path.resolve(pathLib.join(dropboxRoot, '1Password/1Password.agilekeychain'));
-		});
+				this.printf('Unable to find keychain path in %s, using default path', settingsFilePath);
+				path.resolve(pathLib.join(dropboxRoot, '1Password/1Password.agilekeychain'));
+			});
 		return path.promise;
 	}
 
-	private unlockVault(vault: agile_keychain.Vault) : Q.Promise<void> {
+	private unlockVault(vault: agile_keychain.Vault): Q.Promise<void> {
 		return vault.isLocked().then((isLocked) => {
 			if (!isLocked) {
 				return Q<void>(null);
@@ -269,13 +269,13 @@ export class CLI {
 
 		if (content.htmlAction) {
 			this.printf('\nForm Destination: %s %s', content.htmlMethod.toUpperCase(),
-			  content.htmlAction);
+				content.htmlAction);
 		}
 	}
 
-	private initVault(customVaultPath: string) : Q.Promise<agile_keychain.Vault> {
-		var storage : vfs.VFS = new nodefs.FileVFS('/');
-		var dropboxRoot : string;
+	private initVault(customVaultPath: string): Q.Promise<agile_keychain.Vault> {
+		var storage: vfs.VFS = new nodefs.FileVFS('/');
+		var dropboxRoot: string;
 
 		storage = new nodefs.FileVFS('/');
 		dropboxRoot = process.env.HOME + '/Dropbox';
@@ -287,7 +287,7 @@ export class CLI {
 		var vault = Q.defer<agile_keychain.Vault>();
 
 		authenticated.then(() => {
-			var vaultPath : Q.Promise<string>;
+			var vaultPath: Q.Promise<string>;
 			if (customVaultPath) {
 				vaultPath = Q(customVaultPath);
 			} else {
@@ -296,30 +296,30 @@ export class CLI {
 			vaultPath.then((path) => {
 				vault.resolve(new agile_keychain.Vault(storage, path, this.keyAgent));
 			}, (err) => {
+					vault.reject(err);
+				}).done();
+		}, (err) => {
 				vault.reject(err);
 			}).done();
-		}, (err) => {
-			vault.reject(err);
-		}).done();
 
 		return vault.promise;
 	}
 
-	private passwordFieldPrompt() : Q.Promise<string> {
+	private passwordFieldPrompt(): Q.Promise<string> {
 		return consoleio.passwordFieldPrompt(this.io, this.passwordGenerator);
 	}
 
 	/** Returns the item from @p vault matching a given @p pattern.
 	  * If there are multiple matching items the user is prompted to select one.
 	  */
-	private selectItem(vault: agile_keychain.Vault, pattern: string) : Q.Promise<item_store.Item> {
+	private selectItem(vault: agile_keychain.Vault, pattern: string): Q.Promise<item_store.Item> {
 		return item_search.lookupItems(vault, pattern).then((items) => {
 			return this.select(items, 'items', 'Item', pattern, (item) => { return item.title; });
 		});
 	}
 
 	// prompt the user for a selection from a list of items
-	private select<T>(items: T[], plural: string, singular: string, pattern: string, captionFunc: (item: T) => string) : Q.Promise<T> {
+	private select<T>(items: T[], plural: string, singular: string, pattern: string, captionFunc: (item: T) => string): Q.Promise<T> {
 		if (items.length < 1) {
 			this.printf('No %s matching pattern "%s"', plural, pattern);
 			return Q.reject<T>(NO_SUCH_ITEM_ERR);
@@ -330,7 +330,7 @@ export class CLI {
 
 		this.printf('Multiple %s match "%s":\n', plural, pattern);
 		items.forEach((item, index) => {
-			this.printf('  [%d] %s', index+1, captionFunc(item));
+			this.printf('  [%d] %s', index + 1, captionFunc(item));
 		});
 		this.printf('');
 		return this.io.readLine(sprintf('Select %s: ', singular)).then((indexStr) => {
@@ -338,13 +338,13 @@ export class CLI {
 			if (index < 0) {
 				index = 0;
 			} else if (index >= items.length) {
-				index = items.length-1;
+				index = items.length - 1;
 			}
 			return items[index];
 		});
 	}
 
-	private addLoginFields(content: item_store.ItemContent) : Q.Promise<item_store.ItemContent> {
+	private addLoginFields(content: item_store.ItemContent): Q.Promise<item_store.ItemContent> {
 		return this.io.readLine('Website: ').then((website) => {
 			content.urls.push({
 				label: 'website',
@@ -374,7 +374,7 @@ export class CLI {
 		});
 	}
 
-	private addItemCommand(vault: agile_keychain.Vault, type: string, title: string) : Q.Promise<void> {
+	private addItemCommand(vault: agile_keychain.Vault, type: string, title: string): Q.Promise<void> {
 		var types = item_search.matchType(type);
 		return this.select(types, 'item types', 'item type', type, (typeCode) => {
 			return item_store.ITEM_TYPES[<string>typeCode].name;
@@ -385,7 +385,7 @@ export class CLI {
 
 			var content = new item_store.ItemContent();
 
-			var contentReady : Q.Promise<item_store.ItemContent>;
+			var contentReady: Q.Promise<item_store.ItemContent>;
 			if (type == item_store.ItemTypes.LOGIN) {
 				contentReady = this.addLoginFields(content);
 			} else {
@@ -404,9 +404,9 @@ export class CLI {
 		});
 	}
 
-	private trashItemCommand(vault: agile_keychain.Vault, pattern: string, trash: boolean) : Q.Promise<void[]> {
+	private trashItemCommand(vault: agile_keychain.Vault, pattern: string, trash: boolean): Q.Promise<void[]> {
 		return item_search.lookupItems(vault, pattern).then((items) => {
-			var trashOps : Q.Promise<void>[] = [];
+			var trashOps: Q.Promise<void>[] = [];
 			items.forEach((item) => {
 				item.trashed = trash;
 				trashOps.push(item.save());
@@ -416,20 +416,20 @@ export class CLI {
 		});
 	}
 
-	private readNewPassword() : Q.Promise<NewPass> {
+	private readNewPassword(): Q.Promise<NewPass> {
 		return this.io.readPassword('New password: ').then((pass) => {
 			return this.io.readPassword('Re-enter new password: ').then((pass2) => {
 				if (pass != pass2) {
-					throw('Passwords do not match');
+					throw ('Passwords do not match');
 				}
 				return this.io.readLine('Hint for new password: ').then((hint) => {
-					return {pass: pass, hint: hint};
+					return { pass: pass, hint: hint };
 				});
 			});
 		});
 	}
 
-	private setPasswordCommand(vault: agile_keychain.Vault, iterations?: number) : Q.Promise<number> {
+	private setPasswordCommand(vault: agile_keychain.Vault, iterations?: number): Q.Promise<number> {
 		var result = Q.defer<number>();
 		var currentPass: string;
 		var newPass: string;
@@ -454,8 +454,8 @@ export class CLI {
 			return vault.changePassword(currentPass, newPass, hint, iterations);
 		}).then(() => {
 			this.printf('The master password for this vault has been changed.\n\n' +
-'If you are using other 1Password apps, please note that they may still ' +
-'require the previous password when they are next unlocked');
+				'If you are using other 1Password apps, please note that they may still ' +
+				'require the previous password when they are next unlocked');
 			result.resolve(0);
 		}).catch((err) => {
 			this.printf('Unable to update the vault password: %s', err);
@@ -464,8 +464,8 @@ export class CLI {
 		return result.promise;
 	}
 
-	private removeCommand(vault: agile_keychain.Vault, pattern: string) : Q.Promise<void> {
-		var items : item_store.Item[];
+	private removeCommand(vault: agile_keychain.Vault, pattern: string): Q.Promise<void> {
+		var items: item_store.Item[];
 
 		return item_search.lookupItems(vault, pattern).then((items_) => {
 			items = items_;
@@ -481,7 +481,7 @@ export class CLI {
 			return this.io.readLine(sprintf('Do you really want to remove these %d item(s) permanently?', items.length));
 		}).then((response) => {
 			if (response.match(/[yY]/)) {
-				var removeOps : Q.Promise<void>[] = [];
+				var removeOps: Q.Promise<void>[] = [];
 				items.forEach((item) => {
 					removeOps.push(item.remove());
 				});
@@ -494,12 +494,12 @@ export class CLI {
 		});
 	}
 
-	private genPasswordCommand() : Q.Promise<void> {
+	private genPasswordCommand(): Q.Promise<void> {
 		this.printf(crypto.generatePassword(12));
 		return Q<void>(null);
 	}
 
-	private listCommand(vault: agile_keychain.Vault, pattern: string) : Q.Promise<void> {
+	private listCommand(vault: agile_keychain.Vault, pattern: string): Q.Promise<void> {
 		return vault.listItems().then((items) => {
 			items.sort((a, b) => {
 				return a.title.toLowerCase().localeCompare(b.title.toLowerCase());
@@ -516,7 +516,7 @@ export class CLI {
 		});
 	}
 
-	private showItemCommand(vault: agile_keychain.Vault, pattern: string, format: ShowItemFormat) : Q.Promise<void> {
+	private showItemCommand(vault: agile_keychain.Vault, pattern: string, format: ShowItemFormat): Q.Promise<void> {
 		var item: item_store.Item;
 		return this.selectItem(vault, pattern).then((_item) => {
 			item = _item;
@@ -538,14 +538,14 @@ export class CLI {
 		});
 	}
 
-	private copyItemCommand(vault: agile_keychain.Vault, pattern: string, field: string) : Q.Promise<void> {
+	private copyItemCommand(vault: agile_keychain.Vault, pattern: string, field: string): Q.Promise<void> {
 		return this.selectItem(vault, pattern).then((item) => {
 			return item.getContent().then((content) => {
 				var matches = item_search.matchField(content, field);
 				if (matches.length > 0) {
-					var label : string;
+					var label: string;
 					var match = matches[0];
-					var copied : Q.Promise<void>;
+					var copied: Q.Promise<void>;
 					if (match.url) {
 						label = match.url.label;
 						copied = this.clipboard.setData(match.url.url);
@@ -568,7 +568,7 @@ export class CLI {
 		});
 	}
 
-	private newVaultCommand(fs: vfs.VFS, path: string, iterations?: number) : Q.Promise<void> {
+	private newVaultCommand(fs: vfs.VFS, path: string, iterations?: number): Q.Promise<void> {
 		return this.readNewPassword().then((newPass) => {
 			var absPath = pathLib.resolve(path);
 			return agile_keychain.Vault.createVault(fs, absPath, newPass.pass, newPass.hint, iterations).then((vault) => {
@@ -577,7 +577,7 @@ export class CLI {
 		});
 	}
 
-	private repairCommand(vault: agile_keychain.Vault) : Q.Promise<void[]> {
+	private repairCommand(vault: agile_keychain.Vault): Q.Promise<void[]> {
 		return vault.listItems().then((items) => {
 			var sortedItems = underscore.sortBy(items, (item) => {
 				return item.title.toLowerCase();
@@ -589,10 +589,10 @@ export class CLI {
 					return item_repair.repairItem(item, (err) => {
 						this.printf('%s', err)
 					}, () => {
-						return this.io.readLine('Correct item? Y/N').then((result) => {
-							return result.match(/y/i) != null;
+							return this.io.readLine('Correct item? Y/N').then((result) => {
+								return result.match(/y/i) != null;
+							});
 						});
-					});
 				};
 				repairTasks.push(repairTask);
 			});
@@ -603,12 +603,12 @@ export class CLI {
 	/** Starts the command-line interface and returns
 	  * a promise for the exit code.
 	  */
-	exec(argv: string[]) : Q.Promise<number> {
+	exec(argv: string[]): Q.Promise<number> {
 		var args = this.createParser().parseArgs(argv);
 		mkdirp.sync(this.configDir)
 
-		var currentVault : agile_keychain.Vault;
-		var vaultReady : Q.Promise<void>;
+		var currentVault: agile_keychain.Vault;
+		var vaultReady: Q.Promise<void>;
 		var requiresUnlockedVault = ['new-vault', 'gen-password'].indexOf(args.command) == -1;
 
 		if (requiresUnlockedVault) {
@@ -621,7 +621,7 @@ export class CLI {
 			vaultReady = Q<void>(null);
 		}
 
-		var handlers : HandlerMap = {};
+		var handlers: HandlerMap = {};
 
 		handlers['list'] = (args) => {
 			return this.listCommand(currentVault, args.pattern ? args.pattern[0] : null);
@@ -630,17 +630,17 @@ export class CLI {
 		handlers['show'] = (args) => {
 			var format: ShowItemFormat;
 			switch (args.format[0]) {
-			case 'full':
-				format = ShowItemFormat.ShowFull;
-				break;
-			case 'overview':
-				format = ShowItemFormat.ShowOverview;
-				break;
-			case 'json':
-				format = ShowItemFormat.ShowJSON;
-				break;
-			default:
-				return Q.reject<void>(new Error('Unsupported output format: ' + args.format[0]));
+				case 'full':
+					format = ShowItemFormat.ShowFull;
+					break;
+				case 'overview':
+					format = ShowItemFormat.ShowOverview;
+					break;
+				case 'json':
+					format = ShowItemFormat.ShowJSON;
+					break;
+				default:
+					return Q.reject<void>(new Error('Unsupported output format: ' + args.format[0]));
 			}
 			return this.showItemCommand(currentVault, args.pattern, format);
 		};
@@ -716,9 +716,9 @@ export class CLI {
 				exitStatus.resolve(1);
 			}
 		}, (err) => {
-			this.printf('Unlocking failed: %s', err.message);
-			exitStatus.resolve(2);
-		})
+				this.printf('Unlocking failed: %s', err.message);
+				exitStatus.resolve(2);
+			})
 		.done();
 
 		return exitStatus.promise;

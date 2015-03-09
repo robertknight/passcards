@@ -21,7 +21,7 @@ interface Env {
 	vault: onepass.Vault;
 }
 
-function setup() : Q.Promise<Env> {
+function setup(): Q.Promise<Env> {
 	var VAULT_PASS = 'testpass';
 	var VAULT_PASS_ITERATIONS = 100;
 
@@ -31,7 +31,7 @@ function setup() : Q.Promise<Env> {
 
 	return vfs_util.rmrf(fs, vaultDir).then(() => {
 		return onepass.Vault.createVault(fs, vaultDir,
-		  VAULT_PASS, 'testhint', VAULT_PASS_ITERATIONS);
+			VAULT_PASS, 'testhint', VAULT_PASS_ITERATIONS);
 	}).then((_vault) => {
 		vault = _vault;
 		return vault.unlock(VAULT_PASS);
@@ -41,7 +41,7 @@ function setup() : Q.Promise<Env> {
 
 		return {
 			store: store,
-	  		syncer: syncer,
+			syncer: syncer,
 			vault: vault
 		};
 	});
@@ -50,14 +50,14 @@ function setup() : Q.Promise<Env> {
 // create a vault, a local store and a syncer.
 // Add a single item to the vault and the vault, local store, syncer and
 // a reference to the item in the vault
-function setupWithItem() : Q.Promise<{env: Env; item: item_store.Item}> {
+function setupWithItem(): Q.Promise<{ env: Env; item: item_store.Item }> {
 	var env: Env;
 
 	var item = new item_builder.Builder(item_store.ItemTypes.LOGIN)
-	 .setTitle('sync me')
-	 .addLogin('jim@acme.org')
-	 .addUrl('acme.org')
-	 .item();
+	.setTitle('sync me')
+	.addLogin('jim@acme.org')
+	.addUrl('acme.org')
+	.item();
 
 	return setup().then((_env) => {
 		env = _env;
@@ -92,10 +92,10 @@ testLib.addAsyncTest('sync vault items to store', (assert) => {
 
 	// 1. save a new item to the vault
 	var item = new item_builder.Builder(item_store.ItemTypes.LOGIN)
-	 .setTitle('sync me')
-	 .addLogin('testuser@gmail.com')
-	 .addUrl('accounts.google.com')
-	 .item();
+	.setTitle('sync me')
+	.addLogin('testuser@gmail.com')
+	.addUrl('accounts.google.com')
+	.item();
 
 	return setup().then((_env) => {
 		env = _env;
@@ -147,10 +147,10 @@ testLib.addAsyncTest('sync store items to vault', (assert) => {
 
 	// 1. Save a new item to the store
 	var item = new item_builder.Builder(item_store.ItemTypes.LOGIN)
-	  .setTitle('store item')
-	  .addLogin('testuser2@gmail.com')
-	  .addUrl('acme.org')
-	  .item();
+	.setTitle('store item')
+	.addLogin('testuser2@gmail.com')
+	.addUrl('acme.org')
+	.item();
 
 	return setup().then((_env) => {
 		env = _env;
@@ -195,10 +195,10 @@ testLib.addAsyncTest('sync store items to vault', (assert) => {
 testLib.addAsyncTest('merge store and vault item updates', (assert) => {
 	var env: Env;
 	var item = new item_builder.Builder(item_store.ItemTypes.LOGIN)
-	  .setTitle('acme.org')
-	  .addLogin('jim@acme.org')
-	  .addUrl('acme.org')
-	  .item();
+	.setTitle('acme.org')
+	.addLogin('jim@acme.org')
+	.addUrl('acme.org')
+	.item();
 
 	return setup().then((_env) => {
 		env = _env;
@@ -233,10 +233,10 @@ testLib.addAsyncTest('sync progress', (assert) => {
 	var env: Env;
 
 	var item = new item_builder.Builder(item_store.ItemTypes.LOGIN)
-	 .setTitle('sync me')
-	 .addLogin('testuser@gmail.com')
-	 .addUrl('accounts.google.com')
-	 .item();
+	.setTitle('sync me')
+	.addLogin('testuser@gmail.com')
+	.addUrl('accounts.google.com')
+	.item();
 
 	var progressUpdates: sync.SyncProgress[] = [];
 
@@ -255,25 +255,25 @@ testLib.addAsyncTest('sync progress', (assert) => {
 			failed: 0,
 			total: 0,
 			active: 0
-		},{
-			state: sync.SyncState.SyncingItems,
-			active: 0,
-			updated: 0,
-			failed: 0,
-			total: 1
-		},{
-			state: sync.SyncState.SyncingItems,
-			active: 0,
-			updated: 1,
-			failed: 0,
-			total: 1
-		},{
-			state: sync.SyncState.Idle,
-			active: 0,
-			updated: 1,
-			failed: 0,
-			total: 1
-		}], 'check that expected progress updates were received');
+		}, {
+				state: sync.SyncState.SyncingItems,
+				active: 0,
+				updated: 0,
+				failed: 0,
+				total: 1
+			}, {
+				state: sync.SyncState.SyncingItems,
+				active: 0,
+				updated: 1,
+				failed: 0,
+				total: 1
+			}, {
+				state: sync.SyncState.Idle,
+				active: 0,
+				updated: 1,
+				failed: 0,
+				total: 1
+			}], 'check that expected progress updates were received');
 
 		assert.deepEqual(finalState, {
 			state: sync.SyncState.Idle,
@@ -292,19 +292,19 @@ testLib.addAsyncTest('sync progress', (assert) => {
 			failed: 0,
 			updated: 0,
 			total: 0
-		},{
-			state: sync.SyncState.SyncingItems,
-			active: 0,
-			failed: 0,
-			updated: 0,
-			total: 0
-		},{
-			state: sync.SyncState.Idle,
-			active: 0,
-			failed: 0,
-			updated: 0,
-			total: 0
-		}]);
+		}, {
+				state: sync.SyncState.SyncingItems,
+				active: 0,
+				failed: 0,
+				updated: 0,
+				total: 0
+			}, {
+				state: sync.SyncState.Idle,
+				active: 0,
+				failed: 0,
+				updated: 0,
+				total: 0
+			}]);
 	});
 });
 
@@ -321,13 +321,13 @@ testLib.addAsyncTest('sync deleted items', (assert) => {
 	}).then(() => {
 
 		// remove it in the vault
-		return item.remove(); 
+		return item.remove();
 	}).then(() => {
 
 		// sync again
 		return env.syncer.syncItems();
 	}).then(() => {
-		return env.store.listItems({includeTombstones: true});
+		return env.store.listItems({ includeTombstones: true });
 	}).then((items) => {
 
 		// verify that the store item was also
@@ -374,10 +374,10 @@ testLib.addAsyncTest('sync many items', (assert) => {
 		var saves: Q.Promise<void>[] = [];
 		while (saves.length < ITEM_COUNT) {
 			var item = new item_builder.Builder(item_store.ItemTypes.LOGIN)
-			 .setTitle('sync me ' + saves.length)
-			 .addLogin('testuser' + saves.length + '@gmail.com')
-		  	 .addUrl('signon.acme.org')
-			 .item();
+			.setTitle('sync me ' + saves.length)
+			.addLogin('testuser' + saves.length + '@gmail.com')
+			.addUrl('signon.acme.org')
+			.item();
 			saves.push(item.saveTo(env.vault));
 		}
 

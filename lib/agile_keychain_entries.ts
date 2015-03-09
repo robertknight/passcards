@@ -14,31 +14,31 @@ export class EncryptionKeyList {
 	list: EncryptionKeyEntry[];
 
 	/** Map of security level -> key identifier (string) */
-	[keyLevel: string] : any;
+	[keyLevel: string]: any;
 }
 
 export class EncryptionKeyEntry {
 	/** Base64-encoded encryption key */
-	data : string;
+	data: string;
 
 	/** UUID for the key */
-	identifier : string;
+	identifier: string;
 
 	/** Number of iterations of the password derivation
 	  * function used to derive the key from the master
 	  * password.
 	  */
-	iterations : number;
+	iterations: number;
 
 	/** 'Security level' of the key. This links keys with items
 	  * using the Item.securityLevel field.
 	  */
-	level : string;
+	level: string;
 
 	/** Encryption key encrypted with itself as
 	  * a base 64 string.
 	  */
-	validation : string;
+	validation: string;
 }
 
 export class ItemField {

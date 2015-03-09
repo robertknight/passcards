@@ -28,7 +28,7 @@ export class EditCommand {
 			action: 'store',
 			help: 'Pattern specifying the item'
 		});
-		var editCmds = this.parser.addSubparsers({dest:'action'});
+		var editCmds = this.parser.addSubparsers({ dest: 'action' });
 
 		// commands for renaming items
 		var renameCmd = editCmds.addParser('rename');
@@ -88,8 +88,8 @@ export class EditCommand {
 		// - Removing sections
 	}
 
-	handle(args: any, item: item_store.Item) : Q.Promise<void> {
-		var content : item_store.ItemContent;
+	handle(args: any, item: item_store.Item): Q.Promise<void> {
+		var content: item_store.ItemContent;
 		return item.getContent().then((_content) => {
 			content = _content;
 			switch (args.action) {
@@ -112,12 +112,12 @@ export class EditCommand {
 		});
 	}
 
-	private selectField(content: item_store.ItemContent, field: string) : item_search.FieldMatch {
+	private selectField(content: item_store.ItemContent, field: string): item_search.FieldMatch {
 		var matches = item_search.matchField(content, field);
 		return matches.length > 0 ? matches[0] : null;
 	}
 
-	private rename(item: item_store.Item, newTitle: string) : Q.Promise<void> {
+	private rename(item: item_store.Item, newTitle: string): Q.Promise<void> {
 		var title = newTitle.trim();
 		if (title.length < 1) {
 			throw new Error('New item name must not be empty');
@@ -126,7 +126,7 @@ export class EditCommand {
 		return null;
 	}
 
-	private addSection(content: item_store.ItemContent, sectionTitle: string) : Q.Promise<void> {
+	private addSection(content: item_store.ItemContent, sectionTitle: string): Q.Promise<void> {
 		var section = new item_store.ItemSection;
 		section.name = sectionTitle;
 		section.title = sectionTitle;
@@ -135,15 +135,15 @@ export class EditCommand {
 	}
 
 	private addField(content: item_store.ItemContent, sectionName: string, fieldTitle: string, typeName: string,
-	  value: string) : Q.Promise<void> {
+		value: string): Q.Promise<void> {
 		var sections = item_search.matchSection(content, sectionName);
 		if (sections.length == 0) {
 			return Q.reject<void>(NO_SUCH_SECTION_ERROR);
 		}
 
-		var fieldTypes : { [index: string] : item_store.FieldType } = {
-			'text' : item_store.FieldType.Text,
-			'password' : item_store.FieldType.Password
+		var fieldTypes: { [index: string]: item_store.FieldType } = {
+			'text': item_store.FieldType.Text,
+			'password': item_store.FieldType.Password
 		};
 		if (fieldTypes[typeName] === undefined) {
 			return Q.reject<void>(UNKNOWN_FIELD_TYPE_ERROR);
@@ -160,18 +160,18 @@ export class EditCommand {
 		return null;
 	}
 
-	private renameSection(content: item_store.ItemContent, section: string, newName: string) : Q.Promise<void> {
+	private renameSection(content: item_store.ItemContent, section: string, newName: string): Q.Promise<void> {
 		return Q.reject<void>(null);
 	}
 
-	private setField(content: item_store.ItemContent, field: string, newValue: string) : Q.Promise<void> {
+	private setField(content: item_store.ItemContent, field: string, newValue: string): Q.Promise<void> {
 		var match = this.selectField(content, field);
 		if (match) {
 			if (newValue) {
 				match.setValue(newValue);
 				return Q<void>(null);
 			} else {
-				var newValPromise : Q.Promise<string>;
+				var newValPromise: Q.Promise<string>;
 				if (match.isPassword()) {
 					newValPromise = consoleio.passwordFieldPrompt(this.io, this.passwordGenerator);
 				} else {
@@ -187,7 +187,7 @@ export class EditCommand {
 		}
 	}
 
-	private removeField(content: item_store.ItemContent, field: string) : Q.Promise<void> {
+	private removeField(content: item_store.ItemContent, field: string): Q.Promise<void> {
 		var match = this.selectField(content, field);
 		if (!match) {
 			return Q.reject<void>(NO_SUCH_FIELD_ERROR);

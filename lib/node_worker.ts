@@ -38,7 +38,7 @@ export class Worker {
 	addEventListener(event: string, callback: Function) {
 		if (event == 'message') {
 			this.process.on('message', (message: any) => {
-				callback({data: message});
+				callback({ data: message });
 			});
 		}
 	}
@@ -58,7 +58,7 @@ export class WorkerClient {
 	constructor() {
 		process.on('message', (message: any) => {
 			if (this.onmessage) {
-				this.onmessage({data : message});
+				this.onmessage({ data: message });
 			}
 		});
 	}
@@ -66,7 +66,7 @@ export class WorkerClient {
 	close() {
 		process.exit(0);
 	}
-	
+
 	postMessage(message?: any, ports?: any) {
 		process.send(message);
 	}
@@ -74,7 +74,7 @@ export class WorkerClient {
 	addEventListener(event: string, callback: Function) {
 		if (event == 'message') {
 			process.on('message', (message: any) => {
-				callback({data: message});
+				callback({ data: message });
 			});
 		}
 	}

@@ -16,9 +16,9 @@ export var CSSTransitionGroupF = react.createFactory(react_addons.addons.CSSTran
   * the exception of 'className' where the value in @p parentProps and
   * the value in @p childProps are concatenated.
   */
-export function mergeProps<P,C>(parentProps: P, childProps: C) : C {
-	var childMap = tsutil.unsafeCast<C, {[index:string] : any}>(childProps);
-	var parentMap = tsutil.unsafeCast<P, {[index:string] : any}>(parentProps);
+export function mergeProps<P, C>(parentProps: P, childProps: C): C {
+	var childMap = tsutil.unsafeCast<C, { [index: string]: any }>(childProps);
+	var parentMap = tsutil.unsafeCast<P, { [index: string]: any }>(parentProps);
 
 	for (var k in parentMap) {
 		if (!childMap.hasOwnProperty(k)) {
@@ -31,8 +31,8 @@ export function mergeProps<P,C>(parentProps: P, childProps: C) : C {
 	return childProps;
 }
 
-export function createFactory<P,S>(component: {new() : typed_react.Component<P,S>}, ...mixins: React.Mixin<any,any>[])
-  : React.ComponentFactory<P> {
+export function createFactory<P, S>(component: { new (): typed_react.Component<P, S> }, ...mixins: React.Mixin<any, any>[])
+	: React.ComponentFactory<P> {
 	return react.createFactory(typed_react.createClass(component, mixins));
 }
 
@@ -50,9 +50,9 @@ function changedFields(objA: any, objB: any) {
 	// Test for A's keys different from B.
 	for (key in objA) {
 		if (objA.hasOwnProperty(key) &&
-				(!objB.hasOwnProperty(key) || objA[key] !== objB[key])) {
-					changed.push(key);
-				}
+			(!objB.hasOwnProperty(key) || objA[key] !== objB[key])) {
+			changed.push(key);
+		}
 	}
 	// Test for B's keys missing from A.
 	for (key in objB) {
@@ -73,7 +73,7 @@ export function objectChanged(a: any, b: any, ...ignoredFields: string[]) {
 	if (changed.length != ignoredFields.length) {
 		return true;
 	}
-	for (var i=0; i < changed.length; i++) {
+	for (var i = 0; i < changed.length; i++) {
 		if (ignoredFields.indexOf(changed[i]) == -1) {
 			return true;
 		}
@@ -82,11 +82,11 @@ export function objectChanged(a: any, b: any, ...ignoredFields: string[]) {
 }
 
 export interface StyleMap {
-	[property: string] : any;
+	[property: string]: any;
 }
 
 /** Add vendor prefix to inline property style names. */
-export function prefix(style: StyleMap) : StyleMap {
+export function prefix(style: StyleMap): StyleMap {
 	// TODO - Find a suitable existing implementation of this
 	var result: StyleMap = {};
 	for (var key in style) {

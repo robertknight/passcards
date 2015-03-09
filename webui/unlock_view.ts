@@ -133,7 +133,7 @@ export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockVie
 	}
 
 	render() {
-		var unlockMessage : string;
+		var unlockMessage: string;
 		if (this.state.unlockState == UnlockState.Unlocking) {
 			unlockMessage = 'Unlocking...';
 		} else if (this.state.unlockState == UnlockState.Failed) {
@@ -148,7 +148,7 @@ export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockVie
 				react.DOM.div(style.mixin(theme.form),
 					react.DOM.form({
 						className: style.classes(theme.inputPane),
-						ref:'unlockPaneForm',
+						ref: 'unlockPaneForm',
 						onSubmit: (e) => {
 							e.preventDefault();
 							var passwordInputField = <HTMLInputElement>this.refs['masterPassField'].getDOMNode();
@@ -179,11 +179,11 @@ export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockVie
 									this.props.onMenuClicked(itemRect);
 								}
 							})
-						),
+							),
 						react.DOM.div(style.mixin(theme.unlockLabel), unlockMessage)
+						)
 					)
-				)
-			);
+				);
 			unlockPaneLower = react.DOM.div(style.mixin(theme.lower));
 		}
 
@@ -194,13 +194,13 @@ export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockVie
 			reactutil.CSSTransitionGroupF({
 				transitionName: style.classes(app_theme.animations.slideFromBottom)
 			}, unlockPaneLower)
-		);
+			);
 	}
 
 	private tryUnlock(password: string) {
-		this.setState({unlockState: UnlockState.Unlocking});
+		this.setState({ unlockState: UnlockState.Unlocking });
 		return this.props.store.unlock(password).then(() => {
-			this.setState({unlockState: UnlockState.Success});
+			this.setState({ unlockState: UnlockState.Success });
 			this.props.onUnlock();
 		})
 		.catch((err) => {

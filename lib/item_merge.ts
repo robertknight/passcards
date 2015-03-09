@@ -11,7 +11,7 @@ import diff = require('./base/diff');
 import item_store = require('./item_store');
 
 // perform a 3-way merge of ordered sets
-function mergeOrderedSets<T>(base: T[], a: T[], b: T[]) : T[] {
+function mergeOrderedSets<T>(base: T[], a: T[], b: T[]): T[] {
 	var deltaA = diff.diffSets(base, a);
 	var deltaB = diff.diffSets(base, b);
 	var merged = diff.mergeSetDiffs(deltaA, deltaB);
@@ -46,7 +46,7 @@ export function mergeObject<T>(base: T, first: T, second: T) {
 	var base_: any = base;
 	var first_: any = first;
 	var second_: any = second;
-	
+
 	var result: any = {};
 	Object.keys(base_).forEach((key) => {
 		result[key] = mergeField(base_[key], first_[key], second_[key]);
@@ -86,7 +86,7 @@ function uniqueKeys<T>(array: T[], keyFunc: (entry: T) => string, suffix: string
   *                from the three arrays.
   */
 export function mergeSets<T>(baseArray: T[], firstArray: T[], secondArray: T[],
-                                   keyFunc: (entry: T) => string) {
+	keyFunc: (entry: T) => string) {
 	var baseKeys = uniqueKeys(baseArray, keyFunc, 'base');
 	var firstKeys = uniqueKeys(firstArray, keyFunc, 'first');
 	var secondKeys = uniqueKeys(secondArray, keyFunc, 'second');
@@ -106,7 +106,7 @@ export function mergeSets<T>(baseArray: T[], firstArray: T[], secondArray: T[],
 		} else if (baseIndex == -1) {
 			// entry added in first or second item
 			mergedEntry = firstArray[firstIndex] || secondArray[secondIndex];
-		} 
+		}
 
 		assert(mergedEntry);
 		mergedArray.push(mergedEntry);
@@ -116,80 +116,80 @@ export function mergeSets<T>(baseArray: T[], firstArray: T[], secondArray: T[],
 }
 
 export function merge(a: item_store.ItemAndContent,
-                      b: item_store.ItemAndContent,
-                      base?: item_store.ItemAndContent) {
-		var merged = {
-			item: new item_store.Item(null /* store */, a.item.uuid),
-			content: new item_store.ItemContent()
-		};
+	b: item_store.ItemAndContent,
+	base?: item_store.ItemAndContent) {
+	var merged = {
+		item: new item_store.Item(null /* store */, a.item.uuid),
+		content: new item_store.ItemContent()
+	};
 
-		// this is an item that has been updated in either store
-		var mergeItemField = <T>(getter: (item: item_store.ItemAndContent) => T) => {
-			var baseValue = getter(base);
-			var firstValue = getter(a);
-			var secondValue = getter(b);
-			return mergeField(baseValue, firstValue, secondValue);
-		};
+	// this is an item that has been updated in either store
+	var mergeItemField = <T>(getter: (item: item_store.ItemAndContent) => T) => {
+		var baseValue = getter(base);
+		var firstValue = getter(a);
+		var secondValue = getter(b);
+		return mergeField(baseValue, firstValue, secondValue);
+	};
 
-		var mergeFieldSets = <T>(getter: (item: item_store.ItemAndContent) => T[],
-		                             keyFunc: (element: T) => string) => {
-			var baseValue = getter(base);
-			var firstValue = getter(a);
-			var secondValue = getter(b);
-			return mergeSets(baseValue, firstValue, secondValue, keyFunc);
-		};
+	var mergeFieldSets = <T>(getter: (item: item_store.ItemAndContent) => T[],
+		keyFunc: (element: T) => string) => {
+		var baseValue = getter(base);
+		var firstValue = getter(a);
+		var secondValue = getter(b);
+		return mergeSets(baseValue, firstValue, secondValue, keyFunc);
+	};
 
-		// merge overview data
-		merged.item.title = mergeItemField((item) => {
-			return item.item.title;
-		});
-		merged.item.folderUuid = mergeItemField((item) => {
-			return item.item.folderUuid;
-		});
-		merged.item.trashed = mergeItemField((item) => {
-			return item.item.trashed;
-		});
-		merged.item.createdAt = mergeItemField((item) => {
-			return item.item.createdAt;
-		});
-		merged.item.typeName = mergeItemField((item) => {
-			return item.item.typeName;
-		});
-		merged.item.openContents = mergeItemField((item) => {
-			return item.item.openContents;
-		});
+	// merge overview data
+	merged.item.title = mergeItemField((item) => {
+		return item.item.title;
+	});
+	merged.item.folderUuid = mergeItemField((item) => {
+		return item.item.folderUuid;
+	});
+	merged.item.trashed = mergeItemField((item) => {
+		return item.item.trashed;
+	});
+	merged.item.createdAt = mergeItemField((item) => {
+		return item.item.createdAt;
+	});
+	merged.item.typeName = mergeItemField((item) => {
+		return item.item.typeName;
+	});
+	merged.item.openContents = mergeItemField((item) => {
+		return item.item.openContents;
+	});
 
-		// merge content
-		merged.content.sections = mergeFieldSets((item) => {
-			return item.content.sections;
-		}, (section) => {
+	// merge content
+	merged.content.sections = mergeFieldSets((item) => {
+		return item.content.sections;
+	}, (section) => {
 			return section.name;
 		});
-		merged.content.urls = mergeFieldSets((item) => {
-			return item.content.urls;
-		}, (url) => {
+	merged.content.urls = mergeFieldSets((item) => {
+		return item.content.urls;
+	}, (url) => {
 			return url.label + url.url;
 		});
-		merged.content.notes = mergeItemField((item) => {
-			return item.content.notes;
-		});
-		merged.content.formFields = mergeFieldSets((item) => {
-			return item.content.formFields;
-		}, (field) => {
+	merged.content.notes = mergeItemField((item) => {
+		return item.content.notes;
+	});
+	merged.content.formFields = mergeFieldSets((item) => {
+		return item.content.formFields;
+	}, (field) => {
 			return field.name;
 		});
-		merged.content.htmlMethod = mergeItemField((item) => {
-			return item.content.htmlMethod;
-		});
-		merged.content.htmlAction = mergeItemField((item) => {
-			return item.content.htmlAction;
-		});
-		merged.content.htmlId = mergeItemField((item) => {
-			return item.content.htmlId;
-		});
+	merged.content.htmlMethod = mergeItemField((item) => {
+		return item.content.htmlMethod;
+	});
+	merged.content.htmlAction = mergeItemField((item) => {
+		return item.content.htmlAction;
+	});
+	merged.content.htmlId = mergeItemField((item) => {
+		return item.content.htmlId;
+	});
 
-		merged.item.setContent(merged.content);
+	merged.item.setContent(merged.content);
 
-		return merged;
+	return merged;
 }
 

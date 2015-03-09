@@ -28,7 +28,7 @@ export enum CryptoAlgorithm {
 }
 
 export class CryptoParams {
-	algo : CryptoAlgorithm;
+	algo: CryptoAlgorithm;
 
 	constructor(algo: CryptoAlgorithm) {
 		this.algo = algo;
@@ -90,8 +90,8 @@ export class DecryptionError extends err_util.BaseError {
 }
 
 /** Decrypt a set of keys using a password. */
-export function decryptKeys(keys: Key[], password: string) : Q.Promise<DecryptedKey[]> {
-	var derivedKeys : Q.Promise<string>[] = [];
+export function decryptKeys(keys: Key[], password: string): Q.Promise<DecryptedKey[]> {
+	var derivedKeys: Q.Promise<string>[] = [];
 	keys.forEach((key) => {
 		assert.equal(key.format, KeyFormat.AgileKeychainKey);
 		var saltCipher = crypto.extractSaltAndCipherText(atob(key.data));
@@ -119,28 +119,28 @@ export function decryptKeys(keys: Key[], password: string) : Q.Promise<Decrypted
   */
 export interface KeyAgent {
 	/** Register a key with the agent for future use when decrypting items. */
-	addKey(id: string, key: string) : Q.Promise<void>;
+	addKey(id: string, key: string): Q.Promise<void>;
 	/** Returns the IDs of stored keys. */
-	listKeys() : Q.Promise<string[]>;
+	listKeys(): Q.Promise<string[]>;
 	/** Clear all stored keys. */
-	forgetKeys() : Q.Promise<void>;
+	forgetKeys(): Q.Promise<void>;
 	/** Decrypt data for an item using the given key ID and crypto
 	  * parameters.
 	  *
 	  * Returns a promise for the decrypted plaintext.
 	  */
-	decrypt(id: string, cipherText: string, params: CryptoParams) : Q.Promise<string>;
+	decrypt(id: string, cipherText: string, params: CryptoParams): Q.Promise<string>;
 	/** Encrypt data for an item using the given key ID and crypto
 	  * parameters.
 	  *
 	  * Returns a promise for the encrypted text.
 	  */
-	encrypt(id: string, plainText: string, params: CryptoParams) : Q.Promise<string>;
+	encrypt(id: string, plainText: string, params: CryptoParams): Q.Promise<string>;
 
 	/** Optional event stream which emits events when forgetKeys() is
 	  * called. Some key agents may not support this.
 	  */
-	onLock?() : event_stream.EventStream<void>;
+	onLock? (): event_stream.EventStream<void>;
 	
 	/** Reset the timeout for auto-locking this key agent.
 	  * This should be called when the user interacts with the app
@@ -154,18 +154,18 @@ export interface KeyAgent {
 export class SimpleKeyAgent implements KeyAgent {
 	private autoLockTimeout: number;
 	private crypto: crypto.Crypto;
-	private keys: {[id:string] : string};
+	private keys: { [id: string]: string };
 	private lockEvents: event_stream.EventStream<void>;
 
 	// in Node, setTimeout() returns a Timer, in the browser
 	// it returns a number
 	private lockTimeout: any;
 
-	keyCount() : number {
+	keyCount(): number {
 		return Object.keys(this.keys).length;
 	}
 
-	constructor(cryptoImpl? : crypto.Crypto) {
+	constructor(cryptoImpl?: crypto.Crypto) {
 		this.crypto = cryptoImpl || crypto.defaultCrypto;
 		this.keys = {};
 		this.lockEvents = new event_stream.EventStream<void>();
@@ -199,17 +199,17 @@ export class SimpleKeyAgent implements KeyAgent {
 		}
 	}
 
-	addKey(id: string, key: string) : Q.Promise<void> {
+	addKey(id: string, key: string): Q.Promise<void> {
 		this.keys[id] = key;
 		this.resetAutoLock();
 		return Q<void>(null);
 	}
 
-	listKeys() : Q.Promise<string[]> {
+	listKeys(): Q.Promise<string[]> {
 		return Q(Object.keys(this.keys));
 	}
 
-	forgetKeys() : Q.Promise<void> {
+	forgetKeys(): Q.Promise<void> {
 		if (this.lockTimeout) {
 			clearTimeout(this.lockTimeout);
 			this.lockTimeout = null;
@@ -219,20 +219,20 @@ export class SimpleKeyAgent implements KeyAgent {
 		return Q<void>(null);
 	}
 
-	decrypt(id: string, cipherText: string, params: CryptoParams) : Q.Promise<string> {
+	decrypt(id: string, cipherText: string, params: CryptoParams): Q.Promise<string> {
 		if (!this.keys.hasOwnProperty(id)) {
 			return Q.reject<string>(new Error('No such key: ' + id));
 		}
 		switch (params.algo) {
 			case CryptoAlgorithm.AES128_OpenSSLKey:
 				return Q(crypto.decryptAgileKeychainItemData(this.crypto,
-					  this.keys[id], cipherText));
+					this.keys[id], cipherText));
 			default:
 				return Q.reject<string>(new Error('Unknown encryption algorithm'));
 		}
 	}
 
-	encrypt(id: string, plainText: string, params: CryptoParams) : Q.Promise<string> {
+	encrypt(id: string, plainText: string, params: CryptoParams): Q.Promise<string> {
 		if (!this.keys.hasOwnProperty(id)) {
 			return Q.reject<string>(new Error('No such key: ' + id));
 		}
@@ -245,7 +245,7 @@ export class SimpleKeyAgent implements KeyAgent {
 		}
 	}
 
-	onLock() : event_stream.EventStream<void> {
+	onLock(): event_stream.EventStream<void> {
 		return this.lockEvents;
 	}
 }
@@ -258,7 +258,7 @@ export class SimpleKeyAgent implements KeyAgent {
   * @param validation Validation data used to verify whether decryption was successful.
   *  This is a copy of the decrypted version of @p encryptedKey, encrypted with itself.
   */
-export function decryptKey(derivedKey: string, encryptedKey: string, validation: string) : string {
+export function decryptKey(derivedKey: string, encryptedKey: string, validation: string): string {
 	var aesKey = derivedKey.substring(0, 16);
 	var iv = derivedKey.substring(16, 32);
 	var decryptedKey = crypto.defaultCrypto.aesCbcDecrypt(aesKey, encryptedKey, iv);
@@ -278,14 +278,14 @@ export function decryptKey(derivedKey: string, encryptedKey: string, validation:
   * This version is synchronous and will block the UI if @p iterCount
   * is high.
   */
-export function keyFromPasswordSync(pass: string, salt: string, iterCount: number) : string {
+export function keyFromPasswordSync(pass: string, salt: string, iterCount: number): string {
 	return crypto.defaultCrypto.pbkdf2Sync(pass, salt, iterCount, AES_128_KEY_LEN);
 }
 
 /** Derive an encryption key from a password for use with decryptKey()
   * This version is asynchronous and will not block the UI.
   */
-export function keyFromPassword(pass: string, salt: string, iterCount: number) : Q.Promise<string> {
+export function keyFromPassword(pass: string, salt: string, iterCount: number): Q.Promise<string> {
 	return crypto.defaultCrypto.pbkdf2(pass, salt, iterCount, AES_128_KEY_LEN);
 }
 
@@ -293,7 +293,7 @@ export function keyFromPassword(pass: string, salt: string, iterCount: number) :
   * @param derivedKey An encryption key for the master key, derived from a password using keyFromPassword()
   * @param decryptedKey The master key for the vault to be encrypted.
   */
-export function encryptKey(derivedKey: string, decryptedKey: string) : EncryptedKey {
+export function encryptKey(derivedKey: string, decryptedKey: string): EncryptedKey {
 	var aesKey = derivedKey.substring(0, 16);
 	var iv = derivedKey.substring(16, 32);
 	var encryptedKey = crypto.defaultCrypto.aesCbcEncrypt(aesKey, decryptedKey, iv);
@@ -302,5 +302,5 @@ export function encryptKey(derivedKey: string, decryptedKey: string) : Encrypted
 	var keyParams = crypto.openSSLKey(crypto.defaultCrypto, decryptedKey, validationSalt);
 	var validation = 'Salted__' + validationSalt + crypto.defaultCrypto.aesCbcEncrypt(keyParams.key, decryptedKey, keyParams.iv);
 
-	return {key: encryptedKey, validation: validation};
+	return { key: encryptedKey, validation: validation };
 }

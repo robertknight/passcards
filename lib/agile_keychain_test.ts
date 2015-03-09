@@ -20,33 +20,33 @@ require('es6-shim');
 
 class TestCase {
 	/** Relative path to the vault within the test data dir */
-	path : string;
+	path: string;
 
 	/** Master password for the test vault. */
-	password : string;
+	password: string;
 
 	/** Path to .1pif file containing expected
 	  * decrypted data.
 	  */
-	itemDataPath : string;
+	itemDataPath: string;
 }
 
-var TEST_VAULTS : TestCase[] = [
+var TEST_VAULTS: TestCase[] = [
 	{
-		path : 'test.agilekeychain',
-		password : 'logMEin',
-		itemDataPath : 'test.1pif'
+		path: 'test.agilekeychain',
+		password: 'logMEin',
+		itemDataPath: 'test.1pif'
 	}
 ];
 
 var fs = new nodefs.FileVFS('lib/test-data');
 
 class ItemAndContent {
-	item : item_store.Item;
-	content : item_store.ItemContent;
+	item: item_store.Item;
+	content: item_store.ItemContent;
 }
 
-function createTestVault() : Q.Promise<agile_keychain.Vault> {
+function createTestVault(): Q.Promise<agile_keychain.Vault> {
 	var vault = Q.defer<agile_keychain.Vault>();
 	var fs = new nodefs.FileVFS('lib/test-data');
 	vfs_util.rmrf(fs, 'copy.agilekeychain').then(() => {
@@ -69,50 +69,50 @@ testLib.addAsyncTest('Import item from .1pif file', (assert) => {
 	actualItems.then((items) => {
 		assert.equal(items.length, 1, 'Imported expected number of items');
 		var expectedItem = agile_keychain.fromAgileKeychainItem(null, {
-		  "vault": null,
-		  "updatedAt": 1398413120,
-		  "title": "Facebook",
-		  "securityLevel": "SL5",
-		  "secureContents": {
-			"sections": [],
-			"URLs": [
-			  {
-				"label": "website",
-				"url": "facebook.com"
-			  }
-			],
-			"notesPlain": "",
-			"fields": [
-			  {
-				"value": "john.doe@gmail.com",
-				"id": "",
-				"name": "username",
-				"type": "T",
-				"designation": "username"
-			  },
-			  {
-				"value": "Wwk-ZWc-T9MO",
-				"id": "",
-				"name": "password",
-				"type": "P",
-				"designation": "password"
-			  }
-			],
-			"htmlMethod": "",
-			"htmlAction": "",
-			"htmlID": ""
-		  },
-		  "typeName": "webforms.WebForm",
-		  "uuid": "CA20BB325873446966ED1F4E641B5A36",
-		  "createdAt": 1398413120,
-		  "location": "facebook.com",
-		  "folderUuid": "",
-		  "faveIndex": 0,
-		  "trashed": false,
-		  "openContents": {
-			"tags": null,
-			"scope": ""
-		  }
+			"vault": null,
+			"updatedAt": 1398413120,
+			"title": "Facebook",
+			"securityLevel": "SL5",
+			"secureContents": {
+				"sections": [],
+				"URLs": [
+					{
+						"label": "website",
+						"url": "facebook.com"
+					}
+				],
+				"notesPlain": "",
+				"fields": [
+					{
+						"value": "john.doe@gmail.com",
+						"id": "",
+						"name": "username",
+						"type": "T",
+						"designation": "username"
+					},
+					{
+						"value": "Wwk-ZWc-T9MO",
+						"id": "",
+						"name": "password",
+						"type": "P",
+						"designation": "password"
+					}
+				],
+				"htmlMethod": "",
+				"htmlAction": "",
+				"htmlID": ""
+			},
+			"typeName": "webforms.WebForm",
+			"uuid": "CA20BB325873446966ED1F4E641B5A36",
+			"createdAt": 1398413120,
+			"location": "facebook.com",
+			"folderUuid": "",
+			"faveIndex": 0,
+			"trashed": false,
+			"openContents": {
+				"tags": null,
+				"scope": ""
+			}
 		});
 		var diff = testLib.compareObjects(items[0], expectedItem);
 		assert.equal(diff.length, 0, 'Actual/expected imported items match');
@@ -125,7 +125,7 @@ testLib.addAsyncTest('Import item from .1pif file', (assert) => {
 // fetch all items and compare to an expected set
 // of items in .1pif format
 testLib.addAsyncTest('Compare vaults against .1pif files', (assert) => {
-	var done : Q.Promise<boolean>[] = [];
+	var done: Q.Promise<boolean>[] = [];
 	var importer = new exportLib.PIFImporter();
 
 	TEST_VAULTS.forEach((tst) => {
@@ -136,20 +136,20 @@ testLib.addAsyncTest('Compare vaults against .1pif files', (assert) => {
 		var actualItems = Q.defer<ItemAndContent[]>();
 
 		var vault = new agile_keychain.Vault(fs, tst.path);
-		var items : item_store.Item[];
+		var items: item_store.Item[];
 		vault.unlock(tst.password).then(() => {
 			return vault.listItems();
 		}).then((_items) => {
 			items = _items;
-			var contents : Q.Promise<item_store.ItemContent>[] = [];
+			var contents: Q.Promise<item_store.ItemContent>[] = [];
 			items.forEach((item) => {
 				contents.push(item.getContent());
 			});
 			return Q.all(contents);
 		}).then((contents) => {
-			var itemContents : ItemAndContent[] = [];
+			var itemContents: ItemAndContent[] = [];
 			items.forEach((item, index) => {
-				itemContents.push({item: item, content: contents[index]});
+				itemContents.push({ item: item, content: contents[index] });
 			});
 			actualItems.resolve(itemContents);
 		}).done();
@@ -166,17 +166,17 @@ testLib.addAsyncTest('Compare vaults against .1pif files', (assert) => {
 			});
 
 			assert.equal(expectedAry.length, actualAry.length,
-			  'actual and expected vault item counts match');
+				'actual and expected vault item counts match');
 
-			for (var i=0; i < expectedAry.length; i++) {
+			for (var i = 0; i < expectedAry.length; i++) {
 				var expectedItem = expectedAry[i];
 				var actualItem = actualAry[i].item;
 				actualItem.setContent(actualAry[i].content);
 
 				var diff = testLib.compareObjects(expectedItem, actualItem,
-				  ['root/store', 'root/encrypted'],
-				  ['root/securityLevel', 'root/createdAt', 'root/faveIndex', 'root/openContents']
-				);
+					['root/store', 'root/encrypted'],
+					['root/securityLevel', 'root/createdAt', 'root/faveIndex', 'root/openContents']
+					);
 				if (diff.length > 0) {
 					console.log(diff);
 				}
@@ -190,8 +190,8 @@ testLib.addAsyncTest('Compare vaults against .1pif files', (assert) => {
 	return Q.all(done);
 });
 
-function createCryptos() : crypto.Crypto[] {
-	var cryptoImpls : crypto.Crypto[] = [];
+function createCryptos(): crypto.Crypto[] {
+	var cryptoImpls: crypto.Crypto[] = [];
 	cryptoImpls.push(new crypto.CryptoJsCrypto);
 	if (env.isNodeJS()) {
 		cryptoImpls.push(new crypto.NodeCrypto);
@@ -216,7 +216,7 @@ testLib.addTest('AES encrypt/decrypt', (assert) => {
 testLib.addTest('Encrypt/decrypt item data', (assert) => {
 	var cryptoImpls = createCryptos();
 	cryptoImpls.forEach((impl) => {
-		var itemData = JSON.stringify({secret: 'secret-data'});
+		var itemData = JSON.stringify({ secret: 'secret-data' });
 		var itemPass = 'item password';
 		var encrypted = crypto.encryptAgileKeychainItemData(impl, itemPass, itemData);
 		var decrypted = crypto.decryptAgileKeychainItemData(impl, itemPass, encrypted);
@@ -253,9 +253,9 @@ testLib.addAsyncTest('Save item', (assert) => {
 				// check new item appears in vault list
 				vault.listItems().then((items) => {
 					// check that selected properties match
-					var comparedProps : any[] = ['title',
-					 'uuid', 'trashed', 'faveIndex', 'typeName',
-					 'location', 'updatedAt'];
+					var comparedProps: any[] = ['title',
+						'uuid', 'trashed', 'faveIndex', 'typeName',
+						'location', 'updatedAt'];
 
 					var actualOverview = underscore.find(items, (item) => { return item.uuid == loadedItem.uuid });
 					testLib.assertEqual(assert, actualOverview, item, comparedProps);
@@ -295,7 +295,7 @@ testLib.addAsyncTest('Update item', (assert) => {
 		// second on save.
 		var originalSaveDate = new Date(Date.now() - 2000);
 
-		var loadedItem : item_store.Item;
+		var loadedItem: item_store.Item;
 		item.save().then(() => {
 			return vault.loadItem(item.uuid);
 		}).then((loadedItem_) => {
@@ -353,7 +353,7 @@ testLib.addAsyncTest('Update item', (assert) => {
 
 testLib.addAsyncTest('Remove item', (assert) => {
 	createTestVault().then((vault) => {
-		var item : item_store.Item;
+		var item: item_store.Item;
 		vault.loadItem('CA20BB325873446966ED1F4E641B5A36').then((item_) => {
 			item = item_;
 			assert.equal(item.title, 'Facebook');
@@ -361,7 +361,7 @@ testLib.addAsyncTest('Remove item', (assert) => {
 			assert.ok(item.isRegularItem());
 			return item.getContent();
 		}).then((content) => {
-			testLib.assertEqual(assert, content.urls, [ { label: 'website', 'url' : 'facebook.com' } ]);
+			testLib.assertEqual(assert, content.urls, [{ label: 'website', 'url': 'facebook.com' }]);
 			var passwordField = underscore.find(content.formFields, (field) => {
 				return field.designation == 'password';
 			});
@@ -395,7 +395,7 @@ testLib.addAsyncTest('Remove item', (assert) => {
 testLib.addTest('Generate Passwords', (assert) => {
 	var usedPasswords = new Set<string>();
 	for (var len = 4; len < 20; len++) {
-		for (var k=0; k < 10; k++) {
+		for (var k = 0; k < 10; k++) {
 			var pass = crypto.generatePassword(len);
 			assert.ok(pass.match(/[A-Z]/) != null);
 			assert.ok(pass.match(/[a-z]/) != null);
@@ -441,7 +441,7 @@ testLib.addAsyncTest('Create new vault', (assert) => {
 	var fs = new nodefs.FileVFS('/tmp');
 	var pass = 'test-new-vault-pass';
 	var hint = 'the-password-hint';
-	var vault : agile_keychain.Vault;
+	var vault: agile_keychain.Vault;
 	var keyIterations = 100;
 	var vaultDir = '/new-vault';
 
@@ -526,13 +526,13 @@ testLib.addTest('Item content account and password accessors', (assert) => {
 		type: item_store.FormFieldType.Password,
 		designation: 'password',
 		value: 'the-item-password'
-	},{
-		id: '',
-		name: 'email',
-		type: item_store.FormFieldType.Text,
-		designation: 'username',
-		value: 'jim.smith@gmail.com'
-	});
+	}, {
+			id: '',
+			name: 'email',
+			type: item_store.FormFieldType.Text,
+			designation: 'username',
+			value: 'jim.smith@gmail.com'
+		});
 	assert.equal(content.account(), 'jim.smith@gmail.com');
 	assert.equal(content.password(), 'the-item-password');
 });

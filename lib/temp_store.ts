@@ -18,8 +18,8 @@ export class Store implements item_store.SyncableStore {
 	private hint: string;
 	
 	// map of (revision -> item and content)
-	private content: Map<string,item_store.ItemAndContent>;
-	private lastSyncedRevisions: Map<string,string>;
+	private content: Map<string, item_store.ItemAndContent>;
+	private lastSyncedRevisions: Map<string, string>;
 
 	constructor(agent: key_agent.KeyAgent) {
 		this.onItemUpdated = new event_stream.EventStream<item_store.Item>();
@@ -29,7 +29,7 @@ export class Store implements item_store.SyncableStore {
 		this.clear();
 	}
 
-	unlock(password: string) : Q.Promise<void> {
+	unlock(password: string): Q.Promise<void> {
 		return key_agent.decryptKeys(this.keys, password).then((keys) => {
 			var savedKeys: Q.Promise<void>[] = [];
 			keys.forEach((key) => {
@@ -68,7 +68,7 @@ export class Store implements item_store.SyncableStore {
 		}
 
 		var saved = false;
-		for (var i=0; i < this.items.length; i++) {
+		for (var i = 0; i < this.items.length; i++) {
 			if (this.items[i].uuid == item.uuid) {
 				this.items[i] = item;
 				saved = true;
@@ -78,9 +78,9 @@ export class Store implements item_store.SyncableStore {
 		var prevRevision = item.revision;
 		return item.getContent().then((content) => {
 			item.updateOverviewFromContent(content);
-			item.revision = item_store.generateRevisionId({item: item, content: content});
+			item.revision = item_store.generateRevisionId({ item: item, content: content });
 			item.parentRevision = prevRevision;
-			var itemRevision = item_store.cloneItem({item: item, content: content}, item.uuid);
+			var itemRevision = item_store.cloneItem({ item: item, content: content }, item.uuid);
 
 			this.content.set(item.revision, {
 				item: itemRevision.item,
@@ -123,16 +123,16 @@ export class Store implements item_store.SyncableStore {
 	clear() {
 		this.keys = [];
 		this.items = [];
-		this.content = new collectionutil.PMap<string,item_store.ItemAndContent>();
-		this.lastSyncedRevisions = new collectionutil.PMap<string,string>();
+		this.content = new collectionutil.PMap<string, item_store.ItemAndContent>();
+		this.lastSyncedRevisions = new collectionutil.PMap<string, string>();
 		return Q<void>(null);
 	}
 
 	passwordHint() {
 		return Q(this.hint);
 	}
-	
-	getLastSyncedRevision(item: item_store.Item) : Q.Promise<string> {
+
+	getLastSyncedRevision(item: item_store.Item): Q.Promise<string> {
 		return Q(this.lastSyncedRevisions.get(item.uuid));
 	}
 
@@ -142,7 +142,7 @@ export class Store implements item_store.SyncableStore {
 	}
 
 	lastSyncTimestamps() {
-		var timestampMap = new collectionutil.PMap<string,Date>();
+		var timestampMap = new collectionutil.PMap<string, Date>();
 		this.items.forEach((item) => {
 			var lastSyncedRev = this.lastSyncedRevisions.get(item.uuid);
 			if (!lastSyncedRev) {

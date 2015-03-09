@@ -32,20 +32,20 @@ interface FSEntry {
 }
 
 export class FS implements vfs.VFS {
-	private rootKey : string;
-	private root : FSEntry;
-	private storage : Storage;
+	private rootKey: string;
+	private root: FSEntry;
+	private storage: Storage;
 
 	constructor(rootKey: string, storage?: Storage) {
 		this.rootKey = rootKey;
 		this.storage = storage || window.localStorage;
 	}
 
-	login() : Q.Promise<vfs.Credentials> {
+	login(): Q.Promise<vfs.Credentials> {
 		return Q({});
 	}
 
-	isLoggedIn() : boolean {
+	isLoggedIn(): boolean {
 		return true;
 	}
 
@@ -61,11 +61,11 @@ export class FS implements vfs.VFS {
 		return {}
 	}
 
-	setCredentials(credentials: vfs.Credentials) : void {
+	setCredentials(credentials: vfs.Credentials): void {
 		// unused
 	}
 
-	stat(path: string) : Q.Promise<vfs.FileInfo> {
+	stat(path: string): Q.Promise<vfs.FileInfo> {
 		var entry = this.entryForPath(path);
 		if (!entry) {
 			return Q.reject<vfs.FileInfo>(new Error('No such path'));
@@ -74,11 +74,11 @@ export class FS implements vfs.VFS {
 		}
 	}
 
-	search(namePattern: string, cb: (error: Error, files: vfs.FileInfo[]) => any) : void {
+	search(namePattern: string, cb: (error: Error, files: vfs.FileInfo[]) => any): void {
 		vfs_util.searchIn(this, '.', namePattern, cb);
 	}
 
-	read(path: string) : Q.Promise<string> {
+	read(path: string): Q.Promise<string> {
 		var entry = this.entryForPath(path);
 		if (!entry) {
 			return Q.reject<string>(new Error('No such path'));
@@ -92,7 +92,7 @@ export class FS implements vfs.VFS {
 		return Q(this.storage.getItem(entry.key));
 	}
 
-	write(path: string, content: string, options: vfs.WriteOptions = {}) : Q.Promise<void> {
+	write(path: string, content: string, options: vfs.WriteOptions = {}): Q.Promise<void> {
 		var entry = this.entryForPath(path);
 		if (!entry) {
 			// create a new file entry for this path
@@ -134,7 +134,7 @@ export class FS implements vfs.VFS {
 		return Q<void>(null);
 	}
 
-	list(path: string) : Q.Promise<vfs.FileInfo[]> {
+	list(path: string): Q.Promise<vfs.FileInfo[]> {
 		var entry = this.entryForPath(path);
 		if (!entry) {
 			return Q.reject<vfs.FileInfo[]>(new Error('No such directory: ' + path));
@@ -147,7 +147,7 @@ export class FS implements vfs.VFS {
 		}));
 	}
 
-	rm(path: string) : Q.Promise<void> {
+	rm(path: string): Q.Promise<void> {
 		var entry = this.entryForPath(path);
 		if (!entry) {
 			return Q<void>(null);
@@ -171,7 +171,7 @@ export class FS implements vfs.VFS {
 		removeEntry(entry);
 	}
 
-	mkpath(path: string) : Q.Promise<void> {
+	mkpath(path: string): Q.Promise<void> {
 		path = Path.normalize(path);
 		if (path[0] == '/') {
 			path = path.slice(1);
@@ -188,16 +188,16 @@ export class FS implements vfs.VFS {
 				var dirEntry = this.entryForPath(currentPath);
 				if (!dirEntry) {
 					dirEntry = <FSEntry>{
-						name : component,
-						isDir : true,
-						entries : [],
-						parent : prevDirEntry
+						name: component,
+						isDir: true,
+						entries: [],
+						parent: prevDirEntry
 					};
 					prevDirEntry.entries.push(dirEntry);
 					this.writeDirIndex(prevDirEntry);
 				} else if (!dirEntry.isDir) {
 					throw new Error(currentPath + ' exists and is not a directory');
-				} else if (index == components.length-1) {
+				} else if (index == components.length - 1) {
 					throw new Error('Path already exists');
 				}
 
@@ -218,17 +218,17 @@ export class FS implements vfs.VFS {
 		});
 	}
 
-	private readDirIndex(parent: FSEntry, key: string) : FSEntry[] {
+	private readDirIndex(parent: FSEntry, key: string): FSEntry[] {
 		var content = this.storage.getItem(key);
 		if (!content) {
 			return null;
 		}
-		var entries : FSEntry[] = JSON.parse(content);
+		var entries: FSEntry[] = JSON.parse(content);
 		this.updateParent(entries, parent);
 		return entries;
 	}
 
-	private static toDirIndexEntry(entry: FSEntry) : Object {
+	private static toDirIndexEntry(entry: FSEntry): Object {
 		return {
 			name: entry.name,
 			isDir: entry.isDir,
@@ -261,8 +261,8 @@ export class FS implements vfs.VFS {
 
 	// return the 'absolute' (relative to the root of the file system)
 	// canonical form of a path in the file system
-	private canonicalPath(path: string) : string {
-		var components : string[] = [];
+	private canonicalPath(path: string): string {
+		var components: string[] = [];
 		path.split('/').forEach((component) => {
 			if (component == '.' || component == '') {
 				return;
@@ -276,11 +276,11 @@ export class FS implements vfs.VFS {
 		});
 
 		var canonicalPath = '/' + components.join('/');
-		
+
 		return canonicalPath;
 	}
 
-	private entryForPath(path: string, parent?: FSEntry, parentPath?: string) : FSEntry {
+	private entryForPath(path: string, parent?: FSEntry, parentPath?: string): FSEntry {
 
 		path = this.canonicalPath(path);
 
@@ -308,10 +308,10 @@ export class FS implements vfs.VFS {
 			parentPath = '';
 		}
 
-		for (var i=0; i < parent.entries.length; i++) {
+		for (var i = 0; i < parent.entries.length; i++) {
 			var child = parent.entries[i];
 			var childPath = parentPath + '/' + child.name;
-			
+
 			if (childPath == path) {
 				return child;
 			} else if (stringutil.startsWith(path, childPath)) {
@@ -340,8 +340,8 @@ export class FS implements vfs.VFS {
 		return fileInfo;
 	}
 
-	private newItemKey() : string {
-		var itemKey = uuid.v4().toUpperCase().replace(/-/g,'');
+	private newItemKey(): string {
+		var itemKey = uuid.v4().toUpperCase().replace(/-/g, '');
 		return this.rootKey + '/' + itemKey;
 	}
 }

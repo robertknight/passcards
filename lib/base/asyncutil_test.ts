@@ -5,12 +5,12 @@ import asyncutil = require('./asyncutil');
 
 testLib.addAsyncTest('test run sequence', (assert) => {
 	var values = [1, 1, 2, 3, 5, 8, 13];
-	var runOrder : number[] = [];
+	var runOrder: number[] = [];
 
-	var funcs : Array<() => Q.Promise<number>> = [];
+	var funcs: Array<() => Q.Promise<number>> = [];
 	values.forEach((value, index) => {
 		funcs.push(() => {
-			runOrder.push(index+1);
+			runOrder.push(index + 1);
 			return Q(value);
 		});
 	});
@@ -41,10 +41,10 @@ testLib.addAsyncTest('promise to result', (assert) => {
 	var resolvedPromise = Q('hello');
 	var rejectedPromise = Q.reject<string>(new Error('failed'));
 
-	return asyncutil.result<string,Error>(resolvedPromise).then((result) => {
+	return asyncutil.result<string, Error>(resolvedPromise).then((result) => {
 		assert.equal(result.value, 'hello');
 		assert.equal(result.error, null);
-		return asyncutil.result<string,Error>(rejectedPromise);
+		return asyncutil.result<string, Error>(rejectedPromise);
 	}).then((result) => {
 		assert.equal(result.value, null);
 		assert.ok(result.error instanceof Error);

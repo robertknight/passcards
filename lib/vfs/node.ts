@@ -32,7 +32,7 @@ export class FileVFS implements vfs.VFS {
 		return stat.mtime.getTime().toString() + '.' + stat.size.toString();
 	}
 
-	stat(path: string) : Q.Promise<vfs.FileInfo> {
+	stat(path: string): Q.Promise<vfs.FileInfo> {
 		var result = Q.defer<vfs.FileInfo>();
 		fs.stat(this.absPath(path), (err, info) => {
 			if (err) {
@@ -50,11 +50,11 @@ export class FileVFS implements vfs.VFS {
 		return result.promise;
 	}
 
-	search(namePattern: string, cb: (error: Error, files: vfs.FileInfo[]) => any) : void {
+	search(namePattern: string, cb: (error: Error, files: vfs.FileInfo[]) => any): void {
 		vfs_util.searchIn(this, '', namePattern, cb);
 	}
 
-	read(path: string) : Q.Promise<string> {
+	read(path: string): Q.Promise<string> {
 		var result = Q.defer<string>();
 		fs.readFile(this.absPath(path), (error, content) => {
 			if (error) {
@@ -66,15 +66,15 @@ export class FileVFS implements vfs.VFS {
 		return result.promise;
 	}
 
-	write(path: string, content: string, options: vfs.WriteOptions = {}) : Q.Promise<void> {
+	write(path: string, content: string, options: vfs.WriteOptions = {}): Q.Promise<void> {
 		var result = Q.defer<void>();
 
 		var fullPath = this.absPath(path);
 		var tempPath = '';
 
 		if (options.parentRevision) {
-			var randomNamePart = Math.round(Math.random() * (2<<16)).toString();
-			tempPath = this.absPath(path + '.' + randomNamePart +  '.tmp');
+			var randomNamePart = Math.round(Math.random() * (2 << 16)).toString();
+			tempPath = this.absPath(path + '.' + randomNamePart + '.tmp');
 		} else {
 			tempPath = fullPath;
 		}
@@ -101,11 +101,11 @@ export class FileVFS implements vfs.VFS {
 				result.reject(new vfs.ConflictError(path));
 			}
 		});
-		
+
 		return result.promise;
 	}
 
-	list(path: string) : Q.Promise<vfs.FileInfo[]> {
+	list(path: string): Q.Promise<vfs.FileInfo[]> {
 		var result = Q.defer<vfs.FileInfo[]>();
 		var absPath = this.absPath(path);
 		fs.readdir(absPath, (err, files) => {
@@ -114,7 +114,7 @@ export class FileVFS implements vfs.VFS {
 				return;
 			}
 
-			var statOps : Q.Promise<vfs.FileInfo>[] = [];
+			var statOps: Q.Promise<vfs.FileInfo>[] = [];
 			files.forEach((name) => {
 				var filePath = Path.join(path, name);
 				statOps.push(this.stat(filePath));
@@ -126,7 +126,7 @@ export class FileVFS implements vfs.VFS {
 		return result.promise;
 	}
 
-	rmdir(path: string) : Q.Promise<void> {
+	rmdir(path: string): Q.Promise<void> {
 		var result = Q.defer<void>();
 		fs.rmdir(this.absPath(path), (error) => {
 			if (error) {
@@ -138,7 +138,7 @@ export class FileVFS implements vfs.VFS {
 		return result.promise;
 	}
 
-	rm(path: string) : Q.Promise<void> {
+	rm(path: string): Q.Promise<void> {
 		var result = Q.defer<void>();
 		fs.unlink(this.absPath(path), (error) => {
 			if (error) {
@@ -149,8 +149,8 @@ export class FileVFS implements vfs.VFS {
 					this.rmdir(path).then(() => {
 						result.resolve(null);
 					}, (err) => {
-						result.reject(err);
-					}).done();
+							result.reject(err);
+						}).done();
 				} else {
 					result.reject(error);
 				}
@@ -161,14 +161,14 @@ export class FileVFS implements vfs.VFS {
 		return result.promise;
 	}
 
-	login() : Q.Promise<vfs.Credentials> {
-		return Q<vfs.Credentials>({user: process.env.USER});
+	login(): Q.Promise<vfs.Credentials> {
+		return Q<vfs.Credentials>({ user: process.env.USER });
 	}
 
-	isLoggedIn() : boolean {
+	isLoggedIn(): boolean {
 		return true;
 	}
-	
+
 	logout(): Q.Promise<void> {
 		return Q<void>(null);
 	}
@@ -188,8 +188,8 @@ export class FileVFS implements vfs.VFS {
 	mkpath(path: string) {
 		return this.mkpathInternal(path, false /* allowExisting */);
 	}
-	
-	private mkpathInternal(path: string, allowExisting?: boolean) : Q.Promise<void> {
+
+	private mkpathInternal(path: string, allowExisting?: boolean): Q.Promise<void> {
 		var result = Q.defer<void>();
 
 		fs.mkdir(this.absPath(path), 511 /* 0777 */, (err) => {
