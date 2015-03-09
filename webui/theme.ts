@@ -2,7 +2,6 @@ import style = require('ts-style');
 
 import colors = require('./controls/colors');
 import controls_theme = require('./controls/theme');
-import fonts = require('./controls/fonts');
 import style_util = require('./base/style_util');
 
 export var Z_LAYERS = {

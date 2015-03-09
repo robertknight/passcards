@@ -204,4 +204,3 @@ if (env.isBrowser()) {
 	main();
 }
 
-

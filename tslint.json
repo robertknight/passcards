@@ -6,7 +6,6 @@
 		"no-debugger" : true,
 		"no-duplicate-key" : true,
 		"no-duplicate-variable" : true,
-		"no-empty" : true,
 		"no-eval" : true,
 		"no-unreachable" : true,
 		"no-unused-expression" : true,

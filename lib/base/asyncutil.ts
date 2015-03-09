@@ -99,4 +99,3 @@ export function result<T, Error>(promise: Q.Promise<T>) {
 	});
 }
 
-

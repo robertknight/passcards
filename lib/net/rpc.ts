@@ -209,7 +209,6 @@ declare var global: Timers;
   * client and server-sides of an RPC handler.
   */
 export class RpcHandler implements Client, Server {
-	private replyId: number;
 	private id: number;
 	private pending: PendingRpcCall[];
 	private port: MessagePort<CallMessage, ReplyMessage>;

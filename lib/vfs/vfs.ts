@@ -4,7 +4,6 @@
 
 import Q = require('q');
 
-import asyncutil = require('../base/asyncutil');
 import err_util = require('../base/err_util');
 
 /** Holds details of a file retrieved by a VFS implementation */

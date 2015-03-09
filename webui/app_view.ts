@@ -4,14 +4,11 @@ import react = require('react');
 import style = require('ts-style');
 import typed_react = require('typed-react');
 import url = require('url');
-import underscore = require('underscore');
 
 import app_theme = require('./theme');
-import assign = require('../lib/base/assign');
 import autofill = require('./autofill');
 import colors = require('./controls/colors');
 import details_view = require('./details_view');
-import event_stream = require('../lib/base/event_stream');
 import item_builder = require('../lib/item_builder');
 import item_list = require('./item_list_view');
 import item_icons = require('./item_icons');

@@ -13,7 +13,6 @@ import key_agent = require('./key_agent');
 import nodefs = require('./vfs/node');
 import agile_keychain = require('./agile_keychain');
 import testLib = require('./test');
-import vfs = require('./vfs/vfs');
 import vfs_util = require('./vfs/util');
 
 require('es6-shim');
@@ -579,7 +578,7 @@ testLib.addTest('createVault() fails if directory exists', (assert) => {
 	}).then((vault_) => {
 		vault = vault_;
 		var newPass = 'pass-2';
-		return asyncutil.result(agile_keychain.Vault.createVault(fs, path, pass, hint, keyIterations));
+		return asyncutil.result(agile_keychain.Vault.createVault(fs, path, newPass, hint, keyIterations));
 	}).then((result) => {
 		assert.ok(result.error instanceof Error);
 

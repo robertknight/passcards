@@ -10,7 +10,6 @@ import consoleio = require('./console')
 import key_agent = require('../lib/key_agent');
 import nodefs = require('../lib/vfs/node');
 import testLib = require('../lib/test')
-import vfs = require('../lib/vfs/vfs');
 import vfs_util = require('../lib/vfs/util');
 
 interface PromptReply {

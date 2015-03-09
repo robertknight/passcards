@@ -3,16 +3,13 @@
 /// <reference path="../typings/react-0.12.d.ts" />
 /// <reference path="../node_modules/ts-style/dist/ts-style.d.ts" />
 
-import assert = require('assert');
 import fastclick = require('fastclick');
 import react = require('react');
-import underscore = require('underscore');
 
 import app_view = require('./app_view');
 import autofill = require('./autofill');
 import dropboxvfs = require('../lib/vfs/dropbox');
 import env = require('../lib/base/env');
-import event_stream = require('../lib/base/event_stream');
 import item_icons = require('./item_icons');
 import key_agent = require('../lib/key_agent');
 import key_value_store = require('../lib/base/key_value_store');

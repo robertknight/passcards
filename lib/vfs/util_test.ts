@@ -1,6 +1,5 @@
 import node_vfs = require('./node');
 import testLib = require('../test');
-import vfs = require('./vfs');
 import vfs_util = require('./util');
 
 testLib.addAsyncTest('mktemp', (assert) => {

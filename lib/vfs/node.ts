@@ -1,5 +1,4 @@
 import fs = require('fs');
-import mkdirp = require('mkdirp');
 import Path = require('path');
 import Q = require('q');
 
