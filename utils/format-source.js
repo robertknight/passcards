@@ -43,6 +43,17 @@ function fixupResult(source) {
 	// Fixed upstream in TypeScript by 929d359bdfb880339845cb88df0bb959a89a9220
 	// (should land in TS 1.5)
 	var result = source.replace(/,\((.* => {)/g,', ($1');
+
+	// Remove extra indent on new lines that continue
+	// a previous line
+	//
+	// 'foo()
+	//  \t.then(result => {' =>
+	//
+	// 'foo()
+	//  .then(result => {'
+	//
+	result = result.replace(/(\s+)\t\./g,'$1.');
 	return result;
 }
 
