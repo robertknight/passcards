@@ -58,7 +58,6 @@ function fixupResult(source) {
 }
 
 findTypeScriptFiles('.').then(function(files) {
-	console.log('found %d files to process', files.length);
 	typescript_formatter.processFiles(files, {
 		replace: false,
 		tsfmt: true,
@@ -75,7 +74,6 @@ findTypeScriptFiles('.').then(function(files) {
 				fs.writeFileSync(fileName, fixedUpResult);
 			}
 		});
-		console.log('Formatting complete');
 	}).catch(function(err) {
 		console.error('Processing failed: %s', err.toString());
 	});

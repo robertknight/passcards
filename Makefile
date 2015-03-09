@@ -126,6 +126,9 @@ test-package: all
 	&& ./node_modules/passcards/passcards --help $(SILENCE_STDOUT) \
 	&& echo npm package OK
 	
+format: $(all_srcs)
+	./utils/format-source.js
+
 clean:
 	@rm -rf build/*
 	@rm -rf webui/scripts/*
