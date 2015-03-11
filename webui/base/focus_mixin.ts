@@ -1,4 +1,4 @@
-/// <reference path="../../typings/react-0.12.d.ts" />
+/// <reference path="../../typings/react.d.ts" />
 
 import typed_react = require('typed-react');
 

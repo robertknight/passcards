@@ -1,6 +1,6 @@
 /// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
-/// <reference path="../typings/react-0.12.d.ts" />
+/// <reference path="../typings/react.d.ts" />
 /// <reference path="../typings/URIjs.d.ts" />
 /// <reference path="../typings/dom.d.ts" />
 

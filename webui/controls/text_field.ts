@@ -259,10 +259,6 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 	render() {
 		var props = this.props;
 		var styles = theme.textField;
-		var textField = this.refs['textField'];
-		var scrollLeft = 0;
-		var scrollWidth = -1;
-		var width = -1;
 		var placeHolderStyling: any[] = [styles.placeholder];
 
 		if (props.floatingLabel) {
@@ -281,13 +277,6 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 			} else {
 				placeHolderStyling.push({ opacity: '0' });
 			}
-		}
-
-		if (textField) {
-			var textfieldDOMNode = <HTMLElement>textField.getDOMNode();
-			scrollWidth = textfieldDOMNode.scrollWidth;
-			scrollLeft = textfieldDOMNode.scrollLeft;
-			width = textfieldDOMNode.offsetWidth;
 		}
 
 		var containerStyling: any[] = [styles.container];
@@ -341,18 +330,7 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 				readOnly: this.props.readOnly
 			})),
 			underline,
-			errorLabel,
-			div(style.mixin(
-				[scrollLeft ? { opacity: '1' } : null,
-					this.state.focus ? styles.focusStyle : null,
-					styles.scrollBlocksStyle,
-					{ left: '6px' }]
-				)),
-			div(style.mixin([(scrollWidth > (scrollLeft + width)) ?
-				{ opacity: '1' } : null,
-				this.state.focus ? styles.focusStyle : null,
-				styles.scrollBlocksStyle,
-				{ right: '6px' }]))
+			errorLabel
 			);
 	}
 

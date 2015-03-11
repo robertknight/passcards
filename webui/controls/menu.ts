@@ -1,4 +1,4 @@
-/// <reference path="../../typings/react-0.12.d.ts" />
+/// <reference path="../../typings/react.d.ts" />
 
 import react = require('react');
 import typed_react = require('typed-react');
@@ -92,6 +92,7 @@ export interface MenuItem {
 }
 
 interface MenuState {
+	document?: Document;
 	transition?: reactutil.TransitionState;
 	showTime?: Date;
 }
@@ -151,7 +152,8 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 	private transitionListener: reactutil.TransitionEndListener;
 
 	getInitialState() {
-		return {
+		return <MenuState>{
+			document: null,
 			showTime: new Date,
 			transition: reactutil.TransitionState.Entering
 		}
@@ -188,7 +190,10 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 	}
 
 	componentDidMount() {
-		this.setState({ showTime: new Date });
+		this.setState({
+			document: (<HTMLElement>this.getDOMNode()).ownerDocument,
+			showTime: new Date
+		});
 	}
 
 	// returns true if this menu should be displayed
@@ -237,13 +242,8 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 		var menuWidth = 0;
 		var itemFont = theme.menu.item.fontSize + 'px ' + fonts.FAMILY;
 
-		var document: Document;
-		if (this.isMounted()) {
-			document = (<HTMLElement>this.getDOMNode()).ownerDocument;
-		}
-
 		this.props.items.forEach((item) => {
-			var itemWidth = measureText(document, item.label, itemFont);
+			var itemWidth = measureText(this.state.document, item.label, itemFont);
 			menuWidth = Math.max(menuWidth, itemWidth);
 		});
 		menuWidth += theme.menu.item.paddingLeft + theme.menu.item.paddingRight;

@@ -154,7 +154,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 		children.push(this.renderItemDetails());
 		children.push(this.renderToasters());
 
-		var menu = reactutil.TransitionGroupF({},
+		var menu = reactutil.TransitionGroupF({ key: 'toolbar-menu' },
 			this.state.appMenuSourceRect ? this.renderMenu('menu') : null
 			);
 		children.push(menu);
@@ -262,7 +262,6 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 				// make the details view expand from the entry
 				// in the item list, but only if we switch to it
 				// after the app is initially shown
-
 				animateEntry: this.isMounted(),
 
 				entryRect: {
