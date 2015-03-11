@@ -15,8 +15,8 @@ import item_icons = require('./item_icons');
 import item_store = require('../lib/item_store');
 import key_agent = require('../lib/key_agent');
 import menu = require('./controls/menu');
-import onepass_crypto = require('../lib/onepass_crypto');
 import page_access = require('./page_access');
+import password_gen = require('../lib/password_gen');
 import reactutil = require('./base/reactutil');
 import settings = require('./settings');
 import setup_view = require('./setup_view');
@@ -302,7 +302,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 			defaultAccount = '';
 		}
 
-		var randomPassword = onepass_crypto.generatePassword(12);
+		var randomPassword = password_gen.generatePassword(12);
 		var builder = new item_builder.Builder(item_store.ItemTypes.LOGIN)
 		.addLogin(defaultAccount)
 		.addPassword(randomPassword);

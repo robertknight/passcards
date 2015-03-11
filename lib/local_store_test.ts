@@ -3,8 +3,9 @@
 import btoa = require('btoa');
 import Q = require('q');
 
+import agile_keychain_crypto = require('./agile_keychain_crypto');
 import collectionutil = require('./base/collectionutil');
-import crypto = require('./onepass_crypto');
+import crypto = require('./base/crypto');
 import item_builder = require('./item_builder');
 import item_store = require('./item_store');
 import key_agent = require('./key_agent');
@@ -110,7 +111,6 @@ interface Env {
 	databaseName: string;
 }
 
-// TODO - Move to onepass_crypto
 function generateKey(password: string, iterations: number): key_agent.Key {
 	var masterKey = crypto.randomBytes(1024);
 	var salt = crypto.randomBytes(8);
@@ -119,7 +119,7 @@ function generateKey(password: string, iterations: number): key_agent.Key {
 
 	var key: key_agent.Key = {
 		format: key_agent.KeyFormat.AgileKeychainKey,
-		identifier: crypto.newUUID(),
+		identifier: agile_keychain_crypto.newUUID(),
 		data: btoa('Salted__' + salt + encryptedKey.key),
 		iterations: iterations,
 		validation: btoa(encryptedKey.validation)

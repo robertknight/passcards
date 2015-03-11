@@ -9,10 +9,11 @@ import Q = require('q');
 import Path = require('path');
 import underscore = require('underscore');
 
+import agile_keychain_crypto = require('./agile_keychain_crypto');
 import asyncutil = require('./base/asyncutil');
 import agile_keychain_entries = require('./agile_keychain_entries');
+import crypto = require('./base/crypto');
 import collectionutil = require('./base/collectionutil');
-import crypto = require('./onepass_crypto');
 import dateutil = require('./base/dateutil');
 import event_stream = require('./base/event_stream');
 import item_store = require('./item_store');
@@ -273,7 +274,7 @@ export class Vault implements item_store.Store {
 	constructor(fs: vfs.VFS, path: string, agent?: key_agent.KeyAgent) {
 		this.fs = fs;
 		this.path = path;
-		this.keyAgent = agent || new key_agent.SimpleKeyAgent(crypto.defaultCrypto);
+		this.keyAgent = agent || new key_agent.SimpleKeyAgent(agile_keychain_crypto.defaultCrypto);
 		this.onItemUpdated = new event_stream.EventStream<item_store.Item>();
 		this.onUnlock = new event_stream.EventStream<void>();
 
@@ -610,7 +611,7 @@ export class Vault implements item_store.Store {
 
 			try {
 				keys.forEach((key) => {
-					var oldSaltCipher = crypto.extractSaltAndCipherText(atob(key.data));
+					var oldSaltCipher = agile_keychain_crypto.extractSaltAndCipherText(atob(key.data));
 					var newSalt = crypto.randomBytes(8);
 					var derivedKey = key_agent.keyFromPasswordSync(oldPass, oldSaltCipher.salt, key.iterations);
 					var oldKey = key_agent.decryptKey(derivedKey, oldSaltCipher.cipherText,
@@ -663,7 +664,7 @@ export class Vault implements item_store.Store {
 
 			var masterKeyEntry = {
 				data: btoa('Salted__' + salt + encryptedKey.key),
-				identifier: crypto.newUUID(),
+				identifier: agile_keychain_crypto.newUUID(),
 				iterations: passIterations,
 				level: 'SL5',
 				validation: btoa(encryptedKey.validation)

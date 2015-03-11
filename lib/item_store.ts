@@ -9,7 +9,7 @@ import Q = require('q');
 import sprintf = require('sprintf');
 import underscore = require('underscore');
 
-import crypto = require('./onepass_crypto');
+import agile_keychain_crypto = require('./agile_keychain_crypto');
 import collectionutil = require('./base/collectionutil');
 import dateutil = require('./base/dateutil');
 import err_util = require('./base/err_util');
@@ -225,7 +225,7 @@ export class Item {
 	constructor(store?: Store, uuid?: string) {
 		this.store = store;
 
-		this.uuid = uuid || crypto.newUUID();
+		this.uuid = uuid || agile_keychain_crypto.newUUID();
 
 		this.trashed = false;
 		this.typeName = ItemTypes.LOGIN;

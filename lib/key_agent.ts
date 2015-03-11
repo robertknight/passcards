@@ -7,7 +7,8 @@ import atob = require('atob');
 import assert = require('assert');
 import Q = require('q');
 
-import crypto = require('./onepass_crypto');
+import agile_keychain_crypto = require('./agile_keychain_crypto');
+import crypto = require('./base/crypto');
 import err_util = require('./base/err_util');
 import event_stream = require('./base/event_stream');
 
@@ -94,14 +95,14 @@ export function decryptKeys(keys: Key[], password: string): Q.Promise<DecryptedK
 	var derivedKeys: Q.Promise<string>[] = [];
 	keys.forEach((key) => {
 		assert.equal(key.format, KeyFormat.AgileKeychainKey);
-		var saltCipher = crypto.extractSaltAndCipherText(atob(key.data));
+		var saltCipher = agile_keychain_crypto.extractSaltAndCipherText(atob(key.data));
 		derivedKeys.push(keyFromPassword(password, saltCipher.salt, key.iterations));
 	});
 
 	return Q.all(derivedKeys).then((derivedKeys) => {
 		var decryptedKeys: DecryptedKey[] = [];
 		keys.forEach((key, index) => {
-			var saltCipher = crypto.extractSaltAndCipherText(atob(key.data));
+			var saltCipher = agile_keychain_crypto.extractSaltAndCipherText(atob(key.data));
 			var decryptedKey = decryptKey(derivedKeys[index], saltCipher.cipherText,
 				atob(key.validation));
 			decryptedKeys.push({
@@ -153,7 +154,7 @@ export interface KeyAgent {
 /** A simple key agent which just stores keys in memory */
 export class SimpleKeyAgent implements KeyAgent {
 	private autoLockTimeout: number;
-	private crypto: crypto.Crypto;
+	private crypto: agile_keychain_crypto.Crypto;
 	private keys: { [id: string]: string };
 	private lockEvents: event_stream.EventStream<void>;
 
@@ -165,8 +166,8 @@ export class SimpleKeyAgent implements KeyAgent {
 		return Object.keys(this.keys).length;
 	}
 
-	constructor(cryptoImpl?: crypto.Crypto) {
-		this.crypto = cryptoImpl || crypto.defaultCrypto;
+	constructor(cryptoImpl?: agile_keychain_crypto.Crypto) {
+		this.crypto = cryptoImpl || agile_keychain_crypto.defaultCrypto;
 		this.keys = {};
 		this.lockEvents = new event_stream.EventStream<void>();
 		this.autoLockTimeout = 0;
@@ -225,7 +226,7 @@ export class SimpleKeyAgent implements KeyAgent {
 		}
 		switch (params.algo) {
 			case CryptoAlgorithm.AES128_OpenSSLKey:
-				return Q(crypto.decryptAgileKeychainItemData(this.crypto,
+				return Q(agile_keychain_crypto.decryptAgileKeychainItemData(this.crypto,
 					this.keys[id], cipherText));
 			default:
 				return Q.reject<string>(new Error('Unknown encryption algorithm'));
@@ -238,7 +239,7 @@ export class SimpleKeyAgent implements KeyAgent {
 		}
 		switch (params.algo) {
 			case CryptoAlgorithm.AES128_OpenSSLKey:
-				return Q(crypto.encryptAgileKeychainItemData(this.crypto,
+				return Q(agile_keychain_crypto.encryptAgileKeychainItemData(this.crypto,
 					this.keys[id], plainText));
 			default:
 				return Q.reject<string>(new Error('Unknown encryption algorithm'));
@@ -261,11 +262,12 @@ export class SimpleKeyAgent implements KeyAgent {
 export function decryptKey(derivedKey: string, encryptedKey: string, validation: string): string {
 	var aesKey = derivedKey.substring(0, 16);
 	var iv = derivedKey.substring(16, 32);
-	var decryptedKey = crypto.defaultCrypto.aesCbcDecrypt(aesKey, encryptedKey, iv);
-	var validationSaltCipher = crypto.extractSaltAndCipherText(validation);
+	var decryptedKey = agile_keychain_crypto.defaultCrypto.aesCbcDecrypt(aesKey, encryptedKey, iv);
+	var validationSaltCipher = agile_keychain_crypto.extractSaltAndCipherText(validation);
 
-	var keyParams = crypto.openSSLKey(crypto.defaultCrypto, decryptedKey, validationSaltCipher.salt);
-	var decryptedValidation = crypto.defaultCrypto.aesCbcDecrypt(keyParams.key, validationSaltCipher.cipherText, keyParams.iv);
+	var keyParams = agile_keychain_crypto.openSSLKey(agile_keychain_crypto.defaultCrypto,
+		decryptedKey, validationSaltCipher.salt);
+	var decryptedValidation = agile_keychain_crypto.defaultCrypto.aesCbcDecrypt(keyParams.key, validationSaltCipher.cipherText, keyParams.iv);
 
 	if (decryptedValidation != decryptedKey) {
 		throw new DecryptionError('Incorrect password');
@@ -279,14 +281,14 @@ export function decryptKey(derivedKey: string, encryptedKey: string, validation:
   * is high.
   */
 export function keyFromPasswordSync(pass: string, salt: string, iterCount: number): string {
-	return crypto.defaultCrypto.pbkdf2Sync(pass, salt, iterCount, AES_128_KEY_LEN);
+	return agile_keychain_crypto.defaultCrypto.pbkdf2Sync(pass, salt, iterCount, AES_128_KEY_LEN);
 }
 
 /** Derive an encryption key from a password for use with decryptKey()
   * This version is asynchronous and will not block the UI.
   */
 export function keyFromPassword(pass: string, salt: string, iterCount: number): Q.Promise<string> {
-	return crypto.defaultCrypto.pbkdf2(pass, salt, iterCount, AES_128_KEY_LEN);
+	return agile_keychain_crypto.defaultCrypto.pbkdf2(pass, salt, iterCount, AES_128_KEY_LEN);
 }
 
 /** Encrypt the master key for a vault.
@@ -296,11 +298,12 @@ export function keyFromPassword(pass: string, salt: string, iterCount: number): 
 export function encryptKey(derivedKey: string, decryptedKey: string): EncryptedKey {
 	var aesKey = derivedKey.substring(0, 16);
 	var iv = derivedKey.substring(16, 32);
-	var encryptedKey = crypto.defaultCrypto.aesCbcEncrypt(aesKey, decryptedKey, iv);
+	var encryptedKey = agile_keychain_crypto.defaultCrypto.aesCbcEncrypt(aesKey, decryptedKey, iv);
 
 	var validationSalt = crypto.randomBytes(8);
-	var keyParams = crypto.openSSLKey(crypto.defaultCrypto, decryptedKey, validationSalt);
-	var validation = 'Salted__' + validationSalt + crypto.defaultCrypto.aesCbcEncrypt(keyParams.key, decryptedKey, keyParams.iv);
+	var keyParams = agile_keychain_crypto.openSSLKey(agile_keychain_crypto.defaultCrypto,
+		decryptedKey, validationSalt);
+	var validation = 'Salted__' + validationSalt + agile_keychain_crypto.defaultCrypto.aesCbcEncrypt(keyParams.key, decryptedKey, keyParams.iv);
 
 	return { key: encryptedKey, validation: validation };
 }

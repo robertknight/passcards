@@ -1,6 +1,6 @@
 import agent = require('./agent');
 import agent_server = require('./agent_server');
-import crypto = require('../lib/onepass_crypto');
+import agile_keychain_crypto = require('../lib/agile_keychain_crypto');
 import key_agent = require('../lib/key_agent');
 import testLib = require('../lib/test');
 
@@ -32,7 +32,7 @@ testLib.addAsyncTest('decrypt data', (assert) => {
 	// legal in UTF-8 to test exchange of binary key data with the
 	// agent
 	var itemPass = 'the \xFFmaster\x00 key';
-	var encrypted = crypto.encryptAgileKeychainItemData(new crypto.CryptoJsCrypto, itemPass, itemData);
+	var encrypted = agile_keychain_crypto.encryptAgileKeychainItemData(new agile_keychain_crypto.CryptoJsCrypto, itemPass, itemData);
 
 	return httpAgent.addKey('key1', itemPass)
 	.then(() => {

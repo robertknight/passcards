@@ -12,8 +12,8 @@ import path = require('path');
 import Q = require('q');
 import urlrouter = require('urlrouter');
 
+import agile_keychain_crypto = require('../lib/agile_keychain_crypto');
 import consoleio = require('./console');
-import crypto = require('../lib/onepass_crypto');
 import key_agent = require('../lib/key_agent');
 import streamutil = require('../lib/base/streamutil');
 
@@ -60,13 +60,13 @@ function parseJSONRequest(req: http.ServerRequest, rsp: http.ServerResponse, cb:
 }
 
 class Server {
-	private crypto: crypto.Crypto;
+	private crypto: agile_keychain_crypto.Crypto;
 	private httpServer: http.Server;
 	private keys: { [id: string]: string };
 	private keyTimeout: NodeJS.Timer;
 
 	constructor() {
-		this.crypto = new crypto.CryptoJsCrypto();
+		this.crypto = new agile_keychain_crypto.CryptoJsCrypto();
 		this.keys = {};
 
 		var self = this;
@@ -94,7 +94,7 @@ class Server {
 					switch (params.algo) {
 						case key_agent.CryptoAlgorithm.AES128_OpenSSLKey:
 							var cipherText = atob(params.cipherText);
-							var plainText = crypto.decryptAgileKeychainItemData(this.crypto, this.keys[params.id], cipherText);
+							var plainText = agile_keychain_crypto.decryptAgileKeychainItemData(this.crypto, this.keys[params.id], cipherText);
 
 							logf('Decrypted (%d => %d) bytes with key %s', cipherText.length,
 								plainText.length, params.id);
@@ -121,7 +121,7 @@ class Server {
 					switch (params.algo) {
 						case key_agent.CryptoAlgorithm.AES128_OpenSSLKey:
 							var plainText = atob(params.plainText);
-							var cipherText = crypto.encryptAgileKeychainItemData(this.crypto, this.keys[params.id], plainText);
+							var cipherText = agile_keychain_crypto.encryptAgileKeychainItemData(this.crypto, this.keys[params.id], plainText);
 
 							logf('Encrypted (%d => %d) bytes with key %s', plainText.length,
 								cipherText.length, params.id);

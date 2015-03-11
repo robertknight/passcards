@@ -4,14 +4,16 @@
 import Q = require('q');
 import underscore = require('underscore');
 
+import agile_keychain = require('./agile_keychain');
+import agile_keychain_crypto = require('./agile_keychain_crypto');
 import asyncutil = require('./base/asyncutil');
-import crypto = require('./onepass_crypto');
+import crypto = require('./base/crypto');
 import env = require('./base/env');
 import exportLib = require('./export');
 import item_store = require('./item_store');
 import key_agent = require('./key_agent');
 import nodefs = require('./vfs/node');
-import agile_keychain = require('./agile_keychain');
+import password_gen = require('./password_gen');
 import testLib = require('./test');
 import vfs_util = require('./vfs/util');
 
@@ -189,11 +191,11 @@ testLib.addAsyncTest('Compare vaults against .1pif files', (assert) => {
 	return Q.all(done);
 });
 
-function createCryptos(): crypto.Crypto[] {
-	var cryptoImpls: crypto.Crypto[] = [];
-	cryptoImpls.push(new crypto.CryptoJsCrypto);
+function createCryptos(): agile_keychain_crypto.Crypto[] {
+	var cryptoImpls: agile_keychain_crypto.Crypto[] = [];
+	cryptoImpls.push(new agile_keychain_crypto.CryptoJsCrypto);
 	if (env.isNodeJS()) {
-		cryptoImpls.push(new crypto.NodeCrypto);
+		cryptoImpls.push(new agile_keychain_crypto.NodeCrypto);
 	}
 	return cryptoImpls;
 }
@@ -217,8 +219,8 @@ testLib.addTest('Encrypt/decrypt item data', (assert) => {
 	cryptoImpls.forEach((impl) => {
 		var itemData = JSON.stringify({ secret: 'secret-data' });
 		var itemPass = 'item password';
-		var encrypted = crypto.encryptAgileKeychainItemData(impl, itemPass, itemData);
-		var decrypted = crypto.decryptAgileKeychainItemData(impl, itemPass, encrypted);
+		var encrypted = agile_keychain_crypto.encryptAgileKeychainItemData(impl, itemPass, itemData);
+		var decrypted = agile_keychain_crypto.decryptAgileKeychainItemData(impl, itemPass, encrypted);
 		assert.equal(decrypted, itemData);
 	});
 });
@@ -395,7 +397,7 @@ testLib.addTest('Generate Passwords', (assert) => {
 	var usedPasswords = new Set<string>();
 	for (var len = 4; len < 20; len++) {
 		for (var k = 0; k < 10; k++) {
-			var pass = crypto.generatePassword(len);
+			var pass = password_gen.generatePassword(len);
 			assert.ok(pass.match(/[A-Z]/) != null);
 			assert.ok(pass.match(/[a-z]/) != null);
 			assert.ok(pass.match(/[0-9]/) != null);

@@ -4,9 +4,9 @@ import react = require('react');
 import style = require('ts-style');
 import typed_react = require('typed-react');
 
+import agile_keychain_crypto = require('../lib/agile_keychain_crypto');
 import button = require('./controls/button');
 import colors = require('./controls/colors');
-import crypto = require('../lib/onepass_crypto');
 import env = require('../lib/base/env');
 import focus_mixin = require('./base/focus_mixin');
 import fonts = require('./controls/fonts');
@@ -17,6 +17,7 @@ import item_store = require('../lib/item_store');
 import keycodes = require('./base/keycodes');
 import menu = require('./controls/menu');
 import page_access = require('./page_access');
+import password_gen = require('../lib/password_gen');
 import reactutil = require('./base/reactutil');
 import shortcut = require('./base/shortcut');
 import style_util = require('./base/style_util');
@@ -271,7 +272,6 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 			inputType = 'url';
 		}
 
-
 		var actions: React.ReactElement<{}>[] = [];
 		if (this.state.selected) {
 			var copyButton: React.ReactElement<button.ButtonProps>;
@@ -306,7 +306,7 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 						value: 'Generate',
 						key: 'generate',
 						onClick: (e) => {
-							var newPassword = crypto.generatePassword(12);
+							var newPassword = password_gen.generatePassword(12);
 							this.setState({ revealed: true });
 							this.props.onChange(newPassword);
 						}
@@ -614,7 +614,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				color: colors.MATERIAL_COLOR_PRIMARY,
 				onClick: () => {
 					var newSection = new item_store.ItemSection();
-					newSection.name = crypto.newUUID();
+					newSection.name = agile_keychain_crypto.newUUID();
 					newSection.title = 'New Section';
 					item.content.sections.push(newSection);
 
@@ -725,7 +725,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			var field = new item_store.ItemField();
 			field.kind = type;
 			field.value = '';
-			field.name = crypto.newUUID();
+			field.name = agile_keychain_crypto.newUUID();
 			field.title = 'New Field';
 
 			this.setState({

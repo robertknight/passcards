@@ -6,6 +6,8 @@
 import fastclick = require('fastclick');
 import react = require('react');
 
+import agile_keychain = require('../lib/agile_keychain');
+import agile_keychain_crypto = require('../lib/agile_keychain_crypto');
 import app_view = require('./app_view');
 import autofill = require('./autofill');
 import dropboxvfs = require('../lib/vfs/dropbox');
@@ -14,14 +16,12 @@ import item_icons = require('./item_icons');
 import key_agent = require('../lib/key_agent');
 import key_value_store = require('../lib/base/key_value_store');
 import local_store = require('../lib/local_store');
-import onepass = require('../lib/agile_keychain');
-import onepass_crypto = require('../lib/onepass_crypto');
 import page_access = require('./page_access');
 import settings = require('./settings');
 import siteinfo_client = require('../lib/siteinfo/client');
 import sync = require('../lib/sync');
-import vfs = require('../lib/vfs/vfs');
 import ui_item_store = require('./stores/items');
+import vfs = require('../lib/vfs/vfs');
 
 declare var firefoxAddOn: page_access.ExtensionConnector;
 
@@ -65,7 +65,7 @@ export class App {
 
 		this.itemStore = new ui_item_store.Store();
 
-		onepass_crypto.CryptoJsCrypto.initWorkers();
+		agile_keychain_crypto.CryptoJsCrypto.initWorkers();
 
 		browserExt.pageAccess.showEvents.listen(() => {
 			// in the Firefox add-on the active element loses focus when dismissing the
@@ -120,7 +120,7 @@ export class App {
 		this.fs.login().then(() => {
 			try {
 				var itemDatabase = new key_value_store.IndexedDBDatabase();
-				var vault = new onepass.Vault(this.fs, account.storePath, this.services.keyAgent);
+				var vault = new agile_keychain.Vault(this.fs, account.storePath, this.services.keyAgent);
 				var localDatabaseName = this.databaseKeyForAccount(account);
 				var store = new local_store.Store(itemDatabase, localDatabaseName, this.services.keyAgent);
 				var syncer = new sync.CloudStoreSyncer(store, vault);

@@ -3,15 +3,14 @@
 /// <reference path="../typings/dom.d.ts" />
 
 import assert = require('assert');
-import crypto = require('crypto');
 var cryptoJS = require('crypto-js');
+import node_crypto = require('crypto');
 import Q = require('q');
-import underscore = require('underscore');
 import uuid = require('node-uuid');
 
 import collectionutil = require('./base/collectionutil');
+import crypto = require('./base/crypto');
 import crypto_worker = require('./crypto_worker');
-import env = require('./base/env');
 import pbkdf2Lib = require('./crypto/pbkdf2');
 import rpc = require('./net/rpc');
 
@@ -46,7 +45,7 @@ export function openSSLKey(cryptoImpl: Crypto, password: string, salt: string): 
 
 /** Encrypt the JSON data for an item for storage in the Agile Keychain format. */
 export function encryptAgileKeychainItemData(cryptoImpl: Crypto, key: string, plainText: string) {
-	var salt = randomBytes(8);
+	var salt = crypto.randomBytes(8);
 	var keyParams = openSSLKey(cryptoImpl, key, salt);
 	return 'Salted__' + salt + cryptoImpl.aesCbcEncrypt(keyParams.key, plainText, keyParams.iv);
 }
@@ -58,80 +57,13 @@ export function decryptAgileKeychainItemData(cryptoImpl: Crypto, key: string, ci
 	return cryptoImpl.aesCbcDecrypt(keyParams.key, saltCipher.cipherText, keyParams.iv);
 }
 
-/** Generate a V4 (random) UUID */
+/** Generate a V4 (random) UUID string in the form used
+  * by items in an Agile Keychain:
+  * - There are no hyphen separators between parts of the UUID
+  * - All chars are upper case
+  */
 export function newUUID(): string {
 	return uuid.v4().toUpperCase().replace(/-/g, '');
-}
-
-/** Generate a buffer of @p length strong pseudo-random bytes */
-export function randomBytes(length: number): string {
-	if (env.isBrowser()) {
-		// Web Crypto is prefixed in IE 11
-		// see http://msdn.microsoft.com/en-gb/library/ie/dn302339%28v=vs.85%29.aspx
-		var browserCrypto = window.crypto || window.msCrypto;
-		if (browserCrypto && browserCrypto.getRandomValues) {
-			var buffer = new Uint8Array(length);
-			browserCrypto.getRandomValues(buffer);
-			return collectionutil.stringFromBuffer(buffer);
-		}
-	} else if (env.isNodeJS()) {
-		return crypto.pseudoRandomBytes(length).toString('binary');
-	}
-
-	// according to MDN, crypto.getRandomValues() is available in
-	// IE 11, Firefox 21, Chrome 11, iOS 6 and later.
-	// 
-	// If we decide to support older browsers in future, we could use
-	// CryptoJS' Math.random() fallback:
-	//
-	// - cryptoJS.lib.WordArray.random(length).toString(this.encoding);
-	//
-	throw new Error('No secure pseudo-random number generator available');
-}
-
-var DEFAULT_PASSWORD_CHARSETS = ["ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-	"abcdefghijklmnopqrstuvwxyz",
-	"0123456789"];
-
-/** Generate a new random password. */
-export function generatePassword(length: number, charsets?: string[]): string {
-	charsets = charsets || DEFAULT_PASSWORD_CHARSETS;
-	var fullCharset = charsets.join('');
-
-	var genCandidate = (length: number) => {
-		var candidate = '';
-		var sectionSize = 3;
-		while (candidate.length < length) {
-			var buffer = randomBytes(100);
-			for (var i = 0; candidate.length < length && i < buffer.length; i++) {
-				if ((candidate.length % (sectionSize + 1) == sectionSize) &&
-					(length - candidate.length > 1)) {
-					candidate += '-';
-				}
-				if (buffer.charCodeAt(i) < fullCharset.length) {
-					candidate += fullCharset[buffer.charCodeAt(i)];
-				}
-			}
-		}
-		return candidate;
-	}
-	while (true) {
-		// generate a candiate, check that it contains at least one
-		// character from each of the charsets
-		var candidate = genCandidate(length);
-		var charsetMatches = new Array(charsets.length);
-
-		for (var i = 0; i < candidate.length; i++) {
-			for (var k = 0; k < charsetMatches.length; k++) {
-				charsetMatches[k] = charsetMatches[k] || charsets[k].indexOf(candidate[i]) != -1;
-			}
-		}
-		if (underscore.every(charsetMatches, (match: boolean) => {
-			return match;
-		})) {
-			return candidate;
-		}
-	}
 }
 
 /** Crypto is an interface to common crypto algorithms required
@@ -156,7 +88,7 @@ export interface Crypto {
 // crypto implementation using Node.js' crypto lib
 export class NodeCrypto implements Crypto {
 	aesCbcDecrypt(key: string, cipherText: string, iv: string): string {
-		var decipher = crypto.createDecipheriv('AES-128-CBC', key, iv);
+		var decipher = node_crypto.createDecipheriv('AES-128-CBC', key, iv);
 		var result = '';
 		result += decipher.update(cipherText, 'binary', 'binary');
 		result += decipher.final('binary');
@@ -164,7 +96,7 @@ export class NodeCrypto implements Crypto {
 	}
 
 	aesCbcEncrypt(key: string, plainText: string, iv: string): string {
-		var cipher = crypto.createCipheriv('AES-128-CBC', key, iv);
+		var cipher = node_crypto.createCipheriv('AES-128-CBC', key, iv);
 		var result = '';
 		result += cipher.update(plainText, 'binary', 'binary');
 		result += cipher.final('binary');
@@ -172,7 +104,7 @@ export class NodeCrypto implements Crypto {
 	}
 
 	pbkdf2Sync(masterPwd: string, salt: string, iterCount: number, keyLen: number): string {
-		var derivedKey = crypto.pbkdf2Sync(masterPwd, salt, iterCount, keyLen);
+		var derivedKey = node_crypto.pbkdf2Sync(masterPwd, salt, iterCount, keyLen);
 		return derivedKey.toString('binary');
 	}
 
@@ -180,7 +112,7 @@ export class NodeCrypto implements Crypto {
 		var key = Q.defer<string>();
 		// FIXME - Type definition for crypto.pbkdf2() is wrong, result
 		// is a Buffer, not a string.
-		crypto.pbkdf2(masterPwd, salt, iterCount, keyLen, (err, derivedKey) => {
+		node_crypto.pbkdf2(masterPwd, salt, iterCount, keyLen, (err, derivedKey) => {
 			if (err) {
 				key.reject(err);
 				return;
@@ -191,7 +123,7 @@ export class NodeCrypto implements Crypto {
 	}
 
 	md5Digest(input: string): string {
-		var md5er = crypto.createHash('md5');
+		var md5er = node_crypto.createHash('md5');
 		md5er.update(input);
 		return md5er.digest('binary');
 	}

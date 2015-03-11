@@ -12,19 +12,19 @@ import sprintf = require('sprintf');
 import pathLib = require('path');
 import underscore = require('underscore');
 
+import agile_keychain = require('../lib/agile_keychain');
 import asyncutil = require('../lib/base/asyncutil');
 import cli_common = require('./cli_common');
 import clipboard = require('./clipboard');
 import collectionutil = require('../lib/base/collectionutil');
 import consoleio = require('./console');
-import crypto = require('../lib/onepass_crypto');
 import edit_cmd = require('./edit_cmd');
 import item_repair = require('../lib/item_repair');
 import item_search = require('../lib/item_search');
 import item_store = require('../lib/item_store');
 import key_agent = require('../lib/key_agent');
 import nodefs = require('../lib/vfs/node');
-import agile_keychain = require('../lib/agile_keychain');
+import password_gen = require('../lib/password_gen');
 import vfs = require('../lib/vfs/vfs');
 
 interface HandlerMap {
@@ -61,7 +61,7 @@ export class CLI {
 		this.keyAgent = agent || new key_agent.SimpleKeyAgent();
 		this.clipboard = clipboardImpl || clipboard.createPlatformClipboard();
 		this.passwordGenerator = () => {
-			return crypto.generatePassword(12);
+			return password_gen.generatePassword(12);
 		};
 	}
 
@@ -495,7 +495,7 @@ export class CLI {
 	}
 
 	private genPasswordCommand(): Q.Promise<void> {
-		this.printf(crypto.generatePassword(12));
+		this.printf(password_gen.generatePassword(12));
 		return Q<void>(null);
 	}
 

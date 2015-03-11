@@ -22,6 +22,7 @@ import assert = require('assert');
 import Q = require('q');
 import underscore = require('underscore');
 
+import agile_keychain_crypto = require('./agile_keychain_crypto');
 import asyncutil = require('./base/asyncutil');
 import cached = require('./base/cached');
 import collectionutil = require('./base/collectionutil');
@@ -29,7 +30,6 @@ import event_stream = require('./base/event_stream');
 import item_store = require('./item_store');
 import key_agent = require('./key_agent');
 import key_value_store = require('./base/key_value_store');
-import onepass_crypto = require('./onepass_crypto');
 
 // JSON structure that stores the current overview
 // data and revision IDs for all items in the database
@@ -81,7 +81,7 @@ var SCHEMA_VERSION = 2;
 var KEY_ID_PREFIX = 'key/';
 
 export class Store implements item_store.SyncableStore {
-	private crypto: onepass_crypto.Crypto;
+	private crypto: agile_keychain_crypto.Crypto;
 	private database: key_value_store.Database;
 	private name: string;
 	private keyAgent: key_agent.KeyAgent;
@@ -96,7 +96,7 @@ export class Store implements item_store.SyncableStore {
 	constructor(database: key_value_store.Database, name: string, keyAgent: key_agent.KeyAgent) {
 		this.database = database;
 		this.keyAgent = keyAgent;
-		this.crypto = onepass_crypto.defaultCrypto;
+		this.crypto = agile_keychain_crypto.defaultCrypto;
 		this.name = name;
 
 		this.onItemUpdated = new event_stream.EventStream<item_store.Item>();
