@@ -72,7 +72,11 @@ export function fadeIn(state: reactutil.TransitionState) {
 				opacity: 0.01
 			};
 		case reactutil.TransitionState.Entered:
-			return null;
+			// note: We return an object here
+			// rather than null due to React issue #3409
+			return {
+				opacity: 1.0
+			};
 		case reactutil.TransitionState.Leaving:
 		// fall-through
 		case reactutil.TransitionState.Left:
