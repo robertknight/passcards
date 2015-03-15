@@ -277,7 +277,7 @@ interface StoreListProps {
   */
 class StoreList extends typed_react.Component<StoreListProps, {}> {
 	render() {
-		var stores: React.ReactElement<any>[] = [];
+		var stores: react.ReactElement<any>[] = [];
 		Object.keys(this.props.stores).forEach((id) => {
 			var account = this.props.stores[id];
 			var suffixPos = account.storePath.lastIndexOf('.');
@@ -341,7 +341,7 @@ interface NewStoreOptions {
 }
 
 interface SlideProps {
-	children?: React.ReactElement<any>[];
+	children?: react.ReactElement<any>[];
 
 	xTranslation: number;
 	opacity: number;
@@ -456,7 +456,7 @@ class NewStoreForm extends typed_react.Component<NewStoreFormProps, NewStoreForm
 			passwordsMatch &&
 			this.state.options.hint.length > 0;
 
-		var form: React.ReactElement<any>;
+		var form: react.ReactElement<any>;
 		if (this.state.creatingStore) {
 			form = react.DOM.div(style.mixin(theme.newStore),
 				react.DOM.div(style.mixin(theme.creatingStore.label), 'Creating store...')
@@ -573,12 +573,12 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 	}
 
 	render() {
-		var screens: React.ReactElement<any>[] = [];
+		var screens: react.ReactElement<any>[] = [];
 		for (var i = 0; i < this.state.screenStack.length; i++) {
 			var xTranslation = i - this.state.currentScreen;
 			var opacity = i == this.state.currentScreen ? 1.0 : 0.0;
 			var screenKey: string;
-			var screenContent: React.ReactElement<any>;
+			var screenContent: react.ReactElement<any>;
 
 			switch (this.state.screenStack[i].id) {
 				case Screen.Welcome:
@@ -618,7 +618,7 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 			}, screenContent));
 		}
 
-		var message: React.ReactElement<toaster.ToasterProps>;
+		var message: react.ReactElement<toaster.ToasterProps>;
 		if (this.state.status) {
 			message = toaster.ToasterF({
 				message: this.state.status.text

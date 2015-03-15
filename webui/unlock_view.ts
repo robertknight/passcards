@@ -127,8 +127,8 @@ export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockVie
 
 	setFocus() {
 		if (this.props.isLocked) {
-			var masterPassField = this.refs['masterPassField'];
-			(<HTMLElement>masterPassField.getDOMNode()).focus();
+			var masterPassField = <HTMLElement>react.findDOMNode(this.refs['masterPassField']);
+			masterPassField.focus();
 		}
 	}
 
@@ -140,8 +140,8 @@ export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockVie
 			unlockMessage = '';
 		}
 
-		var unlockPaneUpper: React.ReactElement<any>;
-		var unlockPaneLower: React.ReactElement<any>;
+		var unlockPaneUpper: react.ReactElement<any>;
+		var unlockPaneLower: react.ReactElement<any>;
 
 		if (this.props.isLocked) {
 			unlockPaneUpper = react.DOM.div(style.mixin(theme.upper),
@@ -151,7 +151,7 @@ export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockVie
 						ref: 'unlockPaneForm',
 						onSubmit: (e) => {
 							e.preventDefault();
-							var passwordInputField = <HTMLInputElement>this.refs['masterPassField'].getDOMNode();
+							var passwordInputField = <HTMLInputElement>react.findDOMNode(this.refs['masterPassField']);
 							var masterPass = passwordInputField.value;
 							this.tryUnlock(masterPass).then(() => {
 								// clear input field after attempt completes
@@ -175,7 +175,7 @@ export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockVie
 								ref: 'menuButton',
 								onClick: (e) => {
 									e.preventDefault();
-									var itemRect = (<HTMLElement>this.refs['menuButton'].getDOMNode()).getBoundingClientRect();
+									var itemRect = (<HTMLElement>react.findDOMNode(this.refs['menuButton'])).getBoundingClientRect();
 									this.props.onMenuClicked(itemRect);
 								}
 							})

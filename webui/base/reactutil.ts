@@ -31,8 +31,8 @@ export function mergeProps<P, C>(parentProps: P, childProps: C): C {
 	return childProps;
 }
 
-export function createFactory<P, S>(component: { new (): typed_react.Component<P, S> }, ...mixins: React.Mixin<any, any>[])
-	: React.ComponentFactory<P> {
+export function createFactory<P, S>(component: { new (): typed_react.Component<P, S> }, ...mixins: react.Mixin<any, any>[])
+	: react.Factory<P> {
 	return react.createFactory(typed_react.createClass(component, mixins));
 }
 
@@ -170,8 +170,8 @@ export class TransitionEndListener {
 	  *
 	  * Use remove() to remove the listener when no longer required.
 	  */
-	constructor(component: React.Component<any>, property: string, callback: () => void) {
-		this.node = <HTMLElement>component.getDOMNode();
+	constructor(component: react.Component<any,any>, property: string, callback: () => void) {
+		this.node = <HTMLElement>react.findDOMNode(component);
 		this.listener = (e) => {
 			if (e.target === this.node && e.propertyName == property) {
 				callback();

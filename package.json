@@ -41,7 +41,7 @@
     "sprintf": "^0.1.5",
     "through2": "^0.6.3",
     "ts-style": "^0.5.1",
-    "typed-react": "^3.3.1",
+    "typed-react": "https://github.com/robertknight/typed-react/archive/8d353f8b4793f3748e7938a295cfaca43314ab84.tar.gz",
     "underscore": "^1.8.2",
     "urlrouter": ">=0.5.4"
   },

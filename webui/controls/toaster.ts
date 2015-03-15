@@ -75,7 +75,7 @@ export class Toaster extends typed_react.Component<ToasterProps, ToasterState> {
 		var PROGRESS_WIDTH = 200;
 		var meterWidth = (this.props.progressValue / this.props.progressMax) * PROGRESS_WIDTH;
 
-		var progressBar: React.ReactElement<any>;
+		var progressBar: react.ReactElement<any>;
 		if (this.props.progressMax) {
 			progressBar = react.DOM.div(style.mixin([theme.toaster.progressBar.outline, {
 				width: PROGRESS_WIDTH + 'px'

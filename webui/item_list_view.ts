@@ -278,7 +278,7 @@ export class Item extends typed_react.Component<ItemProps, {}> {
 	}
 
 	render() {
-		var focusIndicator: React.ReactElement<any>;
+		var focusIndicator: react.ReactElement<any>;
 		if (this.props.isFocused) {
 			focusIndicator = react.DOM.div(style.mixin(theme.item.focusIndicator), '>');
 		}
@@ -358,7 +358,7 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 		focused: boolean;
 		index: number;
 		offsetTop: number;
-	}): React.ReactElement<ItemProps> {
+	}): react.ReactElement<ItemProps> {
 		return ItemF({
 			key: item.uuid,
 			item: item,
@@ -406,7 +406,7 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 	}
 
 	private scrollList(count: number) {
-		var itemList = <HTMLElement>this.refs['itemList'].getDOMNode();
+		var itemList = <HTMLElement>react.findDOMNode(this.refs['itemList']);
 		itemList.scrollTop += this.state.itemHeight * count;
 	}
 
@@ -423,7 +423,7 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 			return null;
 		}
 
-		var rect = itemRef.getDOMNode().getBoundingClientRect();
+		var rect = react.findDOMNode(itemRef).getBoundingClientRect();
 		return {
 			left: rect.left,
 			top: rect.top,
@@ -496,7 +496,7 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 	}
 
 	private updateVisibleItems() {
-		var itemList = <HTMLElement>this.refs['itemList'].getDOMNode();
+		var itemList = <HTMLElement>react.findDOMNode(this.refs['itemList']);
 		if (this.state.matchingItems.length > 0) {
 			var topIndex: number = -1;
 			var bottomIndex: number = -1;
@@ -621,7 +621,7 @@ class ItemListToolbar extends typed_react.Component<ItemListToolbarProps, {}> {
 	}
 
 	private fieldInput() {
-		return <HTMLInputElement>this.refs['searchField'].getDOMNode();
+		return <HTMLInputElement>react.findDOMNode(this.refs['searchField']);
 	}
 
 	render() {
@@ -676,7 +676,7 @@ class ItemListToolbar extends typed_react.Component<ItemListToolbarProps, {}> {
 					ref: 'menuButton',
 					onClick: () => {
 						var event = {
-							itemRect: (<HTMLElement>this.refs['menuButton'].getDOMNode()).getBoundingClientRect()
+							itemRect: (<HTMLElement>react.findDOMNode(this.refs['menuButton'])).getBoundingClientRect()
 						};
 						this.props.onMenuClicked(event);
 					}
@@ -685,7 +685,7 @@ class ItemListToolbar extends typed_react.Component<ItemListToolbarProps, {}> {
 			);
 	}
 
-	private handleSearchFieldKey(e: React.KeyboardEvent) {
+	private handleSearchFieldKey(e: react.KeyboardEvent) {
 		var handled = true;
 		if (e.which == keycodes.DownArrow) {
 			this.props.onMoveDown();

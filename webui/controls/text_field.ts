@@ -204,9 +204,9 @@ export interface TextFieldProps {
 	  */
 	focus?: boolean;
 
-	onChange?: React.FormEventHandler;
-	onBlur?: React.FocusEventHandler;
-	onFocus?: React.FocusEventHandler;
+	onChange?: react.FormEventHandler;
+	onBlur?: react.FocusEventHandler;
+	onFocus?: react.FocusEventHandler;
 
 	style?: TextFieldStyle;
 }
@@ -252,7 +252,7 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 	}
 
 	private setFocus() {
-		var textField = <HTMLInputElement>this.refs['textField'].getDOMNode();
+		var textField = <HTMLInputElement>react.findDOMNode(this.refs['textField']);
 		textField.select();
 	}
 
@@ -298,13 +298,13 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 			focusedUnderlineStyling.push({ opacity: 1 });
 		}
 
-		var errorLabel: React.ReactElement<any>;
+		var errorLabel: react.ReactElement<any>;
 		if (props.error) {
 			focusedUnderlineStyling.push(styles.errorUnderline);
 			errorLabel = div(style.mixin(styles.errorLabel), props.error);
 		}
 
-		var underline: React.ReactElement<any>;
+		var underline: react.ReactElement<any>;
 		if (props.showUnderline) {
 			underline = div(style.mixin(styles.underlineContainer, { ref: 'underlineContainer' }),
 				div(style.mixin(styles.underline, { ref: 'underline' })),
@@ -334,14 +334,14 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 			);
 	}
 
-	onMouseDown(e: React.MouseEvent) {
+	onMouseDown(e: react.MouseEvent) {
 		if (this.state.focus) {
 			return;
 		}
 		this.setState({ focusX: e.clientX });
 	}
 
-	onTouchStart(e: React.TouchEvent) {
+	onTouchStart(e: react.TouchEvent) {
 		if (this.state.focus) {
 			return;
 		}
@@ -349,13 +349,13 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 		this.setState({ focusX: touch.clientX });
 	}
 
-	onChange(e: React.FormEvent) {
+	onChange(e: react.FormEvent) {
 		if (this.props.onChange) {
 			this.props.onChange(e);
 		}
 	}
 
-	onBlur(e: React.FocusEvent) {
+	onBlur(e: react.FocusEvent) {
 		this.setState({
 			focus: false,
 			focusX: null
@@ -365,7 +365,7 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 		}
 	}
 
-	onFocus(e: React.FocusEvent) {
+	onFocus(e: react.FocusEvent) {
 		this.setState({
 			focus: true
 		});
@@ -374,8 +374,8 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 		// animate the focused underline, spilling from the horizontal
 		// position of the mouse or touch
 		if (this.state.focusX && this.props.showUnderline) {
-			var underlineRect = this.refs['underlineContainer'].getDOMNode().getBoundingClientRect();
-			var focusedUnderline = <HTMLElement>this.refs['focusedUnderline'].getDOMNode();
+			var underlineRect = react.findDOMNode(this.refs['underlineContainer']).getBoundingClientRect();
+			var focusedUnderline = <HTMLElement>react.findDOMNode(this.refs['focusedUnderline']);
 
 			this.setState({ focusing: true });
 
@@ -406,7 +406,7 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 		} else if (this.props.defaultValue) {
 			return this.props.defaultValue;
 		} else if (this.isMounted()) {
-			return (<HTMLInputElement>this.refs['textField'].getDOMNode()).value;
+			return (<HTMLInputElement>react.findDOMNode(this.refs['textField'])).value;
 		} else {
 			return '';
 		}

@@ -57,7 +57,7 @@ interface ControlDemoAppState {
 	};
 }
 
-function componentSection(name: string, ...children: React.ReactElement<any>[]) {
+function componentSection(name: string, ...children: react.ReactElement<any>[]) {
 	return react.DOM.div(style.mixin(theme.section, {}),
 		react.DOM.div(style.mixin(theme.section.header), name),
 		react.DOM.div(style.mixin(theme.section.content), children)
@@ -130,7 +130,7 @@ class ControlDemoApp extends typed_react.Component<ControlDemoAppProps, ControlD
 	}
 
 	private renderMenus() {
-		var popupMenu: React.ReactElement<menu.MenuProps>;
+		var popupMenu: react.ReactElement<menu.MenuProps>;
 		if (this.state.menuPos) {
 			var menuItems = [{
 				label: 'Item One',
@@ -162,7 +162,7 @@ class ControlDemoApp extends typed_react.Component<ControlDemoAppProps, ControlD
 			button.ButtonF({
 				value: 'Show Menu',
 				style: button.Style.RaisedRectangular,
-				onClick: (e: React.MouseEvent) => {
+				onClick: (e: react.MouseEvent) => {
 					this.setState({ menuPos: { left: e.pageX, top: e.pageY } });
 				}
 			}),
@@ -192,11 +192,11 @@ function main() {
 	var elt = document.getElementById('app');
 	var body = elt.ownerDocument.body;
 
-	var rootView = react.render(ControlDemoAppF({ viewportRect: body.getBoundingClientRect() }), elt);
+	var renderRootView = () => {
+		react.render(ControlDemoAppF({ viewportRect: body.getBoundingClientRect() }), elt);
+	};
 	elt.ownerDocument.defaultView.onresize = () => {
-		rootView.setProps({
-			viewportRect: body.getBoundingClientRect()
-		});
+		renderRootView();
 	};
 }
 
