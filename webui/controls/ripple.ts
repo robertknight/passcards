@@ -46,7 +46,7 @@ export interface InkRippleProps {
 	color?: string;
 	/** Max radius the wave ripple can reach during the touch-down phase */
 	radius?: number;
-	children?: React.ReactElement<any>[];
+	children?: react.ReactElement<any>[];
 }
 
 interface InkRippleState {
@@ -133,7 +133,7 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 	}
 
 	private onTouchStart(e: MouseEvent) {
-		var canvas = <HTMLCanvasElement>(this.refs['canvas'].getDOMNode());
+		var canvas = <HTMLCanvasElement>(react.findDOMNode(this.refs['canvas']));
 
 		if (this.state.phase !== Phase.Idle) {
 			return;
@@ -187,8 +187,8 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 	}
 
 	private updateCanvasSize() {
-		var canvas = <HTMLCanvasElement>(this.refs['canvas'].getDOMNode());
-		var container = <HTMLElement>(this.refs['container'].getDOMNode());
+		var canvas = <HTMLCanvasElement>(react.findDOMNode(this.refs['canvas']));
+		var container = <HTMLElement>(react.findDOMNode(this.refs['container']));
 		canvas.width = container.clientWidth;
 		canvas.height = container.clientHeight;
 	}
@@ -231,7 +231,7 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 			backgroundAlpha *= 1 - (phaseElapsed / RELEASE_PHASE_DURATION);
 		}
 
-		var elem = <HTMLCanvasElement>(this.refs['container'].getDOMNode());
+		var elem = <HTMLCanvasElement>(react.findDOMNode(this.refs['container']));
 		var ctx = this.anim.context;
 		ctx.clearRect(0, 0, elem.offsetWidth, elem.offsetHeight);
 		ctx.fillStyle = this.props.color;

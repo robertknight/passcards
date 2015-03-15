@@ -123,7 +123,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 		this.setState({ selectedItemRect: rect });
 	}
 
-	render(): React.ReactElement<any> {
+	render(): react.ReactElement<any> {
 		if (!this.props.itemStore.state.store) {
 			return setup_view.SetupViewF({
 				settings: this.props.services.settings,
@@ -131,7 +131,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 			});
 		}
 
-		var children: React.ReactElement<any>[] = [];
+		var children: react.ReactElement<any>[] = [];
 		var itemStoreState = this.props.itemStore.state;
 
 		children.push(unlock_view.UnlockViewF({
@@ -165,7 +165,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 	}
 
 	private renderToasters() {
-		var toasters: React.ReactElement<toaster.ToasterProps>[] = [];
+		var toasters: react.ReactElement<toaster.ToasterProps>[] = [];
 		if (this.state.status) {
 			toasters.push(toaster.ToasterF({
 				key: 'status-toaster',
@@ -213,7 +213,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 	}
 
 	private renderItemDetails() {
-		var detailsView: React.ReactElement<{}>;
+		var detailsView: react.ReactElement<{}>;
 		if (this.itemStoreState().selectedItem) {
 			var appRect = this.state.viewportRect;
 

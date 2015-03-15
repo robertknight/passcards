@@ -151,7 +151,7 @@ export enum Style {
 }
 
 export interface ButtonProps {
-	onClick: (e: React.MouseEvent) => void;
+	onClick: (e: react.MouseEvent) => void;
 
 	/** Label for the button */
 	value: string;
@@ -245,7 +245,7 @@ export class Button extends typed_react.Component<ButtonProps, {}> {
 			labelStyles.push({ color: this.props.color });
 		}
 
-		var buttonIcon: React.ReactElement<any>;
+		var buttonIcon: react.ReactElement<any>;
 		if (this.props.iconUrl) {
 			// the SVG icon here is wrapped in a container
 			// <div> to work around an issue in Firefox where
@@ -270,14 +270,14 @@ export class Button extends typed_react.Component<ButtonProps, {}> {
 				);
 		}
 
-		var label: React.ReactElement<any>;
+		var label: react.ReactElement<any>;
 		if (this.props.value && isRectangular) {
 			label = react.DOM.div(style.mixin(labelStyles, {}), this.props.value);
 		}
 
 		return react.DOM.button(style.mixin(containerStyles, {
 			tabIndex: 0,
-			onClick: (e: React.MouseEvent) => this.props.onClick(e),
+			onClick: (e: react.MouseEvent) => this.props.onClick(e),
 			title: this.props.value,
 			type: 'button',
 			disabled: this.props.disabled

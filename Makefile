@@ -17,9 +17,10 @@ webui_icon_dir=$(webui_dist_dir)/icons
 submodule_marker=build/submodule_marker
 nodemodule_marker=build/nodemodule_marker
 dropboxjs_lib=node_modules/dropbox/lib/dropbox.js
+typedreact_lib=node_modules/typed-react/typed-react.d.ts
 xpi_file=addons/firefox/passcards@robertknight.github.io.xpi
 
-deps=$(submodule_marker) $(nodemodule_marker) $(dropboxjs_lib) typings/DefinitelyTyped
+deps=$(submodule_marker) $(nodemodule_marker) $(dropboxjs_lib) $(typedreact_lib) typings/DefinitelyTyped
 
 all: build/current webui-build
 
@@ -119,6 +120,13 @@ node_modules/dropbox/lib/dropbox.js: node_modules/dropbox/package.json
 	@# we'll need to run this to build Dropbox before using it
 	@echo "Building dropbox-js..."
 	@(cd ./node_modules/dropbox && npm install --quiet . $(SILENCE_STDOUT))
+
+node_modules/typed-react/typed-react.d.ts: node_modules/typed-react/package.json
+	@echo "Building typed-react..."
+	@# copy the access token used by TSD to avoid hitting GitHub's request
+	@# rate limit
+	@cp .tsdrc ./node_modules/typed-react
+	@(cd ./node_modules/typed-react && npm install --quiet . $(SILENCE_STDOUT) && npm run typings && npm run bundle)
 
 test-package: all
 	cd `$(TMP_DIR_CMD)` \

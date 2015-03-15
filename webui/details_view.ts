@@ -248,7 +248,7 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 	}
 
 	componentDidMount() {
-		var field = <HTMLElement>this.refs['itemField'].getDOMNode();
+		var field = <HTMLElement>react.findDOMNode(this.refs['itemField']);
 		this.focusListener = (e: FocusEvent) => {
 			this.setState({ selected: field.contains(<HTMLElement>e.target) });
 		};
@@ -257,7 +257,7 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 	}
 
 	componentWillUnmount() {
-		var field = this.refs['itemField'].getDOMNode();
+		var field = react.findDOMNode(this.refs['itemField']);
 		field.ownerDocument.removeEventListener('focus', this.focusListener, true /* useCapture */);
 		this.focusListener = null;
 	}
@@ -272,9 +272,9 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 			inputType = 'url';
 		}
 
-		var actions: React.ReactElement<{}>[] = [];
+		var actions: react.ReactElement<{}>[] = [];
 		if (this.state.selected) {
-			var copyButton: React.ReactElement<button.ButtonProps>;
+			var copyButton: react.ReactElement<button.ButtonProps>;
 			if (this.props.clipboard.clipboardAvailable()) {
 				copyButton = button.ButtonF({
 					style: button.Style.Rectangular,
@@ -336,7 +336,7 @@ class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
 		}
 
 		var focusField = this.props.focused;
-		var labelEditor: React.ReactElement<text_field.TextFieldProps>;
+		var labelEditor: react.ReactElement<text_field.TextFieldProps>;
 		if (this.props.onChangeLabel) {
 			labelEditor = text_field.TextFieldF({
 				floatingLabel: true,
@@ -514,9 +514,9 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 	}
 
 	private renderSections(item: item_store.ItemAndContent, onSave: () => void, editing: boolean) {
-		var sections: React.ReactElement<{}>[] = [];
+		var sections: react.ReactElement<{}>[] = [];
 		item.content.sections.forEach((section, sectionIndex) => {
-			var fields: React.ReactElement<{}>[] = [];
+			var fields: react.ReactElement<{}>[] = [];
 			section.fields.forEach((field, fieldIndex) => {
 				var autofocus = this.state.autofocusField === field;
 				var labelChangeHandler: (newValue: string) => boolean;
@@ -592,7 +592,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 					color: colors.MATERIAL_COLOR_PRIMARY,
 					ref: addButtonRef,
 					onClick: (e) => {
-						var buttonRect = (<HTMLElement>this.refs[addButtonRef].getDOMNode()).getBoundingClientRect();
+						var buttonRect = (<HTMLElement>react.findDOMNode(this.refs[addButtonRef])).getBoundingClientRect();
 						this.setState({
 							addingField: {
 								pos: {
@@ -628,7 +628,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 	}
 
 	private renderWebsites(item: item_store.ItemAndContent, onSave: () => void, editing: boolean) {
-		var websites: React.ReactElement<{}>[] = [];
+		var websites: react.ReactElement<{}>[] = [];
 		item.content.urls.forEach((url, urlIndex) => {
 			var autofocus = this.state.autofocusField === url;
 			websites.push(ItemFieldF({
@@ -672,7 +672,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 	}
 
 	private renderCoreFields(item: item_store.ItemAndContent, onSave: () => void, editing: boolean) {
-		var coreFields: React.ReactElement<{}>[] = [];
+		var coreFields: react.ReactElement<{}>[] = [];
 
 		var accountField = item.content.accountField();
 		var passwordField = item.content.passwordField();
@@ -748,7 +748,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				}
 			}];
 
-		var newFieldMenu: React.ReactElement<menu.MenuProps>;
+		var newFieldMenu: react.ReactElement<menu.MenuProps>;
 		if (this.state.addingField) {
 			newFieldMenu = menu.MenuF({
 				items: fieldTypes,
@@ -770,7 +770,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 	}
 
 	private renderToolbar() {
-		var toolbarControls: React.ReactElement<any>[] = [];
+		var toolbarControls: react.ReactElement<any>[] = [];
 		if (this.props.editMode == ItemEditMode.EditItem && !this.state.isEditing) {
 			toolbarControls.push(toolbar.createButton({
 				value: 'Back',
@@ -797,7 +797,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		}
 		toolbarControls.push(react.DOM.div(style.mixin(theme.toolbarSpacer)));
 
-		var editOrSave: React.ReactElement<button.ButtonProps>;
+		var editOrSave: react.ReactElement<button.ButtonProps>;
 		if (this.state.isEditing) {
 			editOrSave = toolbar.createButton({
 				value: 'Save',
@@ -853,14 +853,14 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 	}
 
 	private renderFields(editing: boolean) {
-		var detailsContent: React.ReactElement<any>;
+		var detailsContent: react.ReactElement<any>;
 		var updatedItem = this.state.editedItem;
 		if (updatedItem) {
 			var onChangeItem = () => {
 				this.onChangeItem();
 			};
 
-			var titleField: React.ReactElement<any>;
+			var titleField: react.ReactElement<any>;
 			if (editing) {
 				titleField = ItemFieldF({
 					label: 'Title',
@@ -885,13 +885,13 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				contentKey += '-editing';
 			}
 
-			var sectionDivider: React.ReactElement<{}>;
+			var sectionDivider: react.ReactElement<{}>;
 			if (websites.length > 0 && sections.length > 0) {
 				sectionDivider = react.DOM.div(style.mixin(theme.divider));
 			}
 
-			var itemActionDivider: React.ReactElement<{}>;
-			var itemActions: React.ReactElement<{}>[] = [];
+			var itemActionDivider: react.ReactElement<{}>;
+			var itemActions: react.ReactElement<{}>[] = [];
 			if (editing && this.props.editMode === ItemEditMode.EditItem) {
 				var isTrashed = updatedItem.item.trashed;
 				itemActions.push(button.ButtonF({
@@ -969,7 +969,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		var itemListDetailsStyle: any[] = [headerTheme.iconAndDetails.details.itemList];
 		var detailsViewDetailsStyle: any[] = [headerTheme.iconAndDetails.details.detailsView];
 
-		var contentStyles: React.CSSProperties[] = [{
+		var contentStyles: react.CSSProperties[] = [{
 			paddingTop: 16,
 
 			// vertically align left edge of details text with item
@@ -990,7 +990,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			contentStyles.push({ opacity: 1 });
 		}
 
-		var autofillButton: React.ReactElement<{}>;
+		var autofillButton: react.ReactElement<{}>;
 		var autofillSupported = env.isFirefoxAddon() || env.isChromeExtension();
 		if (!this.state.isEditing && autofillSupported) {
 			autofillButton = react.DOM.div(style.mixin({

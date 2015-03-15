@@ -145,7 +145,7 @@ function measureText(document: Document, text: string, font: string) {
   * displays as a bottom sheet
   * (see http://www.google.co.uk/design/spec/components/bottom-sheets.html)
   *
-  * This component must be rendered inside a React.TransitionGroup component
+  * This component must be rendered inside a react.TransitionGroup component
   * for it to be displayed.
   */
 export class Menu extends typed_react.Component<MenuProps, MenuState> {
@@ -349,7 +349,7 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 			zIndex: this.props.zIndex
 		}]),
 			react.DOM.div(style.mixin(overlayStyles, {
-				onClick: (e: React.MouseEvent) => {
+				onClick: (e: react.MouseEvent) => {
 					this.props.onDismiss();
 				}
 			})),
