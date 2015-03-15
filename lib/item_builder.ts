@@ -108,3 +108,27 @@ export class SectionBuilder {
 	}
 }
 
+export interface LoginItemOptions {
+	title?: string;
+	username?: string;
+	password?: string;
+	url?: string;
+}
+
+export function createItem(opts: LoginItemOptions) {
+	var builder = new Builder(item_store.ItemTypes.LOGIN);
+	if (opts.title) {
+		builder.setTitle(opts.title);
+	}
+	if (opts.username) {
+		builder.addLogin(opts.username);
+	}
+	if (opts.password) {
+		builder.addPassword(opts.password);
+	}
+	if (opts.url) {
+		builder.addUrl(opts.url);
+	}
+	return builder.item();
+}
+
