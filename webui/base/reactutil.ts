@@ -170,7 +170,7 @@ export class TransitionEndListener {
 	  *
 	  * Use remove() to remove the listener when no longer required.
 	  */
-	constructor(component: react.Component<any,any>, property: string, callback: () => void) {
+	constructor(component: react.Component<any, any>, property: string, callback: () => void) {
 		this.node = <HTMLElement>react.findDOMNode(component);
 		this.listener = (e) => {
 			if (e.target === this.node && e.propertyName == property) {

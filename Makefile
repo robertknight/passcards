@@ -122,7 +122,11 @@ node_modules/dropbox/lib/dropbox.js: node_modules/dropbox/package.json
 	@(cd ./node_modules/dropbox && npm install --quiet . $(SILENCE_STDOUT))
 
 node_modules/typed-react/typed-react.d.ts: node_modules/typed-react/package.json
-	(cd ./node_modules/typed-react && npm install --quiet . $(SILENCE_STDOUT) && npm run typings && npm run bundle)
+	@echo "Building typed-react..."
+	@# copy the access token used by TSD to avoid hitting GitHub's request
+	@# rate limit
+	@cp .tsdrc ./node_modules/typed-react
+	@(cd ./node_modules/typed-react && npm install --quiet . $(SILENCE_STDOUT) && npm run typings && npm run bundle)
 
 test-package: all
 	cd `$(TMP_DIR_CMD)` \
