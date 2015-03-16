@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-var findit = require('findit');
+var find = require('./find');
 var fs = require('fs');
 var path = require('path');
 var Q = require('q');
@@ -9,29 +9,12 @@ var typescript_formatter = require('typescript-formatter');
 global.Promise = Q.Promise;
 
 function findTypeScriptFiles(dir) {
-	var files = Q.defer();
-	var fileList = [];
-
-	var finder = findit(dir);
-	var ignoredDirs = ['.git', 'node_modules', 'typings'];
-
-	finder.on('directory', function(dir, stat, stop) {
-		if (ignoredDirs.indexOf(path.basename(dir)) !== -1) {
-			stop();
+	return find(dir, {
+		ignoredDirs: ['.git', 'node_modules', 'typings'],
+		filter: function(file, stat) {
+			return path.extname(file) === '.ts';
 		}
 	});
-
-	finder.on('file', function(file, stat) {
-		if (path.extname(file) === '.ts') {
-			fileList.push(file);
-		}
-	});
-
-	finder.on('end', function() {
-		files.resolve(fileList);
-	});
-
-	return files.promise;
 }
 
 function fixupResult(source) {
