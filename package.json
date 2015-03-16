@@ -35,7 +35,6 @@
     "promptly": "^0.2.1",
     "q": "^2.0.3",
     "react": "^0.13.0",
-    "reactify": "^0.15.2",
     "request": "^2.53.0",
     "shallow-equals": "0.0.0",
     "sprintf": "^0.1.5",
