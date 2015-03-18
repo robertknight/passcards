@@ -22,61 +22,56 @@ var testItems = [item_builder.createItem({
 		url: 'https://www.gmail.com'
 	})];
 
-class FakeIconProvider implements item_icons.IconProvider {
-	updated: event_stream.EventStream<string>;
+testLib.addTest('should display store items', (assert) => {
+	ui_test_utils.runReactTest((element) => {
+		var itemList = react.render(item_list_view.ItemListViewF({
+			items: testItems,
+			selectedItem: null,
+			onSelectedItemChanged: (item, rect) => {
+			},
+			currentUrl: '',
+			iconProvider: new item_icons.FakeIconProvider(),
+			focus: false,
+			onLockClicked: () => { },
+			onMenuClicked: (e) => { }
+		}), element);
 
-	constructor() {
-		this.updated = new event_stream.EventStream<string>();
-	}
+		var renderedItems = reactTestUtils.scryRenderedComponentsWithType(itemList,
+			item_list_view.ItemF.componentClass);
+		assert.equal(renderedItems.length, testItems.length);
+	});
+});
 
-	query(url: string): item_icons.Icon {
-		return {
-			iconUrl: '',
-			state: item_icons.IconFetchState.NoIcon,
-			width: 48,
-			height: 48
+testLib.addTest('should display item details', (assert) => {
+	ui_test_utils.runReactTest((element) => {
+		var itemSelected = false;
+		var iconProvider = new item_icons.FakeIconProvider();
+
+		var renderItem = () => {
+			return react.render(item_list_view.ItemF({
+				key: 'item',
+				item: testItems[0],
+				onSelected: () => {
+					itemSelected = true;
+				},
+				isFocused: false,
+				iconProvider: iconProvider,
+				index: 0,
+				offsetTop: 0
+			}), element);
 		};
-	}
 
-	updateMatches(updateUrl: string, itemUrl: string) {
-		return false;
-	}
-}
+		// should render icon with site's primary location
+		var itemComponent = renderItem();
+		var iconComponent = reactTestUtils.findRenderedComponentWithType(itemComponent,
+			item_icons.IconControlF.componentClass);
+		assert.equal(iconComponent.props.location, testItems[0].primaryLocation());
 
-testLib.addAsyncTest('should display item properties', (assert) => {
-	var element = window.document.getElementById('app');
-	var itemSelected = false;
-	var renderedItem = react.render(item_list_view.ItemF({
-		key: 'item',
-		item: testItems[0],
-		onSelected: () => {
-			itemSelected = true;
-		},
-		isFocused: false,
-		iconProvider: new FakeIconProvider(),
-		index: 0,
-		offsetTop: 0
-	}), element);
-	console.log(element.innerHTML);
+		// should invoke onSelected() handler when clicked
+		assert.equal(itemSelected, false);
+		var rootNode = itemComponent.refs['itemOverview'];
+		reactTestUtils.Simulate.click(rootNode);
+		assert.equal(itemSelected, true);
+	});
 });
 
-/*
-testLib.addAsyncTest('should display store items', (assert) => {
-	var element = window.document.getElementById('app');
-
-	var itemList = react.render(item_list_view.ItemListViewF({
-		items: testItems,
-		selectedItem: null,
-		onSelectedItemChanged: (item, rect) => {
-		},
-		currentUrl: '',
-		iconProvider: new FakeIconProvider(),
-		focus: false,
-		onLockClicked: () => { },
-		onMenuClicked: (e) => { }
-	}), element);
-
-	var renderedItems = reactTestUtils.scryRenderedComponentsWithType(itemList, item_list_view.Item);
-	assert.equal(renderedItems.length, testItems.length);
-});
-*/
