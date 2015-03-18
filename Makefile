@@ -93,7 +93,7 @@ build/lib/crypto/pbkdf2_bundle.js: build/current
 	$(BROWSERIFY) --require ./build/lib/crypto/pbkdf2.js:pbkdf2 --outfile $@
 
 test: cli webui build/lib/crypto/pbkdf2_bundle.js
-	@./utils/run-tests.js
+	@$(NODE) ./utils/run-tests.js
 
 lint_files=$(addprefix build/,$(subst .ts,.ts.lint, $(all_srcs)))
 lint: $(lint_files)

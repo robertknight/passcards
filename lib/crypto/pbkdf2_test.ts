@@ -180,11 +180,12 @@ testLib.addAsyncTest('pbkdf2Lib Parallel', (assert) => {
 	// and concatenate the results. Note that in Node.js the results
 	// of the map() promise are not really Uint8Arrays but the
 	// result of `JSON.parse(JSON.stringify(aUint8Array))`
-	par.map(pbkdfBlock).then((blocks: Uint8Array[]) => {
+	par.map(pbkdfBlock).then((blocks: Array<Uint8Array | number[]>) => {
 		var result = new Uint8Array(params.dkLen);
 		var resultIndex = 0;
 		blocks.forEach((block) => {
-			for (var i = 0; resultIndex < params.dkLen && i < block.byteLength; i++) {
+			var blockLength = block.length || Object.keys(block).length
+			for (var i = 0; resultIndex < params.dkLen && i < blockLength; i++) {
 				result[resultIndex] = block[i];
 				++resultIndex;
 			}
