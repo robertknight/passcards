@@ -427,5 +427,41 @@ export class IconControl extends typed_react.Component<IconControlProps, {}> {
 	}
 }
 
+type URLString = string;
+
+export class FakeIconProvider implements IconProvider {
+	private icons: Map<URLString, Icon>;
+
+	updated: event_stream.EventStream<string>;
+
+	constructor() {
+		this.updated = new event_stream.EventStream<string>();
+		this.icons = new Map<URLString, Icon>();
+	}
+
+	query(url: URLString): Icon {
+		var icon = this.icons.get(url);
+		if (icon) {
+			return icon;
+		} else {
+			return {
+				iconUrl: '',
+				state: IconFetchState.NoIcon,
+				width: 48,
+				height: 48
+			};
+		}
+	}
+
+	addIcon(url: URLString, icon: Icon) {
+		this.icons.set(url, icon);
+		this.updated.publish(url);
+	}
+
+	updateMatches(updateUrl: string, itemUrl: string) {
+		return updateUrl == itemUrl;
+	}
+}
+
 export var IconControlF = reactutil.createFactory(IconControl);
 

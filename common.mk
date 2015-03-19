@@ -5,7 +5,7 @@ PKG_DIR=$(SRC_ROOT)/pkg
 
 BROWSERIFY=$(NODE_BIN_DIR)/browserify
 FOREACH_FILE=tr ' ' '\n' | xargs -n 1
-NODE=node
+NODE=iojs
 ROOT_DIR=$(dir $(abspath package.json))
 SILENCE_CMD=1>/dev/null 2>/dev/null
 SILENCE_STDOUT=1>/dev/null

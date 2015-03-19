@@ -109,7 +109,7 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 	componentDidMount() {
 		// start the ripple on touch where supported or mousedown
 		// otherwise
-		var parentNode = <HTMLElement>(this.getDOMNode().parentNode);
+		var parentNode = <HTMLElement>(react.findDOMNode(this).parentNode);
 
 		parentNode.addEventListener('mousedown', this.onTouchStart);
 		parentNode.addEventListener('touchstart', this.onTouchStart);
@@ -122,7 +122,7 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 	componentWillUnmount() {
 		this.anim = null;
 
-		var parentNode = <HTMLElement>(this.getDOMNode().parentNode);
+		var parentNode = <HTMLElement>(react.findDOMNode(this).parentNode);
 
 		parentNode.removeEventListener('mousedown', this.onTouchStart);
 		parentNode.removeEventListener('touchstart', this.onTouchStart);

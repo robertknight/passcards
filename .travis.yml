@@ -8,7 +8,7 @@ cache:
   directories:
   - node_modules
 node_js:
-- '0.10'
+- 'iojs'
 before_script:
 - export PATH=$PWD/node_modules/.bin:$PATH
 - make update-manifest-versions

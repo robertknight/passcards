@@ -148,8 +148,8 @@ export interface ToolbarClickEvent {
 	itemRect: reactutil.Rect;
 }
 
-export class ItemListViewState {
-	filter: string;
+interface ItemListViewState {
+	filter?: string;
 }
 
 export class ItemListViewProps {
@@ -165,9 +165,8 @@ export class ItemListViewProps {
 }
 
 export class ItemListView extends typed_react.Component<ItemListViewProps, ItemListViewState> {
-	getInitialState() {
-		var state = new ItemListViewState();
-		return state;
+	getInitialState(): ItemListViewState {
+		return { filter: null };
 	}
 
 	componentDidMount() {
@@ -597,7 +596,7 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 	}
 }
 
-export var ItemListF = reactutil.createFactory(ItemList);
+var ItemListF = reactutil.createFactory(ItemList);
 
 class ItemListToolbarProps {
 	filterUrl: string;
@@ -702,4 +701,4 @@ class ItemListToolbar extends typed_react.Component<ItemListToolbarProps, {}> {
 	}
 }
 
-export var ItemListToolbarF = reactutil.createFactory(ItemListToolbar);
+var ItemListToolbarF = reactutil.createFactory(ItemListToolbar);

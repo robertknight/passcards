@@ -6,6 +6,14 @@ import env = require('../../lib/base/env');
 import transition_events = require('./transition_events');
 import tsutil = require('../../lib/base/tsutil');
 
+/** Component factory returned by createFactory(). This extends
+  * React.Factory with an additional property that specifies the
+  * type of component which the factory creates.
+  */
+export interface Factory<P> extends react.Factory<P> {
+	componentClass?: react.ComponentClass<P>;
+}
+
 export var TransitionGroupF = react.createFactory(react_addons.addons.TransitionGroup);
 export var CSSTransitionGroupF = react.createFactory(react_addons.addons.CSSTransitionGroup);
 
@@ -31,9 +39,11 @@ export function mergeProps<P, C>(parentProps: P, childProps: C): C {
 	return childProps;
 }
 
-export function createFactory<P, S>(component: { new (): typed_react.Component<P, S> }, ...mixins: react.Mixin<any, any>[])
-	: react.Factory<P> {
-	return react.createFactory(typed_react.createClass(component, mixins));
+export function createFactory<P, S>(component: { new (): typed_react.Component<P, S> }, ...mixins: react.Mixin<any, any>[]) {
+	var componentClass = typed_react.createClass(component, mixins);
+	var factory: Factory<P> = react.createFactory(componentClass);
+	factory.componentClass = componentClass;
+	return factory;
 }
 
 /** Performs a shallow comparison of the properties of two objects and returns

@@ -7,11 +7,15 @@
 // This module has no dependencies to facilitate easier re-use across
 // different JS environments
 
-/** Returns true if running in the main browser
+/** Returns true if running in a main browser
   * environment with DOM access.
   */
 export function isBrowser() {
-	return typeof window != 'undefined';
+	// when using jsdom for UI testing, global.{window, navigator, document}
+	// are defined for the benefit of libraries like React
+	// and a DOM is available but isBrowser() returns false
+	return typeof window != 'undefined' &&
+	       window.navigator.userAgent.indexOf('Node.js') === -1;
 }
 
 /** Returns true if running from within NodeJS

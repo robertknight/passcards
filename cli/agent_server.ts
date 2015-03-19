@@ -206,11 +206,15 @@ function launchAgent(): Q.Promise<number> {
 		persistent: true,
 		interval: 5
 	}, () => {
-			fs.unwatchFile(AGENT_PID_FILE);
-			pid.resolve(agentPID());
+			var newAgentPID = agentPID();
+			if (newAgentPID) {
+				fs.unwatchFile(AGENT_PID_FILE);
+				pid.resolve(newAgentPID);
+			}
 		});
 
-	var server = child_process.spawn('node', [path.join(__dirname, 'agent_server')], {
+	var agentScript = path.join(__dirname, 'agent_server');
+	var server = child_process.spawn('node', [agentScript], {
 		detached: true,
 		stdio: ['ignore', agentOut, agentErr]
 	});
@@ -225,17 +229,15 @@ function launchAgent(): Q.Promise<number> {
 export function startAgent(): Q.Promise<number> {
 	var existingPID = agentPID();
 	if (existingPID) {
-		var pid = Q.defer<number>();
-		isCurrentVersionRunning().then((isCurrent) => {
+		return isCurrentVersionRunning().then((isCurrent) => {
 			if (isCurrent) {
-				pid.resolve(existingPID);
+				return Q(existingPID);
 			} else {
-				stopAgent().then(launchAgent).then((newVersionPID) => {
-					pid.resolve(newVersionPID);
+				return stopAgent().then(() => {
+					return launchAgent();
 				});
 			}
-		}).done();
-		return pid.promise;
+		});
 	} else {
 		return launchAgent();
 	}
