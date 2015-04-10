@@ -13,7 +13,7 @@
     "sort-stream": "^1.0.1",
     "tsd": "^0.6.0-beta.5",
     "tslint": "^2.1.1",
-    "typescript": "^1.4.1",
+    "typescript": "^1.5.0-alpha",
     "typescript-formatter": "^0.2.2",
     "xdiff": "^0.2.11"
   },
@@ -40,8 +40,9 @@
     "shallow-equals": "0.0.0",
     "sprintf": "^0.1.5",
     "through2": "^0.6.3",
-    "ts-style": "^0.5.1",
-    "typed-react": "https://github.com/robertknight/typed-react/archive/1ce0d48a343f75200d2dc440f907a354c2d9b75d.tar.gz",
+    "ts-style": "^0.6.0",
+    "typed-react": "^3.4.1",
+    "typescript": "^1.5.0-alpha",
     "underscore": "^1.8.2",
     "urlrouter": ">=0.5.4"
   },

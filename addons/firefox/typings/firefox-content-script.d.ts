@@ -14,6 +14,8 @@ declare function exportFunction<F extends Function>(func: F, target: Object, opt
 declare var unsafeWindow: Window;
 
 interface ContentWorker {
+	on(event: 'detach', callback: () => void): void;
+	on(event: 'error', callback: (err: Error) => void): void;
 	on(event: string, callback: () => void): void;
 	port: Port;
 	options: any;

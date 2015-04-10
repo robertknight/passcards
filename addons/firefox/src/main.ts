@@ -31,8 +31,8 @@ function getTabWorker(tab: Tab) {
 		worker.on('detach', () => {
 			delete tabWorkers[tab.id];
 		});
-		worker.on('error', () => {
-			console.warn('Passcards worker script error', arguments);
+		worker.on('error', (err: Error) => {
+			console.warn('Passcards worker script error', err);
 		});
 		tabWorkers[tab.id] = worker;
 	}

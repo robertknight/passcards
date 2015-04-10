@@ -64,6 +64,12 @@ import url_util = require('../base/url_util');
 // - http://www.iacquire.com/blog/18-meta-tags-every-webpage-should-have-in-2013
 // - Google structured data testing tool: http://www.google.com/webmasters/tools/richsnippets
 // 
+
+export enum MetaTagType {
+	Meta,
+	Link
+}
+
 var ICON_LINK_TYPES: PageLink[] = [
 	// Favicons
 	{ type: MetaTagType.Link, rel: 'icon' },
@@ -87,11 +93,6 @@ var ICON_LINK_TYPES: PageLink[] = [
 	// Other
 	{ type: MetaTagType.Meta, rel: 'msapplication-TileImage' }
 ];
-
-export enum MetaTagType {
-	Meta,
-	Link
-}
 
 export interface UrlResponse {
 	status: number;
