@@ -316,3 +316,11 @@ export class BatchedUpdateQueue<T> {
 	}
 }
 
+export function keys<K, V>(collection: Map<K, V>) {
+	let keys: K[] = [];
+	collection.forEach((v, k) => {
+		keys.push(k);
+	});
+	return keys;
+}
+

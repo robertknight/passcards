@@ -95,7 +95,8 @@ export interface Icon {
 	height: number;
 }
 
-/** Provides icon URLs for items.
+/** Provides icon URLs for websites. IconProvider handles fetching
+  * and caching of icons to represent items.
   *
   * Call query(url) to lookup the icon associated with a given URL.
   * If a cached icon is available, it will be returned, otherwise a lookup
@@ -124,13 +125,42 @@ export interface IconProvider {
 	updateMatches(updateUrl: string, itemUrl: string): boolean;
 }
 
+/** Interface for an image loader function
+  * which loads data from an image and returns
+  * a URL that can later be used with an <img>
+  * element to display the image.
+  */
+export interface ImageLoader {
+	(data: Uint8Array): string;
+}
+
+// default image loader implementation which uses
+// URL.createObjectURL() to load an image's data
+function domImageLoader(data: Uint8Array) {
+	var iconInfo = image.getInfo(data);
+	var mimeType = iconInfo ? image.mimeType(iconInfo.type) : 'application/octet-stream';
+	let blob = new Blob([data], { type: mimeType });
+	return URL.createObjectURL(blob);
+}
+
+/** An IconProvider implementation which fetches icons
+  * from a SiteInfoProvider and caches the results
+  * in a local store (eg. an IndexedDB store) for
+  * future use.
+  */
 export class BasicIconProvider implements IconProvider {
+	// cache of item URL -> item icon metadata
 	private tempCache: Map<string, Icon>;
+
+	// persistent cache of item URL -> item icon
+	// image data
 	private diskCache: Cache;
+
 	private provider: site_info.SiteInfoProvider;
 	private iconSize: number;
+	private loadImage: ImageLoader;
 
-	private static LOADING_ICON = 'dist/icons/loading.png';
+	public static LOADING_ICON = 'dist/icons/loading.png';
 	private static DEFAULT_ICON = 'dist/icons/default.png';
 
 	updated: event_stream.EventStream<string>;
@@ -146,35 +176,28 @@ export class BasicIconProvider implements IconProvider {
 	  *                 the actual icon image may be larger or smaller than the preferred
 	  *                 size.
 	  */
-	constructor(cacheStore: key_value_store.ObjectStore, provider: site_info.SiteInfoProvider, iconSize: number) {
+	constructor(cacheStore: key_value_store.ObjectStore,
+		provider: site_info.SiteInfoProvider,
+		iconSize: number,
+		imageLoader?: ImageLoader) {
+
 		this.tempCache = new collectionutil.PMap<string, Icon>();
 		this.diskCache = new Cache(cacheStore);
 		this.provider = provider;
 		this.iconSize = iconSize;
 		this.updated = new event_stream.EventStream<string>();
+		this.loadImage = imageLoader;
+
+		if (!this.loadImage) {
+			this.loadImage = domImageLoader;
+		}
 
 		// increase the number of max listeners since we will have
 		// one listener for each visible icon
 		this.updated.maxListeners = 100;
 
-		this.provider.updated.listen((url) => {
-			var entry = this.provider.status(url);
-
-			if (entry.state == site_info.QueryState.Ready) {
-				this.updateCacheEntry(url, entry.info.icons);
-
-				if (entry.info.icons.length > 0) {
-					// cache icons for future use
-					this.diskCache.insert(url, {
-						icons: entry.info.icons
-					}).catch((err) => {
-						console.log('Caching icons for URL', url, 'failed', err.message);
-					});
-				}
-
-				// free icon data
-				this.provider.forget(url);
-			}
+		this.provider.updated.listen(url => {
+			this.queryProviderForIcon(url, false /* query only, do not start a lookup */);
 		});
 	}
 
@@ -218,15 +241,46 @@ export class BasicIconProvider implements IconProvider {
 				if (entry) {
 					this.updateCacheEntry(url, entry.icons);
 				} else {
-					this.provider.lookup(url);
+					this.queryProviderForIcon(url);
 				}
 			}).catch((err) => {
-				console.log('Disk cache lookup for', url, 'failed:', err, err.message, err.fileName, err.lineNumber);
-				this.provider.lookup(url);
+				this.queryProviderForIcon(url);
 			});
 
 			return icon;
 		}
+	}
+
+	// query icon provider for icon data for a URL and
+	// update the local caches if a result is available.
+	//
+	// 'lookup' specifies whether the icon provider should
+	// perform a (usually remote) lookup or just return
+	// the status of any lookups which have already been
+	// triggered
+	private queryProviderForIcon(url: string, lookup: boolean = true) {
+		let lookupResult: site_info.QueryResult;
+		if (lookup) {
+			lookupResult = this.provider.lookup(url);
+		} else {
+			lookupResult = this.provider.status(url);
+		}
+
+		if (lookupResult.info.icons.length > 0) {
+			// cache icons for future use
+			this.diskCache.insert(url, {
+				icons: lookupResult.info.icons
+			}).catch((err) => {
+				console.log('Caching icons for URL', url, 'failed', err.message);
+			});
+		}
+
+		if (lookupResult.state === site_info.QueryState.Ready) {
+			this.updateCacheEntry(url, lookupResult.info.icons);
+		}
+
+		// free icon data
+		this.provider.forget(url);
 	}
 
 	private updateCacheEntry(url: string, icons: site_info.Icon[]) {
@@ -287,13 +341,7 @@ export class BasicIconProvider implements IconProvider {
 			icon = iconsBySize[iconsBySize.length - 1];
 		}
 
-		var iconInfo = image.getInfo(icon.data);
-		var mimeType = iconInfo ? image.mimeType(iconInfo.type) : 'application/octet-stream';
-
-		var iconBlob = new Blob([icon.data], { type: mimeType });
-		var blobUrl = URL.createObjectURL(iconBlob);
-
-		return { url: blobUrl, icon: icon };
+		return { url: this.loadImage(icon.data), icon: icon };
 	}
 
 	// Returns a fallback URL to try if querying an item's URL does
@@ -391,6 +439,7 @@ export class IconControl extends typed_react.Component<IconControlProps, {}> {
 		if (this.iconUpdateListener && this.props.iconProvider) {
 			this.props.iconProvider.updated.ignore(this.iconUpdateListener);
 		}
+		this.iconUpdateListener = null;
 	}
 
 	componentWillReceiveProps(nextProps: IconControlProps) {
@@ -399,7 +448,6 @@ export class IconControl extends typed_react.Component<IconControlProps, {}> {
 
 	render() {
 		var icon = this.props.iconProvider.query(this.props.location);
-
 		var imgStyles: any[] = [theme.icon];
 		if (icon.width < 48) {
 			// make image rounded if it doesn't fill the container.

@@ -46,6 +46,9 @@
     },
     "jsdom/jsdom.d.ts": {
       "commit": "40eea5dc8f672e511abed203b2bb087026beec60"
+    },
+    "es6-promise/es6-promise.d.ts": {
+      "commit": "a61199a4684d70334795302f09fb2a6b8ca016db"
     }
   }
 }
