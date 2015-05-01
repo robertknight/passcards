@@ -13,7 +13,7 @@ export class BaseError implements Error {
 	private err: Error;
 
 	get name() {
-		return this.name;
+		return this.err.name;
 	}
 
 	set name(name: string) {
