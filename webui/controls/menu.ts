@@ -132,7 +132,7 @@ function measureText(document: Document, text: string, font: string) {
 		menuCanvas.style.display = 'none';
 		document.body.appendChild(menuCanvas);
 	}
-	var context = menuCanvas.getContext('2d');
+	var context = <CanvasRenderingContext2D>menuCanvas.getContext('2d');
 	context.font = font;
 	return context.measureText(text).width;
 }

@@ -29,6 +29,7 @@
     "es6-collections": "^0.3.4",
     "es6-shim": "^0.18.0",
     "fastclick": "^1.0.6",
+    "jsdom": "^5.4.2",
     "mkdirp": ">=0.4.0",
     "node-uuid": "^1.4.2",
     "paralleljs": ">=0.2.1",
@@ -41,7 +42,7 @@
     "through2": "^0.6.3",
     "ts-style": "^0.6.0",
     "typed-react": "^3.4.1",
-    "typescript": "^1.5.0-alpha",
+    "typescript": "^1.5.0-beta",
     "underscore": "^1.8.2",
     "urlrouter": ">=0.5.4"
   },

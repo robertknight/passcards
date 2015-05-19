@@ -1,3 +1,5 @@
+/// <reference path="../../typings/es6-collections.d.ts" />
+
 import Q = require('q');
 
 interface BiDiMapEntry<T1, T2> {

@@ -79,7 +79,7 @@ export interface MessagePort<Call, Reply> {
   * messages to/from other windows.
   */
 export interface WindowMessageInterface {
-	addEventListener(event: string, handler: Function): void;
+	addEventListener(event: string, handler: EventListenerOrEventListenerObject): void;
 	addEventListener(event: 'message', handler: (ev: MessageEvent) => any): void;
 	postMessage(message: any, targetOrigin: string): void;
 }

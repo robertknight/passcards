@@ -41,8 +41,8 @@ detectors.push((data) => {
 	}
 
 	var dataView = new DataView(data.buffer, data.byteOffset);
-	var width = dataView.getUint32(headerStart + 8);
-	var height = dataView.getUint32(headerStart + 12);
+	var width = dataView.getUint32(headerStart + 8, false /* littleEndian */);
+	var height = dataView.getUint32(headerStart + 12, false /* littleEndian */);
 
 	return {
 		type: ImageType.Png,
@@ -68,7 +68,7 @@ detectors.push((data) => {
 		}
 
 		var segmentType = segmentInfo.getUint8(segmentStart + 1);
-		var segmentLength = segmentInfo.getUint16(segmentStart + 2);
+		var segmentLength = segmentInfo.getUint16(segmentStart + 2, false /* littleEndian */);
 
 		var isStartOfFrame = segmentType >= 0xC0 && segmentType <= 0xCF &&
 			segmentType != 0xC4 && segmentType != 0xC8 && segmentType != 0xCC;
@@ -83,8 +83,8 @@ detectors.push((data) => {
 		// - Data Precision (1)
 		// - Image Height (2)
 		// - Image Width (2)
-		var width = segmentInfo.getUint16(segmentStart + 5);
-		var height = segmentInfo.getUint16(segmentStart + 7);
+		var width = segmentInfo.getUint16(segmentStart + 5, false /* littleEndian */);
+		var height = segmentInfo.getUint16(segmentStart + 7, false /* littleEndian */);
 
 		return {
 			type: ImageType.Jpeg,

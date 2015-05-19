@@ -126,7 +126,7 @@ export class App {
 				syncer.syncKeys().then(() => {
 					console.log('Encryption keys synced')
 				}).catch((err) => {
-					console.log('Failed to sync encryption keys: %s', err);
+					this.activeAppView.showError(err);
 				});
 
 				store.onUnlock.listen(() => {

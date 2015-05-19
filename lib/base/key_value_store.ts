@@ -111,7 +111,7 @@ export class IndexedDBDatabase implements Database {
 		};
 		req.onerror = (e) => {
 			var err = new err_util.BaseError('Failed to open IndexedDB database');
-			err.sourceErr = e.error;
+			err.sourceErr = (<ErrorEvent>e).error;
 			_db.reject(err);
 		};
 		this.database = _db.promise;

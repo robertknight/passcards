@@ -15,41 +15,6 @@ declare var IDBKeyRange: {
     upperBound(bound: any, open?: boolean): IDBKeyRange;
 }
 
-// [TS/1.0]
-interface ClipboardEvent extends Event {
-	clipboardData: DataTransfer;
-}
-
-declare var ClipboardEvent: {
-	new(type: string, args: {
-		dataType: string;
-		data: string;
-	}) : ClipboardEvent;
-}
-
-// [TS/1.0]
-// https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent
-interface Touch {
-	pageX: number;
-	pageY: number;
-}
-
-interface TouchList {
-	length: number;
-	[index: number] : Touch;
-}
-
-interface TouchEvent extends Event {
-	touches: TouchList
-}
-
-// [TS/1.0]
-interface Window {
-	// Unprefixed crypto property for browsers other than IE
-	// available via msCrypto in IE 11
-	crypto: Crypto;
-}
-
 // [TS/1.1]
 interface Error {
 	stack?: Object

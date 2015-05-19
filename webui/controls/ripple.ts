@@ -160,7 +160,7 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 		this.updateCanvasSize();
 
 		this.anim = {
-			context: canvas.getContext('2d')
+			context: <CanvasRenderingContext2D>canvas.getContext('2d')
 		};
 		this.setState({
 			active: true,

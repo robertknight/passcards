@@ -8,7 +8,7 @@ export function randomBytes(length: number): string {
 	if (env.isBrowser()) {
 		// Web Crypto is prefixed in IE 11
 		// see http://msdn.microsoft.com/en-gb/library/ie/dn302339%28v=vs.85%29.aspx
-		var browserCrypto = window.crypto || window.msCrypto;
+		var browserCrypto = window.crypto || (<any>window).msCrypto;
 		if (browserCrypto && browserCrypto.getRandomValues) {
 			var buffer = new Uint8Array(length);
 			browserCrypto.getRandomValues(buffer);
