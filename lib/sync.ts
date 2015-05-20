@@ -107,8 +107,15 @@ export class CloudStoreSyncer implements Syncer {
 	}
 
 	syncKeys(): Q.Promise<void> {
-		var keys = this.cloudStore.listKeys();
-		var hint = this.cloudStore.passwordHint();
+		let keys = this.cloudStore.listKeys();
+
+		// sync the password hint on a best-effort basis.
+		// If no hint is available, display a placeholder instead.
+		let hint = this.cloudStore.passwordHint().then(hint => {
+			return hint;
+		}).catch(err => {
+			return '';
+		});
 
 		return Q.all([keys, hint]).then((keysAndHint) => {
 			var keys = <key_agent.Key[]>keysAndHint[0];

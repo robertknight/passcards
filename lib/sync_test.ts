@@ -12,6 +12,7 @@ import onepass = require('./agile_keychain');
 import sync = require('./sync');
 import temp_store = require('./temp_store');
 import testLib = require('./test');
+import vfs = require('./vfs/vfs');
 import vfs_node = require('./vfs/node');
 import vfs_util = require('./vfs/util');
 
@@ -19,6 +20,7 @@ interface Env {
 	store: temp_store.Store;
 	syncer: sync.Syncer;
 	vault: onepass.Vault;
+	fs: vfs.VFS;
 }
 
 function setup(): Q.Promise<Env> {
@@ -42,7 +44,8 @@ function setup(): Q.Promise<Env> {
 		return {
 			store: store,
 			syncer: syncer,
-			vault: vault
+			vault: vault,
+			fs: fs
 		};
 	});
 }
@@ -84,6 +87,24 @@ testLib.addAsyncTest('sync vault keys and password hint', (assert) => {
 
 		assert.equal(keys.length, 1);
 		assert.equal(hint, 'testhint');
+	});
+});
+
+testLib.addAsyncTest('sync keys without hint', assert => {
+	let env: Env;
+	return setup().then(_env => {
+		env = _env;
+
+		// verify that syncing keys succeeds if the password
+		// hint is not available
+		return env.fs.rm(`${_env.vault.vaultPath() }/data/default/.password.hint`);
+	}).then(() => {
+		return env.syncer.syncKeys();
+	}).then(() => {
+		return Q.all([env.store.listKeys(), env.store.passwordHint()]);
+	}).then((keysAndHint: [key_agent.Key[], string]) => {
+		assert.equal(keysAndHint[0].length, 1);
+		assert.equal(keysAndHint[1], '');
 	});
 });
 
