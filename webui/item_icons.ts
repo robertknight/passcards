@@ -271,7 +271,7 @@ export class BasicIconProvider implements IconProvider {
 			this.diskCache.insert(url, {
 				icons: lookupResult.info.icons
 			}).catch((err) => {
-				console.log('Caching icons for URL', url, 'failed', err.message);
+				console.warn('Caching icons for URL', url, 'failed', err.message);
 			});
 		}
 

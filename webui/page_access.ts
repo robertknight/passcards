@@ -46,7 +46,7 @@ export interface PageAccess {
 	oauthRedirectUrl(): string;
 
 	/** Fetch a list of auto-fillable fields on the current page. */
-	findForms(callback: (formList: forms.FieldGroup[]) => void): void;
+	findForms(): Q.Promise<forms.FieldGroup[]>;
 
 	/** Auto-fill fields on the current page.
 	  * Returns a promise for the number of fields that were auto-filled.
@@ -129,14 +129,10 @@ export class ExtensionPageAccess implements PageAccess, ClipboardAccess {
 		});
 	}
 
-	findForms(callback: (fieldList: forms.FieldGroup[]) => void) {
-		this.rpc.call('find-fields', [], (err: any, fieldList: forms.FieldGroup[]) => {
-			if (err) {
-				callback([]);
-				return;
-			}
-			callback(fieldList);
-		});
+	findForms() {
+		let fieldGroups = Q.defer<forms.FieldGroup[]>();
+		this.rpc.call('find-fields', [], fieldGroups.makeNodeResolver());
+		return fieldGroups.promise;
 	}
 
 	oauthRedirectUrl() {
@@ -234,17 +230,14 @@ export class ChromeExtensionPageAccess implements PageAccess, ClipboardAccess {
 		return null;
 	}
 
-	findForms(callback: (formList: forms.FieldGroup[]) => void): void {
+	findForms(): Q.Promise<forms.FieldGroup[]> {
+		let result = Q.defer<forms.FieldGroup[]>();
 		this.connectToCurrentTab().then((rpc) => {
-			rpc.call('find-fields', [], (err: any, forms: forms.FieldGroup[]) => {
-				if (err) {
-					console.log('Error listing form fields:', err);
-					callback([]);
-					return;
-				}
-				callback(forms);
-			});
+			rpc.call('find-fields', [], result.makeNodeResolver());
+		}).catch(err => {
+			result.reject(err);
 		});
+		return result.promise;
 	}
 
 	autofill(fields: forms.AutoFillEntry[]): Q.Promise<number> {

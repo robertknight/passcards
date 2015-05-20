@@ -135,11 +135,10 @@ export class App {
 
 				this.itemStore.update({ store: store, syncer: syncer });
 			} catch (err) {
-				console.log('vault setup failed', err, err.stack);
+				this.activeAppView.showError(err, 'Vault setup failed');
 			}
 		}).catch((err) => {
-			this.activeAppView.showError(err);
-			console.log('Failed to setup vault', err.toString());
+			this.activeAppView.showError(err, 'Dropbox login failed');
 		});
 	}
 

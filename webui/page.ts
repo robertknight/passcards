@@ -98,7 +98,7 @@ function collectFieldsInDocument(document: Document): InputField[] {
 				fields = fields.concat(documentFields);
 			}
 		} catch (ex) {
-			console.log('Unable to collect fields from iframe:', ex);
+			console.error('Unable to collect fields from iframe:', ex);
 		}
 	}
 

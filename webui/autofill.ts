@@ -37,84 +37,86 @@ export class AutoFiller {
 	autofill(item: item_store.Item): Q.Promise<AutoFillResult> {
 		var result = Q.defer<AutoFillResult>();
 		var usernameKeys = ['email', 'user', 'account'];
+		let content: item_store.ItemContent;
 
-		item.getContent().then((content) => {
-			this.page.findForms((formList) => {
-				var autofillEntries: forms.AutoFillEntry[] = [];
+		item.getContent().then(itemContent => {
+			content = itemContent;
+			return this.page.findForms();
+		}).then(formList => {
+			var autofillEntries: forms.AutoFillEntry[] = [];
 
-				formList.forEach((form) => {
-					var foundPasswordField = false;
-					var foundUsernameField = false;
+			formList.forEach((form) => {
+				var foundPasswordField = false;
+				var foundUsernameField = false;
 
-					form.fields.forEach((field) => {
-						if (!field.visible) {
-							return;
-						}
+				form.fields.forEach((field) => {
+					if (!field.visible) {
+						return;
+					}
 
-						var isUsernameField = false;
-						var isPasswordField = false;
+					var isUsernameField = false;
+					var isPasswordField = false;
 
-						if (this.fieldMatch(field, 'password') ||
-							field.type == forms.FieldType.Password) {
-							isPasswordField = true;
-						}
+					if (this.fieldMatch(field, 'password') ||
+						field.type == forms.FieldType.Password) {
+						isPasswordField = true;
+					}
 
-						if (!isPasswordField) {
-							usernameKeys.forEach((key) => {
-								if (this.fieldMatch(field, key) ||
-									field.type === forms.FieldType.Email) {
-									isUsernameField = true;
-								}
-							});
-						}
-
-						var autofillValue: string;
-						if (isUsernameField) {
-							autofillValue = content.account();
-							foundUsernameField = true;
-						} else if (isPasswordField) {
-							autofillValue = content.password();
-							foundPasswordField = true;
-						}
-
-						if (autofillValue) {
-							var entry: forms.AutoFillEntry = {
-								key: field.key,
-								value: autofillValue
-							};
-							autofillEntries.push(entry);
-						}
-					});
-
-					// if a password field was found in the form
-					// but no corresponding username field was found,
-					// pick the most likely candidate for a username
-					// field
-					if (foundPasswordField && !foundUsernameField) {
-						form.fields.forEach((field) => {
-							if (foundUsernameField || !field.visible) {
-								return;
-							}
-							if (field.type === forms.FieldType.Text ||
+					if (!isPasswordField) {
+						usernameKeys.forEach((key) => {
+							if (this.fieldMatch(field, key) ||
 								field.type === forms.FieldType.Email) {
-
-								foundUsernameField = true;
-								autofillEntries.push({
-									key: field.key,
-									value: content.account()
-								});
+								isUsernameField = true;
 							}
 						});
 					}
+
+					var autofillValue: string;
+					if (isUsernameField) {
+						autofillValue = content.account();
+						foundUsernameField = true;
+					} else if (isPasswordField) {
+						autofillValue = content.password();
+						foundPasswordField = true;
+					}
+
+					if (autofillValue) {
+						var entry: forms.AutoFillEntry = {
+							key: field.key,
+							value: autofillValue
+						};
+						autofillEntries.push(entry);
+					}
 				});
 
-				this.page.autofill(autofillEntries).then((count) => {
-					result.resolve({
-						count: count
+				// if a password field was found in the form
+				// but no corresponding username field was found,
+				// pick the most likely candidate for a username
+				// field
+				if (foundPasswordField && !foundUsernameField) {
+					form.fields.forEach((field) => {
+						if (foundUsernameField || !field.visible) {
+							return;
+						}
+						if (field.type === forms.FieldType.Text ||
+							field.type === forms.FieldType.Email) {
+
+							foundUsernameField = true;
+							autofillEntries.push({
+								key: field.key,
+								value: content.account()
+							});
+						}
 					});
-				}).catch((err) => {
-					result.reject(err);
+				}
+			});
+
+			this.page.autofill(autofillEntries).then((count) => {
+				result.resolve({
+					count: count
 				});
+			}).catch((err) => {
+				result.reject(err);
 			});
 		}).catch((err) => {
 			result.reject(err);

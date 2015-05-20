@@ -31,10 +31,12 @@ class FakePageAccess implements page_access.PageAccess {
 		return '';
 	}
 
-	findForms(callback: (formList: forms.FieldGroup[]) => void): void {
+	findForms() {
+		let result = Q.defer<forms.FieldGroup[]>();
 		setTimeout(() => {
-			callback(this.formList);
-		}, 0);
+			result.resolve(this.formList);
+		});
+		return result.promise;
 	}
 
 	autofill(fields: forms.AutoFillEntry[]): Q.Promise<number> {

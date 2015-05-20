@@ -80,10 +80,16 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 		this.props.itemStore.stateChanged.ignoreContext(this);
 	}
 
-	private showError(error: Error) {
+	private showError(error: Error, context?: string) {
 		assert(error.message);
 
-		var status = new status_message.Status(status_message.StatusType.Error, error.message);
+		let message = context || '';
+		if (message) {
+			message += ': ';
+		}
+		message += error.message;
+
+		var status = new status_message.Status(status_message.StatusType.Error, message);
 		this.showStatus(status);
 		console.log('App error:', error.message, error.stack);
 	}
