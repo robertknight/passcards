@@ -522,6 +522,10 @@ export class Vault implements item_store.Store {
 		return Path.join(this.dataFolderPath(), 'contents.js');
 	}
 
+	listItemStates(): Q.Promise<item_store.ItemState[]> {
+		return item_store.itemStates(this);
+	}
+
 	/** Returns a list of overview data for all items in the vault,
 	  * except tombstone markers for deleted items.
 	  *

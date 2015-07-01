@@ -157,6 +157,10 @@ export class Store implements item_store.SyncableStore {
 		});
 	}
 
+	listItemStates(): Q.Promise<item_store.ItemState[]> {
+		return item_store.itemStates(this);
+	}
+
 	listItems(opts: item_store.ListItemsOptions = {}): Q.Promise<item_store.Item[]> {
 		return this.itemIndex.get().then((overviewMap) => {
 			var items: item_store.Item[] = [];
@@ -241,12 +245,13 @@ export class Store implements item_store.SyncableStore {
 	loadItem(uuid: string, revision?: string): Q.Promise<item_store.ItemAndContent> {
 		if (revision) {
 			return Q.all([this.overviewKey(), this.itemStore.get<string>('revisions/' + revision)])
-			.then((keyAndRevision) => {
+			.then(keyAndRevision => {
 				var key = <string>keyAndRevision[0];
 				var revisionData = <string>keyAndRevision[1];
 				return this.decrypt<ItemRevision>(key, revisionData);
-			}).then((revision) => {
+			}).then(revision => {
 				var item = this.itemFromOverview(uuid, revision.overview);
+				assert.equal(item.revision, revision.overview.revision);
 				item.parentRevision = revision.parentRevision;
 				return {
 					item: item,
@@ -254,18 +259,12 @@ export class Store implements item_store.SyncableStore {
 				};
 			});
 		} else {
-			// FIXME - Avoid listing the entire vault when loading
-			// a single item
-			return this.listItems().then((items) => {
-				for (let item of items) {
-					if (item.uuid == uuid) {
-						if (!item.revision) {
-							return Q.reject<item_store.ItemAndContent>(new Error(`Item revision missing for ${uuid}`));
-						}
-						return this.loadItem(uuid, item.revision);
-					}
+			return this.itemIndex.get().then(overviewMap => {
+				if (uuid in overviewMap) {
+					return this.loadItem(uuid, overviewMap[uuid].revision);
+				} else {
+					throw new Error('No such item ' + uuid);
 				}
-				return Q.reject<item_store.ItemAndContent>(new Error('No such item ' + uuid));
 			});
 		}
 	}
@@ -358,8 +357,8 @@ export class Store implements item_store.SyncableStore {
 		return this.keyStore.get<string>('hint');
 	}
 
-	getLastSyncedRevision(item: item_store.Item) {
-		return this.itemStore.get<LastSyncEntry>('lastSynced/' + item.uuid)
+	getLastSyncedRevision(uuid: string) {
+		return this.itemStore.get<LastSyncEntry>('lastSynced/' + uuid)
 		.then((entry) => {
 			if (entry) {
 				return entry.revision;

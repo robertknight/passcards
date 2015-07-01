@@ -53,6 +53,10 @@ export class Store implements item_store.SyncableStore {
 		return Q<void>(null);
 	}
 
+	listItemStates(): Q.Promise<item_store.ItemState[]> {
+		return item_store.itemStates(this);
+	}
+
 	listItems(opts: item_store.ListItemsOptions = {}) {
 		let matches = this.items.filter(item => {
 			if (!opts.includeTombstones && item.isTombstone()) {
@@ -83,10 +87,11 @@ export class Store implements item_store.SyncableStore {
 				item.updateOverviewFromContent(content);
 				item.revision = item_store.generateRevisionId({ item: item, content: content });
 				item.parentRevision = prevRevision;
-				var itemRevision = item_store.cloneItem({
+				let itemRevision = item_store.cloneItem({
 					item: item,
 					content: content
 				}, item.uuid, this);
+				itemRevision.item.revision = item.revision;
 
 				this.content.set(item.revision, {
 					item: itemRevision.item,
@@ -143,8 +148,8 @@ export class Store implements item_store.SyncableStore {
 		return Q(this.hint);
 	}
 
-	getLastSyncedRevision(item: item_store.Item): Q.Promise<string> {
-		return Q(this.lastSyncedRevisions.get(item.uuid));
+	getLastSyncedRevision(uuid: string): Q.Promise<string> {
+		return Q(this.lastSyncedRevisions.get(uuid));
 	}
 
 	setLastSyncedRevision(item: item_store.Item, revision: string) {

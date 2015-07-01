@@ -147,7 +147,7 @@ export var ITEM_TYPES: ItemTypeMap = {
 
 export interface ItemState {
 	uuid: string;
-	updatedAt: number;
+	updatedAt: Date;
 	deleted: boolean;
 }
 
@@ -584,6 +584,11 @@ export interface Store {
 	/** Unlock the vault */
 	unlock(password: string): Q.Promise<void>;
 
+	/** List the states (ID, last update time and whether deleted)
+	  * of all items in the store.
+	  */
+	listItemStates(): Q.Promise<ItemState[]>;
+
 	/** List all of the items in the store */
 	listItems(opts?: ListItemsOptions): Q.Promise<Item[]>;
 
@@ -597,6 +602,8 @@ export interface Store {
 	  * back to the store. The @p source specifies whether
 	  * this update is a result of syncing changes
 	  * with another store or a local modification.
+	  *
+	  * Saving an item assigns a new revision to it.
 	  */
 	saveItem(item: Item, source?: ChangeSource): Q.Promise<void>;
 
@@ -626,7 +633,7 @@ export interface Store {
 
 export interface SyncableStore extends Store {
 	/** Returns the last-synced revision of an item. */
-	getLastSyncedRevision(item: Item): Q.Promise<string>;
+	getLastSyncedRevision(uuid: string): Q.Promise<string>;
 	setLastSyncedRevision(item: Item, revision: string): Q.Promise<void>;
 
 	/** Retrieve a map of (item ID -> last-sync timestamp) for
@@ -637,6 +644,9 @@ export interface SyncableStore extends Store {
 
 /** Copy an item and its contents, using @p uuid as the ID for
   * the new item. If new item is associated with @p store.
+  *
+  * The returned item will have {itemAndContent.item.revision} as
+  * its parentRevision and a null revision property.
   */
 export function cloneItem(itemAndContent: ItemAndContent, uuid: string, store?: Store) {
 	let item = itemAndContent.item;
@@ -690,5 +700,13 @@ export function generateRevisionId(item: ItemAndContent) {
 	var digest = new Int32Array(5);
 	hasher.hash(srcBuf, digest);
 	return collectionutil.hexlify(digest);
+}
+
+export function itemStates(store: Store): Q.Promise<ItemState[]> {
+	return store.listItems({ includeTombstones: true }).then(items => items.map(item => ({
+		uuid: item.uuid,
+		updatedAt: item.updatedAt,
+		deleted: item.isTombstone()
+	})));
 }
 

@@ -317,12 +317,12 @@ testLib.addAsyncTest('get/set last sync data', (assert) => {
 		return item.saveTo(store);
 	}).then(() => {
 		assert.notEqual(item.revision, null);
-		return store.getLastSyncedRevision(item);
+		return store.getLastSyncedRevision(item.uuid);
 	}).then((revision) => {
 		assert.equal(revision, null);
 		return store.setLastSyncedRevision(item, item.revision);
 	}).then(() => {
-		return store.getLastSyncedRevision(item);
+		return store.getLastSyncedRevision(item.uuid);
 	}).then((revision) => {
 		assert.equal(revision, item.revision);
 		return store.lastSyncTimestamps();
@@ -377,6 +377,40 @@ testLib.addAsyncTest('updating keys replaces existing keys', (assert) => {
 		return store.listKeys();
 	}).then((keys) => {
 		assert.equal(keys.length, 1);
+	});
+});
+
+interface StoreWithItem {
+	store: item_store.Store;
+	item: item_store.Item;
+}
+
+function createStoreWithItem() {
+	let env = setupEnv();
+	let store = new local_store.Store(env.database, env.databaseName, env.keyAgent);
+	let item = makeItem();
+
+	return store.saveKeys([env.masterKey], '').then(() => {
+		return store.unlock(env.masterPass);
+	}).then(() => {
+		return item.saveTo(store);
+	}).then(() => ({
+		store: store,
+		item: item
+	}));
+}
+
+testLib.addAsyncTest('list item states', assert => {
+	var storeAndItem: StoreWithItem;
+	return createStoreWithItem().then(storeAndItem_ => {
+		storeAndItem = storeAndItem_;
+		return storeAndItem.store.listItemStates();
+	}).then(items => {
+		assert.deepEqual(items, [{
+			uuid: storeAndItem.item.uuid,
+			updatedAt: storeAndItem.item.updatedAt,
+			deleted: false
+		}]);
 	});
 });
 

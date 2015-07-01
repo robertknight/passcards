@@ -1,12 +1,15 @@
-import assert = require('assert');
-
 // Function extensions from ES6
 interface ES6Function extends Function {
 	// Implemented by all browsers except IE
 	name: string;
 }
 
-/** Base class for custom errors */
+/** Base class for custom errors.
+  *
+  * This provides a concrete implementation of the Error
+  * interface and also provides support for wrapping
+  * errors with additional context information.
+  */
 export class BaseError implements Error {
 	/** When wrapping one error with another,
 	  * this is used to store the original error.
@@ -23,7 +26,11 @@ export class BaseError implements Error {
 	}
 
 	get stack() {
-		return this.err.stack;
+		var stack = this.err.stack;
+		if (this.sourceErr) {
+			stack += `\n\ncaused by: ${this.sourceErr.stack}`;
+		}
+		return stack;
 	}
 
 	get message() {
@@ -34,9 +41,10 @@ export class BaseError implements Error {
 		this.err.message = message;
 	}
 
-	constructor(message: string) {
+	constructor(message: string, sourceErr?: Error) {
 		this.err = new Error(message);
 		this.name = (<ES6Function>this.constructor).name;
+		this.sourceErr = sourceErr;
 	}
 
 	toString() {
@@ -49,6 +57,21 @@ export class BaseError implements Error {
 export class ApiError extends BaseError {
 	constructor(public url: string, public status: number, public message: string) {
 		super(message);
+	}
+}
+
+/** Returns true if the string @p message appears in @p err's message
+  * or any of the messages in the source error chain for @p err,
+  * if @p err is an instance of BaseError.
+  */
+export function hasCause(err: Error, message: string): boolean {
+	let baseErr = <BaseError>err;
+	if (err.message.indexOf(message) !== -1) {
+		return true;
+	} else if (err instanceof BaseError && baseErr.sourceErr) {
+		return hasCause(baseErr.sourceErr, message);
+	} else {
+		return false;
 	}
 }
 

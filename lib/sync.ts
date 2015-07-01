@@ -6,10 +6,17 @@ import Q = require('q');
 
 import collectionutil = require('./base/collectionutil');
 import dateutil = require('./base/dateutil');
+import err_util = require('./base/err_util');
 import event_stream = require('./base/event_stream');
 import item_merge = require('./item_merge');
 import item_store = require('./item_store');
 import key_agent = require('./key_agent');
+
+export class SyncError extends err_util.BaseError {
+	constructor(message: string, sourceErr?: Error) {
+		super(message, sourceErr);
+	}
+}
 
 function syncLog(...args: any[]) {
 	//	console.log.apply(console, args);
@@ -57,8 +64,8 @@ export interface SyncProgress {
 }
 
 interface SyncItem {
-	localItem: item_store.Item;
-	remoteItem: item_store.Item;
+	localItem: item_store.ItemState;
+	remoteItem: item_store.ItemState;
 }
 
 /** Interface for syncing encryption keys and items between
@@ -162,14 +169,13 @@ export class CloudStoreSyncer implements Syncer {
 		}, 'sync-progress');
 		this.onProgress.publish(this.syncProgress);
 
-		var listOpts = { includeTombstones: true };
-		var localItems = this.localStore.listItems(listOpts);
-		var remoteItems = this.cloudStore.listItems(listOpts);
+		var localItems = this.localStore.listItemStates();
+		var remoteItems = this.cloudStore.listItemStates();
 		var lastSyncTimes = this.localStore.lastSyncTimestamps();
 
 		Q.all([localItems, remoteItems, lastSyncTimes]).then((itemLists) => {
-			var localItems = <item_store.Item[]>itemLists[0];
-			var remoteItems = <item_store.Item[]>itemLists[1];
+			var localItems = <item_store.ItemState[]>itemLists[0];
+			var remoteItems = <item_store.ItemState[]>itemLists[1];
 			var lastSyncTimes = <Map<string, Date>>(itemLists[2]);
 
 			syncLog('%d items in local store, %d in remote store', localItems.length, remoteItems.length);
@@ -239,7 +245,9 @@ export class CloudStoreSyncer implements Syncer {
 		}
 	}
 
-	private syncItem(localItem: item_store.Item, remoteItem: item_store.Item) {
+	private syncItem(localItem: item_store.ItemState, remoteItem: item_store.ItemState) {
+		assert(localItem || remoteItem, 'either local or remote source item missing');
+
 		++this.syncProgress.active;
 
 		var itemDone = (err?: Error) => {
@@ -259,23 +267,19 @@ export class CloudStoreSyncer implements Syncer {
 		var lastSyncedItemContent: Q.Promise<item_store.ItemAndContent>;
 
 		if (localItem) {
-			localItemContent = localItem.getContent().then((content) => {
-				return { item: localItem, content: content };
-			});
-			lastSyncedItemContent = this.getLastSyncedItemRevision(localItem);
+			localItemContent = this.localStore.loadItem(localItem.uuid);
+			lastSyncedItemContent = this.getLastSyncedItemRevision(localItem.uuid);
 		}
 
 		if (remoteItem) {
-			// load the full item overview data from the remote store.
-			// When the remote store is an Agile Keychain-format store,
-			// ItemStore.listItems() only includes the core overview metadata
-			// fields and not account data or non-primary locations.
 			remoteItemContent = this.cloudStore.loadItem(remoteItem.uuid);
 		}
 
 		var uuid = localItem ? localItem.uuid : remoteItem.uuid;
 		var contents = Q.all([localItemContent, remoteItemContent, lastSyncedItemContent]);
-		contents.then((contents: any[]) => {
+		contents.then((contents: [item_store.ItemAndContent,
+			item_store.ItemAndContent,
+			item_store.ItemAndContent]) => {
 			// merge changes between local/remote store items and update the
 			// last-synced revision
 			this.mergeAndSyncItem(contents[0] /* local item */,
@@ -285,22 +289,22 @@ export class CloudStoreSyncer implements Syncer {
 				itemDone();
 			}).catch((err: Error) => {
 				syncLog('Syncing item %s failed:', uuid, err);
-				var itemErr = new Error(`Failed to save updates for item ${uuid}: ${err}`);
+				var itemErr = new SyncError(`Failed to save updates for item ${uuid}`, err);
 				itemDone(itemErr);
 			});
-		}).catch((err) => {
+		}).catch(err => {
 			syncLog('Retrieving updates for %s failed:', uuid, err);
-			var itemErr = new Error(`Failed to retrieve updated item ${uuid}: ${err}`);
+			var itemErr = new SyncError(`Failed to retrieve updated item ${uuid}`, err);
 			itemDone(itemErr);
 		});
 	}
 
 	// returns the item and content for the last-synced version of an item,
 	// or null if the item has not been synced before
-	private getLastSyncedItemRevision(item: item_store.Item): Q.Promise<item_store.ItemAndContent> {
-		return this.localStore.getLastSyncedRevision(item).then(revision => {
+	private getLastSyncedItemRevision(uuid: string): Q.Promise<item_store.ItemAndContent> {
+		return this.localStore.getLastSyncedRevision(uuid).then(revision => {
 			if (revision) {
-				return this.localStore.loadItem(item.uuid, revision);
+				return this.localStore.loadItem(uuid, revision);
 			} else {
 				return null;
 			}
@@ -317,6 +321,8 @@ export class CloudStoreSyncer implements Syncer {
 		remoteItem: item_store.ItemAndContent,
 		lastSynced: item_store.ItemAndContent) {
 
+		assert(localItem || remoteItem, 'neither local nor remote item specified');
+
 		var updatedStoreItem: item_store.Item;
 		var saved: Q.Promise<void>;
 
@@ -326,6 +332,7 @@ export class CloudStoreSyncer implements Syncer {
 		var clonedItem: item_store.Item;
 
 		if (!remoteItem) {
+			assert(localItem.item.revision, 'local item does not have a revision');
 			syncLog('syncing new item %s from local -> remote store', localItem.item.uuid);
 
 			// new item in local store
@@ -339,10 +346,12 @@ export class CloudStoreSyncer implements Syncer {
 			// new item in remote store
 			clonedItem = item_store.cloneItem(remoteItem, remoteItem.item.uuid).item;
 			saved = this.localStore.saveItem(clonedItem, item_store.ChangeSource.Sync).then(() => {
+				assert(clonedItem.revision, 'item cloned from remote store does not have a revision');
 				revision = clonedItem.revision;
 				updatedStoreItem = clonedItem;
 			});
 		} else if (itemUpdateTimesEqual(remoteItem.item.updatedAt, lastSynced.item.updatedAt)) {
+			assert('updated local item does not have a revision', localItem.item.revision);
 			syncLog('syncing updated item %s from local -> remote store', localItem.item.uuid);
 
 			// item updated in local store
@@ -356,6 +365,7 @@ export class CloudStoreSyncer implements Syncer {
 			// item updated in remote store
 			clonedItem = item_store.cloneItem(remoteItem, remoteItem.item.uuid).item;
 			saved = this.localStore.saveItem(clonedItem, item_store.ChangeSource.Sync).then(() => {
+				assert(clonedItem.revision, 'updated local item does not have a revision');
 				assert.notEqual(clonedItem.revision, localItem.item.revision);
 
 				revision = clonedItem.revision;
@@ -374,6 +384,7 @@ export class CloudStoreSyncer implements Syncer {
 				this.localStore.saveItem(mergedStoreItem.item, item_store.ChangeSource.Sync),
 				this.cloudStore.saveItem(mergedRemoteItem.item, item_store.ChangeSource.Sync)
 			]).then(() => {
+				assert(mergedStoreItem.item.revision, 'merged local item does not have a revision');
 				assert.notEqual(mergedStoreItem.item.revision, localItem.item.revision);
 
 				revision = mergedStoreItem.item.revision;

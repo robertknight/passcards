@@ -22,7 +22,6 @@ import argparse = require('argparse');
 import colors = require('colors');
 import fs = require('fs');
 import path = require('path');
-import semver = require('semver');
 import underscore = require('underscore');
 import xdiff = require('xdiff');
 var qunit = require('qunitjs');

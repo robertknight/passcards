@@ -5,12 +5,11 @@
 import clone = require('clone');
 import Q = require('q');
 
+import agile_keychain = require('./agile_keychain');
 import agile_keychain_crypto = require('./agile_keychain_crypto');
-import asyncutil = require('./base/asyncutil');
 import item_builder = require('./item_builder');
 import item_store = require('./item_store');
 import key_agent = require('./key_agent');
-import agile_keychain = require('./agile_keychain');
 import sync = require('./sync');
 import temp_store = require('./temp_store');
 import testLib = require('./test');
