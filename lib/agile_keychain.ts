@@ -407,11 +407,18 @@ export class Vault implements item_store.Store {
 		return Path.join(this.path, 'data/default/' + uuid + '.1password')
 	}
 
-	loadItem(uuid: string): Q.Promise<item_store.Item> {
-		var content = this.fs.read(this.itemPath(uuid));
-		return content.then((content) => {
-			return fromAgileKeychainItem(this, JSON.parse(content));
-		});
+	loadItem(uuid: string): Q.Promise<item_store.ItemAndContent> {
+		var contentData = this.fs.read(this.itemPath(uuid));
+		var item: item_store.Item;
+		return contentData.then(contentJSON => {
+			return fromAgileKeychainItem(this, JSON.parse(contentJSON));
+		}).then(encryptedItem => {
+			item = encryptedItem;
+			return encryptedItem.getContent();
+		}).then(content => ({
+			item: item,
+			content: content
+		}));
 	}
 
 	saveItem(item: item_store.Item, source?: item_store.ChangeSource): Q.Promise<void> {

@@ -245,23 +245,21 @@ testLib.addAsyncTest('Save item', (assert) => {
 			return vault.loadItem(item.uuid);
 		}).then((loadedItem) => {
 			// check overview data matches
-			assert.equal(item.title, loadedItem.title);
+			assert.equal(item.title, loadedItem.item.title);
 
 			// check item content matches
-			loadedItem.getContent().then((loadedContent) => {
-				testLib.assertEqual(assert, content, loadedContent);
+			testLib.assertEqual(assert, content, loadedItem.content);
 
-				// check new item appears in vault list
-				vault.listItems().then((items) => {
-					// check that selected properties match
-					var comparedProps: any[] = ['title',
-						'uuid', 'trashed', 'faveIndex', 'typeName',
-						'location', 'updatedAt'];
+			// check new item appears in vault list
+			vault.listItems().then((items) => {
+				// check that selected properties match
+				var comparedProps: any[] = ['title',
+					'uuid', 'trashed', 'faveIndex', 'typeName',
+					'location', 'updatedAt'];
 
-					var actualOverview = underscore.find(items, (item) => { return item.uuid == loadedItem.uuid });
-					testLib.assertEqual(assert, actualOverview, item, comparedProps);
-					testLib.continueTests();
-				}).done();
+				var actualOverview = underscore.find(items, item => item.uuid == loadedItem.item.uuid);
+				testLib.assertEqual(assert, actualOverview, item, comparedProps);
+				testLib.continueTests();
 			}).done();
 		})
 		.done();
@@ -296,14 +294,12 @@ testLib.addAsyncTest('Update item', (assert) => {
 		// second on save.
 		var originalSaveDate = new Date(Date.now() - 2000);
 
-		var loadedItem: item_store.Item;
+		var loadedItem: item_store.ItemAndContent;
 		item.save().then(() => {
 			return vault.loadItem(item.uuid);
 		}).then((loadedItem_) => {
 			loadedItem = loadedItem_;
-			return loadedItem.getContent()
-		}).then((content) => {
-			var passwordField = underscore.find(content.formFields, (field) => {
+			var passwordField = underscore.find(loadedItem.content.formFields, (field) => {
 				return field.name == 'password';
 			});
 			assert.notEqual(passwordField, null);
@@ -311,39 +307,37 @@ testLib.addAsyncTest('Update item', (assert) => {
 			assert.equal(passwordField.type, item_store.FormFieldType.Password);
 			assert.equal(content.password(), 'original-password');
 
-			loadedItem.title = 'New Item Title';
-			loadedItem.faveIndex = 42;
-			content.urls[0].url = 'newsite.com';
-			loadedItem.trashed = true;
+			loadedItem.item.title = 'New Item Title';
+			loadedItem.item.faveIndex = 42;
+			loadedItem.content.urls[0].url = 'newsite.com';
+			loadedItem.item.trashed = true;
 
 			passwordField.value = 'new-password';
-			loadedItem.setContent(content);
+			loadedItem.item.setContent(loadedItem.content);
 
-			return loadedItem.save();
+			return loadedItem.item.save();
 		}).then(() => {
 			return vault.loadItem(item.uuid);
 		}).then((loadedItem_) => {
 			loadedItem = loadedItem_;
 
-			assert.equal(loadedItem.title, 'New Item Title');
-			assert.equal(loadedItem.faveIndex, 42);
-			assert.equal(loadedItem.trashed, true);
+			assert.equal(loadedItem.item.title, 'New Item Title');
+			assert.equal(loadedItem.item.faveIndex, 42);
+			assert.equal(loadedItem.item.trashed, true);
 
 			// check that Item.location property is updated
 			// to match URL list on save
-			assert.deepEqual(loadedItem.locations, ['newsite.com']);
+			assert.deepEqual(loadedItem.item.locations, ['newsite.com']);
 
 			// check that Item.updatedAt is updated on save
-			assert.ok(loadedItem.updatedAt > originalSaveDate);
+			assert.ok(loadedItem.item.updatedAt > originalSaveDate);
 
-			return loadedItem.getContent();
-		}).then((content) => {
-			var passwordField = underscore.find(content.formFields, (field) => {
+			var passwordField = underscore.find(loadedItem.content.formFields, (field) => {
 				return field.name == 'password';
 			});
 			assert.notEqual(passwordField, null);
 			assert.equal(passwordField.value, 'new-password');
-			assert.equal(content.password(), 'new-password');
+			assert.equal(loadedItem.content.password(), 'new-password');
 
 			testLib.continueTests();
 		})
@@ -356,12 +350,12 @@ testLib.addAsyncTest('Remove item', (assert) => {
 	createTestVault().then((vault) => {
 		var item: item_store.Item;
 		vault.loadItem('CA20BB325873446966ED1F4E641B5A36').then((item_) => {
-			item = item_;
+			item = item_.item;
 			assert.equal(item.title, 'Facebook');
 			assert.equal(item.typeName, item_store.ItemTypes.LOGIN);
 			assert.ok(item.isRegularItem());
-			return item.getContent();
-		}).then((content) => {
+
+			var content = item_.content;
 			testLib.assertEqual(assert, content.urls, [{ label: 'website', 'url': 'facebook.com' }]);
 			var passwordField = underscore.find(content.formFields, (field) => {
 				return field.designation == 'password';
@@ -378,16 +372,14 @@ testLib.addAsyncTest('Remove item', (assert) => {
 			assert.equal(item.typeName, item_store.ItemTypes.TOMBSTONE);
 			return vault.loadItem(item.uuid);
 		}).then((loadedItem) => {
-			assert.ok(loadedItem.isTombstone());
-			assert.equal(loadedItem.title, 'Unnamed');
-			assert.equal(loadedItem.typeName, item_store.ItemTypes.TOMBSTONE);
-			assert.equal(loadedItem.trashed, true);
-			assert.equal(loadedItem.faveIndex, null);
-			assert.equal(loadedItem.openContents, null);
+			assert.ok(loadedItem.item.isTombstone());
+			assert.equal(loadedItem.item.title, 'Unnamed');
+			assert.equal(loadedItem.item.typeName, item_store.ItemTypes.TOMBSTONE);
+			assert.equal(loadedItem.item.trashed, true);
+			assert.equal(loadedItem.item.faveIndex, null);
+			assert.equal(loadedItem.item.openContents, null);
 
-			return loadedItem.getContent();
-		}).then((content) => {
-			testLib.assertEqual(assert, content, new item_store.ItemContent());
+			testLib.assertEqual(assert, loadedItem.content, new item_store.ItemContent());
 			testLib.continueTests();
 		}).done();
 	});
@@ -515,7 +507,7 @@ testLib.addAsyncTest('Save existing item to new vault', (assert) => {
 		assert.equal(item.uuid.length, 32);
 		return vault.loadItem(item.uuid);
 	}).then((loadedItem) => {
-		assert.equal(item.title, loadedItem.title);
+		assert.equal(item.title, loadedItem.item.title);
 	});
 });
 

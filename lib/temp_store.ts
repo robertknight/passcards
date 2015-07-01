@@ -100,12 +100,12 @@ export class Store implements item_store.SyncableStore {
 			return item.uuid == uuid;
 		});
 		if (items.length == 0) {
-			return Q.reject<item_store.Item>(new Error('No such item'));
+			return Q.reject<item_store.ItemAndContent>(new Error('No such item'));
 		}
 		if (!revision) {
 			revision = items[0].revision;
 		}
-		return Q(this.content.get(revision).item);
+		return Q(this.content.get(revision));
 	}
 
 	getContent(item: item_store.Item) {

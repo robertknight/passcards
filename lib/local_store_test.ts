@@ -246,16 +246,16 @@ testLib.addAsyncTest('save and load item revisions', (assert) => {
 	}).then(() => {
 		assert.notEqual(item.revision, firstRevision);
 		return store.loadItem(item.uuid, firstRevision);
-	}).then((firstItemRevision) => {
-		assert.equal(firstItemRevision.parentRevision, null);
-		assert.equal(firstItemRevision.revision, firstRevision);
-		assert.equal(firstItemRevision.title, 'Initial Title');
+	}).then(firstItemRevision => {
+		assert.equal(firstItemRevision.item.parentRevision, null);
+		assert.equal(firstItemRevision.item.revision, firstRevision);
+		assert.equal(firstItemRevision.item.title, 'Initial Title');
 		return store.loadItem(item.uuid, item.revision);
-	}).then((secondItemRevision) => {
-		secondRevision = secondItemRevision.revision;
-		assert.equal(secondItemRevision.parentRevision, firstRevision);
-		assert.equal(secondItemRevision.revision, item.revision);
-		assert.equal(secondItemRevision.title, 'Updated Title');
+	}).then(secondItemRevision => {
+		secondRevision = secondItemRevision.item.revision;
+		assert.equal(secondItemRevision.item.parentRevision, firstRevision);
+		assert.equal(secondItemRevision.item.revision, item.revision);
+		assert.equal(secondItemRevision.item.title, 'Updated Title');
 
 		item.trashed = true;
 		return item.saveTo(store);
@@ -264,7 +264,7 @@ testLib.addAsyncTest('save and load item revisions', (assert) => {
 		assert.equal(item.parentRevision, secondRevision);
 		assert.notEqual(item.revision, secondRevision);
 		return store.listItems();
-	}).then((items) => {
+	}).then(items => {
 		assert.equal(items.length, 1);
 		assert.equal(items[0].revision, thirdRevision);
 		assert.equal(items[0].parentRevision, secondRevision);

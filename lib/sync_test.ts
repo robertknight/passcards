@@ -228,22 +228,22 @@ testLib.addAsyncTest('merge store and vault item updates', (assert) => {
 		return env.syncer.syncItems();
 	}).then(() => {
 		return env.vault.loadItem(item.uuid);
-	}).then((vaultItem) => {
-		assert.equal(vaultItem.title, item.title);
-		assert.equal(item.trashed, vaultItem.trashed);
-		assert.ok(sync.itemUpdateTimesEqual(item.updatedAt, vaultItem.updatedAt));
+	}).then(vaultItem => {
+		assert.equal(vaultItem.item.title, item.title);
+		assert.equal(item.trashed, vaultItem.item.trashed);
+		assert.ok(sync.itemUpdateTimesEqual(item.updatedAt, vaultItem.item.updatedAt));
 
 		// update item in vault and store and save to both
-		vaultItem.trashed = true;
+		vaultItem.item.trashed = true;
 		item.title = 'acme.org - client update';
-		return Q.all([item.save(), vaultItem.save()]);
+		return Q.all([item.save(), vaultItem.item.save()]);
 	}).then(() => {
 		return env.syncer.syncItems();
 	}).then(() => {
 		return Q.all([env.store.loadItem(item.uuid), env.vault.loadItem(item.uuid)]);
 	}).then((items) => {
-		var storeItem = <item_store.Item>items[0];
-		var vaultItem = <item_store.Item>items[1];
+		var storeItem = <item_store.Item>items[0].item;
+		var vaultItem = <item_store.Item>items[1].item;
 		assert.equal(storeItem.title, vaultItem.title);
 		assert.equal(storeItem.trashed, vaultItem.trashed);
 		assert.ok(sync.itemUpdateTimesEqual(storeItem.updatedAt, vaultItem.updatedAt));

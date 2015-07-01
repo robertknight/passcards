@@ -145,6 +145,12 @@ export var ITEM_TYPES: ItemTypeMap = {
 	},
 };
 
+export interface ItemState {
+	uuid: string;
+	updatedAt: number;
+	deleted: boolean;
+}
+
 /** A convenience interface for passing around an item
   * and its contents together.
   */
@@ -585,7 +591,7 @@ export interface Store {
 	  * If a revision is specified, load a specific version of an item,
 	  * otherwise load the current version of the item.
 	  */
-	loadItem(uuid: string, revision?: string): Q.Promise<Item>;
+	loadItem(uuid: string, revision?: string): Q.Promise<ItemAndContent>;
 
 	/** Save changes to the overview data and item content
 	  * back to the store. The @p source specifies whether

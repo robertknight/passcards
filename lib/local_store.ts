@@ -238,7 +238,7 @@ export class Store implements item_store.SyncableStore {
 		};
 	}
 
-	loadItem(uuid: string, revision?: string): Q.Promise<item_store.Item> {
+	loadItem(uuid: string, revision?: string): Q.Promise<item_store.ItemAndContent> {
 		if (revision) {
 			return Q.all([this.overviewKey(), this.itemStore.get<string>('revisions/' + revision)])
 			.then((keyAndRevision) => {
@@ -248,18 +248,24 @@ export class Store implements item_store.SyncableStore {
 			}).then((revision) => {
 				var item = this.itemFromOverview(uuid, revision.overview);
 				item.parentRevision = revision.parentRevision;
-				return item;
+				return {
+					item: item,
+					content: revision.content
+				};
 			});
 		} else {
+			// FIXME - Avoid listing the entire vault when loading
+			// a single item
 			return this.listItems().then((items) => {
-				var matches = items.filter((item) => {
-					return item.uuid == uuid;
-				});
-				if (matches.length > 0) {
-					return Q(matches[0]);
-				} else {
-					return Q.reject<item_store.Item>(new Error('No such item ' + uuid));
+				for (let item of items) {
+					if (item.uuid == uuid) {
+						if (!item.revision) {
+							return Q.reject<item_store.ItemAndContent>(new Error(`Item revision missing for ${uuid}`));
+						}
+						return this.loadItem(uuid, item.revision);
+					}
 				}
+				return Q.reject<item_store.ItemAndContent>(new Error('No such item ' + uuid));
 			});
 		}
 	}
