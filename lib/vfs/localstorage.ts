@@ -115,7 +115,7 @@ export class FS implements vfs.VFS {
 		}
 
 		if (options.parentRevision && entry.mtime && entry.mtime !== parentRev) {
-			return Q.reject<void>(new vfs.ConflictError(path));
+			return Q.reject<void>(new vfs.VfsError(vfs.ErrorType.Conflict, path));
 		}
 
 		assert(entry.parent);

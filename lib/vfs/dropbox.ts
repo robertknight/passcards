@@ -32,8 +32,15 @@ export interface Options {
 	receiverPage: string;
 }
 
-function convertError(error: dropbox.ApiError): err_util.ApiError {
-	return new err_util.ApiError(error.url, error.status, error.responseText);
+function convertError(error: dropbox.ApiError): vfs.VfsError {
+	const apiError = new err_util.ApiError(error.url, error.status, error.responseText);
+	let type = vfs.ErrorType.Other;
+	if (error.status == 404) {
+		type = vfs.ErrorType.FileNotFound;
+	}
+	const vfsError = new vfs.VfsError(type, error.responseText);
+	vfsError.sourceErr = apiError;
+	return vfsError;
 }
 
 export class DropboxVFS implements vfs.VFS {
