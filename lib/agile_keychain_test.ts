@@ -2,6 +2,7 @@
 /// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
 
 import Q = require('q');
+import path = require('path');
 import underscore = require('underscore');
 
 import agile_keychain = require('./agile_keychain');
@@ -47,21 +48,23 @@ class ItemAndContent {
 	content: item_store.ItemContent;
 }
 
-function createTestVault(): Q.Promise<agile_keychain.Vault> {
-	var vault = Q.defer<agile_keychain.Vault>();
-	var fs = new nodefs.FileVFS('lib/test-data');
-	vfs_util.rmrf(fs, 'copy.agilekeychain').then(() => {
-		return fs.stat('test.agilekeychain')
-	}).then((srcFolder) => {
-		return vfs_util.cp(fs, srcFolder, 'copy.agilekeychain')
+function createTestVault() {
+	let sourcePath = path.resolve('lib/test-data');
+	let copyPath = '/tmp/copy.agilekeychain';
+
+	let vault: agile_keychain.Vault;
+	let fs = new nodefs.FileVFS('/');
+	return vfs_util.rmrf(fs, copyPath).then(() => {
+		return fs.stat(sourcePath + '/test.agilekeychain')
+	}).then(srcFolder => {
+		return vfs_util.cp(fs, srcFolder, copyPath)
 	}).then(() => {
-		var newVault = new agile_keychain.Vault(fs, 'copy.agilekeychain');
-		newVault.unlock('logMEin').then(() => {
-			vault.resolve(newVault);
-		}).done();
-	})
-	.done();
-	return vault.promise;
+		var newVault = new agile_keychain.Vault(fs, copyPath);
+		vault = newVault;
+		return newVault.unlock('logMEin');
+	}).then(() => {
+		return vault;
+	});
 }
 
 testLib.addAsyncTest('Import item from .1pif file', (assert) => {
