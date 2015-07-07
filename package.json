@@ -5,6 +5,7 @@
   "devDependencies": {
     "autoprefixer": "^3.1.0",
     "browserify": "^5.13.1",
+    "fake-indexeddb": "^1.0.3",
     "findit": "^2.0.0",
     "jpm": "0.0.13",
     "jsdom": "^4.0.2",

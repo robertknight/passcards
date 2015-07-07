@@ -91,15 +91,13 @@ class FakeKeyValueStore implements key_value_store.ObjectStore {
 		return Q<void>(null);
 	}
 
-	list(prefix: string = '') {
-		var keys: string[] = [];
+	iterate<T>(prefix: string, callback: (key: string, value?: T) => void) {
 		this.items.forEach((value, key) => {
 			if (stringutil.startsWith(key, prefix)) {
-				keys.push(key);
+				callback(key, value);
 			}
 		});
-		keys.sort();
-		return Q(keys);
+		return Q<void>(null);
 	}
 }
 

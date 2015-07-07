@@ -45,7 +45,29 @@ export interface ObjectStore {
 	set<T>(key: string, value: T): Q.Promise<void>;
 	get<T>(key: string): Q.Promise<T>;
 	remove(key: string): Q.Promise<void>;
-	list(prefix?: string): Q.Promise<string[]>;
+
+	/** Iterate over keys in an object store beginning with @p prefix,
+	  * invoking callback() for each match.
+	  */
+	iterate<T>(prefix: string, callback: (key: string, value?: T) => void): Q.Promise<void>;
+}
+
+export function listKeys(store: ObjectStore, prefix = ''): Q.Promise<string[]> {
+	let keys: string[] = [];
+	return store.iterate<void>(prefix, key => {
+		keys.push(key);
+	}).then(() => {
+		keys.sort();
+		return keys;
+	});
+}
+
+export function setItems<V>(store: ObjectStore, items: [string, V][]) {
+	let saved: Q.Promise<void>[] = [];
+	for (let item of items) {
+		saved.push(store.set(item[0], item[1]));
+	}
+	return Q.all(saved);
 }
 
 export class IndexedDBDatabase implements Database {
@@ -85,7 +107,7 @@ export class IndexedDBDatabase implements Database {
 				storeNames: () => {
 					var names: string[] = [];
 					for (var i = 0; i < db.objectStoreNames.length; i++) {
-						names.push(db.objectStoreNames.item(i));
+						names.push(db.objectStoreNames[i]);
 					}
 					return names;
 				},
@@ -182,37 +204,40 @@ class IndexedDBStore implements ObjectStore {
 	}
 
 	set<T>(key: string, value: T): Q.Promise<void> {
-		return this.db.then((db) => {
+		return this.db.then(db => {
 			return promisify<void>(this.getStore(db).put(value, key));
 		});
 	}
 
 	get<T>(key: string): Q.Promise<T> {
-		return this.db.then((db) => {
+		return this.db.then(db => {
 			return promisify<T>(this.getStore(db).get(key));
 		});
 	}
 
 	remove(key: string): Q.Promise<void> {
-		return this.db.then((db) => {
+		return this.db.then(db => {
 			return promisify<void>(this.getStore(db).delete(key));
 		});
 	}
 
-	list(prefix: string = ''): Q.Promise<string[]> {
+	iterate<T>(prefix: string, callback: (key: string, value?: T) => void): Q.Promise<void> {
 		return this.db.then((db) => {
 			var store = this.getStore(db);
 			var req = store.openCursor(IDBKeyRange.lowerBound(prefix));
-			var keys: string[] = [];
-			var result = Q.defer<string[]>();
+			var result = Q.defer<void>();
 
 			req.onsuccess = () => {
-				var cursor = <IDBCursor>req.result;
+				var cursor = <IDBCursorWithValue>req.result;
 				if (!cursor || !stringutil.startsWith(cursor.key, prefix)) {
-					result.resolve(keys);
+					result.resolve(null);
 					return;
 				}
-				keys.push(cursor.key);
+				if (callback.length < 2) {
+					callback(cursor.key);
+				} else {
+					callback(cursor.key, cursor.value);
+				}
 				cursor.continue();
 			};
 			req.onerror = () => {

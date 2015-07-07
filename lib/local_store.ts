@@ -327,7 +327,7 @@ export class Store implements item_store.SyncableStore {
 	}
 
 	listKeys(): Q.Promise<key_agent.Key[]> {
-		return this.keyStore.list(KEY_ID_PREFIX).then((keyIds) => {
+		return key_value_store.listKeys(this.keyStore, KEY_ID_PREFIX).then(keyIds => {
 			var keys: Q.Promise<key_agent.Key>[] = [];
 			keyIds.forEach((id) => {
 				keys.push(this.keyStore.get<key_agent.Key>(id));
@@ -337,7 +337,7 @@ export class Store implements item_store.SyncableStore {
 	}
 
 	saveKeys(keys: key_agent.Key[], hint: string): Q.Promise<void> {
-		return this.keyStore.list(KEY_ID_PREFIX).then((keyIds) => {
+		return key_value_store.listKeys(this.keyStore, KEY_ID_PREFIX).then(keyIds => {
 			// remove existing keys
 			var removeOps = keyIds.map((id) => {
 				return this.keyStore.remove(id);
