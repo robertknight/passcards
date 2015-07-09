@@ -7,6 +7,7 @@
     "browserify": "^5.13.1",
     "fake-indexeddb": "^1.0.3",
     "findit": "^2.0.0",
+    "fs-extra": "^0.21.0",
     "jpm": "0.0.13",
     "jsdom": "^4.0.2",
     "module-deps": "^3.5.6",
@@ -73,7 +74,7 @@
     "build",
     "passcards"
   ],
-  "engines" : {
-    "node" : ">=0.12"
+  "engines": {
+    "node": ">=0.12"
   }
 }
