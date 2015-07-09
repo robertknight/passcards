@@ -77,7 +77,7 @@ interface LastSyncEntry {
 	external: string;
 }
 
-var SCHEMA_VERSION = 2;
+var SCHEMA_VERSION = 3;
 
 // prefix for encryption key entries in the encryption key
 // object store
@@ -120,14 +120,21 @@ export class Store implements item_store.SyncableStore {
 		});
 	}
 
+	private resetDatabase(schemaUpdater: key_value_store.DatabaseSchemaModifier) {
+		schemaUpdater.storeNames().forEach((name) => {
+			schemaUpdater.deleteStore(name);
+		});
+		schemaUpdater.createStore('keys');
+		schemaUpdater.createStore('items');
+	}
+
 	private initDatabase() {
-		this.database.open(this.name, SCHEMA_VERSION, (schemaUpdater) => {
-			if (schemaUpdater.currentVersion() < 2) {
-				schemaUpdater.storeNames().forEach((name) => {
-					schemaUpdater.deleteStore(name);
-				});
-				schemaUpdater.createStore('keys');
-				schemaUpdater.createStore('items');
+		this.database.open(this.name, SCHEMA_VERSION, schemaUpdater => {
+			// when opening databases with schema versions prior to the
+			// first public beta release, we just reset the database
+			// and re-sync from the cloud
+			if (schemaUpdater.currentVersion() < 3) {
+				this.resetDatabase(schemaUpdater);
 			}
 		});
 
