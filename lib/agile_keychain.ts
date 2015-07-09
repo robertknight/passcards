@@ -21,6 +21,17 @@ import key_agent = require('./key_agent');
 import stringutil = require('./base/stringutil');
 import vfs = require('./vfs/vfs');
 
+type IndexEntry =[
+string, // uuid
+string, // typeName
+string, // title
+string, // primaryLocation
+number, // UNIX timestamp in milliseconds
+string, // folder UUID
+number, // unknown
+string  // trashed ("Y" || "N")
+];
+
 var fieldKindMap = new collectionutil.BiDiMap<item_store.FieldType, string>()
 .add(item_store.FieldType.Text, 'string')
 .add(item_store.FieldType.Password, 'concealed')
@@ -396,11 +407,18 @@ export class Vault implements item_store.Store {
 		return Path.join(this.path, 'data/default/' + uuid + '.1password')
 	}
 
-	loadItem(uuid: string): Q.Promise<item_store.Item> {
-		var content = this.fs.read(this.itemPath(uuid));
-		return content.then((content) => {
-			return fromAgileKeychainItem(this, JSON.parse(content));
-		});
+	loadItem(uuid: string): Q.Promise<item_store.ItemAndContent> {
+		var contentData = this.fs.read(this.itemPath(uuid));
+		var item: item_store.Item;
+		return contentData.then(contentJSON => {
+			return fromAgileKeychainItem(this, JSON.parse(contentJSON));
+		}).then(encryptedItem => {
+			item = encryptedItem;
+			return encryptedItem.getContent();
+		}).then(content => ({
+			item: item,
+			content: content
+		}));
 	}
 
 	saveItem(item: item_store.Item, source?: item_store.ChangeSource): Q.Promise<void> {
@@ -460,14 +478,13 @@ export class Vault implements item_store.Store {
 			revision = stat.revision;
 			return this.fs.read(this.contentsFilePath());
 		}).then((contentsJSON) => {
-			// [TODO TypeScript/1.3] - Type the contents.js entry tuples
 			var updatedItems: item_store.Item[] = [];
 			this.pendingIndexUpdates.forEach((item) => {
 				updatedItems.push(item);
 			});
 			this.pendingIndexUpdates.clear();
 
-			var contentEntries: any[] = JSON.parse(contentsJSON);
+			var contentEntries: IndexEntry[] = JSON.parse(contentsJSON);
 			updatedItems.forEach((item) => {
 				var entry = underscore.find(contentEntries, (entry) => { return entry[0] == item.uuid });
 				if (!entry) {
@@ -475,7 +492,7 @@ export class Vault implements item_store.Store {
 					contentEntries.push(entry);
 				}
 				entry[0] = item.uuid;
-				entry[1] = item.typeName;
+				entry[1] = <string>item.typeName;
 				entry[2] = item.title;
 				entry[3] = item.primaryLocation();
 				entry[4] = dateutil.unixTimestampFromDate(item.updatedAt);
@@ -522,7 +539,7 @@ export class Vault implements item_store.Store {
 		content.then((content) => {
 			var entries = JSON.parse(content);
 			var vaultItems: item_store.Item[] = [];
-			entries.forEach((entry: any[]) => {
+			entries.forEach((entry: IndexEntry) => {
 				var item = new item_store.Item(this);
 				item.uuid = entry[0];
 				item.typeName = entry[1];

@@ -269,16 +269,11 @@ export class CloudStoreSyncer implements Syncer {
 		}
 
 		if (remoteItem) {
-			remoteItemContent = this.cloudStore.loadItem(remoteItem.uuid).then((item) => {
-				// load the full item overview data from the remote store.
-				// When the remote store is an Agile Keychain-format store,
-				// ItemStore.listItems() only includes the core overview metadata
-				// fields and not account data or non-primary locations.
-				remoteItem = item;
-				return remoteItem.getContent();
-			}).then((content) => {
-				return { item: remoteItem, content: content };
-			});
+			// load the full item overview data from the remote store.
+			// When the remote store is an Agile Keychain-format store,
+			// ItemStore.listItems() only includes the core overview metadata
+			// fields and not account data or non-primary locations.
+			remoteItemContent = this.cloudStore.loadItem(remoteItem.uuid);
 		}
 
 		var uuid = localItem ? localItem.uuid : remoteItem.uuid;
@@ -306,23 +301,9 @@ export class CloudStoreSyncer implements Syncer {
 	// returns the item and content for the last-synced version of an item,
 	// or null if the item has not been synced before
 	private getLastSyncedItemRevision(item: item_store.Item): Q.Promise<item_store.ItemAndContent> {
-		var lastSyncedItem: item_store.Item;
-		return this.localStore.getLastSyncedRevision(item).then((revision) => {
+		return this.localStore.getLastSyncedRevision(item).then(revision => {
 			if (revision) {
 				return this.localStore.loadItem(item.uuid, revision);
-			} else {
-				return null;
-			}
-		}).then((item) => {
-			if (item) {
-				lastSyncedItem = item;
-				return item.getContent();
-			} else {
-				return null;
-			}
-		}).then((content) => {
-			if (content) {
-				return { item: lastSyncedItem, content: content };
 			} else {
 				return null;
 			}

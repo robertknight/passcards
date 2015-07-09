@@ -110,7 +110,7 @@ export function mktemp(fs: vfs.VFS, path: string, template: string = 'tmp.XXX') 
 	var baseName = template.replace(/X{3,}/, (match) => {
 		var randomized = '';
 		for (var i = 0; i < match.length; i++) {
-			randomized += String.fromCharCode(97 /* 'a' */ + Math.round(Math.random() * 26));
+			randomized += String.fromCharCode(97 /* 'a' */ + Math.round(Math.random() * 25));
 		}
 		return randomized;
 	});

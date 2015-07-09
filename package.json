@@ -5,7 +5,9 @@
   "devDependencies": {
     "autoprefixer": "^3.1.0",
     "browserify": "^5.13.1",
+    "fake-indexeddb": "^1.0.3",
     "findit": "^2.0.0",
+    "fs-extra": "^0.21.0",
     "jpm": "0.0.13",
     "jsdom": "^4.0.2",
     "module-deps": "^3.5.6",
@@ -37,6 +39,7 @@
     "q": "^2.0.3",
     "react": "^0.13.0",
     "request": "^2.53.0",
+    "semver": "^4.3.6",
     "shallow-equals": "0.0.0",
     "sprintf": "^0.1.5",
     "through2": "^0.6.3",
@@ -70,5 +73,8 @@
   "files": [
     "build",
     "passcards"
-  ]
+  ],
+  "engines": {
+    "node": ">=0.12"
+  }
 }

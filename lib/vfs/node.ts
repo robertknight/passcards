@@ -92,12 +92,12 @@ export class FileVFS implements vfs.VFS {
 			try {
 				var fileStat = fs.statSync(fullPath);
 				if (FileVFS.statToRevision(fileStat) !== options.parentRevision) {
-					result.reject(new vfs.ConflictError(path));
+					result.reject(new vfs.VfsError(vfs.ErrorType.Conflict, path));
 				}
 				fs.renameSync(tempPath, fullPath);
 				result.resolve(null);
 			} catch (err) {
-				result.reject(new vfs.ConflictError(path));
+				result.reject(new vfs.VfsError(vfs.ErrorType.Conflict, path));
 			}
 		});
 

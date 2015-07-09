@@ -37,12 +37,23 @@ export interface WriteOptions {
 export interface Credentials extends Object {
 }
 
-/** Error reported when a file update with VFS.write() conflicts
-  * with another update to the same file.
-  */
-export class ConflictError extends err_util.BaseError {
-	constructor(public path: string) {
-		super('Conflict updating file');
+export enum ErrorType {
+	Conflict,
+	FileNotFound,
+	Other
+}
+
+export class VfsError extends err_util.BaseError {
+	private _type: ErrorType;
+
+	constructor(type: ErrorType, message: string) {
+		super(message);
+
+		this._type = type;
+	}
+
+	get type() {
+		return this._type;
 	}
 }
 

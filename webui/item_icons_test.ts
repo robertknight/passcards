@@ -70,10 +70,13 @@ class FakeObjectStore implements key_value_store.ObjectStore {
 		return Q<void>(null);
 	}
 
-	list(prefix?: string) {
-		return Q(collectionutil.keys(this.map).filter(key => {
-			return !prefix || stringutil.startsWith(key, prefix);
-		}));
+	iterate<T>(prefix: string, callback: (key: string, value?: T) => void) {
+		this.map.forEach((value, key) => {
+			if (stringutil.startsWith(key, prefix)) {
+				callback(key, value);
+			}
+		});
+		return Q<void>(null);
 	}
 }
 

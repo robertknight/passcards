@@ -1,5 +1,6 @@
 /// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
+/// <reference path="../typings/DefinitelyTyped/semver/semver.d.ts" />
 
 /// <reference path="../typings/argparse.d.ts" />
 /// <reference path="../typings/xdiff.d.ts" />
@@ -17,6 +18,7 @@
 
 import argparse = require('argparse');
 import path = require('path');
+import semver = require('semver');
 import underscore = require('underscore');
 import xdiff = require('xdiff');
 var qunit = require('qunitjs');
@@ -145,6 +147,14 @@ interface TestSuiteResult {
 	runtime: number
 }
 
+function requireNodeVersion(version: string) {
+	var semver = require('semver');
+	if (env.isNodeJS() && semver.lt(process.version, version)) {
+		console.error('Node version %s or later is required', version);
+		process.exit(1);
+	}
+}
+
 /** Start the test suite. The default mode is to run tests added with
   * addTest() and addAsyncTest().
   *
@@ -155,6 +165,8 @@ interface TestSuiteResult {
   * @param args Command-line arguments for the test.
   */
 export function start(args?: string[]) {
+	requireNodeVersion('0.12.0');
+
 	if (!args && env.isNodeJS()) {
 		args = process.argv.slice(2);
 	}
