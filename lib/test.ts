@@ -1,3 +1,4 @@
+/// <reference path="../typings/DefinitelyTyped/colors/colors.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/semver/semver.d.ts" />
@@ -17,6 +18,7 @@
 // nested objects and arrays.
 
 import argparse = require('argparse');
+import colors = require('colors');
 import path = require('path');
 import semver = require('semver');
 import underscore = require('underscore');
@@ -89,7 +91,12 @@ export function addAsyncTest(name: string, testFunc: (assert: Assert) => any) {
 			if (typeof result == 'object' && typeof result.then == 'function') {
 				result.then(() => {
 					continueTests();
-				}).done();
+				}).catch((err: Error) => {
+					console.log(colors.red('EXCEPTION: %s'), err);
+					console.log(err.stack);
+					qunit.pushFailure(err.toString());
+					continueTests();
+				});
 			}
 		},
 		async: true
@@ -234,18 +241,26 @@ function run(tests: TestCase[]) {
 
 	qunit.log((details: AssertionResult) => {
 		if (!details.result) {
-			console.log('test failed');
-			console.log(details);
+			let message = details.message || 'Assert failed';
+			console.log(colors.red(`ERROR: ${message}, actual: ${details.actual}, expected ${details.expected}`));
+			console.log(details.source);
 		}
 	});
 
 	qunit.testDone((result: TestResult) => {
-		var summary = result.passed == result.total ? 'PASS' : 'FAIL';
-		console.log('%s: %s (%sms)', summary, result.name, result.runtime);
+		const FORMAT_STR = '%s (%sms)';
+		let formatStr: string;
+		if (result.passed === result.total) {
+			formatStr = colors.green(`PASS: ${FORMAT_STR}`);
+		} else {
+			formatStr = colors.red(`FAIL: ${FORMAT_STR}`);
+		}
+		console.log(formatStr, result.name, result.runtime);
 	});
 
 	qunit.done((result: TestSuiteResult) => {
-		console.log('END: Assertions: %d, Failed: %d, Duration: %dms', result.total, result.failed, result.runtime);
+		let colorFunc = result.failed === 0 ? colors.green : colors.yellow;
+		console.log(colorFunc('END: Assertions: %d, Failed: %d, Duration: %dms'), result.total, result.failed, result.runtime);
 		if (env.isNodeJS()) {
 			if (result.failed > 0) {
 				process.on('exit', () => {
