@@ -7,11 +7,11 @@ import testLib = require('../test');
 global.indexedDB = require('fake-indexeddb');
 global.IDBKeyRange = require('fake-indexeddb/lib/FDBKeyRange');
 
-function setupDB() {
+function setupDB(name: string) {
 	let db = new key_value_store.IndexedDBDatabase();
 	const TEST_STORE_NAME = 'test-store';
 
-	return db.open('test', 1, schemaUpdater => {
+	return db.open(name, 1, schemaUpdater => {
 		schemaUpdater.createStore(TEST_STORE_NAME);
 		assert.deepEqual(schemaUpdater.storeNames(), [TEST_STORE_NAME]);
 	}).then(() => db.store(TEST_STORE_NAME));
@@ -21,7 +21,7 @@ testLib.addTest('iterate over keys and values', assert => {
 	let values: [string, number][] = [];
 	let expectedValues = values;
 	let store: key_value_store.ObjectStore;
-	return setupDB().then(store_ => {
+	return setupDB('test-iterate').then(store_ => {
 		store = store_;
 		for (let i = 1; i <= 3; i++) {
 			expectedValues.push([i.toString(), i]);
@@ -38,7 +38,7 @@ testLib.addTest('iterate over keys and values', assert => {
 
 testLib.addTest('list keys', assert => {
 	let store: key_value_store.ObjectStore;
-	return setupDB().then(store_ => {
+	return setupDB('test-list').then(store_ => {
 		store = store_;
 		return key_value_store.setItems(store, [
 			['a', 1],
