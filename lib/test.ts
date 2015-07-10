@@ -26,6 +26,7 @@ import xdiff = require('xdiff');
 var qunit = require('qunitjs');
 
 import env = require('./base/env');
+import err_util = require('./base/err_util');
 
 /** Interface for testing the values of objects during
   * a test.
@@ -93,7 +94,7 @@ export function addAsyncTest(name: string, testFunc: (assert: Assert) => any) {
 					continueTests();
 				}).catch((err: Error) => {
 					console.log(colors.red('EXCEPTION: %s'), err);
-					console.log(err.stack);
+					console.log(colors.yellow(err_util.formatStack(<string>err.stack).join('\n')));
 					qunit.pushFailure(err.toString());
 					continueTests();
 				});
@@ -133,7 +134,7 @@ interface AssertionResult {
 	actual: Object
 	expected: Object
 	message: string
-	source: string
+	source?: string
 	module: string
 	name: string
 }
@@ -243,7 +244,9 @@ function run(tests: TestCase[]) {
 		if (!details.result) {
 			let message = details.message || 'Assert failed';
 			console.log(colors.red(`ERROR: ${message}, actual: ${details.actual}, expected ${details.expected}`));
-			console.log(details.source);
+			if (details.source) {
+				console.log(colors.yellow(err_util.formatStack(details.source).join('\n')));
+			}
 		}
 	});
 
