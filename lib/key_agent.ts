@@ -222,7 +222,7 @@ export class SimpleKeyAgent implements KeyAgent {
 
 	decrypt(id: string, cipherText: string, params: CryptoParams): Q.Promise<string> {
 		if (!this.keys.hasOwnProperty(id)) {
-			return Q.reject<string>(new Error('No such key: ' + id));
+			return Q.reject<string>(new DecryptionError('No such key: ' + id));
 		}
 		switch (params.algo) {
 			case CryptoAlgorithm.AES128_OpenSSLKey:

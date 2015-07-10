@@ -635,15 +635,14 @@ export interface SyncableStore extends Store {
 	lastSyncTimestamps(): Q.Promise<Map<string, Date>>;
 }
 
-/** Copy an item and its contents. If @p uuid is set it is
-  * used as the UUID for the new item, otherwise
-  * a new UUID is generated.
+/** Copy an item and its contents, using @p uuid as the ID for
+  * the new item. If new item is associated with @p store.
   */
-export function cloneItem(itemAndContent: ItemAndContent, uuid?: string) {
-	var item = itemAndContent.item;
+export function cloneItem(itemAndContent: ItemAndContent, uuid: string, store?: Store) {
+	let item = itemAndContent.item;
 
 	// item ID and sync data
-	var clonedItem = new Item(null /* store */, uuid);
+	let clonedItem = new Item(store, uuid);
 	clonedItem.parentRevision = item.revision;
 
 	// core metadata
@@ -659,7 +658,7 @@ export function cloneItem(itemAndContent: ItemAndContent, uuid?: string) {
 	clonedItem.account = item.account;
 
 	// item content
-	var clonedContent = <ItemContent>clone(itemAndContent.content);
+	let clonedContent = <ItemContent>clone(itemAndContent.content);
 	clonedItem.setContent(clonedContent);
 
 	return { item: clonedItem, content: clonedContent };

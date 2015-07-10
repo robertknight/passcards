@@ -16,15 +16,17 @@ export class Store implements item_store.SyncableStore {
 	private items: item_store.Item[];
 	private keyAgent: key_agent.KeyAgent;
 	private hint: string;
+	private name: string;
 	
 	// map of (revision -> item and content)
 	private content: Map<string, item_store.ItemAndContent>;
 	private lastSyncedRevisions: Map<string, string>;
 
-	constructor(agent: key_agent.KeyAgent) {
+	constructor(agent: key_agent.KeyAgent, name?: string) {
 		this.onItemUpdated = new event_stream.EventStream<item_store.Item>();
 		this.onUnlock = new event_stream.EventStream<void>();
 		this.keyAgent = agent;
+		this.name = name;
 
 		this.clear();
 	}
@@ -52,7 +54,7 @@ export class Store implements item_store.SyncableStore {
 	}
 
 	listItems(opts: item_store.ListItemsOptions = {}) {
-		var matches = this.items.filter((item) => {
+		let matches = this.items.filter(item => {
 			if (!opts.includeTombstones && item.isTombstone()) {
 				return false;
 			}
@@ -63,57 +65,66 @@ export class Store implements item_store.SyncableStore {
 	}
 
 	saveItem(item: item_store.Item, source: item_store.ChangeSource) {
-		if (source !== item_store.ChangeSource.Sync) {
-			item.updateTimestamps();
-		}
-
-		var saved = false;
-		for (var i = 0; i < this.items.length; i++) {
-			if (this.items[i].uuid == item.uuid) {
-				this.items[i] = item;
-				saved = true;
+		return this.checkUnlocked().then(() => {
+			if (source !== item_store.ChangeSource.Sync) {
+				item.updateTimestamps();
 			}
-		}
 
-		var prevRevision = item.revision;
-		return item.getContent().then((content) => {
-			item.updateOverviewFromContent(content);
-			item.revision = item_store.generateRevisionId({ item: item, content: content });
-			item.parentRevision = prevRevision;
-			var itemRevision = item_store.cloneItem({ item: item, content: content }, item.uuid);
+			let saved = false;
+			for (var i = 0; i < this.items.length; i++) {
+				if (this.items[i].uuid == item.uuid) {
+					this.items[i] = item;
+					saved = true;
+				}
+			}
 
-			this.content.set(item.revision, {
-				item: itemRevision.item,
-				content: itemRevision.content
+			let prevRevision = item.revision;
+			return item.getContent().then((content) => {
+				item.updateOverviewFromContent(content);
+				item.revision = item_store.generateRevisionId({ item: item, content: content });
+				item.parentRevision = prevRevision;
+				var itemRevision = item_store.cloneItem({
+					item: item,
+					content: content
+				}, item.uuid, this);
+
+				this.content.set(item.revision, {
+					item: itemRevision.item,
+					content: itemRevision.content
+				});
+
+				if (!saved) {
+					this.items.push(item);
+				}
+
+				this.onItemUpdated.publish(item);
 			});
-
-			if (!saved) {
-				this.items.push(item);
-			}
-
-			this.onItemUpdated.publish(item);
 		});
 	}
 
 	loadItem(uuid: string, revision?: string) {
-		var items = this.items.filter((item) => {
-			return item.uuid == uuid;
+		return this.checkUnlocked().then(() => {
+			let items = this.items.filter(item => {
+				return item.uuid == uuid;
+			});
+			if (items.length == 0) {
+				return Q.reject<item_store.ItemAndContent>(new Error('No such item'));
+			}
+			if (!revision) {
+				revision = items[0].revision;
+			}
+			return Q(this.content.get(revision));
 		});
-		if (items.length == 0) {
-			return Q.reject<item_store.ItemAndContent>(new Error('No such item'));
-		}
-		if (!revision) {
-			revision = items[0].revision;
-		}
-		return Q(this.content.get(revision));
 	}
 
 	getContent(item: item_store.Item) {
-		if (this.content.has(item.revision)) {
-			return Q(this.content.get(item.revision).content);
-		} else {
-			return Q.reject<item_store.ItemContent>(new Error('No such item'));
-		}
+		return this.checkUnlocked().then(() => {
+			if (this.content.has(item.revision)) {
+				return Q(this.content.get(item.revision).content);
+			} else {
+				return Q.reject<item_store.ItemContent>(new Error('No such item'));
+			}
+		});
 	}
 
 	getRawDecryptedData(item: item_store.Item) {
@@ -142,7 +153,7 @@ export class Store implements item_store.SyncableStore {
 	}
 
 	lastSyncTimestamps() {
-		var timestampMap = new collectionutil.PMap<string, Date>();
+		let timestampMap = new collectionutil.PMap<string, Date>();
 		this.items.forEach((item) => {
 			var lastSyncedRev = this.lastSyncedRevisions.get(item.uuid);
 			if (!lastSyncedRev) {
@@ -152,6 +163,14 @@ export class Store implements item_store.SyncableStore {
 			timestampMap.set(item.uuid, lastSyncedAt);
 		});
 		return Q(timestampMap);
+	}
+
+	private checkUnlocked() {
+		return this.keyAgent.listKeys().then(keys => {
+			if (keys.length === 0) {
+				throw new key_agent.DecryptionError('Store is locked');
+			}
+		});
 	}
 }
 

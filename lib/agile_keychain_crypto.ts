@@ -3,14 +3,17 @@
 /// <reference path="../typings/dom.d.ts" />
 
 import assert = require('assert');
+import btoa = require('btoa');
 var cryptoJS = require('crypto-js');
 import node_crypto = require('crypto');
 import Q = require('q');
 import uuid = require('node-uuid');
 
+import agile_keychain_entries = require('./agile_keychain_entries');
 import collectionutil = require('./base/collectionutil');
 import crypto = require('./base/crypto');
 import crypto_worker = require('./crypto_worker');
+import key_agent = require('./key_agent');
 import pbkdf2Lib = require('./crypto/pbkdf2');
 import rpc = require('./net/rpc');
 
@@ -22,6 +25,35 @@ export class AESKeyParams {
 export class SaltedCipherText {
 	constructor(public salt: string, public cipherText: string) {
 	}
+}
+
+/** Generate encryption keys for an Agile Keychain vault from
+  * a given password.
+  *
+  * This function generates a new random 1024-byte encryption key
+  * for a vault and encrypts it using a key derived from @p password
+  * using @p passIterations iterations of PBKDF2.
+  */
+export function generateMasterKey(password: string, passIterations: number): Q.Promise<agile_keychain_entries.EncryptionKeyList> {
+	let masterKey = crypto.randomBytes(1024);
+	let salt = crypto.randomBytes(8);
+
+	return key_agent.keyFromPassword(password, salt, passIterations).then(derivedKey => {
+		let encryptedKey = key_agent.encryptKey(derivedKey, masterKey);
+
+		let masterKeyEntry = {
+			data: btoa('Salted__' + salt + encryptedKey.key),
+			identifier: newUUID(),
+			iterations: passIterations,
+			level: 'SL5',
+			validation: btoa(encryptedKey.validation)
+		};
+
+		return <agile_keychain_entries.EncryptionKeyList>{
+			list: [masterKeyEntry],
+			SL5: masterKeyEntry.identifier
+		};
+	});
 }
 
 export function extractSaltAndCipherText(input: string): SaltedCipherText {

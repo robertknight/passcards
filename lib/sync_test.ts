@@ -5,54 +5,54 @@
 import clone = require('clone');
 import Q = require('q');
 
+import agile_keychain_crypto = require('./agile_keychain_crypto');
+import asyncutil = require('./base/asyncutil');
 import item_builder = require('./item_builder');
 import item_store = require('./item_store');
 import key_agent = require('./key_agent');
-import onepass = require('./agile_keychain');
+import agile_keychain = require('./agile_keychain');
 import sync = require('./sync');
 import temp_store = require('./temp_store');
 import testLib = require('./test');
-import vfs = require('./vfs/vfs');
-import vfs_node = require('./vfs/node');
-import vfs_util = require('./vfs/util');
 
 interface Env {
-	store: temp_store.Store;
+	localStore: temp_store.Store;
 	syncer: sync.Syncer;
-	vault: onepass.Vault;
-	fs: vfs.VFS;
+	cloudStore: temp_store.Store;
+	keyAgent: key_agent.KeyAgent;
 }
 
 function setup(): Q.Promise<Env> {
-	var VAULT_PASS = 'testpass';
-	var VAULT_PASS_ITERATIONS = 100;
+	const VAULT_PASS = 'testpass';
+	const VAULT_PASS_ITERATIONS = 100;
+	const VAULT_PASS_HINT = 'testhint';
 
-	var fs = new vfs_node.FileVFS('/tmp');
-	var vault: onepass.Vault;
-	var vaultDir = '/tmp/sync-test-vault.agilekeychain';
+	let keyAgent = new key_agent.SimpleKeyAgent();
+	let cloudStoreKeyAgent = new key_agent.SimpleKeyAgent();
+	let cloudStore = new temp_store.Store(cloudStoreKeyAgent, 'Cloud Store');
+	let localStore = new temp_store.Store(keyAgent, 'Local Store')
+	let syncer = new sync.CloudStoreSyncer(localStore, cloudStore);
 
-	return vfs_util.rmrf(fs, vaultDir).then(() => {
-		return onepass.Vault.createVault(fs, vaultDir,
-			VAULT_PASS, 'testhint', VAULT_PASS_ITERATIONS);
-	}).then((_vault) => {
-		vault = _vault;
-		return vault.unlock(VAULT_PASS);
+	return agile_keychain_crypto.generateMasterKey(VAULT_PASS,
+		VAULT_PASS_ITERATIONS).then(keyList => {
+		let keys = agile_keychain.convertKeys(keyList.list);
+		return Q.all([localStore.saveKeys(keys, VAULT_PASS_HINT),
+			cloudStore.saveKeys(keys, VAULT_PASS_HINT)]);
 	}).then(() => {
-		var store = new temp_store.Store(new key_agent.SimpleKeyAgent());
-		var syncer = new sync.CloudStoreSyncer(store, vault);
-
+		return Q.all([localStore.unlock(VAULT_PASS), cloudStore.unlock(VAULT_PASS)]);
+	}).then(() => {
 		return {
-			store: store,
+			localStore: localStore,
 			syncer: syncer,
-			vault: vault,
-			fs: fs
+			cloudStore: cloudStore,
+			keyAgent: keyAgent
 		};
 	});
 }
 
-// create a vault, a local store and a syncer.
-// Add a single item to the vault and the vault, local store, syncer and
-// a reference to the item in the vault
+// create a cloudStore, a local store and a syncer.
+// Add a single item to the cloudStore and the cloudStore, local store, syncer and
+// a reference to the item in the cloudStore
 function setupWithItem(): Q.Promise<{ env: Env; item: item_store.Item }> {
 	var env: Env;
 
@@ -62,9 +62,9 @@ function setupWithItem(): Q.Promise<{ env: Env; item: item_store.Item }> {
 	.addUrl('acme.org')
 	.item();
 
-	return setup().then((_env) => {
+	return setup().then(_env => {
 		env = _env;
-		return item.saveTo(env.vault);
+		return item.saveTo(env.cloudStore);
 	}).then(() => {
 		return {
 			env: env,
@@ -73,17 +73,17 @@ function setupWithItem(): Q.Promise<{ env: Env; item: item_store.Item }> {
 	});
 }
 
-testLib.addAsyncTest('sync vault keys and password hint', (assert) => {
-	var env: Env;
+testLib.addAsyncTest('sync cloudStore keys and password hint', (assert) => {
+	let env: Env;
 
-	return setup().then((_env) => {
+	return setup().then(_env => {
 		env = _env;
 		return env.syncer.syncKeys();
 	}).then(() => {
-		return Q.all([env.store.listKeys(), env.store.passwordHint()]);
-	}).then((keyAndHint) => {
-		var keys = <key_agent.Key[]>keyAndHint[0];
-		var hint = <string>keyAndHint[1];
+		return Q.all([env.localStore.listKeys(), env.localStore.passwordHint()]);
+	}).then(keyAndHint => {
+		let keys = <key_agent.Key[]>keyAndHint[0];
+		let hint = <string>keyAndHint[1];
 
 		assert.equal(keys.length, 1);
 		assert.equal(hint, 'testhint');
@@ -94,24 +94,26 @@ testLib.addAsyncTest('sync keys without hint', assert => {
 	let env: Env;
 	return setup().then(_env => {
 		env = _env;
-
+		
 		// verify that syncing keys succeeds if the password
 		// hint is not available
-		return env.fs.rm(`${_env.vault.vaultPath() }/data/default/.password.hint`);
+		env.cloudStore.passwordHint = () => {
+			return Q.reject<string>(new Error('Fail to fetch hint'));
+		};
 	}).then(() => {
 		return env.syncer.syncKeys();
 	}).then(() => {
-		return Q.all([env.store.listKeys(), env.store.passwordHint()]);
+		return Q.all([env.localStore.listKeys(), env.localStore.passwordHint()]);
 	}).then((keysAndHint: [key_agent.Key[], string]) => {
 		assert.equal(keysAndHint[0].length, 1);
 		assert.equal(keysAndHint[1], '');
 	});
 });
 
-testLib.addAsyncTest('sync vault items to store', (assert) => {
+testLib.addAsyncTest('sync cloudStore items to store', (assert) => {
 	var env: Env;
 
-	// 1. save a new item to the vault
+	// 1. save a new item to the cloudStore
 	var item = new item_builder.Builder(item_store.ItemTypes.LOGIN)
 	.setTitle('sync me')
 	.addLogin('testuser@gmail.com')
@@ -120,7 +122,7 @@ testLib.addAsyncTest('sync vault items to store', (assert) => {
 
 	return setup().then((_env) => {
 		env = _env;
-		return item.saveTo(env.vault);
+		return item.saveTo(env.cloudStore);
 	}).then(() => {
 		// 2. sync and verify that the updated items were
 		//    synced to the local store
@@ -128,9 +130,9 @@ testLib.addAsyncTest('sync vault items to store', (assert) => {
 	}).then((syncStats) => {
 		assert.equal(syncStats.updated, 1);
 		assert.equal(syncStats.total, 1);
-		return env.store.listItems();
+		return env.localStore.listItems();
 	}).then((storeItems) => {
-		// 3. update the item in the vault, sync again
+		// 3. update the item in the cloudStore, sync again
 		//    and verify that the updates are synced
 		//    to the local store
 		assert.equal(storeItems.length, 1);
@@ -156,14 +158,14 @@ testLib.addAsyncTest('sync vault items to store', (assert) => {
 	}).then((syncStats) => {
 		assert.equal(syncStats.updated, 1);
 		assert.equal(syncStats.total, 1);
-		return env.store.listItems();
+		return env.localStore.listItems();
 	}).then((storeItems) => {
 		assert.equal(storeItems.length, 1);
 		assert.equal(storeItems[0].title, item.title);
 	});
 });
 
-testLib.addAsyncTest('sync store items to vault', (assert) => {
+testLib.addAsyncTest('sync store items to cloudStore', (assert) => {
 	var env: Env;
 
 	// 1. Save a new item to the store
@@ -175,14 +177,14 @@ testLib.addAsyncTest('sync store items to vault', (assert) => {
 
 	return setup().then((_env) => {
 		env = _env;
-		return item.saveTo(env.store);
+		return item.saveTo(env.localStore);
 	}).then(() => {
-		// 2. Sync and verify that item was added to vault
+		// 2. Sync and verify that item was added to cloudStore
 		return env.syncer.syncItems();
 	}).then((syncStats) => {
 		assert.equal(syncStats.updated, 1);
 		assert.equal(syncStats.total, 1);
-		return env.vault.listItems();
+		return env.cloudStore.listItems();
 	}).then((vaultItems) => {
 		assert.equal(vaultItems.length, 1);
 		assert.equal(vaultItems[0].title, item.title);
@@ -199,13 +201,13 @@ testLib.addAsyncTest('sync store items to vault', (assert) => {
 		}]);
 
 		// 3. Update item in store, sync and verify that
-		// vault item is updated
+		// cloudStore item is updated
 		item.title = 'store item - updated';
 		return item.save();
 	}).then(() => {
 		return env.syncer.syncItems();
 	}).then(() => {
-		return env.vault.listItems();
+		return env.cloudStore.listItems();
 	}).then((vaultItems) => {
 		assert.equal(vaultItems.length, 1);
 		assert.equal(vaultItems[0].title, item.title);
@@ -213,7 +215,7 @@ testLib.addAsyncTest('sync store items to vault', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('merge store and vault item updates', (assert) => {
+testLib.addAsyncTest('merge store and cloudStore item updates', (assert) => {
 	var env: Env;
 	var item = new item_builder.Builder(item_store.ItemTypes.LOGIN)
 	.setTitle('acme.org')
@@ -223,24 +225,24 @@ testLib.addAsyncTest('merge store and vault item updates', (assert) => {
 
 	return setup().then((_env) => {
 		env = _env;
-		return item.saveTo(env.store);
+		return item.saveTo(env.localStore);
 	}).then(() => {
 		return env.syncer.syncItems();
 	}).then(() => {
-		return env.vault.loadItem(item.uuid);
+		return env.cloudStore.loadItem(item.uuid);
 	}).then(vaultItem => {
 		assert.equal(vaultItem.item.title, item.title);
 		assert.equal(item.trashed, vaultItem.item.trashed);
 		assert.ok(sync.itemUpdateTimesEqual(item.updatedAt, vaultItem.item.updatedAt));
 
-		// update item in vault and store and save to both
+		// update item in cloudStore and store and save to both
 		vaultItem.item.trashed = true;
 		item.title = 'acme.org - client update';
 		return Q.all([item.save(), vaultItem.item.save()]);
 	}).then(() => {
 		return env.syncer.syncItems();
 	}).then(() => {
-		return Q.all([env.store.loadItem(item.uuid), env.vault.loadItem(item.uuid)]);
+		return Q.all([env.localStore.loadItem(item.uuid), env.cloudStore.loadItem(item.uuid)]);
 	}).then((items) => {
 		var storeItem = <item_store.Item>items[0].item;
 		var vaultItem = <item_store.Item>items[1].item;
@@ -266,7 +268,7 @@ testLib.addAsyncTest('sync progress', (assert) => {
 		env.syncer.onProgress.listen((progress) => {
 			progressUpdates.push(<sync.SyncProgress>clone(progress));
 		});
-		return item.saveTo(env.vault);
+		return item.saveTo(env.cloudStore);
 	}).then(() => {
 		return env.syncer.syncItems();
 	}).then((finalState) => {
@@ -341,14 +343,14 @@ testLib.addAsyncTest('sync deleted items', (assert) => {
 		return env.syncer.syncItems();
 	}).then(() => {
 
-		// remove it in the vault
+		// remove it in the cloudStore
 		return item.remove();
 	}).then(() => {
 
 		// sync again
 		return env.syncer.syncItems();
 	}).then(() => {
-		return env.store.listItems({ includeTombstones: true });
+		return env.localStore.listItems({ includeTombstones: true });
 	}).then((items) => {
 
 		// verify that the store item was also
@@ -358,19 +360,20 @@ testLib.addAsyncTest('sync deleted items', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('sync locked vault', (assert) => {
+testLib.addAsyncTest('syncing locked store should fail', (assert) => {
 	var env: Env;
 	var item: item_store.Item;
 
-	return setupWithItem().then((_env) => {
+	return setupWithItem().then(_env => {
 		env = _env.env;
 		item = _env.item;
-
-		return env.vault.lock()
+		return env.keyAgent.forgetKeys()
 	}).then(() => {
-		return env.syncer.syncItems();
-	}).catch((err) => {
-		assert.ok(err.message.indexOf('No such key') != -1);
+		return env.keyAgent.listKeys();
+	}).then(keys => {
+		return asyncutil.result(env.syncer.syncItems());
+	}).then(result => {
+		assert.ok(result.error != null);
 	});
 });
 
@@ -399,16 +402,15 @@ testLib.addAsyncTest('sync many items', (assert) => {
 			.addLogin('testuser' + saves.length + '@gmail.com')
 			.addUrl('signon.acme.org')
 			.item();
-			saves.push(item.saveTo(env.vault));
+			saves.push(item.saveTo(env.cloudStore));
 		}
 
 		return Q.all(saves);
 	}).then(() => {
 		return env.syncer.syncItems();
 	}).then(() => {
-		return env.store.listItems();
+		return env.localStore.listItems();
 	}).then((items) => {
 		assert.equal(items.length, ITEM_COUNT, 'synced expected number of items');
 	});
 });
-

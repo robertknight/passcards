@@ -12,7 +12,7 @@ import item_store = require('./item_store');
 import key_agent = require('./key_agent');
 
 function syncLog(...args: any[]) {
-	//console.log.apply(console, args);
+	//	console.log.apply(console, args);
 }
 
 /** Returns true if two date/times from Item.updatedAt should
@@ -118,8 +118,8 @@ export class CloudStoreSyncer implements Syncer {
 		});
 
 		return Q.all([keys, hint]).then((keysAndHint) => {
-			var keys = <key_agent.Key[]>keysAndHint[0];
-			var hint = <string>keysAndHint[1];
+			let keys = <key_agent.Key[]>keysAndHint[0];
+			let hint = <string>keysAndHint[1];
 			return this.localStore.saveKeys(keys, hint);
 		});
 	}
@@ -172,7 +172,7 @@ export class CloudStoreSyncer implements Syncer {
 			var remoteItems = <item_store.Item[]>itemLists[1];
 			var lastSyncTimes = <Map<string, Date>>(itemLists[2]);
 
-			syncLog('%d items in remote store, %d in local store', localItems.length, remoteItems.length);
+			syncLog('%d items in local store, %d in remote store', localItems.length, remoteItems.length);
 
 			var allItems: { [index: string]: boolean } = {};
 

@@ -259,6 +259,18 @@ function fromAgileKeychainFormField(keychainField: agile_keychain_entries.WebFor
 	return field;
 }
 
+export function convertKeys(keyList: agile_keychain_entries.EncryptionKeyEntry[]): key_agent.Key[] {
+	return keyList.map(keyEntry => {
+		return {
+			format: key_agent.KeyFormat.AgileKeychainKey,
+			data: keyEntry.data,
+			identifier: keyEntry.identifier,
+			iterations: keyEntry.iterations,
+			validation: keyEntry.validation
+		};
+	});
+}
+
 /** Represents an Agile Keychain-format 1Password vault. */
 export class Vault implements item_store.Store {
 	private fs: vfs.VFS;
@@ -341,18 +353,7 @@ export class Vault implements item_store.Store {
 	}
 
 	listKeys(): Q.Promise<key_agent.Key[]> {
-		return this.getKeys().then((keyEntries) => {
-			return keyEntries.map((keyEntry) => {
-				// TODO - The key's 'level' property is unused here
-				return {
-					format: key_agent.KeyFormat.AgileKeychainKey,
-					data: keyEntry.data,
-					identifier: keyEntry.identifier,
-					iterations: keyEntry.iterations,
-					validation: keyEntry.validation
-				};
-			});
-		});
+		return this.getKeys().then(convertKeys);
 	}
 
 	saveKeys(keys: key_agent.Key[], hint: string) {
@@ -427,12 +428,12 @@ export class Vault implements item_store.Store {
 		}
 
 		// update the '<item ID>.1password' file
-		var itemSaved = item.getContent().then((content) => {
+		var itemSaved = item.getContent().then(content => {
 			item.updateOverviewFromContent(content);
 
 			var contentJSON = JSON.stringify(toAgileKeychainContent(content));
 			return this.encryptItemData(DEFAULT_AGILEKEYCHAIN_SECURITY_LEVEL, contentJSON);
-		}).then((encryptedContent) => {
+		}).then(encryptedContent => {
 			var itemPath = this.itemPath(item.uuid);
 			var keychainJSON = JSON.stringify(toAgileKeychainItem(item, encryptedContent));
 			return this.fs.write(itemPath, keychainJSON);
@@ -672,30 +673,11 @@ export class Vault implements item_store.Store {
 		//    specifying the vault path, add one
 		// 4. Generate new random key and encrypt with master password
 
-		var masterKey = crypto.randomBytes(1024);
-		var salt = crypto.randomBytes(8);
-		var keyList: agile_keychain_entries.EncryptionKeyList;
-
-		return key_agent.keyFromPassword(password, salt, passIterations).then((derivedKey) => {
-			var encryptedKey = key_agent.encryptKey(derivedKey, masterKey);
-
-			var masterKeyEntry = {
-				data: btoa('Salted__' + salt + encryptedKey.key),
-				identifier: agile_keychain_crypto.newUUID(),
-				iterations: passIterations,
-				level: 'SL5',
-				validation: btoa(encryptedKey.validation)
-			};
-
-			keyList = {
-				list: [masterKeyEntry],
-				SL5: masterKeyEntry.identifier
-			};
-
-			return fs.mkpath(vault.dataFolderPath());
-		}).then(() => {
-			var keysSaved = vault.writeKeys(keyList, hint);
-			var contentsSaved = fs.write(vault.contentsFilePath(), '[]');
+		return fs.mkpath(vault.dataFolderPath()).then(() => {
+			return agile_keychain_crypto.generateMasterKey(password, passIterations);
+		}).then(keyList => {
+			let keysSaved = vault.writeKeys(keyList, hint);
+			let contentsSaved = fs.write(vault.contentsFilePath(), '[]');
 			return Q.all([keysSaved, contentsSaved]);
 		}).then(() => {
 			return vault;

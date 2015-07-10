@@ -285,7 +285,7 @@ export class Store implements item_store.SyncableStore {
 		return this.keyForItem(item).then((_key) => {
 			key = _key;
 			return item.getContent();
-		}).then((content) => {
+		}).then(content => {
 			item.updateOverviewFromContent(content);
 			item.parentRevision = item.revision;
 			item.revision = item_store.generateRevisionId({ item: item, content: content });
@@ -297,7 +297,7 @@ export class Store implements item_store.SyncableStore {
 				content: content
 			};
 			return this.encrypt(key, revision);
-		}).then((revisionData) => {
+		}).then(revisionData => {
 			var indexUpdated = this.indexUpdateQueue.push(item);
 			var revisionSaved = this.itemStore.set('revisions/' + item.revision, revisionData);
 			return asyncutil.eraseResult(Q.all([indexUpdated, revisionSaved]));
