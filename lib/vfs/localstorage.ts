@@ -92,7 +92,7 @@ export class FS implements vfs.VFS {
 		return Q(this.storage.getItem(entry.key));
 	}
 
-	write(path: string, content: string, options: vfs.WriteOptions = {}): Q.Promise<void> {
+	write(path: string, content: string, options: vfs.WriteOptions = {}): Q.Promise<vfs.FileInfo> {
 		var entry = this.entryForPath(path);
 		if (!entry) {
 			// create a new file entry for this path
@@ -103,7 +103,7 @@ export class FS implements vfs.VFS {
 			}
 			var parentDirEntry = this.entryForPath(Path.dirname(path));
 			if (!parentDirEntry) {
-				return Q.reject<void>(new Error('Directory does not exist'));
+				return Q.reject<vfs.FileInfo>(new Error('Directory does not exist'));
 			}
 			entry.parent = parentDirEntry;
 			parentDirEntry.entries.push(entry);
@@ -115,7 +115,7 @@ export class FS implements vfs.VFS {
 		}
 
 		if (options.parentRevision && entry.mtime && entry.mtime !== parentRev) {
-			return Q.reject<void>(new vfs.VfsError(vfs.ErrorType.Conflict, path));
+			return Q.reject<vfs.FileInfo>(new vfs.VfsError(vfs.ErrorType.Conflict, path));
 		}
 
 		assert(entry.parent);
@@ -131,7 +131,7 @@ export class FS implements vfs.VFS {
 		this.writeDirIndex(entry.parent);
 
 		this.storage.setItem(entry.key, content);
-		return Q<void>(null);
+		return Q(FS.fsEntryToFileInfo(entry));
 	}
 
 	list(path: string): Q.Promise<vfs.FileInfo[]> {
@@ -326,7 +326,9 @@ export class FS implements vfs.VFS {
 		var fileInfo = <vfs.FileInfo>{
 			name: entry.name,
 			isDir: entry.isDir,
-			path: entry.name
+			path: entry.name,
+			lastModified: new Date(entry.mtime),
+			size: null
 		};
 		if (entry.mtime) {
 			fileInfo.revision = entry.mtime.toString();

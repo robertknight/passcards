@@ -99,12 +99,12 @@ export class Client implements vfs.VFS {
 		});
 	}
 
-	write(path: string, content: string): Q.Promise<void> {
+	write(path: string, content: string): Q.Promise<vfs.FileInfo> {
 		if (stringutil.endsWith(path, '/')) {
-			return Q.reject<void>(new Error(`Cannot write file. ${path} is a directory`));
+			return Q.reject<vfs.FileInfo>(new Error(`Cannot write file. ${path} is a directory`));
 		}
 		return http_client.expect(this.request('PUT', path, content), 200).then(() => {
-			return <void>null;
+			return this.stat(path);
 		});
 	}
 

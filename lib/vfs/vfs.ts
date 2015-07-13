@@ -14,6 +14,12 @@ export interface FileInfo {
 
 	/** The current version of the file. */
 	revision?: string;
+
+	/** The last modified timestamp for the file. */
+	lastModified: Date;
+
+	/** The size of the file in bytes. */
+	size: number;
 }
 
 export interface AccountInfo {
@@ -86,7 +92,7 @@ export interface VFS {
 	/** Read the contents of a file at @p path */
 	read(path: string): Q.Promise<string>
 	/** Write the contents of a file at @p path */
-	write(path: string, content: string, options?: WriteOptions): Q.Promise<void>;
+	write(path: string, content: string, options?: WriteOptions): Q.Promise<FileInfo>;
 	/** List the contents of a directory */
 	list(path: string): Q.Promise<FileInfo[]>;
 	/** Remove a file or directory */

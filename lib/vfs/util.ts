@@ -62,18 +62,18 @@ export function listRecursive(fs: vfs.VFS, src: string): Q.Promise<vfs.FileInfo[
 }
 
 /** Copy the directory @p path and all of its contents to a new location */
-export function cp(fs: vfs.VFS, src: vfs.FileInfo, dest: string): Q.Promise<void> {
+export function cp(fs: vfs.VFS, src: vfs.FileInfo, dest: string): Q.Promise<{}> {
 	if (src.isDir) {
 		return fs.mkpath(dest).then(() => {
 			return fs.list(src.path);
 		})
 		.then((srcFiles) => {
-			var copyOps: Q.Promise<void>[] = [];
+			var copyOps: Q.Promise<{}>[] = [];
 			srcFiles.forEach((srcFile) => {
 				var destPath = dest + '/' + srcFile.name;
 				copyOps.push(cp(fs, srcFile, destPath));
 			});
-			return asyncutil.eraseResult(Q.all(copyOps));
+			return Q.all(copyOps);
 		})
 	} else {
 		return fs.read(src.path).then((content) => {

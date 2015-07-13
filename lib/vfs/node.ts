@@ -38,13 +38,14 @@ export class FileVFS implements vfs.VFS {
 				result.reject(err);
 				return;
 			}
-			var fileInfo = {
+			result.resolve({
 				name: Path.basename(path),
 				path: path,
 				isDir: info.isDirectory(),
-				revision: FileVFS.statToRevision(info)
-			};
-			result.resolve(fileInfo);
+				revision: FileVFS.statToRevision(info),
+				lastModified: info.mtime,
+				size: info.size
+			});
 		});
 		return result.promise;
 	}
@@ -65,8 +66,8 @@ export class FileVFS implements vfs.VFS {
 		return result.promise;
 	}
 
-	write(path: string, content: string, options: vfs.WriteOptions = {}): Q.Promise<void> {
-		var result = Q.defer<void>();
+	write(path: string, content: string, options: vfs.WriteOptions = {}): Q.Promise<vfs.FileInfo> {
+		var result = Q.defer<{}>();
 
 		var fullPath = this.absPath(path);
 		var tempPath = '';
@@ -101,7 +102,7 @@ export class FileVFS implements vfs.VFS {
 			}
 		});
 
-		return result.promise;
+		return result.promise.then(() => this.stat(path));
 	}
 
 	list(path: string): Q.Promise<vfs.FileInfo[]> {
@@ -118,9 +119,11 @@ export class FileVFS implements vfs.VFS {
 				var filePath = Path.join(path, name);
 				statOps.push(this.stat(filePath));
 			});
-			Q.all(statOps).then((fileInfoList) => {
+			Q.all(statOps).then(fileInfoList => {
 				result.resolve(fileInfoList);
-			}).done();
+			}).catch(err => {
+				result.reject(err);
+			});
 		});
 		return result.promise;
 	}

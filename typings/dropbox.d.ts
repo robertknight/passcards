@@ -140,7 +140,8 @@ declare module "dropbox" {
 		search(path: string, namePattern: string, options: SearchOptions, callback: (error:ApiError, matches: File.Stat[]) => void) : XMLHttpRequest;
 		setCredentials(credentials: Object) : Client;
 		stat(path: string, options: StatOptions, callback: (error: ApiError, file: File.Stat) => void) : XMLHttpRequest;
-		writeFile(path: string, content: string, options : WriteFileOptions, callback: (error:ApiError) => void) : XMLHttpRequest;
+		writeFile(path: string, content: string, options : WriteFileOptions,
+		          callback: (error:ApiError, stat: File.Stat) => void) : XMLHttpRequest;
 
 		onError : EventSource<ApiError>;
 	}

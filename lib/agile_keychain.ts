@@ -284,7 +284,7 @@ export class Vault implements item_store.Store {
 
 	// promise which is resolved when the current flush of
 	// index updates completes
-	private indexUpdated: Q.Promise<void>;
+	private indexUpdated: Q.Promise<{}>;
 	private indexUpdatePending: boolean;
 
 	onItemUpdated: event_stream.EventStream<item_store.Item>;
@@ -302,7 +302,7 @@ export class Vault implements item_store.Store {
 		this.onUnlock = new event_stream.EventStream<void>();
 
 		this.pendingIndexUpdates = new collectionutil.PMap<string, item_store.Item>();
-		this.indexUpdated = Q<void>(null);
+		this.indexUpdated = Q<{}>(null);
 		this.indexUpdatePending = false;
 	}
 
@@ -472,13 +472,13 @@ export class Vault implements item_store.Store {
 
 	// save pending changes to the contents.js index file
 	private saveContentsFile() {
-		var overviewSaved = Q.defer<void>();
+		var overviewSaved = Q.defer<{}>();
 		var revision: string;
 
-		this.indexUpdated = this.fs.stat(this.contentsFilePath()).then((stat) => {
+		this.indexUpdated = this.fs.stat(this.contentsFilePath()).then(stat => {
 			revision = stat.revision;
 			return this.fs.read(this.contentsFilePath());
-		}).then((contentsJSON) => {
+		}).then(contentsJSON => {
 			var updatedItems: item_store.Item[] = [];
 			this.pendingIndexUpdates.forEach((item) => {
 				updatedItems.push(item);

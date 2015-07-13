@@ -169,8 +169,8 @@ export class DropboxVFS implements vfs.VFS {
 		return result.promise;
 	}
 
-	write(path: string, content: string, options: vfs.WriteOptions = {}): Q.Promise<void> {
-		var result = Q.defer<void>();
+	write(path: string, content: string, options: vfs.WriteOptions = {}): Q.Promise<vfs.FileInfo> {
+		var result = Q.defer<vfs.FileInfo>();
 		var dropboxWriteOpts: dropbox.WriteFileOptions = {};
 
 		if (options && options.parentRevision) {
@@ -179,12 +179,12 @@ export class DropboxVFS implements vfs.VFS {
 			// dropboxWriteOpts.autorename = false;
 		}
 
-		this.client.writeFile(path, content, dropboxWriteOpts, (error) => {
+		this.client.writeFile(path, content, dropboxWriteOpts, (error, stat) => {
 			if (error) {
 				result.reject(convertError(error));
 				return;
 			}
-			result.resolve(null);
+			result.resolve(this.toVfsFile(stat));
 		});
 		return result.promise;
 	}
@@ -242,7 +242,9 @@ export class DropboxVFS implements vfs.VFS {
 			name: file.name,
 			path: file.path,
 			isDir: file.isFolder,
-			revision: file.versionTag
+			revision: file.versionTag,
+			lastModified: file.modifiedAt,
+			size: file.size
 		};
 	}
 }
