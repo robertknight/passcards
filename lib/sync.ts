@@ -249,9 +249,6 @@ export class CloudStoreSyncer implements Syncer {
 			} else {
 				++this.syncProgress.updated;
 			}
-			if (err) {
-				this.currentSync.reject(err);
-			}
 			this.onProgress.publish(this.syncProgress);
 		};
 

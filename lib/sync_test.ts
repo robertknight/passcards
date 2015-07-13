@@ -371,9 +371,11 @@ testLib.addAsyncTest('syncing locked store should fail', (assert) => {
 	}).then(() => {
 		return env.keyAgent.listKeys();
 	}).then(keys => {
-		return asyncutil.result(env.syncer.syncItems());
+		return env.syncer.syncItems();
 	}).then(result => {
-		assert.ok(result.error != null);
+		assert.equal(result.updated, 0);
+		assert.equal(result.failed, 1);
+		assert.equal(result.total, 1);
 	});
 });
 
@@ -414,3 +416,46 @@ testLib.addAsyncTest('sync many items', (assert) => {
 		assert.equal(items.length, ITEM_COUNT, 'synced expected number of items');
 	});
 });
+
+testLib.addAsyncTest('sync should complete if errors occur', assert => {
+	let env: Env;
+	let item: item_store.Item;
+
+	return setupWithItem().then(_env => {
+		env = _env.env;
+		item = _env.item;
+		return env.syncer.syncItems();
+	}).then(() => {
+		return env.cloudStore.loadItem(item.uuid);
+	}).then(cloudItem => {
+		cloudItem.item.title = 'Updated title';
+		return cloudItem.item.save();
+	}).then(() => {
+		// simulate error syncing a particular item
+		// (eg. concurrent deletion of item from cloud store,
+		//  temporary issue with cloud store)
+		let originalLoadItem = env.cloudStore.loadItem.bind(env.cloudStore);
+		env.cloudStore.loadItem = uuid => {
+			if (uuid === item.uuid) {
+				return Q.reject<item_store.ItemAndContent>('Could not load item');
+			} else {
+				return originalLoadItem(uuid);
+			}
+		};
+		return env.syncer.syncItems();
+	}).then(result => {
+		assert.equal(result.failed, 1);
+		assert.equal(result.total, 1);
+
+		// reset error handler and verify that
+		// syncing succeeds
+		delete env.cloudStore.loadItem;
+
+		return env.syncer.syncItems();
+	}).then(result => {
+		assert.equal(result.failed, 0);
+		assert.equal(result.updated, 1);
+		assert.equal(result.total, 1);
+	});
+});
+
