@@ -1,9 +1,52 @@
 /// <reference path="../../typings/DefinitelyTyped/chrome/chrome.d.ts" />
 
-/** `rpc` provides an interface for making RPC calls between
-  * isolated objects such as two Windows in different domains,
-  * workers or browser extension scripts and web front-ends etc.
+/** 'rpc' provides a portable abstraction layer for communicating between
+  * different JavaScript contexts, such as:
   *
+  * - Browser extension interfaces and content scripts
+  * - Web workers and the main thread
+  * - Different Window objects
+  *
+  * The different contexts communicate with each other via
+  * MessagePort implementations. A MessagePort implementation 
+  * must provide two basic methods,
+  * emit() to send messages to the communication channel and on()
+  * to register a handler to be invoked when a message is received.
+  *
+  * Several MessagePort implementations are provided:
+  *
+  * - WorkerMessagePort class implements MessagePort using
+  *   Window.postMessage() and Window.addEventListener('message', ...)
+  *   and can be used for worker <-> main thread communications.
+  * - WindowMessagePort is similar to WorkerMessagePort but is used
+  *   for inter-Window communications.
+  * - ChromeMessagePort handles communication between background pages
+  *   and content scripts in Chrome extensions via chrome.runtime methods.
+  *
+  * On top of the MessagePort abstraction, the RpcHandler class
+  * provides an RPC implementation for making method calls and
+  * receiving the response asynchronously.
+  *
+  * Here is an example of using 'rpc' to simplify communications between
+  * a web worker and the main page of an application:
+  *
+  *   // in main page
+  *   var workerPort = new WorkerMessagePort(worker, 'worker', 'main');
+  *   var workerRpc = new rpc.RpcHandler(workerPort);
+  *
+  *   workerRpc.call('do-some-work', function(err, result) {
+  *     ...
+  *   });
+  *
+  *   // in web worker
+  *   var mainPort = new WorkerMessagePort(self, 'main', 'worker');
+  *   var mainRpc = new rpc.RpcHandler(mainPort);
+  *
+  *   mainRpc.on('do-some-work', function(input) {
+  *    // do something expensive
+  *    return result;
+  *   });
+  * 
   * This module uses callbacks rather than promises for portability
   * between different Javascript environments (standard browser
   * context, web workers, priviledged extension scripts, sandboxed
