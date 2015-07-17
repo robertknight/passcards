@@ -21,7 +21,7 @@ deploy:
 - provider: npm
   email: robertknight@gmail.com
   api_key:
-    secure: RhRzH7umr4QyFjScdoR1nsWn/BHjQGrqwpFiavQzMgd1cEEnuWtTju8puGFct8++SJXH3bfcLp9kqtg3S2BB2qQM8ZqHlU1WGh8rKvgaFtmZCMdITPWqGmL/AuKQi+JL272jnReqwxi/leTNI1OQXL3TJXRv33JHDJphKJ+vGtE=
+    secure: "CL8iIrwmfFRJ7UKHIa3+7zSCihBlAG79ZY5n7v5gPesLZ7ydtA+NJuiLyW4js2yBusTzIwSpctpemlGsPhdde5Zl/F9fs7lYpXlGTxf/zh+bUJ/gf0NgfsCbL/xiFUZcA/Xxqr9z0cQFDKpTKPdlJ+YdgZyFmCUmbgQ1iZohpwI="
   skip_cleanup: true
 - provider: s3
   access_key_id: AKIAJLAC2I2QPV6E33GA
