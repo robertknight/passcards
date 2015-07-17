@@ -41,11 +41,12 @@ function setupDOM(): Q.Promise<Window> {
 
 var testModules = [
 	'./item_list_view_test',
-	'./item_icons_test'
+	'./item_icons_test',
+	'./page_test'
 ];
 
 setupDOM().then(() => {
-	testModules.forEach((testModule) => {
+	testModules.forEach(testModule => {
 		try {
 			require(testModule);
 		} catch (err) {

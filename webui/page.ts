@@ -8,15 +8,6 @@ import env = require('../lib/base/env');
 import forms = require('../webui/forms');
 import rpc = require('../lib/net/rpc');
 
-var portRpc: rpc.RpcHandler;
-
-if (env.isChromeExtension()) {
-	portRpc = new rpc.RpcHandler(new rpc.ChromeMessagePort());
-} else {
-	var selfWorker: ContentWorker = <any>self;
-	portRpc = new rpc.RpcHandler(selfWorker.port);
-}
-
 function inputFieldType(typeStr: string): forms.FieldType {
 	switch (typeStr.toLowerCase()) {
 		case 'email':
@@ -43,11 +34,6 @@ interface InputField {
 	element: HTMLInputElement;
 	field: forms.InputField;
 }
-
-// Set of fields returned in the most recent RPC call
-// from the extension to collect the set of fields in the
-// document
-var lastFields: HTMLInputElement[] = [];
 
 function collectFieldsInDocument(document: Document): InputField[] {
 	var fieldElements = document.getElementsByTagName('input');
@@ -116,57 +102,117 @@ function parentForm(input: HTMLInputElement): HTMLFormElement {
 	return null;
 }
 
+// Populates an input field with a given value and generates
+// events to enable the page's UI to update itself
+function autofillField(input: HTMLInputElement, value: string) {
+	input.value = value;
+
+	// some pages disable the login action on a form until
+	// the user edits the username/password fields.
+	//
+	// Generate events that simulate those that would be generated
+	// if the user filled the form manually.
+	//
+	// See http://stackoverflow.com/questions/1948332 for an example
+	// of the kind of logic that pages may employ to detect changes
+	//
+	let changeEvents = [
+		new Event('input'),
+		new Event('change')
+	];
+
+	for (let event of changeEvents) {
+		input.dispatchEvent(event);
+	}
+
+	return true;
+}
+
 interface InputForm {
 	formElement: HTMLFormElement;
 	fieldGroup: forms.FieldGroup;
 }
 
-portRpc.on('find-fields', () => {
-	lastFields = [];
+/** Sets up communication between the content script
+  * with access to the DOM of the page that the user
+  * wants to autofill and the main app that stores
+  * login credentials and other items, using @p portRpc
+  * to communicate between the two.
+  */
+export function init(portRpc?: rpc.RpcHandler) {
+	// Set of fields returned in the most recent RPC call
+	// from the extension to collect the set of fields in the
+	// document
+	let lastFields: HTMLInputElement[] = [];
 
-	var inputFields = collectFieldsInDocument(document);
-	lastFields = inputFields.map((field) => {
-		return field.element;
-	});
+	if (!portRpc) {
+		if (env.isChromeExtension()) {
+			portRpc = new rpc.RpcHandler(new rpc.ChromeMessagePort());
+		} else if ('port' in self) {
+			// Firefox extension.
+			// See https://developer.mozilla.org/en-US/Add-ons/SDK/Guides/Content_Scripts/port
+			var selfWorker: ContentWorker = <any>self;
+			portRpc = new rpc.RpcHandler(selfWorker.port);
+		}
+	}
 
-	var forms: InputForm[] = [];
-	inputFields.forEach((field) => {
-		var formElement = parentForm(field.element);
-		var form: InputForm;
-		for (var i = 0; i < forms.length; i++) {
-			if (forms[i].formElement === formElement) {
-				form = forms[i];
+	portRpc.on('find-fields', () => {
+		lastFields = [];
+
+		var inputFields = collectFieldsInDocument(document);
+		lastFields = inputFields.map((field) => {
+			return field.element;
+		});
+
+		var forms: InputForm[] = [];
+		inputFields.forEach((field) => {
+			var formElement = parentForm(field.element);
+			var form: InputForm;
+			for (var i = 0; i < forms.length; i++) {
+				if (forms[i].formElement === formElement) {
+					form = forms[i];
+				}
 			}
-		}
-		if (!form) {
-			form = {
-				formElement: formElement,
-				fieldGroup: { fields: [] }
-			};
-			forms.push(form);
-		}
-		form.fieldGroup.fields.push(field.field);
-	});
-	return forms.map((form) => {
-		return form.fieldGroup;
-	});
-});
-
-portRpc.on('autofill', (entries: forms.AutoFillEntry[]) => {
-	var filled = 0;
-
-	entries.forEach((entry) => {
-		var foundField = false;
-		if (typeof entry.key == 'number' && entry.key >= 0 && entry.key < lastFields.length) {
-			var elt = lastFields[entry.key];
-			elt.value = entry.value;
-			++filled;
-			foundField = true;
-		}
-		if (!foundField) {
-			console.warn('Failed to find input field to autofill');
-		}
+			if (!form) {
+				form = {
+					formElement: formElement,
+					fieldGroup: { fields: [] }
+				};
+				forms.push(form);
+			}
+			form.fieldGroup.fields.push(field.field);
+		});
+		return forms.map((form) => {
+			return form.fieldGroup;
+		});
 	});
 
-	return filled;
-});
+	portRpc.on('autofill', (entries: forms.AutoFillEntry[]) => {
+		var filled = 0;
+
+		entries.forEach(entry => {
+			let foundField = false;
+			if (typeof entry.key == 'number' && entry.key >= 0 && entry.key < lastFields.length) {
+				var elt = lastFields[entry.key];
+				if (autofillField(elt, entry.value)) {
+					++filled;
+					foundField = true;
+				}
+			}
+			if (!foundField) {
+				console.warn('Failed to find input field to autofill');
+			}
+		});
+
+		return filled;
+	});
+}
+
+// when this script is loaded into the page in the context
+// of a browser extension, it auto-initializes itself, otherwise
+// the injector has to call init() and provide an rpc.RpcHandler
+// implementation to communicate with the main app that stores
+// login details
+if (env.isChromeExtension() || (typeof self === 'object' && 'port' in self)) {
+	init();
+}

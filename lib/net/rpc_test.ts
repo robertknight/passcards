@@ -26,7 +26,7 @@ class FakePort implements rpc.MessagePort<rpc.CallMessage, rpc.ReplyMessage> {
 	}
 
 	emit(method: string, data: Object): void {
-		this.receiver.handlers.forEach((handler) => {
+		this.receiver.handlers.forEach(handler => {
 			if (handler.method == method) {
 				handler.callback(data);
 			}

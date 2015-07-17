@@ -11,7 +11,8 @@
   */
 
 /** Client provides a call() method to invoke an RPC
-  * call on the server and receive a promise for the result.
+  * call asynchronously on a 'server' and receive the result
+  * back via a callback.
   */
 export interface Client {
 	/** Invoke an RPC call and invoke callback with the results.
