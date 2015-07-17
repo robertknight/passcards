@@ -15,14 +15,10 @@ before_script:
 after_success:
 - make firefox-addon
 - make publish-chrome-extension
+- make publish-passcards-cli
 before_deploy:
 - make test-package
 deploy:
-- provider: npm
-  email: robertknight@gmail.com
-  api_key:
-    secure: "CL8iIrwmfFRJ7UKHIa3+7zSCihBlAG79ZY5n7v5gPesLZ7ydtA+NJuiLyW4js2yBusTzIwSpctpemlGsPhdde5Zl/F9fs7lYpXlGTxf/zh+bUJ/gf0NgfsCbL/xiFUZcA/Xxqr9z0cQFDKpTKPdlJ+YdgZyFmCUmbgQ1iZohpwI="
-  skip_cleanup: true
 - provider: s3
   access_key_id: AKIAJLAC2I2QPV6E33GA
   secret_access_key:
@@ -53,3 +49,5 @@ env:
   - secure: QgqHYQ8eg9sJLJcELRuC47B7R56/t8Y7fxi+dToZGeD82UHfJX2lZcKfn9coAVxRc8VvYSdOw0PCHxzeq61xCXRK/Rw4H/zrbyEyqwIPu6t82vyTP8S0/2qQa43suUPPL9vCw7/uohzeUd7MuZeAUofQdJPxCYF8RvNK7uBOYfk=
   # CHROME_EXT_CLIENT_SECRET
   - secure: NyDSq2y6xkHzFTTnoZuLrLfIdEmSzNTEQX9vQQCNyGfCWDbN4AYQd2whYAYV0IUaKdOh5/p+ixYvIaodjVol5ixRZ0p1R3IiqRfwV7YPum10goPiAb9e8D+tNgryz0SUMBNtJBT07yc3NsrTZAAsZfEb0ME4Emdp7O9C8q4d9pk=
+  # NPM_AUTH_TOKEN
+  - secure: "mZc/QM0FmeGwCPrUHsInrXp9gBXkyezEcioM0fyjmajboqerjfjz4uzn0C4iGEYXL5SBEbEuTcFfnaa3Mtuy6ftWrj5l0VbcimHgiwy20+FFeM5cJE4eC6uwnY6BNVECF0KwHM8qIMwY1w94mIVQCg8+P7rzE74xnUVl45k7BEE="

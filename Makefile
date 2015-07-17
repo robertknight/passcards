@@ -144,6 +144,10 @@ chrome-extension: webui-build
 publish-chrome-extension: chrome-extension
 	./utils/publish-chrome-extension.js pkg/passcards.zip
 
+publish-passcards-cli: webui-build
+	echo '//registry.npmjs.org/:_authToken=$${NPM_AUTH_TOKEN}' > .npmrc
+	npm -dd publish
+
 update-manifest-versions:
 	$(UPDATE_MANIFEST) package.json
 	$(UPDATE_MANIFEST) addons/chrome/manifest.json
