@@ -31,7 +31,7 @@ Support for older browsers may be possible in future.
 
 ## Development
 
-Local development requires Node.js 0.10 and make. To build the CLI and web clients, clone the source and run `make`.
+Local development requires a version of iojs/Node that is compatible with [jsdom](https://github.com/tmpvar/jsdom) and make. To build the CLI and web clients, clone the source and run `make`.
 
 ```
 git clone https://github.com/robertknight/passcards
