@@ -72,7 +72,7 @@ function setupWithItem(): Q.Promise<{ env: Env; item: item_store.Item }> {
 	});
 }
 
-testLib.addAsyncTest('sync cloudStore keys and password hint', (assert) => {
+testLib.addAsyncTest('sync keys and password hint from cloud to local', (assert) => {
 	let env: Env;
 
 	return setup().then(_env => {
@@ -109,7 +109,7 @@ testLib.addAsyncTest('sync keys without hint', assert => {
 	});
 });
 
-testLib.addAsyncTest('sync cloudStore items to store', (assert) => {
+testLib.addAsyncTest('sync items from cloud to local', (assert) => {
 	var env: Env;
 
 	// 1. save a new item to the cloudStore
@@ -164,7 +164,7 @@ testLib.addAsyncTest('sync cloudStore items to store', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('sync store items to cloudStore', (assert) => {
+testLib.addAsyncTest('sync items from local to cloud', (assert) => {
 	var env: Env;
 
 	// 1. Save a new item to the store
@@ -214,7 +214,7 @@ testLib.addAsyncTest('sync store items to cloudStore', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('merge store and cloudStore item updates', (assert) => {
+testLib.addAsyncTest('merge local and cloud item updates', (assert) => {
 	var env: Env;
 	var item = new item_builder.Builder(item_store.ItemTypes.LOGIN)
 	.setTitle('acme.org')
@@ -251,7 +251,7 @@ testLib.addAsyncTest('merge store and cloudStore item updates', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('sync progress', (assert) => {
+testLib.addAsyncTest('report sync progress', (assert) => {
 	var env: Env;
 
 	var item = new item_builder.Builder(item_store.ItemTypes.LOGIN)
@@ -330,7 +330,7 @@ testLib.addAsyncTest('sync progress', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('sync deleted items', (assert) => {
+testLib.addAsyncTest('sync item deletions', (assert) => {
 	var env: Env;
 	var item: item_store.Item;
 
