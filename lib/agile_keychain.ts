@@ -3,6 +3,7 @@
 /// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
 /// <reference path="../typings/atob.d.ts" />
 
+import assert = require('assert');
 import atob = require('atob');
 import btoa = require('btoa');
 import Q = require('q');
@@ -409,11 +410,17 @@ export class Vault implements item_store.Store {
 	}
 
 	loadItem(uuid: string): Q.Promise<item_store.ItemAndContent> {
+		var contentInfo = this.fs.stat(this.itemPath(uuid));
 		var contentData = this.fs.read(this.itemPath(uuid));
 		var item: item_store.Item;
-		return contentData.then(contentJSON => {
-			return fromAgileKeychainItem(this, JSON.parse(contentJSON));
-		}).then(encryptedItem => {
+		return Q.all([contentInfo, contentData]).then((contentData: [vfs.FileInfo, string]) => {
+			let contentInfo = contentData[0];
+			let contentJSON = contentData[1];
+			let encryptedItem = fromAgileKeychainItem(this, JSON.parse(contentJSON));
+
+			assert(contentInfo.revision);
+			encryptedItem.revision = contentInfo.revision;
+
 			item = encryptedItem;
 			return encryptedItem.getContent();
 		}).then(content => ({
@@ -437,9 +444,16 @@ export class Vault implements item_store.Store {
 			var itemPath = this.itemPath(item.uuid);
 			var keychainJSON = JSON.stringify(toAgileKeychainItem(item, encryptedContent));
 			return this.fs.write(itemPath, keychainJSON);
+		}).then(fileInfo => {
+			// update the saved revision for the item
+			item.revision = fileInfo.revision;
 		});
 
-		// update the contents.js index file.
+		// update the contents.js index file. The index file is not used by
+		// Passcards as a source for item metadata, since failures in VFS
+		// operations can cause contents.js to get out of sync with the
+		// corresponding .1password files. contents.js is maintained and updated
+		// by Passcards for compatibility with the official 1Password clients.
 		//
 		// Updates are added to a queue which is then flushed so that an update for one
 		// entry does not clobber an update for another. This also reduces the number
@@ -486,7 +500,7 @@ export class Vault implements item_store.Store {
 			this.pendingIndexUpdates.clear();
 
 			var contentEntries: IndexEntry[] = JSON.parse(contentsJSON);
-			updatedItems.forEach((item) => {
+			updatedItems.forEach(item => {
 				var entry = underscore.find(contentEntries, (entry) => { return entry[0] == item.uuid });
 				if (!entry) {
 					entry = [null, null, null, null, null, null, null, null];
@@ -535,22 +549,36 @@ export class Vault implements item_store.Store {
 	  *
 	  * The createdAt, faveIndex, openContents, locations and account
 	  * fields are not set.
-	  *
-	  * FIXME: Use the type system to represent the above
 	  */
 	listItems(opts: item_store.ListItemsOptions = {}): Q.Promise<item_store.Item[]> {
-		var items = Q.defer<item_store.Item[]>();
-		var content = this.fs.read(this.contentsFilePath());
-		content.then((content) => {
-			var entries = JSON.parse(content);
-			var vaultItems: item_store.Item[] = [];
+		let items = Q.defer<item_store.Item[]>();
+		let content = this.fs.read(this.contentsFilePath());
+		let fileMetadata = this.fs.list(this.dataFolderPath());
+
+		return Q.all([fileMetadata, content]).then(result => {
+			let revisions = new Map<string, string>();
+			let filesMetadata = <vfs.FileInfo[]>result[0];
+			const ONEPWD_SUFFIX = '.1password';
+			for (let metadata of filesMetadata) {
+				if (stringutil.endsWith(metadata.name, ONEPWD_SUFFIX)) {
+					let uuid = metadata.name.slice(0, -ONEPWD_SUFFIX.length);
+					revisions.set(uuid, metadata.revision);
+				}
+			}
+			let entries = JSON.parse(<string>result[1]);
+			let vaultItems: item_store.Item[] = [];
 			entries.forEach((entry: IndexEntry) => {
-				var item = new item_store.Item(this);
+				let item = new item_store.Item(this);
 				item.uuid = entry[0];
 				item.typeName = entry[1];
 				item.title = entry[2];
 
-				var primaryLocation = entry[3];
+				if (!item.isTombstone()) {
+					item.revision = revisions.get(item.uuid);
+					assert(item.revision, `Item revision not found for ${item.uuid}`);
+				}
+
+				let primaryLocation = entry[3];
 				if (primaryLocation) {
 					item.locations.push(primaryLocation);
 				}
@@ -566,11 +594,8 @@ export class Vault implements item_store.Store {
 
 				vaultItems.push(item);
 			});
-			items.resolve(vaultItems);
-		}, (err: any) => {
-				items.reject(err);
-			}).done();
-		return items.promise;
+			return vaultItems;
+		});
 	}
 
 	decryptItemData(level: string, data: string): Q.Promise<string> {

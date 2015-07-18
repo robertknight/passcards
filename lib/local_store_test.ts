@@ -141,6 +141,17 @@ function setupEnv(): Env {
 	};
 }
 
+function setupStoreAndUnlock() {
+	let env = setupEnv();
+
+	let store = new local_store.Store(env.database, env.databaseName, env.keyAgent);
+	return store.saveKeys([env.masterKey], 'hint').then(() => {
+		return store.unlock(env.masterPass);
+	}).then(() => {
+		return store;
+	})
+}
+
 testLib.addAsyncTest('save and load keys and hint', (assert) => {
 	var env = setupEnv();
 
@@ -303,32 +314,33 @@ testLib.addAsyncTest('unlock store with no keys', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('get/set last sync data', (assert) => {
-	var env = setupEnv();
-	var store = new local_store.Store(env.database, env.databaseName, env.keyAgent);
-	var item = makeItem();
+testLib.addAsyncTest('get/set last sync data', assert => {
+	let store: local_store.Store;
+	let item = makeItem();
 
-	return store.saveKeys([env.masterKey], '').then(() => {
-		return store.unlock(env.masterPass);
+	const LOCAL_STORE = 'local';
+
+	return setupStoreAndUnlock().then(store_ => {
+		store = store_;
 	}).then(() => {
-		return store.lastSyncTimestamps();
-	}).then((timestamps) => {
-		assert.equal(timestamps.size, 0);
+		return store.lastSyncRevisions(LOCAL_STORE);
+	}).then(revisions => {
+		assert.equal(revisions.size, 0);
 		return item.saveTo(store);
 	}).then(() => {
 		assert.notEqual(item.revision, null);
-		return store.getLastSyncedRevision(item.uuid);
-	}).then((revision) => {
+		return store.getLastSyncedRevision(item.uuid, LOCAL_STORE);
+	}).then(revision => {
 		assert.equal(revision, null);
-		return store.setLastSyncedRevision(item, item.revision);
+		return store.setLastSyncedRevision(item, LOCAL_STORE, item.revision);
 	}).then(() => {
-		return store.getLastSyncedRevision(item.uuid);
-	}).then((revision) => {
+		return store.getLastSyncedRevision(item.uuid, LOCAL_STORE);
+	}).then(revision => {
 		assert.equal(revision, item.revision);
-		return store.lastSyncTimestamps();
-	}).then((timestamps) => {
-		assert.equal(timestamps.size, 1);
-		assert.equal(timestamps.get(item.uuid).getTime(), item.updatedAt.getTime());
+		return store.lastSyncRevisions(LOCAL_STORE);
+	}).then(revisions => {
+		assert.equal(revisions.size, 1);
+		assert.equal(revisions.get(item.uuid), item.revision);
 	});
 });
 
@@ -408,7 +420,7 @@ testLib.addAsyncTest('list item states', assert => {
 	}).then(items => {
 		assert.deepEqual(items, [{
 			uuid: storeAndItem.item.uuid,
-			updatedAt: storeAndItem.item.updatedAt,
+			revision: storeAndItem.item.revision,
 			deleted: false
 		}]);
 	});

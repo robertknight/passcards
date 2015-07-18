@@ -11,16 +11,18 @@ import key_agent = require('./key_agent');
 export class Store implements item_store.SyncableStore {
 	onItemUpdated: event_stream.EventStream<item_store.Item>;
 	onUnlock: event_stream.EventStream<void>;
+	name: string;
 
 	private keys: key_agent.Key[];
 	private items: item_store.Item[];
 	private keyAgent: key_agent.KeyAgent;
 	private hint: string;
-	private name: string;
 	
 	// map of (revision -> item and content)
 	private content: Map<string, item_store.ItemAndContent>;
-	private lastSyncedRevisions: Map<string, string>;
+	
+	// map of (store ID -> (item UUID -> revision))
+	private lastSyncedRevisions: Map<string, Map<string, string>>;
 
 	constructor(agent: key_agent.KeyAgent, name?: string) {
 		this.onItemUpdated = new event_stream.EventStream<item_store.Item>();
@@ -140,7 +142,7 @@ export class Store implements item_store.SyncableStore {
 		this.keys = [];
 		this.items = [];
 		this.content = new collectionutil.PMap<string, item_store.ItemAndContent>();
-		this.lastSyncedRevisions = new collectionutil.PMap<string, string>();
+		this.lastSyncedRevisions = new Map<string, Map<string, string>>();
 		return Q<void>(null);
 	}
 
@@ -148,26 +150,25 @@ export class Store implements item_store.SyncableStore {
 		return Q(this.hint);
 	}
 
-	getLastSyncedRevision(uuid: string): Q.Promise<string> {
-		return Q(this.lastSyncedRevisions.get(uuid));
+	getLastSyncedRevision(uuid: string, storeID: string) {
+		let storeRevisions = this.lastSyncedRevisions.get(storeID);
+		if (storeRevisions) {
+			return Q(storeRevisions.get(uuid));
+		} else {
+			return Q<string>(null);
+		}
 	}
 
-	setLastSyncedRevision(item: item_store.Item, revision: string) {
-		this.lastSyncedRevisions.set(item.uuid, revision);
+	setLastSyncedRevision(item: item_store.Item, storeID: string, revision: string) {
+		if (!this.lastSyncedRevisions.has(storeID)) {
+			this.lastSyncedRevisions.set(storeID, new Map<string, string>());
+		}
+		this.lastSyncedRevisions.get(storeID).set(item.uuid, revision);
 		return Q<void>(null);
 	}
 
-	lastSyncTimestamps() {
-		let timestampMap = new collectionutil.PMap<string, Date>();
-		this.items.forEach((item) => {
-			var lastSyncedRev = this.lastSyncedRevisions.get(item.uuid);
-			if (!lastSyncedRev) {
-				return;
-			}
-			var lastSyncedAt = this.content.get(lastSyncedRev).item.updatedAt;
-			timestampMap.set(item.uuid, lastSyncedAt);
-		});
-		return Q(timestampMap);
+	lastSyncRevisions(storeID: string) {
+		return Q(this.lastSyncedRevisions.get(storeID));
 	}
 
 	private checkUnlocked() {

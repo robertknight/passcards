@@ -147,7 +147,7 @@ export var ITEM_TYPES: ItemTypeMap = {
 
 export interface ItemState {
 	uuid: string;
-	updatedAt: Date;
+	revision: string;
 	deleted: boolean;
 }
 
@@ -645,13 +645,13 @@ export interface Store {
 
 export interface SyncableStore extends Store {
 	/** Returns the last-synced revision of an item. */
-	getLastSyncedRevision(uuid: string): Q.Promise<string>;
-	setLastSyncedRevision(item: Item, revision: string): Q.Promise<void>;
+	getLastSyncedRevision(uuid: string, storeID: string): Q.Promise<string>;
+	setLastSyncedRevision(item: Item, storeID: string, revision: string): Q.Promise<void>;
 
 	/** Retrieve a map of (item ID -> last-sync timestamp) for
-	  * each item.
-	  */
-	lastSyncTimestamps(): Q.Promise<Map<string, Date>>;
+	 * each item.
+	 */
+	lastSyncRevisions(storeID: string): Q.Promise<Map<string, string>>;
 }
 
 /** Copy an item and its contents, using @p uuid as the ID for
@@ -717,8 +717,7 @@ export function generateRevisionId(item: ItemAndContent) {
 export function itemStates(store: Store): Q.Promise<ItemState[]> {
 	return store.listItems({ includeTombstones: true }).then(items => items.map(item => ({
 		uuid: item.uuid,
-		updatedAt: item.updatedAt,
+		revision: item.revision,
 		deleted: item.isTombstone()
 	})));
 }
-

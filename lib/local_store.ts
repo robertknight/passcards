@@ -281,7 +281,7 @@ export class Store implements item_store.SyncableStore {
 		}
 
 		var key: string;
-		return this.keyForItem(item).then((_key) => {
+		return this.keyForItem(item).then(_key => {
 			key = _key;
 			return item.getContent();
 		}).then(content => {
@@ -357,9 +357,9 @@ export class Store implements item_store.SyncableStore {
 		return this.keyStore.get<string>('hint');
 	}
 
-	getLastSyncedRevision(uuid: string) {
-		return this.itemStore.get<LastSyncEntry>('lastSynced/' + uuid)
-		.then((entry) => {
+	getLastSyncedRevision(uuid: string, storeID: string) {
+		return this.itemStore.get<LastSyncEntry>(`lastSynced/${storeID}/${uuid}`)
+		.then(entry => {
 			if (entry) {
 				return entry.revision;
 			} else {
@@ -368,9 +368,8 @@ export class Store implements item_store.SyncableStore {
 		});
 	}
 
-	setLastSyncedRevision(item: item_store.Item, revision: string) {
-		assert(item.revision === revision);
-		return this.itemStore.set('lastSynced/' + item.uuid, {
+	setLastSyncedRevision(item: item_store.Item, storeID: string, revision: string) {
+		return this.itemStore.set(`lastSynced/${storeID}/${item.uuid}`, {
 			revision: revision,
 			timestamp: item.updatedAt
 		}).then(() => {
@@ -378,15 +377,13 @@ export class Store implements item_store.SyncableStore {
 		});
 	}
 
-	lastSyncTimestamps() {
-		var timestamps: Map<string, Date> = new collectionutil.PMap<string, Date>();
-		return this.itemIndex.get().then((itemIndex) => {
-			Object.keys(itemIndex).forEach((id) => {
-				var lastSyncedAt = itemIndex[id].lastSyncedAt;
-				timestamps.set(id, new Date(lastSyncedAt));
-			});
-			return timestamps;
-		});
+	lastSyncRevisions(storeID: string) {
+		let revisions = new Map<string, string>();
+		let prefix = `lastSynced/${storeID}/`;
+		return this.itemStore.iterate<LastSyncEntry>(prefix, (key, value) => {
+			let uuid = key.slice(prefix.length);
+			revisions.set(uuid, value.revision);
+		}).then(() => revisions);
 	}
 
 	// encrypt and write the item overview index.
@@ -444,4 +441,3 @@ export class Store implements item_store.SyncableStore {
 		});
 	}
 }
-

@@ -178,7 +178,7 @@ testLib.addAsyncTest('Compare vaults against .1pif files', (assert) => {
 				actualItem.setContent(actualAry[i].content);
 
 				var diff = testLib.compareObjects(expectedItem, actualItem,
-					['root/store', 'root/encrypted'],
+					['root/store', 'root/encrypted', 'root/revision'],
 					['root/securityLevel', 'root/createdAt', 'root/faveIndex', 'root/openContents']
 					);
 				if (diff.length > 0) {
