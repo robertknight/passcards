@@ -1,10 +1,7 @@
 include common.mk
 
-lib_srcs=$(shell find lib -name '*.ts')
-cli_srcs=$(shell find cli -name '*.ts')
-webui_srcs=$(shell find webui -name '*.ts')
-firefox_addon_srcs=$(shell find addons/firefox/src -name '*.ts')
-all_srcs=$(lib_srcs) $(cli_srcs) $(webui_srcs) $(addon_srcs)
+all_srcs=$(shell find lib cli webui addons -name '*.ts' -not -name '*.d.ts')
+compiled_js_files=$(addprefix build/,$(subst .ts,.js,$(all_srcs)))
 test_files=$(shell find build -name '*_test.js')
 
 webui_dist_dir=webui/dist
@@ -21,10 +18,10 @@ xpi_file=addons/firefox/passcards@robertknight.github.io.xpi
 
 deps=$(submodule_marker) $(nodemodule_marker) $(dropboxjs_lib) typings/DefinitelyTyped
 
-all: build/current webui-build
+all: $(compiled_js_files) webui-build
 
-build/current: $(lib_srcs) $(cli_srcs) $(webui_srcs) $(deps)
-	@$(TSC) && touch $@
+$(compiled_js_files): $(all_srcs) $(deps)
+	@$(TSC)
 
 webui-build: $(webui_script_dir)/platform_bundle.js \
              $(webui_script_dir)/webui_bundle.js \
@@ -43,22 +40,22 @@ $(webui_script_dir)/platform_bundle.js: package.json utils/create-external-modul
 	@mkdir -p $(webui_script_dir)
 	@./utils/create-external-modules-bundle.js build/webui/app.js > $@
 
-$(webui_script_dir)/webui_bundle.js: build/current
+$(webui_script_dir)/webui_bundle.js: $(compiled_js_files)
 	@echo "Building web app bundle"
 	@mkdir -p $(webui_script_dir)
 	@$(BROWSERIFY) --no-builtins --no-bundle-external --entry build/webui/init.js --outfile $@
 
-$(webui_script_dir)/page_bundle.js: build/current
+$(webui_script_dir)/page_bundle.js: $(compiled_js_files)
 	@echo "Building page autofill bundle"
 	@mkdir -p $(webui_script_dir)
 	@$(BROWSERIFY) build/webui/page.js --outfile $@
 
-$(webui_script_dir)/crypto_worker.js: build/current
+$(webui_script_dir)/crypto_worker.js: $(compiled_js_files)
 	@echo "Building crypto bundle"
 	@mkdir -p $(webui_script_dir)
 	@$(BROWSERIFY) --entry build/lib/crypto_worker.js --outfile $@
 
-build/webui/theme.css: build/current
+build/webui/theme.css: $(compiled_js_files)
 	@echo "Generating theme CSS"
 	@$(NODE_BIN_DIR)/ts-style build/webui/theme.js build/webui/controls/*.js build/webui/*_view.js > $@
 
@@ -71,11 +68,11 @@ $(webui_css_dir)/app.css: webui/app.css build/webui/theme.css
 
 controls-demo: $(webui_script_dir)/controls_bundle.js $(webui_css_dir)/controls_demo_theme.css
 
-$(webui_script_dir)/controls_bundle.js: build/current
+$(webui_script_dir)/controls_bundle.js: $(compiled_js_files)
 	@mkdir -p $(webui_script_dir)
 	@$(BROWSERIFY) --no-builtins --no-bundle-external --entry build/webui/controls/demo.js --outfile $@
 
-$(webui_css_dir)/controls_demo_theme.css: build/current
+$(webui_css_dir)/controls_demo_theme.css: $(compiled_js_files)
 	@echo "Generating controls demo theme CSS"
 	@mkdir -p $(webui_css_dir)
 	@$(NODE_BIN_DIR)/ts-style build/webui/controls/demo.js > $@
@@ -88,7 +85,7 @@ webui-icons:
 # pbkdf2_bundle.js is a require()-able bundle
 # of the PBKDF2 implementation for use in Web Workers
 # in the browser
-build/lib/crypto/pbkdf2_bundle.js: build/current
+build/lib/crypto/pbkdf2_bundle.js: $(compiled_js_files)
 	$(BROWSERIFY) --require ./build/lib/crypto/pbkdf2.js:pbkdf2 --outfile $@
 
 test: cli webui build/lib/crypto/pbkdf2_bundle.js
