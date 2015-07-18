@@ -1,8 +1,8 @@
 include common.mk
 
-all_srcs=$(shell find lib cli webui addons -name '*.ts' -not -name '*.d.ts')
-compiled_js_files=$(addprefix build/,$(subst .ts,.js,$(all_srcs)))
-test_files=$(shell find build -name '*_test.js')
+all_srcs:=$(shell ./utils/tsproject.js inputs)
+compiled_js_files:=$(shell ./utils/tsproject.js outputs)
+test_files:=$(shell find build -name '*_test.js')
 
 webui_dist_dir=webui/dist
 webui_script_dir=$(webui_dist_dir)/scripts
