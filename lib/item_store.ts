@@ -249,6 +249,7 @@ export class Item {
 		this.typeName = ItemTypes.LOGIN;
 		this.folderUuid = '';
 		this.locations = [];
+		this.title = '';
 	}
 
 	/** Retrieves and decrypts the content of a 1Password item.

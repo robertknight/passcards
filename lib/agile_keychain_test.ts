@@ -17,6 +17,7 @@ import key_agent = require('./key_agent');
 import nodefs = require('./vfs/node');
 import password_gen = require('./password_gen');
 import testLib = require('./test');
+import vfs = require('./vfs/vfs');
 import vfs_util = require('./vfs/util');
 
 require('es6-shim');
@@ -366,41 +367,58 @@ testLib.addAsyncTest('Update item', (assert) => {
 });
 
 testLib.addAsyncTest('Remove item', (assert) => {
-	createTestVault().then((vault) => {
-		var item: item_store.Item;
-		vault.loadItem('CA20BB325873446966ED1F4E641B5A36').then((item_) => {
-			item = item_.item;
-			assert.equal(item.title, 'Facebook');
-			assert.equal(item.typeName, item_store.ItemTypes.LOGIN);
-			assert.ok(item.isRegularItem());
+	let item: item_store.Item;
+	let vault: agile_keychain.Vault;
 
-			var content = item_.content;
-			testLib.assertEqual(assert, content.urls, [{ label: 'website', 'url': 'facebook.com' }]);
-			var passwordField = underscore.find(content.formFields, (field) => {
-				return field.designation == 'password';
-			});
-			assert.ok(passwordField != null);
-			assert.equal(passwordField.value, 'Wwk-ZWc-T9MO');
-			return item.remove();
-		}).then(() => {
-			// check that all item-specific data has been erased.
-			// Only a tombstone should be left behind
-			assert.ok(item.isTombstone());
-			assert.ok(!item.isRegularItem());
-			assert.equal(item.title, 'Unnamed');
-			assert.equal(item.typeName, item_store.ItemTypes.TOMBSTONE);
-			return vault.loadItem(item.uuid);
-		}).then((loadedItem) => {
-			assert.ok(loadedItem.item.isTombstone());
-			assert.equal(loadedItem.item.title, 'Unnamed');
-			assert.equal(loadedItem.item.typeName, item_store.ItemTypes.TOMBSTONE);
-			assert.equal(loadedItem.item.trashed, true);
-			assert.equal(loadedItem.item.faveIndex, null);
-			assert.equal(loadedItem.item.openContents, null);
+	return createTestVault().then((vault_) => {
+		vault = vault_;
+		return vault.loadItem('CA20BB325873446966ED1F4E641B5A36');
+	}).then((item_) => {
+		item = item_.item;
+		assert.equal(item.title, 'Facebook');
+		assert.equal(item.typeName, item_store.ItemTypes.LOGIN);
+		assert.ok(item.isRegularItem());
 
-			testLib.assertEqual(assert, loadedItem.content, new item_store.ItemContent());
-			testLib.continueTests();
-		}).done();
+		var content = item_.content;
+		testLib.assertEqual(assert, content.urls, [{ label: 'website', 'url': 'facebook.com' }]);
+		var passwordField = underscore.find(content.formFields, (field) => {
+			return field.designation == 'password';
+		});
+		assert.ok(passwordField != null);
+		assert.equal(passwordField.value, 'Wwk-ZWc-T9MO');
+		return item.remove();
+	}).then(() => {
+		// check that all item-specific data has been erased.
+		// Only a tombstone should be left behind
+		assert.ok(item.isTombstone());
+		assert.ok(!item.isRegularItem());
+		assert.equal(item.title, 'Unnamed');
+		assert.equal(item.typeName, item_store.ItemTypes.TOMBSTONE);
+		return asyncutil.result(vault.fs.stat(`${vault.path}/data/default/${item.uuid}.1password`));
+	}).then(statResult => {
+		// the .1password file should have been removed, with
+		// just a tombstone entry left in the contents.js file
+		assert.equal(statResult.value, undefined);
+		assert.ok(statResult.error instanceof vfs.VfsError);
+		assert.equal((<vfs.VfsError>statResult.error).type, vfs.ErrorType.FileNotFound);
+	});
+});
+
+testLib.addTest('listItems() should not list tombstones', assert => {
+	let testVault: TestVault;
+	return createTestVaultWithNItems(1).then(testVault_ => {
+		testVault = testVault_;
+		return testVault_.vault.listItems();
+	}).then(listedItems => {
+		assert.equal(listedItems.length, 1);
+		return testVault.items[0].remove();
+	}).then(() => {
+		return testVault.vault.listItems();
+	}).then(listedItems => {
+		assert.equal(listedItems.length, 0);
+		return testVault.vault.listItems({ includeTombstones: true });
+	}).then(listedItems => {
+		assert.equal(listedItems.length, 1);
 	});
 });
 
@@ -593,7 +611,7 @@ testLib.addTest('createVault() fails if directory exists', (assert) => {
 		var newPass = 'pass-2';
 		return asyncutil.result(agile_keychain.Vault.createVault(fs, path, newPass, hint, keyIterations));
 	}).then((result) => {
-		assert.ok(result.error instanceof Error);
+		assert.ok(result.error instanceof vfs.VfsError);
 
 		// check that the original vault has not been modified
 		return vault.unlock(pass);

@@ -5,6 +5,16 @@ import Q = require('q');
 import vfs = require('./vfs');
 import vfs_util = require('./util');
 
+function convertError(error: NodeJS.ErrnoException): vfs.VfsError {
+	let type = vfs.ErrorType.Other;
+	if (error.code === 'ENOENT') {
+		type = vfs.ErrorType.FileNotFound;
+	}
+	let vfsError = new vfs.VfsError(type, error.toString());
+	vfsError.sourceErr = error;
+	return vfsError;
+}
+
 /** VFS implementation which operates on the local filesystem */
 export class FileVFS implements vfs.VFS {
 	root: string;
@@ -35,7 +45,7 @@ export class FileVFS implements vfs.VFS {
 		var result = Q.defer<vfs.FileInfo>();
 		fs.stat(this.absPath(path), (err, info) => {
 			if (err) {
-				result.reject(err);
+				result.reject(convertError(err));
 				return;
 			}
 			result.resolve({
@@ -58,7 +68,7 @@ export class FileVFS implements vfs.VFS {
 		var result = Q.defer<string>();
 		fs.readFile(this.absPath(path), (error, content) => {
 			if (error) {
-				result.reject(error);
+				result.reject(convertError(error));
 				return;
 			}
 			result.resolve(content.toString('binary'));
@@ -81,7 +91,7 @@ export class FileVFS implements vfs.VFS {
 
 		fs.writeFile(tempPath, content, (error) => {
 			if (error) {
-				result.reject(error);
+				result.reject(convertError(error));
 				return;
 			}
 
@@ -110,7 +120,7 @@ export class FileVFS implements vfs.VFS {
 		var absPath = this.absPath(path);
 		fs.readdir(absPath, (err, files) => {
 			if (err) {
-				result.reject(err);
+				result.reject(convertError(err));
 				return;
 			}
 
@@ -122,7 +132,7 @@ export class FileVFS implements vfs.VFS {
 			Q.all(statOps).then(fileInfoList => {
 				result.resolve(fileInfoList);
 			}).catch(err => {
-				result.reject(err);
+				result.reject(convertError(err));
 			});
 		});
 		return result.promise;
@@ -132,7 +142,7 @@ export class FileVFS implements vfs.VFS {
 		var result = Q.defer<void>();
 		fs.rmdir(this.absPath(path), (error) => {
 			if (error) {
-				result.reject(error);
+				result.reject(convertError(error));
 				return;
 			}
 			result.resolve(null);
@@ -151,10 +161,10 @@ export class FileVFS implements vfs.VFS {
 					this.rmdir(path).then(() => {
 						result.resolve(null);
 					}, (err) => {
-							result.reject(err);
+							result.reject(convertError(err));
 						}).done();
 				} else {
-					result.reject(error);
+					result.reject(convertError(error));
 				}
 			} else {
 				result.resolve(null);
@@ -203,7 +213,7 @@ export class FileVFS implements vfs.VFS {
 						this.mkpathInternal(path, allowExisting).then(() => {
 							result.resolve(null);
 						}).catch((err) => {
-							result.reject(err);
+							result.reject(convertError(err));
 						});
 					});
 				} else if (err.code === 'EEXIST') {
@@ -212,14 +222,14 @@ export class FileVFS implements vfs.VFS {
 							if (existingFile.isDir) {
 								result.resolve(null);
 							} else {
-								result.reject(err);
+								result.reject(convertError(err));
 							}
 						});
 					} else {
-						result.reject(err);
+						result.reject(convertError(err));
 					}
 				} else {
-					result.reject(err);
+					result.reject(convertError(err));
 				}
 			} else {
 				result.resolve(null);

@@ -440,19 +440,24 @@ export class Vault implements item_store.Store {
 		}
 
 		// update the '<item ID>.1password' file
-		var itemSaved = item.getContent().then(content => {
-			item.updateOverviewFromContent(content);
+		let itemPath = this.itemPath(item.uuid);
+		let itemSaved: Q.Promise<void>;
+		if (item.isTombstone()) {
+			itemSaved = this.fs.rm(itemPath);
+		} else {
+			itemSaved = item.getContent().then(content => {
+				item.updateOverviewFromContent(content);
 
-			var contentJSON = JSON.stringify(toAgileKeychainContent(content));
-			return this.encryptItemData(DEFAULT_AGILEKEYCHAIN_SECURITY_LEVEL, contentJSON);
-		}).then(encryptedContent => {
-			var itemPath = this.itemPath(item.uuid);
-			var keychainJSON = JSON.stringify(toAgileKeychainItem(item, encryptedContent));
-			return this.fs.write(itemPath, keychainJSON);
-		}).then(fileInfo => {
-			// update the saved revision for the item
-			item.revision = fileInfo.revision;
-		});
+				var contentJSON = JSON.stringify(toAgileKeychainContent(content));
+				return this.encryptItemData(DEFAULT_AGILEKEYCHAIN_SECURITY_LEVEL, contentJSON);
+			}).then(encryptedContent => {
+				var keychainJSON = JSON.stringify(toAgileKeychainItem(item, encryptedContent));
+				return this.fs.write(itemPath, keychainJSON);
+			}).then(fileInfo => {
+				// update the saved revision for the item
+				item.revision = fileInfo.revision;
+			});
+		}
 
 		// update the contents.js index file. The index file is not used by
 		// Passcards as a source for item metadata, since failures in VFS
@@ -564,7 +569,22 @@ export class Vault implements item_store.Store {
 	listItemStates(): Q.Promise<item_store.ItemState[]> {
 		return Q.all([this.listDeletedItems(), this.listCurrentItems()])
 		.then((items: [item_store.ItemState[], item_store.ItemState[]]) => {
-			return items[0].concat(items[1]);
+			// if an item is listed as a tombstone in the contents.js file
+			// but a .1password file also exists then the deletion takes precedence.
+			//
+			// This currently does not 'repair' the vault by removing the
+			// .1password file.
+			let deletedItems = new Set<string>();
+			for (let item of items[0]) {
+				deletedItems.add(item.uuid);
+			}
+			let allItems = items[0];
+			for (let item of items[1]) {
+				if (!deletedItems.has(item.uuid)) {
+					allItems.push(item);
+				}
+			}
+			return allItems;
 		});
 	}
 
@@ -576,19 +596,26 @@ export class Vault implements item_store.Store {
 			let loadedItems: Q.Promise<item_store.ItemAndContent>[] = [];
 			for (let state of itemStates) {
 				if (state.deleted) {
-					let item = new item_store.Item(this, state.uuid);
-					item.typeName = item_store.ItemTypes.TOMBSTONE;
-					loadedItems.push(Q({
-						item: item,
-						content: null
-					}));
+					if (opts.includeTombstones) {
+						let item = new item_store.Item(this, state.uuid);
+						item.typeName = item_store.ItemTypes.TOMBSTONE;
+						loadedItems.push(Q({
+							item: item,
+							content: null
+						}));
+					}
 				} else {
 					loadedItems.push(this.loadItem(state.uuid));
 				}
 			}
 			return Q.all(loadedItems);
 		}).then((items: item_store.ItemAndContent[]) => {
-			return items.map(item => item.item);
+			// Early versions of Passcards would update .1password
+			// files when items were removed rather than deleting them.
+			// When listing vault items, filter out any such tombstones
+			return items.map(item => item.item).filter(item => {
+				return !item.isTombstone() || opts.includeTombstones;
+			});
 		});
 	}
 
