@@ -24,7 +24,7 @@ deps=$(submodule_marker) $(nodemodule_marker) $(dropboxjs_lib) typings/Definitel
 all: build/current webui-build
 
 build/current: $(lib_srcs) $(cli_srcs) $(webui_srcs) $(deps)
-	@$(TSC) --outDir build $(lib_srcs) $(cli_srcs) $(webui_srcs) && touch $@
+	@$(TSC) && touch $@
 
 webui-build: $(webui_script_dir)/platform_bundle.js \
              $(webui_script_dir)/webui_bundle.js \

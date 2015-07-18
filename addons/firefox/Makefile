@@ -29,13 +29,12 @@ build/xpi_content: lib/main.js \
 	@touch $@
 
 lib/main.js: src/main.ts
-	$(TSC) src/main.ts --outDir build/
 	mkdir -p lib
 	# Re-write 'rpc' require() to avoid error with 'cfx'
 	# when trying to require() a dependency outside of the current
 	# dir tree
-	cp build/lib/net/rpc.js lib/
-	cp build/addons/firefox/src/main.js $@
+	cp $(SRC_ROOT)/build/lib/net/rpc.js lib/
+	cp $(SRC_ROOT)/build/addons/firefox/src/main.js $@
 	sed -i='' 's/..\/..\/..\/lib\/net\/rpc/.\/rpc/' $@
 
 data/dist: $(webui_app_srcs)
@@ -51,8 +50,7 @@ data/index.html: ../../webui/index.html
 	cp ../../webui/index.html $@
 
 data/scripts/panel_content.js: data/scripts src/panel_content.ts
-	$(TSC) --outDir build/ src/panel_content.ts 
-	$(BROWSERIFY) --no-builtins build/addons/firefox/src/panel_content.js > $@
+	$(BROWSERIFY) --no-builtins $(SRC_ROOT)/build/addons/firefox/src/panel_content.js > $@
 
 clean:
 	rm -rf build data lib

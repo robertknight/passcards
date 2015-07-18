@@ -5,7 +5,6 @@
   "version": "0.3",
   "homepage_url": "https://robertknight.github.io/passcards",
 
-  "__comment" : "TODO - Only ask for permission to access the Passcards service if the user accepts an opt-in to the offered services",
   "permissions": [
     "activeTab",
     "clipboardWrite",

@@ -7,7 +7,9 @@
 //
 // See https://addons.mozilla.org/developers/docs/sdk/latest/dev-guide
 
-declare function require(module: string) : any;
+// require() declaration omitted because it conflicts with the Node
+// declaration, which is a superset of the functionality
+// that require() has in Node
 
 // interfaces available for use in the main add-on script
 interface PageWorker {
