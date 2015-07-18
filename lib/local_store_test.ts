@@ -318,29 +318,33 @@ testLib.addAsyncTest('get/set last sync data', assert => {
 	let store: local_store.Store;
 	let item = makeItem();
 
-	const LOCAL_STORE = 'local';
+	const CLOUD_STORE_ID = 'cloud';
 
 	return setupStoreAndUnlock().then(store_ => {
 		store = store_;
 	}).then(() => {
-		return store.lastSyncRevisions(LOCAL_STORE);
+		return store.lastSyncRevisions(CLOUD_STORE_ID);
 	}).then(revisions => {
 		assert.equal(revisions.size, 0);
 		return item.saveTo(store);
 	}).then(() => {
 		assert.notEqual(item.revision, null);
-		return store.getLastSyncedRevision(item.uuid, LOCAL_STORE);
+		return store.getLastSyncedRevision(item.uuid, CLOUD_STORE_ID);
 	}).then(revision => {
 		assert.equal(revision, null);
-		return store.setLastSyncedRevision(item, LOCAL_STORE, item.revision);
+		return store.setLastSyncedRevision(item, CLOUD_STORE_ID, {
+			local: item.revision,
+			external: '1'
+		});
 	}).then(() => {
-		return store.getLastSyncedRevision(item.uuid, LOCAL_STORE);
+		return store.getLastSyncedRevision(item.uuid, CLOUD_STORE_ID);
 	}).then(revision => {
-		assert.equal(revision, item.revision);
-		return store.lastSyncRevisions(LOCAL_STORE);
+		assert.equal(revision.local, item.revision);
+		assert.equal(revision.external, '1');
+		return store.lastSyncRevisions(CLOUD_STORE_ID);
 	}).then(revisions => {
 		assert.equal(revisions.size, 1);
-		assert.equal(revisions.get(item.uuid), item.revision);
+		assert.equal(revisions.get(item.uuid).local, item.revision);
 	});
 });
 

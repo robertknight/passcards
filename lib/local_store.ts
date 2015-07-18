@@ -71,7 +71,10 @@ interface ItemIndexEntry extends ItemOverview {
 
 interface LastSyncEntry {
 	timestamp: number;
-	revision: string;
+	/** Revision of the item in the local store. */
+	local: string;
+	/** Revision of the item in the cloud store. */
+	external: string;
 }
 
 var SCHEMA_VERSION = 2;
@@ -361,16 +364,17 @@ export class Store implements item_store.SyncableStore {
 		return this.itemStore.get<LastSyncEntry>(`lastSynced/${storeID}/${uuid}`)
 		.then(entry => {
 			if (entry) {
-				return entry.revision;
+				return entry;
 			} else {
 				return null;
 			}
 		});
 	}
 
-	setLastSyncedRevision(item: item_store.Item, storeID: string, revision: string) {
+	setLastSyncedRevision(item: item_store.Item, storeID: string, revision: item_store.RevisionPair) {
 		return this.itemStore.set(`lastSynced/${storeID}/${item.uuid}`, {
-			revision: revision,
+			local: revision.local,
+			external: revision.external,
 			timestamp: item.updatedAt
 		}).then(() => {
 			return this.indexUpdateQueue.push(item);
@@ -378,11 +382,11 @@ export class Store implements item_store.SyncableStore {
 	}
 
 	lastSyncRevisions(storeID: string) {
-		let revisions = new Map<string, string>();
+		let revisions = new Map<string, item_store.RevisionPair>();
 		let prefix = `lastSynced/${storeID}/`;
 		return this.itemStore.iterate<LastSyncEntry>(prefix, (key, value) => {
 			let uuid = key.slice(prefix.length);
-			revisions.set(uuid, value.revision);
+			revisions.set(uuid, value);
 		}).then(() => revisions);
 	}
 

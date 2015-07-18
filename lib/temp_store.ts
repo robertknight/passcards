@@ -22,7 +22,7 @@ export class Store implements item_store.SyncableStore {
 	private content: Map<string, item_store.ItemAndContent>;
 	
 	// map of (store ID -> (item UUID -> revision))
-	private lastSyncedRevisions: Map<string, Map<string, string>>;
+	private lastSyncedRevisions: Map<string, Map<string, item_store.RevisionPair>>;
 
 	constructor(agent: key_agent.KeyAgent, name?: string) {
 		this.onItemUpdated = new event_stream.EventStream<item_store.Item>();
@@ -142,7 +142,7 @@ export class Store implements item_store.SyncableStore {
 		this.keys = [];
 		this.items = [];
 		this.content = new collectionutil.PMap<string, item_store.ItemAndContent>();
-		this.lastSyncedRevisions = new Map<string, Map<string, string>>();
+		this.lastSyncedRevisions = new Map<string, Map<string, item_store.RevisionPair>>();
 		return Q<void>(null);
 	}
 
@@ -155,13 +155,13 @@ export class Store implements item_store.SyncableStore {
 		if (storeRevisions) {
 			return Q(storeRevisions.get(uuid));
 		} else {
-			return Q<string>(null);
+			return Q<item_store.RevisionPair>(null);
 		}
 	}
 
-	setLastSyncedRevision(item: item_store.Item, storeID: string, revision: string) {
+	setLastSyncedRevision(item: item_store.Item, storeID: string, revision: item_store.RevisionPair) {
 		if (!this.lastSyncedRevisions.has(storeID)) {
-			this.lastSyncedRevisions.set(storeID, new Map<string, string>());
+			this.lastSyncedRevisions.set(storeID, new Map<string, item_store.RevisionPair>());
 		}
 		this.lastSyncedRevisions.get(storeID).set(item.uuid, revision);
 		return Q<void>(null);

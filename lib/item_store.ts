@@ -663,6 +663,25 @@ export interface Store {
 	passwordHint(): Q.Promise<string>;
 }
 
+/** Represents a pair of revision strings for
+  * the same revision of an item in the local and cloud
+  * stores.
+  *
+  * Item revision formats are specific to the store
+  * implementation, so the same revision of an item
+  * that is synced between two stores (eg. a local
+  * store in IndexedDB in the browser and a cloud store
+  * in Dropbox) will have different revision strings.
+  */
+export interface RevisionPair {
+	/** The revision of the item in the local store. */
+	local: string;
+	/** The corresponding revision of the item in the
+	  * external store.
+	  */
+	external: string;
+}
+
 /** SyncableStore provides methods for storing metadata
   * to enable syncing this store with other stores.
   */
@@ -670,18 +689,20 @@ export interface SyncableStore extends Store {
 	/** Stores which revision of an item in a store (identified by @p storeID) was
 	  * last synced with this store.
 	  */
-	setLastSyncedRevision(item: Item, storeID: string, revision: string): Q.Promise<void>;
+	setLastSyncedRevision(item: Item,
+		storeID: string,
+		revision: RevisionPair): Q.Promise<void>;
 	
 	/** Retrieves the revision of an item in a store (identified by @p storeID)
 	  * which was last synced with this store.
 	  */
-	getLastSyncedRevision(uuid: string, storeID: string): Q.Promise<string>;
+	getLastSyncedRevision(uuid: string, storeID: string): Q.Promise<RevisionPair>;
 
 	/** Retrieve a map of (item ID -> last-synced revision) for
 	 * all items in the store which have previously been synced with
 	 * @p storeID.
 	 */
-	lastSyncRevisions(storeID: string): Q.Promise<Map<string, string>>;
+	lastSyncRevisions(storeID: string): Q.Promise<Map<string, RevisionPair>>;
 }
 
 /** Copy an item and its contents, using @p uuid as the ID for
