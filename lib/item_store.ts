@@ -488,6 +488,7 @@ export class ItemOpenContents {
 	scope: string;
 }
 
+/** A group of fields in an item. */
 export class ItemSection {
 	/** Internal name of the section. */
 	name: string;
@@ -503,6 +504,11 @@ export class ItemSection {
 	}
 }
 
+/** A specific property/attribute of an item.
+  *
+  * Each field has a data type, an internal name/ID for the field,
+  * a user-visible title and a current value.
+  */
 export class ItemField {
 	kind: FieldType;
 	name: string;
@@ -523,6 +529,7 @@ export class ItemField {
 	}
 }
 
+/** Type of input field in a web form. */
 export enum FormFieldType {
 	Text,
 	Password,
@@ -556,6 +563,10 @@ export class ItemUrl {
 	url: string;
 }
 
+/** Type of data stored in a field.
+  * The set of types comes originally from those used
+  * in the 1Password Agile Keychain format.
+  */
 export enum FieldType {
 	Text,
 	Password,
@@ -586,6 +597,16 @@ export enum ChangeSource {
 	Local
 }
 
+/** Interface for a store of encrypted items.
+  *
+  * A Store consists of a set of Item(s), identified by unique ID,
+  * plus a set of encryption keys used to encrypt the contents of
+  * those items.
+  *
+  * Items are versioned with an implementation-specific revision.
+  * Stores may keep only the last revision of an item or they
+  * may keep previous revisions as well.
+  */
 export interface Store {
 	/** Emits events when items are updated in the store. */
 	onItemUpdated: event_stream.EventStream<Item>;
@@ -634,8 +655,7 @@ export interface Store {
 	/** Update the encryption keys in this store. */
 	saveKeys(keys: key_agent.Key[], hint: string): Q.Promise<void>;
 
-	/** Clear the store. This can be used to wipe stores
-	  * which cache data for offline use.
+	/** Permanently delete all data from the store.
 	  */
 	clear(): Q.Promise<void>;
 
@@ -643,13 +663,23 @@ export interface Store {
 	passwordHint(): Q.Promise<string>;
 }
 
+/** SyncableStore provides methods for storing metadata
+  * to enable syncing this store with other stores.
+  */
 export interface SyncableStore extends Store {
-	/** Returns the last-synced revision of an item. */
-	getLastSyncedRevision(uuid: string, storeID: string): Q.Promise<string>;
+	/** Stores which revision of an item in a store (identified by @p storeID) was
+	  * last synced with this store.
+	  */
 	setLastSyncedRevision(item: Item, storeID: string, revision: string): Q.Promise<void>;
+	
+	/** Retrieves the revision of an item in a store (identified by @p storeID)
+	  * which was last synced with this store.
+	  */
+	getLastSyncedRevision(uuid: string, storeID: string): Q.Promise<string>;
 
-	/** Retrieve a map of (item ID -> last-sync timestamp) for
-	 * each item.
+	/** Retrieve a map of (item ID -> last-synced revision) for
+	 * all items in the store which have previously been synced with
+	 * @p storeID.
 	 */
 	lastSyncRevisions(storeID: string): Q.Promise<Map<string, string>>;
 }
@@ -714,6 +744,11 @@ export function generateRevisionId(item: ItemAndContent) {
 	return collectionutil.hexlify(digest);
 }
 
+/** Provides a default implementation of ItemStore.listItemStates() using
+  * ItemStore.listItems(). Since listItemStates() returns a subset of
+  * the information returned by listItems(), stores may be able to
+  * provide more efficient implementations.
+  */
 export function itemStates(store: Store): Q.Promise<ItemState[]> {
 	return store.listItems({ includeTombstones: true }).then(items => items.map(item => ({
 		uuid: item.uuid,
