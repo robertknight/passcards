@@ -99,7 +99,6 @@
         "./lib/vfs/dropbox.ts",
         "./lib/vfs/http.ts",
         "./lib/vfs/http_test.ts",
-        "./lib/vfs/localstorage.ts",
         "./lib/vfs/node.ts",
         "./lib/vfs/util.ts",
         "./lib/vfs/util_test.ts",

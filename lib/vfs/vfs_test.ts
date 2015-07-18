@@ -1,7 +1,6 @@
 import Q = require('q');
 
 import asyncutil = require('../base/asyncutil');
-import localstoragefs = require('./localstorage');
 import nodefs = require('./node');
 import testLib = require('../test');
 import vfs = require('./vfs');
@@ -10,55 +9,6 @@ import vfs_util = require('./util');
 class StorageEntry {
 	key: string;
 	value: any;
-}
-
-class FakeLocalStorage {
-	private data: StorageEntry[];
-
-	length: number;
-
-	// from MSStorageExtensions interface
-	remainingSpace: number;
-
-	constructor() {
-		this.clear();
-	}
-
-	getItem(key: string): any {
-		for (var i = 0; i < this.data.length; i++) {
-			if (this.data[i].key == key) {
-				return this.data[i].value;
-			}
-		}
-	}
-
-	setItem(key: string, data: any): void {
-		for (var i = 0; i < this.data.length; i++) {
-			if (this.data[i].key == key) {
-				this.data[i].value = data;
-				return;
-			}
-		}
-		this.data.push({ key: key, value: data });
-		this.length = this.data.length;
-	}
-
-	clear(): void {
-		this.data = [];
-		this.length = 0;
-		this.remainingSpace = 0;
-	}
-
-	removeItem(key: string): void {
-		this.setItem(key, undefined);
-	}
-
-	key(index: number): string {
-		return this.data[index].key;
-	}
-
-    [key: string]: any;
-    [index: number]: any;
 }
 
 var createNodeFs = () => {
@@ -75,10 +25,6 @@ var createNodeFs = () => {
 		}
 		return fs;
 	});
-}
-
-var createLocalStorageFs = () => {
-	return Q(new localstoragefs.FS('/1pass-web-test', new FakeLocalStorage));
 }
 
 function addTests(fsName: string, createFs: () => Q.Promise<vfs.VFS>) {
@@ -269,11 +215,10 @@ function addTests(fsName: string, createFs: () => Q.Promise<vfs.VFS>) {
 			// This should fail
 			return asyncutil.result(fs.mkpath('/foo/bar'));
 		}).then((result) => {
-			assert.ok(result.error instanceof Error);
+			assert.ok(result.error instanceof vfs.VfsError);
 		});
 	});
 }
 
 addTests('Node FS', createNodeFs);
-addTests('LocalStorage', createLocalStorageFs);
 
