@@ -182,9 +182,8 @@ export class Item {
 	private store: Store;
 
 	/** Identifies the version of an item. This is an opaque
-	  * string which is set when an item is saved to a store
-	  * which supports item history. It will be updated
-	  * each time an item is saved.
+	  * string which is set when an item is saved to a store.
+	  * It will change each time an item is saved.
 	  */
 	revision: string;
 
@@ -196,8 +195,10 @@ export class Item {
 	  */
 	parentRevision: string;
 
-	// item ID and sync metadata
+	/** Unique ID for this item within the vault */
 	uuid: string;
+
+	/** ID of the folder that this item currently belongs to */
 	folderUuid: string;
 	faveIndex: number;
 	trashed: boolean;
@@ -205,12 +206,23 @@ export class Item {
 	updatedAt: Date;
 	createdAt: Date;
 
-	// overview metadata fields
+	/** Item type code for this item. This is one of the values
+	  * in the ItemTypes class.
+	  */
 	typeName: ItemType;
+
+	/** Main title for this item. */
 	title: string;
+
+	/** Additional metadata (eg. tags)
+	  * which is stored unencrypted for this item.
+	  */
 	openContents: ItemOpenContents;
 
+	/** List of URLs that this item is associated with. */
 	locations: string[];
+
+	/** The account name or number that this item is associated with */
 	account: string;
 
 	/** The decrypted content of the item, either set
