@@ -4,6 +4,7 @@
         "target": "es5",
         "module": "commonjs",
         "declaration": false,
+        "noEmitOnError": true,
         "noImplicitAny": true,
         "removeComments": true,
         "noLib": false,
