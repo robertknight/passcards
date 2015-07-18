@@ -121,3 +121,10 @@ export function mktemp(fs: vfs.VFS, path: string, template: string = 'tmp.XXX') 
 	});
 }
 
+/** Read and parse the contents of a JSON file and return
+  * the result as an object of type T
+  */
+export function readJSON<T>(fs: vfs.VFS, path: string) {
+	return fs.read(path).then(json => <T>JSON.parse(json));
+}
+

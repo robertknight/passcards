@@ -21,6 +21,7 @@ import item_store = require('./item_store');
 import key_agent = require('./key_agent');
 import stringutil = require('./base/stringutil');
 import vfs = require('./vfs/vfs');
+import vfs_util = require('./vfs/util');
 
 type IndexEntry =[
 string, // uuid
@@ -274,8 +275,12 @@ export function convertKeys(keyList: agile_keychain_entries.EncryptionKeyEntry[]
 
 /** Represents an Agile Keychain-format 1Password vault. */
 export class Vault implements item_store.Store {
-	private fs: vfs.VFS;
-	private path: string;
+	/** File system which stores the vaults contents. */
+	fs: vfs.VFS;
+
+	/** Path to the vault within the file system. */
+	path: string;
+
 	private keyAgent: key_agent.KeyAgent;
 	private keys: Q.Promise<agile_keychain_entries.EncryptionKeyEntry[]>;
 
@@ -536,65 +541,54 @@ export class Vault implements item_store.Store {
 		return Path.join(this.dataFolderPath(), 'contents.js');
 	}
 
+	private listDeletedItems() {
+		return vfs_util.readJSON<IndexEntry[]>(this.fs, this.contentsFilePath()).then(contents => {
+			return contents.filter(entry => entry[1] === item_store.ItemTypes.TOMBSTONE)
+			.map(entry => ({ uuid: entry[0], deleted: true }));
+		});
+	}
+
+	private listCurrentItems() {
+		const ID_REGEX = /^([0-9a-fA-F]+)\.1password$/
+		return this.fs.list(this.dataFolderPath()).then(entries => {
+			return entries
+			.filter(entry => entry.name.match(ID_REGEX) != null)
+			.map(entry => ({
+				uuid: entry.name.match(ID_REGEX)[1],
+				revision: entry.revision,
+				deleted: false
+			}));
+		});
+	}
+
 	listItemStates(): Q.Promise<item_store.ItemState[]> {
-		return item_store.itemStates(this);
+		return Q.all([this.listDeletedItems(), this.listCurrentItems()])
+		.then((items: [item_store.ItemState[], item_store.ItemState[]]) => {
+			return items[0].concat(items[1]);
+		});
 	}
 
 	/** Returns a list of overview data for all items in the vault,
-	  * except tombstone markers for deleted items.
-	  *
-	  * Note: The items returned by listItems() are from the index
-	  * file and only contain the item's UUID, title, last-update date,
-	  * type name and primary location.
-	  *
-	  * The createdAt, faveIndex, openContents, locations and account
-	  * fields are not set.
+	  * and tombstone markers for deleted items.
 	  */
 	listItems(opts: item_store.ListItemsOptions = {}): Q.Promise<item_store.Item[]> {
-		let items = Q.defer<item_store.Item[]>();
-		let content = this.fs.read(this.contentsFilePath());
-		let fileMetadata = this.fs.list(this.dataFolderPath());
-
-		return Q.all([fileMetadata, content]).then(result => {
-			let revisions = new Map<string, string>();
-			let filesMetadata = <vfs.FileInfo[]>result[0];
-			const ONEPWD_SUFFIX = '.1password';
-			for (let metadata of filesMetadata) {
-				if (stringutil.endsWith(metadata.name, ONEPWD_SUFFIX)) {
-					let uuid = metadata.name.slice(0, -ONEPWD_SUFFIX.length);
-					revisions.set(uuid, metadata.revision);
+		return this.listItemStates().then(itemStates => {
+			let loadedItems: Q.Promise<item_store.ItemAndContent>[] = [];
+			for (let state of itemStates) {
+				if (state.deleted) {
+					let item = new item_store.Item(this, state.uuid);
+					item.typeName = item_store.ItemTypes.TOMBSTONE;
+					loadedItems.push(Q({
+						item: item,
+						content: null
+					}));
+				} else {
+					loadedItems.push(this.loadItem(state.uuid));
 				}
 			}
-			let entries = JSON.parse(<string>result[1]);
-			let vaultItems: item_store.Item[] = [];
-			entries.forEach((entry: IndexEntry) => {
-				let item = new item_store.Item(this);
-				item.uuid = entry[0];
-				item.typeName = entry[1];
-				item.title = entry[2];
-
-				if (!item.isTombstone()) {
-					item.revision = revisions.get(item.uuid);
-					assert(item.revision, `Item revision not found for ${item.uuid}`);
-				}
-
-				let primaryLocation = entry[3];
-				if (primaryLocation) {
-					item.locations.push(primaryLocation);
-				}
-
-				item.updatedAt = dateutil.dateFromUnixTimestamp(entry[4]);
-				item.folderUuid = entry[5];
-				item.trashed = entry[7] === "Y";
-
-				if (item.isTombstone() && !opts.includeTombstones) {
-					// skip markers for deleted items
-					return;
-				}
-
-				vaultItems.push(item);
-			});
-			return vaultItems;
+			return Q.all(loadedItems);
+		}).then((items: item_store.ItemAndContent[]) => {
+			return items.map(item => item.item);
 		});
 	}
 

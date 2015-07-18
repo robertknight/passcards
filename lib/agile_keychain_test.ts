@@ -11,6 +11,7 @@ import asyncutil = require('./base/asyncutil');
 import crypto = require('./base/crypto');
 import env = require('./base/env');
 import exportLib = require('./export');
+import item_builder = require('./item_builder');
 import item_store = require('./item_store');
 import key_agent = require('./key_agent');
 import nodefs = require('./vfs/node');
@@ -46,6 +47,21 @@ var fs = new nodefs.FileVFS('lib/test-data');
 class ItemAndContent {
 	item: item_store.Item;
 	content: item_store.ItemContent;
+}
+
+function createEmptyVault() {
+	const VAULT_PASS = 'logMEin';
+	const VAULT_PASS_ITER = 100;
+
+	let fs = new nodefs.FileVFS('/');
+	let vault: agile_keychain.Vault;
+
+	return vfs_util.mktemp(fs, '/tmp', 'vault.XXX').then(path => {
+		return agile_keychain.Vault.createVault(fs, path, VAULT_PASS, '', VAULT_PASS_ITER);
+	}).then(vault_ => {
+		vault = vault_;
+		return vault_.unlock(VAULT_PASS);
+	}).then(() => vault);
 }
 
 function createTestVault() {
@@ -254,14 +270,14 @@ testLib.addAsyncTest('Save item', (assert) => {
 			testLib.assertEqual(assert, content, loadedItem.content);
 
 			// check new item appears in vault list
-			vault.listItems().then((items) => {
+			vault.listItems().then(items => {
 				// check that selected properties match
 				var comparedProps: any[] = ['title',
-					'uuid', 'trashed', 'faveIndex', 'typeName',
+					'uuid', 'trashed', 'typeName',
 					'location', 'updatedAt'];
 
 				var actualOverview = underscore.find(items, item => item.uuid == loadedItem.item.uuid);
-				testLib.assertEqual(assert, actualOverview, item, comparedProps);
+				testLib.assertEqual(assert, actualOverview, loadedItem.item, comparedProps);
 				testLib.continueTests();
 			}).done();
 		})
@@ -581,6 +597,80 @@ testLib.addTest('createVault() fails if directory exists', (assert) => {
 
 		// check that the original vault has not been modified
 		return vault.unlock(pass);
+	});
+});
+
+function createTestLoginItem(id: number) {
+	return item_builder.createItem({
+		title: `Login ${id}`,
+		username: `user${id}`,
+		password: `pass${id}`,
+		url: `https://foobar.com/users/${id}`
+	});
+}
+
+interface TestVault {
+	vault: agile_keychain.Vault;
+	items: item_store.Item[];
+}
+
+function createTestVaultWithNItems(n: number): Q.Promise<TestVault> {
+	let vault: agile_keychain.Vault;
+	let items: item_store.Item[] = [];
+	return createEmptyVault().then(_vault => {
+		vault = _vault;
+		let saved: Q.Promise<void>[] = [];
+		for (let i = 0; i < n; i++) {
+			var item = createTestLoginItem(i);
+			items.push(item);
+			saved.push(item.saveTo(vault));
+		}
+		return Q.all(saved);
+	}).then(() => ({
+		vault: vault,
+		items: items
+	}));
+}
+
+testLib.addAsyncTest('listItemStates() matches listItems() output', assert => {
+	let vault: agile_keychain.Vault;
+	let items: item_store.Item[];
+	return createTestVaultWithNItems(3).then(result => {
+		vault = result.vault;
+		items = result.items;
+		return Q.all([vault.listItemStates(), vault.listItems()]);
+	}).then((items: [item_store.ItemState[], item_store.Item[]]) => {
+		assert.equal(items[0].length, items[1].length);
+
+		items[0].sort((a, b) => a.uuid.localeCompare(b.uuid));
+		items[1].sort((a, b) => a.uuid.localeCompare(b.uuid));
+
+		for (let i = 0; i < items[0].length; i++) {
+			assert.deepEqual(items[0][i].uuid, items[1][i].uuid);
+			assert.deepEqual(items[0][i].revision, items[1][i].revision);
+			assert.deepEqual(items[0][i].deleted, items[1][i].isTombstone());
+		}
+	});
+});
+
+// if the contents.js files and .1password files get out of sync, the .1password
+// file is the source of truth
+testLib.addAsyncTest('listItemStates(), listItems() should not list item if .1password file is not present', assert => {
+	let testVault: TestVault;
+	return createTestVaultWithNItems(3).then(testVault_ => {
+		testVault = testVault_;
+		return testVault.vault.fs.list(testVault.vault.path + '/data/default');
+	}).then(entries => {
+		let itemID = testVault.items[0].uuid;
+		let itemPath = `${testVault.vault.path}/data/default/${itemID}.1password`;
+		return testVault.vault.fs.rm(itemPath);
+	}).then(() => {
+		return testVault.vault.listItemStates();
+	}).then(items => {
+		assert.equal(items.length, 2);
+		return testVault.vault.listItems();
+	}).then(items => {
+		assert.equal(items.length, 2);
 	});
 });
 
