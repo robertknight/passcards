@@ -21,27 +21,37 @@ function findTestFiles(dir) {
 
 var failed = [];
 findTestFiles('./build').then(function(files) {
+	var activeJobs = 0;
 	var runNext = function() {
 		if (files.length === 0) {
-			if (failed.length === 0) {
-				process.exit(0);
-			} else {
-				console.error('Tests failed: %s', failed.join(', '));
-				process.exit(1);
+			if (activeJobs === 0) {
+				if (failed.length === 0) {
+					process.exit(0);
+				} else {
+					console.error('Tests failed: %s', failed.join(', '));
+					process.exit(1);
+				}
 			}
 			return;
 		}
 		var test = files.shift();
 		var chan = child_process.fork(path.resolve(test));
+		++activeJobs;
+
 		chan.on('exit', function(code, signal) {
 			if (code !== 0) {
 				failed.push(test);
 			}
+			--activeJobs;
 			runNext();
 		});
 		chan.disconnect();
 	};
-	runNext();
+
+	var maxJobs = 5;
+	while (activeJobs < maxJobs) {
+		runNext();
+	}
 
 }).catch(function(err) {
 	console.log('test error: ', err.toString());
