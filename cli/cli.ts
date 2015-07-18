@@ -47,6 +47,12 @@ var NO_SUCH_ITEM_ERR = 'No items matched the pattern';
 var NO_SUCH_FIELD_ERR = 'No fields matched the pattern';
 var ACTION_CANCELED_ERR = 'Action canceled';
 
+function sortByTitle(items: item_store.Item[]) {
+	return items.concat().sort((a, b) => {
+		return a.title.localeCompare(b.title);
+	});
+}
+
 export class CLI {
 	private configDir: string;
 	private io: consoleio.TermIO;
@@ -314,7 +320,7 @@ export class CLI {
 	  */
 	private selectItem(vault: agile_keychain.Vault, pattern: string): Q.Promise<item_store.Item> {
 		return item_search.lookupItems(vault, pattern).then((items) => {
-			return this.select(items, 'items', 'Item', pattern, (item) => { return item.title; });
+			return this.select(sortByTitle(items), 'items', 'Item', pattern, (item) => { return item.title; });
 		});
 	}
 
@@ -405,7 +411,7 @@ export class CLI {
 	}
 
 	private trashItemCommand(vault: agile_keychain.Vault, pattern: string, trash: boolean): Q.Promise<void[]> {
-		return item_search.lookupItems(vault, pattern).then((items) => {
+		return item_search.lookupItems(vault, pattern).then(items => {
 			var trashOps: Q.Promise<void>[] = [];
 			items.forEach((item) => {
 				item.trashed = trash;
@@ -468,7 +474,7 @@ export class CLI {
 		var items: item_store.Item[];
 
 		return item_search.lookupItems(vault, pattern).then((items_) => {
-			items = items_;
+			items = sortByTitle(items_);
 			if (items.length == 0) {
 				this.printf('No matching items');
 				throw NO_SUCH_ITEM_ERR;
