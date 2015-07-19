@@ -627,8 +627,13 @@ export interface Store {
 	listItems(opts?: ListItemsOptions): Q.Promise<Item[]>;
 
 	/** Load the item with a specific ID.
+	  *
 	  * If a revision is specified, load a specific version of an item,
 	  * otherwise load the current version of the item.
+	  *
+	  * loadItem() should report an error if the item has been deleted.
+	  * Deleted items are only available as tombstone entries in the
+	  * list returned by listItemStates().
 	  */
 	loadItem(uuid: string, revision?: string): Q.Promise<ItemAndContent>;
 

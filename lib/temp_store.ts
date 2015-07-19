@@ -117,6 +117,9 @@ export class Store implements item_store.SyncableStore {
 			if (items.length == 0) {
 				return Q.reject<item_store.ItemAndContent>(new Error('No such item'));
 			}
+			if (items[0].isTombstone()) {
+				return Q.reject<item_store.ItemAndContent>(new Error('Item has been deleted'));
+			}
 			if (!revision) {
 				revision = items[0].revision;
 			}
