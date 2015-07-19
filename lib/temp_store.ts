@@ -78,6 +78,8 @@ export class Store implements item_store.SyncableStore {
 		return this.checkUnlocked().then(() => {
 			if (source !== item_store.ChangeSource.Sync) {
 				item.updateTimestamps();
+			} else {
+				assert(item.updatedAt);
 			}
 
 			let prevRevision = item.revision;

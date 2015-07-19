@@ -680,7 +680,7 @@ testLib.addAsyncTest('listItemStates(), listItems() should not list item if .1pa
 		return testVault.vault.fs.list(testVault.vault.path + '/data/default');
 	}).then(entries => {
 		let itemID = testVault.items[0].uuid;
-		let itemPath = `${testVault.vault.path}/data/default/${itemID}.1password`;
+		let itemPath = testVault.vault.itemPath(itemID);
 		return testVault.vault.fs.rm(itemPath);
 	}).then(() => {
 		return testVault.vault.listItemStates();
@@ -689,6 +689,19 @@ testLib.addAsyncTest('listItemStates(), listItems() should not list item if .1pa
 		return testVault.vault.listItems();
 	}).then(items => {
 		assert.equal(items.length, 2);
+	});
+});
+
+testLib.addAsyncTest('Removing item succeeds if file is already removed', assert => {
+	let testVault: TestVault;
+	return createTestVaultWithNItems(1).then(testVault_ => {
+		testVault = testVault_;
+		let itemPath = testVault.vault.itemPath(testVault.items[0].uuid);
+		return testVault.vault.fs.rm(itemPath);
+	}).then(() => {
+		return testVault.items[0].remove();
+	}).then(() => {
+		assert.ok(testVault.items[0].isTombstone());
 	});
 });
 

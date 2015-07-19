@@ -308,6 +308,7 @@ export class CloudStoreSyncer implements Syncer {
 	private createTombstone(store: item_store.Store, uuid: string): item_store.ItemAndContent {
 		let item = new item_store.Item(store, uuid);
 		item.typeName = item_store.ItemTypes.TOMBSTONE;
+		item.updatedAt = new Date();
 		return {
 			item: item,
 			content: null

@@ -410,7 +410,10 @@ export class Vault implements item_store.Store {
 			});
 	}
 
-	private itemPath(uuid: string): string {
+	/** Returns the path to the file containing the encrypted data
+	  * for an item.
+	  */
+	itemPath(uuid: string): string {
 		return Path.join(this.path, 'data/default/' + uuid + '.1password')
 	}
 
@@ -437,13 +440,22 @@ export class Vault implements item_store.Store {
 	saveItem(item: item_store.Item, source?: item_store.ChangeSource): Q.Promise<void> {
 		if (source !== item_store.ChangeSource.Sync) {
 			item.updateTimestamps();
+		} else {
+			assert(item.updatedAt);
 		}
 
 		// update the '<item ID>.1password' file
 		let itemPath = this.itemPath(item.uuid);
 		let itemSaved: Q.Promise<void>;
 		if (item.isTombstone()) {
-			itemSaved = this.fs.rm(itemPath);
+			itemSaved = this.fs.rm(itemPath).catch((err: Error | vfs.VfsError) => {
+				if (err instanceof vfs.VfsError) {
+					if (err.type === vfs.ErrorType.FileNotFound) {
+						return;
+					}
+				}
+				throw err;
+			});
 		} else {
 			itemSaved = item.getContent().then(content => {
 				item.updateOverviewFromContent(content);
