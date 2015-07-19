@@ -211,56 +211,10 @@ export class CloudStoreSyncer implements Syncer {
 
 			Object.keys(allItems).forEach(uuid => {
 				let remoteItem = remoteItemMap.get(uuid);
-				let remoteState = ItemSyncState.Unchanged;
 				let localItem = localItemMap.get(uuid);
-				let localState = ItemSyncState.Unchanged;
-
 				let lastSyncedRevision = lastSyncedRevisions.get(uuid);
-
-				if (localItem) {
-					if (localItem.deleted) {
-						if (lastSyncedRevision) {
-							localState = ItemSyncState.Deleted;
-							syncLog.info('item %s deleted locally', uuid);
-						}
-					} else if (lastSyncedRevision) {
-						if (localItem.revision !== lastSyncedRevision.local) {
-							localState = ItemSyncState.Updated;
-							syncLog.info('item %s updated locally', uuid);
-						}
-					} else {
-						localState = ItemSyncState.Updated;
-						syncLog.info('item %s added locally');
-					}
-				}
-
-				if (remoteItem) {
-					if (remoteItem.deleted) {
-						if (lastSyncedRevision) {
-							remoteState = ItemSyncState.Deleted;
-							syncLog.info('item %s deleted in cloud', uuid);
-						}
-					} else if (lastSyncedRevision) {
-						if (remoteItem.revision !== lastSyncedRevision.external) {
-							remoteState = ItemSyncState.Updated;
-							syncLog.info('item %s updated in cloud', uuid);
-						}
-					} else {
-						remoteState = ItemSyncState.Updated;
-						syncLog.info('item %s added in cloud', uuid);
-					}
-				}
-
-				if (localState !== ItemSyncState.Unchanged ||
-					remoteState !== ItemSyncState.Unchanged) {
-					this.syncQueue.push({
-						localItem: localItem,
-						localState: localState,
-						remoteItem: remoteItem,
-						remoteState: remoteState
-					});
-					++this.syncProgress.total;
-				}
+				
+				this.enqueueItemForSyncIfChanged(localItem, remoteItem, lastSyncedRevision);
 			});
 
 			syncLog.info('found %d items to sync', this.syncQueue.length);
@@ -277,6 +231,60 @@ export class CloudStoreSyncer implements Syncer {
 		this.syncNextBatch();
 
 		return this.currentSync.promise;
+	}
+
+	private enqueueItemForSyncIfChanged(localItem: item_store.ItemState,
+	  remoteItem: item_store.ItemState,
+	  lastSyncedRevision?: item_store.RevisionPair) {
+
+		let uuid = localItem ? localItem.uuid : remoteItem.uuid;
+		let remoteState = ItemSyncState.Unchanged;
+		let localState = ItemSyncState.Unchanged;
+
+		if (localItem) {
+			if (localItem.deleted) {
+				if (lastSyncedRevision) {
+					localState = ItemSyncState.Deleted;
+					syncLog.info('item %s deleted locally', uuid);
+				}
+			} else if (lastSyncedRevision) {
+				if (localItem.revision !== lastSyncedRevision.local) {
+					localState = ItemSyncState.Updated;
+					syncLog.info('item %s updated locally', uuid);
+				}
+			} else {
+				localState = ItemSyncState.Updated;
+				syncLog.info('item %s added locally');
+			}
+		}
+
+		if (remoteItem) {
+			if (remoteItem.deleted) {
+				if (lastSyncedRevision) {
+					remoteState = ItemSyncState.Deleted;
+					syncLog.info('item %s deleted in cloud', uuid);
+				}
+			} else if (lastSyncedRevision) {
+				if (remoteItem.revision !== lastSyncedRevision.external) {
+					remoteState = ItemSyncState.Updated;
+					syncLog.info('item %s updated in cloud', uuid);
+				}
+			} else {
+				remoteState = ItemSyncState.Updated;
+				syncLog.info('item %s added in cloud', uuid);
+			}
+		}
+
+		if (localState !== ItemSyncState.Unchanged ||
+				remoteState !== ItemSyncState.Unchanged) {
+			this.syncQueue.push({
+				localItem: localItem,
+				localState: localState,
+				remoteItem: remoteItem,
+				remoteState: remoteState
+			});
+			++this.syncProgress.total;
+		}
 	}
 
 	// sync the next batch of items. This adds items
