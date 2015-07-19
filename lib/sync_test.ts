@@ -59,7 +59,7 @@ function syncItems(syncer: sync.Syncer) {
 	});
 }
 
-// create a cloudStore, a local store and a syncer.
+// create a cloud store, a local store and a syncer.
 // Add a single item to the cloudStore and the cloudStore, local store, syncer and
 // a reference to the item in the cloudStore
 function setupWithItem(): Q.Promise<{ env: Env; item: item_store.Item }> {
@@ -395,6 +395,35 @@ testLib.addAsyncTest('sync item deletion from local to cloud', assert => {
 		return env.cloudStore.listItems();
 	}).then(items => {
 		assert.equal(items.length, 0);
+	});
+});
+
+testLib.addAsyncTest('item deleted in cloud and locally', assert => {
+	let env: Env;
+	let uuid: string;
+	return setupWithItem().then(_env => {
+		env = _env.env;
+		uuid = _env.item.uuid;
+		return syncItems(env.syncer);
+	}).then(() => {
+		let deletedLocally = env.localStore.loadItem(uuid)
+		.then(item => item.item.remove());
+		let deletedInCloud = env.cloudStore.loadItem(uuid)
+		.then(item => item.item.remove());
+		return Q.all([deletedLocally, deletedInCloud]);
+	}).then(() => {
+		return syncItems(env.syncer);
+	}).then(result => {
+		// the syncer could optimize by handling deletions on both
+		// sides purely locally. For the moment, it reports the item
+		// as being updated
+		assert.equal(result.updated, 1);
+
+		// sync again. This time the item should not be reported
+		// as being updated.
+		return syncItems(env.syncer);
+	}).then(result => {
+		assert.equal(result.updated, 0);
 	});
 });
 

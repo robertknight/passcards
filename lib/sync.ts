@@ -213,7 +213,7 @@ export class CloudStoreSyncer implements Syncer {
 				let remoteItem = remoteItemMap.get(uuid);
 				let localItem = localItemMap.get(uuid);
 				let lastSyncedRevision = lastSyncedRevisions.get(uuid);
-				
+
 				this.enqueueItemForSyncIfChanged(localItem, remoteItem, lastSyncedRevision);
 			});
 
@@ -234,8 +234,8 @@ export class CloudStoreSyncer implements Syncer {
 	}
 
 	private enqueueItemForSyncIfChanged(localItem: item_store.ItemState,
-	  remoteItem: item_store.ItemState,
-	  lastSyncedRevision?: item_store.RevisionPair) {
+		remoteItem: item_store.ItemState,
+		lastSyncedRevision?: item_store.RevisionPair) {
 
 		let uuid = localItem ? localItem.uuid : remoteItem.uuid;
 		let remoteState = ItemSyncState.Unchanged;
@@ -276,7 +276,7 @@ export class CloudStoreSyncer implements Syncer {
 		}
 
 		if (localState !== ItemSyncState.Unchanged ||
-				remoteState !== ItemSyncState.Unchanged) {
+			remoteState !== ItemSyncState.Unchanged) {
 			this.syncQueue.push({
 				localItem: localItem,
 				localState: localState,
