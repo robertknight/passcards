@@ -378,14 +378,19 @@ export class Store implements item_store.SyncableStore {
 		});
 	}
 
-	setLastSyncedRevision(item: item_store.Item, storeID: string, revision: item_store.RevisionPair) {
-		return this.itemStore.set(`lastSynced/${storeID}/${item.uuid}`, {
-			local: revision.local,
-			external: revision.external,
-			timestamp: item.updatedAt
-		}).then(() => {
-			return this.indexUpdateQueue.push(item);
-		});
+	setLastSyncedRevision(item: item_store.Item, storeID: string, revision?: item_store.RevisionPair) {
+		let key = `lastSynced/${storeID}/${item.uuid}`;
+		let saved: Q.Promise<void>;
+		if (revision) {
+			saved = this.itemStore.set(key, {
+				local: revision.local,
+				external: revision.external,
+				timestamp: item.updatedAt
+			});
+		} else {
+			saved = this.itemStore.remove(key);
+		}
+		return saved.then(() => this.indexUpdateQueue.push(item));
 	}
 
 	lastSyncRevisions(storeID: string) {

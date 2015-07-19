@@ -697,7 +697,7 @@ export interface SyncableStore extends Store {
 	  */
 	setLastSyncedRevision(item: Item,
 		storeID: string,
-		revision: RevisionPair): Q.Promise<void>;
+		revision?: RevisionPair): Q.Promise<void>;
 	
 	/** Retrieves the revision of an item in a store (identified by @p storeID)
 	  * which was last synced with this store.

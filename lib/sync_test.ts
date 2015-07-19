@@ -178,7 +178,7 @@ testLib.addAsyncTest('sync items from local to cloud', (assert) => {
 		env = _env;
 		return item.saveTo(env.localStore);
 	}).then(() => {
-		// 2. Sync and verify that item was added to cloudStore
+		// 2. Sync and verify that item was added to the cloud store
 		return env.syncer.syncItems();
 	}).then((syncStats) => {
 		assert.equal(syncStats.updated, 1);
@@ -200,7 +200,7 @@ testLib.addAsyncTest('sync items from local to cloud', (assert) => {
 		}]);
 
 		// 3. Update item in store, sync and verify that
-		// cloudStore item is updated
+		// cloud store item is updated
 		item.title = 'store item - updated';
 		return item.save();
 	}).then(() => {
@@ -330,9 +330,11 @@ testLib.addAsyncTest('report sync progress', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('sync item deletions', (assert) => {
-	var env: Env;
-	var item: item_store.Item;
+const CLOUD_STORE_ID = 'cloud';
+
+testLib.addAsyncTest('sync item deletion from cloud to local', (assert) => {
+	let env: Env;
+	let item: item_store.Item;
 
 	return setupWithItem().then((_env) => {
 		env = _env.env;
@@ -342,7 +344,7 @@ testLib.addAsyncTest('sync item deletions', (assert) => {
 		return env.syncer.syncItems();
 	}).then(() => {
 
-		// remove it in the cloudStore
+		// remove it in the cloud store
 		return item.remove();
 	}).then(() => {
 
@@ -356,6 +358,33 @@ testLib.addAsyncTest('sync item deletions', (assert) => {
 		// deleted
 		assert.equal(items.length, 1);
 		assert.ok(items[0].isTombstone());
+
+		// verify that the last-synced revision was cleared
+		return env.localStore.getLastSyncedRevision(item.uuid, CLOUD_STORE_ID);
+	}).then(revision => {
+		assert.equal(revision, null);
+	});
+});
+
+testLib.addAsyncTest('sync item deletion from local to cloud', assert => {
+	let env: Env;
+	return setupWithItem().then(_env => {
+		env = _env.env;
+		return env.syncer.syncItems();
+	}).then(() => {
+		return env.localStore.listItems();
+	}).then(items => {
+		// remove item in local store
+		assert.equal(items.length, 1);
+		assert.ok(!items[0].isTombstone());
+		return items[0].remove();
+	}).then(() => {
+		return env.syncer.syncItems();
+	}).then(() => {
+		// verify that deletion was propagated to cloud store
+		return env.cloudStore.listItems();
+	}).then(items => {
+		assert.equal(items.length, 0);
 	});
 });
 

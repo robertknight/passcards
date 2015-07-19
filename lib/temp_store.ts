@@ -1,3 +1,4 @@
+import assert = require('assert');
 import clone = require('clone');
 import Q = require('q');
 
@@ -24,11 +25,14 @@ export class Store implements item_store.SyncableStore {
 	// map of (store ID -> (item UUID -> revision))
 	private lastSyncedRevisions: Map<string, Map<string, item_store.RevisionPair>>;
 
+	private nextRevision: number;
+
 	constructor(agent: key_agent.KeyAgent, name?: string) {
 		this.onItemUpdated = new event_stream.EventStream<item_store.Item>();
 		this.onUnlock = new event_stream.EventStream<void>();
 		this.keyAgent = agent;
 		this.name = name;
+		this.nextRevision = 1;
 
 		this.clear();
 	}
@@ -76,18 +80,12 @@ export class Store implements item_store.SyncableStore {
 				item.updateTimestamps();
 			}
 
-			let saved = false;
-			for (var i = 0; i < this.items.length; i++) {
-				if (this.items[i].uuid == item.uuid) {
-					this.items[i] = item;
-					saved = true;
-				}
-			}
-
 			let prevRevision = item.revision;
 			return item.getContent().then((content) => {
 				item.updateOverviewFromContent(content);
-				item.revision = item_store.generateRevisionId({ item: item, content: content });
+				item.revision = this.nextRevision.toString();
+				++this.nextRevision;
+
 				item.parentRevision = prevRevision;
 				let itemRevision = item_store.cloneItem({
 					item: item,
@@ -100,8 +98,16 @@ export class Store implements item_store.SyncableStore {
 					content: itemRevision.content
 				});
 
+				let saved = false;
+				for (var i = 0; i < this.items.length; i++) {
+					if (this.items[i].uuid == item.uuid) {
+						this.items[i] = itemRevision.item;
+						saved = true;
+					}
+				}
+
 				if (!saved) {
-					this.items.push(item);
+					this.items.push(itemRevision.item);
 				}
 
 				this.onItemUpdated.publish(item);
@@ -162,15 +168,22 @@ export class Store implements item_store.SyncableStore {
 		}
 	}
 
-	setLastSyncedRevision(item: item_store.Item, storeID: string, revision: item_store.RevisionPair) {
+	setLastSyncedRevision(item: item_store.Item, storeID: string, revision?: item_store.RevisionPair) {
 		if (!this.lastSyncedRevisions.has(storeID)) {
 			this.lastSyncedRevisions.set(storeID, new Map<string, item_store.RevisionPair>());
 		}
-		this.lastSyncedRevisions.get(storeID).set(item.uuid, revision);
+		if (revision) {
+			this.lastSyncedRevisions.get(storeID).set(item.uuid, revision);
+		} else {
+			this.lastSyncedRevisions.get(storeID).delete(item.uuid);
+		}
 		return Q<void>(null);
 	}
 
 	lastSyncRevisions(storeID: string) {
+		if (!this.lastSyncedRevisions.has(storeID)) {
+			this.lastSyncedRevisions.set(storeID, new Map<string, item_store.RevisionPair>());
+		}
 		return Q(this.lastSyncedRevisions.get(storeID));
 	}
 
