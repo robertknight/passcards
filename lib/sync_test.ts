@@ -49,6 +49,16 @@ function setup(): Q.Promise<Env> {
 	});
 }
 
+// sync items and throw an error if any fail
+function syncItems(syncer: sync.Syncer) {
+	return syncer.syncItems().then(result => {
+		if (result.failed > 0) {
+			throw new Error(`${result.failed} items failed to sync`);
+		}
+		return result;
+	});
+}
+
 // create a cloudStore, a local store and a syncer.
 // Add a single item to the cloudStore and the cloudStore, local store, syncer and
 // a reference to the item in the cloudStore
@@ -125,7 +135,7 @@ testLib.addAsyncTest('sync items from cloud to local', (assert) => {
 	}).then(() => {
 		// 2. sync and verify that the updated items were
 		//    synced to the local store
-		return env.syncer.syncItems();
+		return syncItems(env.syncer);
 	}).then((syncStats) => {
 		assert.equal(syncStats.updated, 1);
 		assert.equal(syncStats.total, 1);
@@ -153,7 +163,7 @@ testLib.addAsyncTest('sync items from cloud to local', (assert) => {
 		item.title = 'sync me - updated';
 		return item.save();
 	}).then(() => {
-		return env.syncer.syncItems();
+		return syncItems(env.syncer);
 	}).then((syncStats) => {
 		assert.equal(syncStats.updated, 1);
 		assert.equal(syncStats.total, 1);
@@ -179,7 +189,7 @@ testLib.addAsyncTest('sync items from local to cloud', (assert) => {
 		return item.saveTo(env.localStore);
 	}).then(() => {
 		// 2. Sync and verify that item was added to the cloud store
-		return env.syncer.syncItems();
+		return syncItems(env.syncer);
 	}).then((syncStats) => {
 		assert.equal(syncStats.updated, 1);
 		assert.equal(syncStats.total, 1);
@@ -204,7 +214,7 @@ testLib.addAsyncTest('sync items from local to cloud', (assert) => {
 		item.title = 'store item - updated';
 		return item.save();
 	}).then(() => {
-		return env.syncer.syncItems();
+		return syncItems(env.syncer);
 	}).then(() => {
 		return env.cloudStore.listItems();
 	}).then((vaultItems) => {
@@ -226,7 +236,7 @@ testLib.addAsyncTest('merge local and cloud item updates', (assert) => {
 		env = _env;
 		return item.saveTo(env.localStore);
 	}).then(() => {
-		return env.syncer.syncItems();
+		return syncItems(env.syncer);
 	}).then(() => {
 		return env.cloudStore.loadItem(item.uuid);
 	}).then(vaultItem => {
@@ -239,7 +249,7 @@ testLib.addAsyncTest('merge local and cloud item updates', (assert) => {
 		item.title = 'acme.org - client update';
 		return Q.all([item.save(), vaultItem.item.save()]);
 	}).then(() => {
-		return env.syncer.syncItems();
+		return syncItems(env.syncer);
 	}).then(() => {
 		return Q.all([env.localStore.loadItem(item.uuid), env.cloudStore.loadItem(item.uuid)]);
 	}).then((items) => {
@@ -269,7 +279,7 @@ testLib.addAsyncTest('report sync progress', (assert) => {
 		});
 		return item.saveTo(env.cloudStore);
 	}).then(() => {
-		return env.syncer.syncItems();
+		return syncItems(env.syncer);
 	}).then((finalState) => {
 		assert.deepEqual(progressUpdates, [{
 			state: sync.SyncState.ListingItems,
@@ -306,7 +316,7 @@ testLib.addAsyncTest('report sync progress', (assert) => {
 		});
 
 		progressUpdates = [];
-		return env.syncer.syncItems();
+		return syncItems(env.syncer);
 	}).then(() => {
 		assert.deepEqual(progressUpdates, [{
 			state: sync.SyncState.ListingItems,
@@ -341,7 +351,7 @@ testLib.addAsyncTest('sync item deletion from cloud to local', (assert) => {
 		item = _env.item;
 
 		// sync item to local store
-		return env.syncer.syncItems();
+		return syncItems(env.syncer);
 	}).then(() => {
 
 		// remove it in the cloud store
@@ -349,7 +359,7 @@ testLib.addAsyncTest('sync item deletion from cloud to local', (assert) => {
 	}).then(() => {
 
 		// sync again
-		return env.syncer.syncItems();
+		return syncItems(env.syncer);
 	}).then(() => {
 		return env.localStore.listItems({ includeTombstones: true });
 	}).then((items) => {
@@ -370,7 +380,7 @@ testLib.addAsyncTest('sync item deletion from local to cloud', assert => {
 	let env: Env;
 	return setupWithItem().then(_env => {
 		env = _env.env;
-		return env.syncer.syncItems();
+		return syncItems(env.syncer);
 	}).then(() => {
 		return env.localStore.listItems();
 	}).then(items => {
@@ -379,7 +389,7 @@ testLib.addAsyncTest('sync item deletion from local to cloud', assert => {
 		assert.ok(!items[0].isTombstone());
 		return items[0].remove();
 	}).then(() => {
-		return env.syncer.syncItems();
+		return syncItems(env.syncer);
 	}).then(() => {
 		// verify that deletion was propagated to cloud store
 		return env.cloudStore.listItems();
@@ -437,7 +447,7 @@ testLib.addAsyncTest('sync many items', (assert) => {
 
 		return Q.all(saves);
 	}).then(() => {
-		return env.syncer.syncItems();
+		return syncItems(env.syncer);
 	}).then(() => {
 		return env.localStore.listItems();
 	}).then((items) => {
@@ -452,7 +462,7 @@ testLib.addAsyncTest('sync should complete if errors occur', assert => {
 	return setupWithItem().then(_env => {
 		env = _env.env;
 		item = _env.item;
-		return env.syncer.syncItems();
+		return syncItems(env.syncer);
 	}).then(() => {
 		return env.cloudStore.loadItem(item.uuid);
 	}).then(cloudItem => {

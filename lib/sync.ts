@@ -393,7 +393,7 @@ export class CloudStoreSyncer implements Syncer {
 	private mergeAndSyncItem(localItem: item_store.ItemAndContent,
 		localState: ItemSyncState,
 		remoteItem: item_store.ItemAndContent,
-							 remoteState: ItemSyncState) {
+		remoteState: ItemSyncState) {
 		assert(localItem || remoteItem, 'neither local nor remote item specified');
 
 		let remoteRevision: string;
@@ -454,11 +454,11 @@ export class CloudStoreSyncer implements Syncer {
 		}
 
 		return saved.then(() => {
-			assert(newLocalRevision, 'saved item does not have a revision');
 			syncLog.info('setting last synced revisions for %s to %s, %s', updatedStoreItem.uuid, newLocalRevision, remoteRevision);
 
 			let revisions: item_store.RevisionPair;
 			if (!updatedStoreItem.isTombstone()) {
+				assert(newLocalRevision, 'saved item does not have a revision');
 				revisions = { local: newLocalRevision, external: remoteRevision };
 			}
 			return this.localStore.setLastSyncedRevision(updatedStoreItem, REMOTE_STORE, revisions);
