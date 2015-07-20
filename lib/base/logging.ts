@@ -16,6 +16,7 @@ export class BasicLogger {
 
 	constructor(name: string) {
 		this.name = name;
+		this.level = Level.Warn;
 	}
 
 	info(...args: any[]) {
@@ -34,7 +35,15 @@ export class BasicLogger {
 		if (this.level > level || args.length === 0) {
 			return;
 		}
-		args[0] = `${this.name}: ${args[0]}`;
+
+		let prefix = `${this.name}: `;
+		if (typeof args[0] === 'string') {
+			// first argument is a format string, so must
+			// remain the first argument to console.log()
+			args[0] = prefix + args[0];
+		} else {
+			args.unshift(this.name);
+		}
 		console.log.apply(console, args);
 	}
 }
