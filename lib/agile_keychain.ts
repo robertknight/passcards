@@ -671,40 +671,53 @@ export class Vault implements item_store.Store {
 	changePassword(oldPass: string, newPass: string, newPassHint: string, iterations?: number): Q.Promise<void> {
 		return this.isLocked().then((locked) => {
 			if (locked) {
-				return Q.reject<agile_keychain_entries.EncryptionKeyEntry[]>(new Error('Vault must be unlocked before changing the password'));
+				return Q.reject<agile_keychain_entries.EncryptionKeyEntry[]>(
+					new Error('Vault must be unlocked before changing the password')
+					);
 			}
 			return this.getKeys();
-		}).then((keys) => {
-			var keyList = <agile_keychain_entries.EncryptionKeyList>{
-				list: []
+		}).then(keys => {
+			let newKeys: Q.Promise<agile_keychain_entries.EncryptionKeyEntry>[] = [];
+			for (let key of keys) {
+				newKeys.push(this.reencryptKey(key, oldPass, newPass, iterations));
+			}
+			return Q.all(newKeys);
+		}).then(newKeys => {
+			let keyList = <agile_keychain_entries.EncryptionKeyList>{
+				list: newKeys
 			};
-
-			try {
-				keys.forEach((key) => {
-					var oldSaltCipher = agile_keychain_crypto.extractSaltAndCipherText(atob(key.data));
-					var newSalt = crypto.randomBytes(8);
-					var derivedKey = key_agent.keyFromPasswordSync(oldPass, oldSaltCipher.salt, key.iterations);
-					var oldKey = key_agent.decryptKey(derivedKey, oldSaltCipher.cipherText,
-						atob(key.validation));
-					var newKeyIterations = iterations || key.iterations;
-					var newDerivedKey = key_agent.keyFromPasswordSync(newPass, newSalt, newKeyIterations);
-					var newKey = key_agent.encryptKey(newDerivedKey, oldKey);
-					var newKeyEntry = {
-						data: btoa('Salted__' + newSalt + newKey.key),
-						identifier: key.identifier,
-						iterations: newKeyIterations,
-						level: key.level,
-						validation: btoa(newKey.validation)
-					};
-					keyList.list.push(newKeyEntry);
-					keyList[newKeyEntry.level] = newKeyEntry.identifier;
-				});
-			} catch (err) {
-				return Q.reject<void>(err);
+			for (let key of newKeys) {
+				keyList[key.level] = key.identifier;
 			}
 
 			this.keys = null;
 			return this.writeKeys(keyList, newPassHint);
+		});
+	}
+
+	private reencryptKey(key: agile_keychain_entries.EncryptionKeyEntry,
+		oldPass: string,
+		newPass: string,
+		iterations?: number) {
+		let oldSaltCipher = agile_keychain_crypto.extractSaltAndCipherText(atob(key.data));
+		let newSalt = crypto.randomBytes(8);
+		let derivedKey = key_agent.keyFromPassword(oldPass, oldSaltCipher.salt, key.iterations);
+
+		return derivedKey.then(derivedKey => {
+			return key_agent.decryptKey(derivedKey, oldSaltCipher.cipherText,
+				atob(key.validation));
+		}).then(oldKey => {
+			let newKeyIterations = iterations || key.iterations;
+			let newDerivedKey = key_agent.keyFromPasswordSync(newPass, newSalt, newKeyIterations);
+			let newKey = key_agent.encryptKey(newDerivedKey, oldKey);
+			let newKeyEntry = {
+				data: btoa('Salted__' + newSalt + newKey.key),
+				identifier: key.identifier,
+				iterations: newKeyIterations,
+				level: key.level,
+				validation: btoa(newKey.validation)
+			};
+			return newKeyEntry;
 		});
 	}
 

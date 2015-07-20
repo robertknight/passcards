@@ -16,6 +16,7 @@ import crypto_worker = require('./crypto_worker');
 import key_agent = require('./key_agent');
 import pbkdf2Lib = require('./crypto/pbkdf2');
 import rpc = require('./net/rpc');
+import perf = require('./base/perf');
 
 export class AESKeyParams {
 	constructor(public key: string, public iv: string) {
@@ -104,7 +105,7 @@ export function newUUID(): string {
 export interface Crypto {
 	/** Decrypt @p cipherText using AES-128 with the given key and initialization vector.
 	  */
-	aesCbcDecrypt(key: string, cipherText: string, iv: string): string;
+	aesCbcDecrypt(key: string, cipherText: string, iv: string): Q.Promise<string>;
 	aesCbcEncrypt(key: string, plainText: string, iv: string): string;
 
 	/** Derive a key of length @p keyLen from a password using @p iterCount iterations
@@ -119,12 +120,12 @@ export interface Crypto {
 
 // crypto implementation using Node.js' crypto lib
 export class NodeCrypto implements Crypto {
-	aesCbcDecrypt(key: string, cipherText: string, iv: string): string {
+	aesCbcDecrypt(key: string, cipherText: string, iv: string) {
 		var decipher = node_crypto.createDecipheriv('AES-128-CBC', key, iv);
-		var result = '';
+		let result = '';
 		result += decipher.update(cipherText, 'binary', 'binary');
 		result += decipher.final('binary');
-		return result;
+		return Q<string>(result);
 	}
 
 	aesCbcEncrypt(key: string, plainText: string, iv: string): string {
@@ -209,7 +210,7 @@ export class CryptoJsCrypto implements Crypto {
 		return encrypted.ciphertext.toString(this.encoding);
 	}
 
-	aesCbcDecrypt(key: string, cipherText: string, iv: string): string {
+	aesCbcDecrypt(key: string, cipherText: string, iv: string) {
 		assert.equal(key.length, 16);
 		assert.equal(iv.length, 16);
 
@@ -219,11 +220,12 @@ export class CryptoJsCrypto implements Crypto {
 		var cipherParams = cryptoJS.lib.CipherParams.create({
 			ciphertext: cipherArray
 		});
-		return cryptoJS.AES.decrypt(cipherParams, keyArray, {
+		let result = cryptoJS.AES.decrypt(cipherParams, keyArray, {
 			mode: cryptoJS.mode.CBC,
 			padding: cryptoJS.pad.Pkcs7,
 			iv: ivArray
 		}).toString(this.encoding);
+		return Q(result);
 	}
 
 	/** Derive a key from a password using PBKDF2. Depending on the number of iterations,

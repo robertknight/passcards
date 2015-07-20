@@ -92,26 +92,20 @@ export class DecryptionError extends err_util.BaseError {
 
 /** Decrypt a set of keys using a password. */
 export function decryptKeys(keys: Key[], password: string): Q.Promise<DecryptedKey[]> {
-	var derivedKeys: Q.Promise<string>[] = [];
-	keys.forEach((key) => {
+	let decryptedKeys: Q.Promise<DecryptedKey>[] = [];
+	keys.forEach(key => {
 		assert.equal(key.format, KeyFormat.AgileKeychainKey);
 		var saltCipher = agile_keychain_crypto.extractSaltAndCipherText(atob(key.data));
-		derivedKeys.push(keyFromPassword(password, saltCipher.salt, key.iterations));
+		let decryptedKey = keyFromPassword(password, saltCipher.salt, key.iterations)
+		.then(derivedKey => {
+			return decryptKey(derivedKey, saltCipher.cipherText, atob(key.validation));
+		}).then(decryptedKey => ({
+			id: key.identifier,
+			key: decryptedKey
+		}));
+		decryptedKeys.push(decryptedKey);
 	});
-
-	return Q.all(derivedKeys).then((derivedKeys) => {
-		var decryptedKeys: DecryptedKey[] = [];
-		keys.forEach((key, index) => {
-			var saltCipher = agile_keychain_crypto.extractSaltAndCipherText(atob(key.data));
-			var decryptedKey = decryptKey(derivedKeys[index], saltCipher.cipherText,
-				atob(key.validation));
-			decryptedKeys.push({
-				id: key.identifier,
-				key: decryptedKey
-			});
-		});
-		return decryptedKeys;
-	});
+	return Q.all(decryptedKeys);
 }
 
 /** Interface for agent which handles storage of decryption
@@ -226,8 +220,8 @@ export class SimpleKeyAgent implements KeyAgent {
 		}
 		switch (params.algo) {
 			case CryptoAlgorithm.AES128_OpenSSLKey:
-				return Q(agile_keychain_crypto.decryptAgileKeychainItemData(this.crypto,
-					this.keys[id], cipherText));
+				return agile_keychain_crypto.decryptAgileKeychainItemData(this.crypto,
+					this.keys[id], cipherText);
 			default:
 				return Q.reject<string>(new Error('Unknown encryption algorithm'));
 		}
@@ -259,21 +253,24 @@ export class SimpleKeyAgent implements KeyAgent {
   * @param validation Validation data used to verify whether decryption was successful.
   *  This is a copy of the decrypted version of @p encryptedKey, encrypted with itself.
   */
-export function decryptKey(derivedKey: string, encryptedKey: string, validation: string): string {
-	var aesKey = derivedKey.substring(0, 16);
-	var iv = derivedKey.substring(16, 32);
-	var decryptedKey = agile_keychain_crypto.defaultCrypto.aesCbcDecrypt(aesKey, encryptedKey, iv);
-	var validationSaltCipher = agile_keychain_crypto.extractSaltAndCipherText(validation);
+export function decryptKey(derivedKey: string, encryptedKey: string, validation: string): Q.Promise<string> {
+	let aesKey = derivedKey.substring(0, 16);
+	let iv = derivedKey.substring(16, 32);
+	let keyDecrypted = agile_keychain_crypto.defaultCrypto.aesCbcDecrypt(aesKey, encryptedKey, iv);
+	let decryptedKey: string;
+	return keyDecrypted.then(decryptedKey_ => {
+		decryptedKey = decryptedKey_;
+		let validationSaltCipher = agile_keychain_crypto.extractSaltAndCipherText(validation);
 
-	var keyParams = agile_keychain_crypto.openSSLKey(agile_keychain_crypto.defaultCrypto,
-		decryptedKey, validationSaltCipher.salt);
-	var decryptedValidation = agile_keychain_crypto.defaultCrypto.aesCbcDecrypt(keyParams.key, validationSaltCipher.cipherText, keyParams.iv);
-
-	if (decryptedValidation != decryptedKey) {
-		throw new DecryptionError('Incorrect password');
-	}
-
-	return decryptedKey;
+		let keyParams = agile_keychain_crypto.openSSLKey(agile_keychain_crypto.defaultCrypto,
+			decryptedKey, validationSaltCipher.salt);
+		return agile_keychain_crypto.defaultCrypto.aesCbcDecrypt(keyParams.key, validationSaltCipher.cipherText, keyParams.iv);
+	}).then(decryptedValidation => {
+		if (decryptedValidation !== decryptedKey) {
+			throw new DecryptionError('Incorrect password');
+		}
+		return decryptedKey;
+	});
 }
 
 /** Derive an encryption key from a password for use with decryptKey().

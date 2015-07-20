@@ -220,9 +220,10 @@ function createCryptos(): agile_keychain_crypto.Crypto[] {
 	return cryptoImpls;
 }
 
-testLib.addTest('AES encrypt/decrypt', (assert) => {
-	var cryptoImpls = createCryptos();
-	cryptoImpls.forEach((impl) => {
+testLib.addAsyncTest('AES encrypt/decrypt', (assert) => {
+	let done: Q.Promise<void>[] = [];
+	let impls = createCryptos();
+	for (let impl of impls) {
 		var plainText = 'foo bar';
 		var key = 'ABCDABCDABCDABCD';
 		var iv = 'EFGHEFGHEFGHEFGH';
@@ -230,19 +231,27 @@ testLib.addTest('AES encrypt/decrypt', (assert) => {
 		var cipherText = impl.aesCbcEncrypt(key, plainText, iv);
 		var decrypted = impl.aesCbcDecrypt(key, cipherText, iv);
 
-		assert.equal(decrypted, plainText);
-	});
+		done.push(decrypted.then(result => {
+			assert.equal(result, plainText);
+		}));
+	}
+	return Q.all(done);
 });
 
-testLib.addTest('Encrypt/decrypt item data', (assert) => {
-	var cryptoImpls = createCryptos();
-	cryptoImpls.forEach((impl) => {
+testLib.addAsyncTest('Encrypt/decrypt item data', (assert) => {
+	let impls = createCryptos();
+	let done: Q.Promise<void>[] = [];
+	for (let impl of impls) {
 		var itemData = JSON.stringify({ secret: 'secret-data' });
 		var itemPass = 'item password';
 		var encrypted = agile_keychain_crypto.encryptAgileKeychainItemData(impl, itemPass, itemData);
 		var decrypted = agile_keychain_crypto.decryptAgileKeychainItemData(impl, itemPass, encrypted);
-		assert.equal(decrypted, itemData);
-	});
+
+		done.push(decrypted.then(result => {
+			assert.equal(result, itemData);
+		}));
+	}
+	return Q.all(done);
 });
 
 testLib.addTest('New item UUID', (assert) => {
@@ -438,7 +447,7 @@ testLib.addTest('Generate Passwords', (assert) => {
 	}
 });
 
-testLib.addTest('Encrypt/decrypt key (sync)', (assert) => {
+testLib.addAsyncTest('Encrypt/decrypt key (sync)', (assert) => {
 	var password = 'test-pass'
 	var iterations = 100;
 	var salt = crypto.randomBytes(8);
@@ -447,10 +456,12 @@ testLib.addTest('Encrypt/decrypt key (sync)', (assert) => {
 	var derivedKey = key_agent.keyFromPasswordSync(password, salt, iterations);
 	var encryptedKey = key_agent.encryptKey(derivedKey, masterKey);
 	var decryptedKey = key_agent.decryptKey(derivedKey, encryptedKey.key, encryptedKey.validation);
-	assert.equal(decryptedKey, masterKey);
-	assert.throws(() => {
+	return decryptedKey.then(decryptedKey => {
+		assert.equal(decryptedKey, masterKey);
 		var derivedKey2 = key_agent.keyFromPasswordSync('wrong-pass', salt, iterations);
-		key_agent.decryptKey(derivedKey2, encryptedKey.key, encryptedKey.validation)
+		return asyncutil.result(key_agent.decryptKey(derivedKey2, encryptedKey.key, encryptedKey.validation));
+	}).then(result => {
+		assert.ok(result.error != null);
 	});
 });
 
@@ -462,7 +473,8 @@ testLib.addAsyncTest('Encrypt/decrypt key (async)', (assert) => {
 
 	return key_agent.keyFromPassword(password, salt, iterations).then((derivedKey) => {
 		var encryptedKey = key_agent.encryptKey(derivedKey, masterKey);
-		var decryptedKey = key_agent.decryptKey(derivedKey, encryptedKey.key, encryptedKey.validation);
+		return key_agent.decryptKey(derivedKey, encryptedKey.key, encryptedKey.validation);
+	}).then(decryptedKey => {
 		assert.equal(decryptedKey, masterKey);
 	});
 });
