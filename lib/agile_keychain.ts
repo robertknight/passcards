@@ -373,17 +373,7 @@ export class Vault implements item_store.Store {
 	  * This must be called before item contents can be decrypted.
 	  */
 	unlock(pwd: string): Q.Promise<void> {
-		return this.listKeys().then((keys) => {
-			return key_agent.decryptKeys(keys, pwd);
-		}).then((keys) => {
-			var savedKeys: Q.Promise<void>[] = [];
-			keys.forEach((key) => {
-				savedKeys.push(this.keyAgent.addKey(key.id, key.key));
-			});
-			return asyncutil.eraseResult(Q.all(savedKeys)).then(() => {
-				this.onUnlock.publish(null);
-			});
-		});
+		return item_store.unlockStore(this, this.keyAgent, pwd);
 	}
 
 	/** Lock the vault. This discards decrypted master keys for the vault

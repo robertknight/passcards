@@ -2,7 +2,6 @@ import assert = require('assert');
 import clone = require('clone');
 import Q = require('q');
 
-import asyncutil = require('./base/asyncutil');
 import collectionutil = require('./base/collectionutil');
 import event_stream = require('./base/event_stream');
 import item_store = require('./item_store');
@@ -38,15 +37,7 @@ export class Store implements item_store.SyncableStore {
 	}
 
 	unlock(password: string): Q.Promise<void> {
-		return key_agent.decryptKeys(this.keys, password).then((keys) => {
-			var savedKeys: Q.Promise<void>[] = [];
-			keys.forEach((key) => {
-				savedKeys.push(this.keyAgent.addKey(key.id, key.key));
-			});
-			return asyncutil.eraseResult(Q.all(savedKeys)).then(() => {
-				this.onUnlock.publish(null);
-			});
-		});
+		return item_store.unlockStore(this, this.keyAgent, password);
 	}
 
 	listKeys() {

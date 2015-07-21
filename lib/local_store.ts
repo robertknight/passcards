@@ -150,21 +150,7 @@ export class Store implements item_store.SyncableStore {
 	}
 
 	unlock(pwd: string): Q.Promise<void> {
-		// FIXME - This duplicates onepass.Vault.unlock()
-		return this.listKeys().then((keys) => {
-			if (keys.length == 0) {
-				throw new Error('No encryption keys have been saved');
-			}
-			return Q(key_agent.decryptKeys(keys, pwd));
-		}).then((keys) => {
-			var savedKeys: Q.Promise<void>[] = [];
-			keys.forEach((key) => {
-				savedKeys.push(this.keyAgent.addKey(key.id, key.key));
-			});
-			return asyncutil.eraseResult(Q.all(savedKeys)).then(() => {
-				this.onUnlock.publish(null);
-			});
-		});
+		return item_store.unlockStore(this, this.keyAgent, pwd);
 	}
 
 	listItemStates(): Q.Promise<item_store.ItemState[]> {

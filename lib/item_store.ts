@@ -10,6 +10,7 @@ import sprintf = require('sprintf');
 import underscore = require('underscore');
 
 import agile_keychain_crypto = require('./agile_keychain_crypto');
+import asyncutil = require('./base/asyncutil');
 import collectionutil = require('./base/collectionutil');
 import dateutil = require('./base/dateutil');
 import err_util = require('./base/err_util');
@@ -783,3 +784,24 @@ export function itemStates(store: Store): Q.Promise<ItemState[]> {
 		deleted: item.isTombstone()
 	})));
 }
+
+/** Decrypt the encryption keys for @p store and add
+  * the keys to @p agent.
+  */
+export function unlockStore(store: Store, agent: key_agent.KeyAgent, password: string): Q.Promise<void> {
+	return store.listKeys().then((keys) => {
+		if (keys.length == 0) {
+			throw new Error('Unable to unlock store: No encryption keys have been saved');
+		}
+		return Q(key_agent.decryptKeys(keys, password));
+	}).then(keys => {
+		let savedKeys: Q.Promise<void>[] = [];
+		keys.forEach((key) => {
+			savedKeys.push(agent.addKey(key.id, key.key));
+		});
+		return asyncutil.eraseResult(Q.all(savedKeys)).then(() => {
+			store.onUnlock.publish(null);
+		});
+	});
+}
+
