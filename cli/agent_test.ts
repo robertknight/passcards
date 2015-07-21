@@ -24,18 +24,22 @@ testLib.addAsyncTest('store keys', (assert) => {
 });
 
 testLib.addAsyncTest('decrypt data', (assert) => {
-	var httpAgent = new agent.HttpKeyAgent();
+	let httpAgent = new agent.HttpKeyAgent();
 
-	var itemData = JSON.stringify({ secret: 'secret-data' });
+	let itemData = JSON.stringify({ secret: 'secret-data' });
 
 	// note: The item password below contains bytes
 	// legal in UTF-8 to test exchange of binary key data with the
 	// agent
-	var itemPass = 'the \xFFmaster\x00 key';
-	var encrypted = agile_keychain_crypto.encryptAgileKeychainItemData(new agile_keychain_crypto.CryptoJsCrypto, itemPass, itemData);
+	let itemPass = 'the \xFFmaster\x00 key';
+	let encrypted: string;
 
-	return httpAgent.addKey('key1', itemPass)
-	.then(() => {
+	return agile_keychain_crypto.encryptAgileKeychainItemData(new agile_keychain_crypto.CryptoJsCrypto,
+		itemPass, itemData)
+	.then(encrypted_ => {
+		encrypted = encrypted_;
+		return httpAgent.addKey('key1', itemPass)
+	}).then(() => {
 		return httpAgent.decrypt('key1', encrypted, new key_agent.CryptoParams(
 			key_agent.CryptoAlgorithm.AES128_OpenSSLKey));
 	})

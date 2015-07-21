@@ -129,14 +129,18 @@ class Server {
 					switch (params.algo) {
 						case key_agent.CryptoAlgorithm.AES128_OpenSSLKey:
 							var plainText = atob(params.plainText);
-							var cipherText = agile_keychain_crypto.encryptAgileKeychainItemData(this.crypto, this.keys[params.id], plainText);
+							agile_keychain_crypto.encryptAgileKeychainItemData(this.crypto, this.keys[params.id], plainText)
+							.then(cipherText => {
+								logf('Encrypted (%d => %d) bytes with key %s', plainText.length,
+									cipherText.length, params.id);
 
-							logf('Encrypted (%d => %d) bytes with key %s', plainText.length,
-								cipherText.length, params.id);
+								self.resetKeyTimeout();
 
-							self.resetKeyTimeout();
-
-							res.end(btoa(cipherText));
+								res.end(btoa(cipherText));
+							}).catch(err => {
+								res.statusCode = 500;
+								res.end(err.toString());
+							});
 							break;
 						default:
 							logf('Encrypt failed - unknown algorithm');

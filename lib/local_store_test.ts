@@ -109,28 +109,31 @@ interface Env {
 	databaseName: string;
 }
 
-function generateKey(password: string, iterations: number): key_agent.Key {
-	var masterKey = crypto.randomBytes(1024);
-	var salt = crypto.randomBytes(8);
-	var derivedKey = key_agent.keyFromPasswordSync(password, salt, iterations);
-	var encryptedKey = key_agent.encryptKey(derivedKey, masterKey);
+function generateKey(password: string, iterations: number): Q.Promise<key_agent.Key> {
+	let masterKey = crypto.randomBytes(1024);
+	let salt = crypto.randomBytes(8);
+	let derivedKey = key_agent.keyFromPassword(password, salt, iterations);
 
-	var key: key_agent.Key = {
-		format: key_agent.KeyFormat.AgileKeychainKey,
-		identifier: agile_keychain_crypto.newUUID(),
-		data: btoa('Salted__' + salt + encryptedKey.key),
-		iterations: iterations,
-		validation: btoa(encryptedKey.validation)
-	};
-	return key;
+	return derivedKey.then(derivedKey => {
+		return key_agent.encryptKey(derivedKey, masterKey);
+	}).then(encryptedKey => {
+		return {
+			format: key_agent.KeyFormat.AgileKeychainKey,
+			identifier: agile_keychain_crypto.newUUID(),
+			data: btoa('Salted__' + salt + encryptedKey.key),
+			iterations: iterations,
+			validation: btoa(encryptedKey.validation)
+		};
+	});
 }
 
-function setupEnv(): Env {
-	var keyAgent = new key_agent.SimpleKeyAgent();
-	var database = new FakeKeyValueDatabase();
+let masterPass = 'testpass';
+let masterKey: key_agent.Key;
 
-	var masterPass = 'testpass';
-	var masterKey = generateKey(masterPass, 100);
+function setupEnv(): Env {
+	let keyAgent = new key_agent.SimpleKeyAgent();
+	let database = new FakeKeyValueDatabase();
+	let masterPass = 'testpass';
 
 	return {
 		masterPass: masterPass,
@@ -428,5 +431,11 @@ testLib.addAsyncTest('list item states', assert => {
 			deleted: false
 		}]);
 	});
+});
+
+testLib.cancelAutoStart();
+generateKey(masterPass, 100).then(key => {
+	masterKey = key;
+	testLib.start();
 });
 

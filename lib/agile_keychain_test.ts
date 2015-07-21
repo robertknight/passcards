@@ -223,16 +223,16 @@ function createCryptos(): agile_keychain_crypto.Crypto[] {
 testLib.addAsyncTest('AES encrypt/decrypt', (assert) => {
 	let done: Q.Promise<void>[] = [];
 	let impls = createCryptos();
-	for (let impl of impls) {
+	for (var impl of impls) {
 		var plainText = 'foo bar';
 		var key = 'ABCDABCDABCDABCD';
 		var iv = 'EFGHEFGHEFGHEFGH';
 
 		var cipherText = impl.aesCbcEncrypt(key, plainText, iv);
-		var decrypted = impl.aesCbcDecrypt(key, cipherText, iv);
-
-		done.push(decrypted.then(result => {
-			assert.equal(result, plainText);
+		done.push(cipherText.then(cipherText => {
+			return impl.aesCbcDecrypt(key, cipherText, iv);
+		}).then(decrypted => {
+			assert.equal(decrypted, plainText);
 		}));
 	}
 	return Q.all(done);
@@ -241,14 +241,15 @@ testLib.addAsyncTest('AES encrypt/decrypt', (assert) => {
 testLib.addAsyncTest('Encrypt/decrypt item data', (assert) => {
 	let impls = createCryptos();
 	let done: Q.Promise<void>[] = [];
-	for (let impl of impls) {
+	for (var impl of impls) {
 		var itemData = JSON.stringify({ secret: 'secret-data' });
 		var itemPass = 'item password';
 		var encrypted = agile_keychain_crypto.encryptAgileKeychainItemData(impl, itemPass, itemData);
-		var decrypted = agile_keychain_crypto.decryptAgileKeychainItemData(impl, itemPass, encrypted);
 
-		done.push(decrypted.then(result => {
-			assert.equal(result, itemData);
+		done.push(encrypted.then(encrypted => {
+			return agile_keychain_crypto.decryptAgileKeychainItemData(impl, itemPass, encrypted);
+		}).then(decrypted => {
+			assert.equal(decrypted, itemData);
 		}));
 	}
 	return Q.all(done);
@@ -448,17 +449,21 @@ testLib.addTest('Generate Passwords', (assert) => {
 });
 
 testLib.addAsyncTest('Encrypt/decrypt key (sync)', (assert) => {
-	var password = 'test-pass'
-	var iterations = 100;
-	var salt = crypto.randomBytes(8);
-	var masterKey = crypto.randomBytes(1024);
+	let password = 'test-pass'
+	let iterations = 100;
+	let salt = crypto.randomBytes(8);
+	let masterKey = crypto.randomBytes(1024);
 
-	var derivedKey = key_agent.keyFromPasswordSync(password, salt, iterations);
-	var encryptedKey = key_agent.encryptKey(derivedKey, masterKey);
-	var decryptedKey = key_agent.decryptKey(derivedKey, encryptedKey.key, encryptedKey.validation);
-	return decryptedKey.then(decryptedKey => {
+	let derivedKey = key_agent.keyFromPasswordSync(password, salt, iterations);
+	let encryptedKey: key_agent.EncryptedKey;
+
+	return key_agent.encryptKey(derivedKey, masterKey)
+	.then(encryptedKey_ => {
+		encryptedKey = encryptedKey_;
+		return key_agent.decryptKey(derivedKey, encryptedKey.key, encryptedKey.validation);
+	}).then(decryptedKey => {
 		assert.equal(decryptedKey, masterKey);
-		var derivedKey2 = key_agent.keyFromPasswordSync('wrong-pass', salt, iterations);
+		let derivedKey2 = key_agent.keyFromPasswordSync('wrong-pass', salt, iterations);
 		return asyncutil.result(key_agent.decryptKey(derivedKey2, encryptedKey.key, encryptedKey.validation));
 	}).then(result => {
 		assert.ok(result.error != null);
@@ -471,8 +476,12 @@ testLib.addAsyncTest('Encrypt/decrypt key (async)', (assert) => {
 	var salt = crypto.randomBytes(8);
 	var masterKey = crypto.randomBytes(1024);
 
-	return key_agent.keyFromPassword(password, salt, iterations).then((derivedKey) => {
-		var encryptedKey = key_agent.encryptKey(derivedKey, masterKey);
+	let derivedKey: string;
+
+	return key_agent.keyFromPassword(password, salt, iterations).then(derivedKey_ => {
+		derivedKey = derivedKey_;
+		return key_agent.encryptKey(derivedKey, masterKey);
+	}).then(encryptedKey => {
 		return key_agent.decryptKey(derivedKey, encryptedKey.key, encryptedKey.validation);
 	}).then(decryptedKey => {
 		assert.equal(decryptedKey, masterKey);

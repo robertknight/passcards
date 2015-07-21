@@ -39,8 +39,8 @@ export function generateMasterKey(password: string, passIterations: number): Q.P
 	let salt = crypto.randomBytes(8);
 
 	return key_agent.keyFromPassword(password, salt, passIterations).then(derivedKey => {
-		let encryptedKey = key_agent.encryptKey(derivedKey, masterKey);
-
+		return key_agent.encryptKey(derivedKey, masterKey);
+	}).then(encryptedKey => {
 		let masterKeyEntry = {
 			data: btoa('Salted__' + salt + encryptedKey.key),
 			identifier: newUUID(),
@@ -79,7 +79,9 @@ export function openSSLKey(cryptoImpl: Crypto, password: string, salt: string): 
 export function encryptAgileKeychainItemData(cryptoImpl: Crypto, key: string, plainText: string) {
 	var salt = crypto.randomBytes(8);
 	var keyParams = openSSLKey(cryptoImpl, key, salt);
-	return 'Salted__' + salt + cryptoImpl.aesCbcEncrypt(keyParams.key, plainText, keyParams.iv);
+	return cryptoImpl.aesCbcEncrypt(keyParams.key, plainText, keyParams.iv).then(encrypted => {
+		return 'Salted__' + salt + encrypted;
+	});
 }
 
 /** Decrypt the encrypted contents of an item stored in the Agile Keychain format. */
@@ -105,7 +107,7 @@ export interface Crypto {
 	/** Decrypt @p cipherText using AES-128 with the given key and initialization vector.
 	  */
 	aesCbcDecrypt(key: string, cipherText: string, iv: string): Q.Promise<string>;
-	aesCbcEncrypt(key: string, plainText: string, iv: string): string;
+	aesCbcEncrypt(key: string, plainText: string, iv: string): Q.Promise<string>;
 
 	/** Derive a key of length @p keyLen from a password using @p iterCount iterations
 	  * of PBKDF2
@@ -127,12 +129,12 @@ export class NodeCrypto implements Crypto {
 		return Q<string>(result);
 	}
 
-	aesCbcEncrypt(key: string, plainText: string, iv: string): string {
+	aesCbcEncrypt(key: string, plainText: string, iv: string): Q.Promise<string> {
 		var cipher = node_crypto.createCipheriv('AES-128-CBC', key, iv);
 		var result = '';
 		result += cipher.update(plainText, 'binary', 'binary');
 		result += cipher.final('binary');
-		return result;
+		return Q(result);
 	}
 
 	pbkdf2Sync(masterPwd: string, salt: string, iterCount: number, keyLen: number): string {
@@ -194,7 +196,7 @@ export class CryptoJsCrypto implements Crypto {
 		this.encoding = cryptoJS.enc.Latin1;
 	}
 
-	aesCbcEncrypt(key: string, plainText: string, iv: string): string {
+	aesCbcEncrypt(key: string, plainText: string, iv: string): Q.Promise<string> {
 		assert.equal(key.length, 16);
 		assert.equal(iv.length, 16);
 
@@ -206,7 +208,7 @@ export class CryptoJsCrypto implements Crypto {
 			padding: cryptoJS.pad.Pkcs7,
 			iv: ivArray
 		});
-		return encrypted.ciphertext.toString(this.encoding);
+		return Q(encrypted.ciphertext.toString(this.encoding));
 	}
 
 	aesCbcDecrypt(key: string, cipherText: string, iv: string) {

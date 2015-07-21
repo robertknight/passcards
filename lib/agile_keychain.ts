@@ -702,14 +702,15 @@ export class Vault implements item_store.Store {
 		let oldSaltCipher = agile_keychain_crypto.extractSaltAndCipherText(atob(key.data));
 		let newSalt = crypto.randomBytes(8);
 		let derivedKey = key_agent.keyFromPassword(oldPass, oldSaltCipher.salt, key.iterations);
+		let newKeyIterations = iterations || key.iterations;
 
 		return derivedKey.then(derivedKey => {
 			return key_agent.decryptKey(derivedKey, oldSaltCipher.cipherText,
 				atob(key.validation));
 		}).then(oldKey => {
-			let newKeyIterations = iterations || key.iterations;
 			let newDerivedKey = key_agent.keyFromPasswordSync(newPass, newSalt, newKeyIterations);
-			let newKey = key_agent.encryptKey(newDerivedKey, oldKey);
+			return key_agent.encryptKey(newDerivedKey, oldKey);
+		}).then(newKey => {
 			let newKeyEntry = {
 				data: btoa('Salted__' + newSalt + newKey.key),
 				identifier: key.identifier,

@@ -233,8 +233,8 @@ export class SimpleKeyAgent implements KeyAgent {
 		}
 		switch (params.algo) {
 			case CryptoAlgorithm.AES128_OpenSSLKey:
-				return Q(agile_keychain_crypto.encryptAgileKeychainItemData(this.crypto,
-					this.keys[id], plainText));
+				return agile_keychain_crypto.encryptAgileKeychainItemData(this.crypto,
+					this.keys[id], plainText);
 			default:
 				return Q.reject<string>(new Error('Unknown encryption algorithm'));
 		}
@@ -292,15 +292,20 @@ export function keyFromPassword(pass: string, salt: string, iterCount: number): 
   * @param derivedKey An encryption key for the master key, derived from a password using keyFromPassword()
   * @param decryptedKey The master key for the vault to be encrypted.
   */
-export function encryptKey(derivedKey: string, decryptedKey: string): EncryptedKey {
-	var aesKey = derivedKey.substring(0, 16);
-	var iv = derivedKey.substring(16, 32);
-	var encryptedKey = agile_keychain_crypto.defaultCrypto.aesCbcEncrypt(aesKey, decryptedKey, iv);
+export function encryptKey(derivedKey: string, decryptedKey: string): Q.Promise<EncryptedKey> {
+	let aesKey = derivedKey.substring(0, 16);
+	let iv = derivedKey.substring(16, 32);
+	let encryptedKey = agile_keychain_crypto.defaultCrypto.aesCbcEncrypt(aesKey, decryptedKey, iv);
 
-	var validationSalt = crypto.randomBytes(8);
-	var keyParams = agile_keychain_crypto.openSSLKey(agile_keychain_crypto.defaultCrypto,
+	let validationSalt = crypto.randomBytes(8);
+	let keyParams = agile_keychain_crypto.openSSLKey(agile_keychain_crypto.defaultCrypto,
 		decryptedKey, validationSalt);
-	var validation = 'Salted__' + validationSalt + agile_keychain_crypto.defaultCrypto.aesCbcEncrypt(keyParams.key, decryptedKey, keyParams.iv);
 
-	return { key: encryptedKey, validation: validation };
+	let validation = agile_keychain_crypto.defaultCrypto.aesCbcEncrypt(keyParams.key, decryptedKey, keyParams.iv);
+
+	return Q.all([encryptedKey, validation]).then((result: [string, string]) => {
+		let encryptedKey = result[0];
+		let validation = 'Salted__' + validationSalt + result[1];
+		return { key: encryptedKey, validation: validation };
+	});
 }
