@@ -130,7 +130,13 @@ export class App {
 				});
 
 				store.onUnlock.listen(() => {
-					syncer.syncItems();
+					syncer.syncItems().then(result => {
+						if (result.failed > 0) {
+							this.activeAppView.showError(new Error(`Sync completed but ${result.failed} items failed to sync`));
+						}
+					}).catch(err => {
+						this.activeAppView.showError(new Error(`Unable to sync items: ${err.toString() }`));
+					});
 				});
 
 				this.itemStore.update({ store: store, syncer: syncer });
