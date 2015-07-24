@@ -1,20 +1,28 @@
 [![Build Status](https://travis-ci.org/robertknight/passcards.png?branch=master)](https://travis-ci.org/robertknight/passcards) [![Join the chat at https://gitter.im/robertknight/passcards](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/robertknight/passcards?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-*passcards* is a web, browser extension and command-line based password manager under development.
+*Passcards* is an open source app that aims to make logging in to websites and apps from all your devices easier.
 
-It uses the [1Password](https://agilebits.com/onepassword) password vault format and is designed
-to be usable alongside the official 1Password apps.
+It saves logins and other credentials in an encrypted store in Dropbox and enables you to access them from a supported browser (currently Chrome, Firefox or Safari) on any device via a web app or browser extension. The browser extension (currently available for Chrome and Firefox) can auto-fill login forms using saved credentials and quickly add or update logins.
 
-The passcards apps are designed for use with Dropbox. To use them with an existing 1Password vault,
-you'll need to enable Dropbox syncing within the official 1Password apps.
+Passcards uses the same storage format as the popular [1Password](https://agilebits.com/onepassword) app and can be used alongside the official 1Password apps. (_Please be aware that Passcards is **not** affiliated with the makers of 1Password, AgileBits, in any way and they cannot support the use of 3rd-party apps to access 1Password vaults_)
+
+## Features
+
+* Saves logins and other credentials to an encrypted store and enables access from a supported browser on any device
+* Syncs logins for offline access (eg. for WiFi network passwords)
+* Simple [material design](http://www.google.co.uk/design/) interface for quick search and editing/adding of items.
+* Generates random passwords which are secure but still easy to read and type when needed
+* Browser extensions for Chrome and Firefox that can be used on Windows, Mac, Linux and ChromeOS
+* Mobile web app, compatible with Safari, Chrome and Firefox (other browsers may also work).
+* Compatible with the official [1Password](https://agilebits.com/onepassword) apps
+* Command-line interface installable via npm
 
 ## Installation
 
 passcards is available as a browser add-on for Firefox and Chrome, a web app and a command-line
 app.
 
-See [the passcards site](http://robertknight.github.io/passcards/) for links to
-current releases.
+See [the passcards site](http://robertknight.github.io/passcards/) for links to install the browser extensions, access the web app and instructions to install the command-line version.
 
 ### Supported Browsers
 
