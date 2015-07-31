@@ -160,12 +160,14 @@ function main() {
 		onChange: showPanel
 	});
 
-	var hotkey = new hotkeys.Hotkey({
+	let hotkey = new hotkeys.Hotkey({
 		combo: 'alt-shift-p',
 		onPress: () => {
 			toolbarButton.click();
 		}
 	});
+	// suppress tslint warning
+	hotkey = hotkey;
 }
 
 main();

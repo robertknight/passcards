@@ -8,8 +8,6 @@
 import jsdom = require('jsdom');
 import Q = require('q');
 
-import testLib = require('../lib/test');
-
 // setup the fake DOM environment for tests.
 // This function must be called _before_ React
 // is required

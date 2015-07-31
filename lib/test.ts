@@ -27,7 +27,6 @@ import xdiff = require('xdiff');
 var qunit = require('qunitjs');
 
 import env = require('./base/env');
-import err_util = require('./base/err_util');
 
 /** Interface for testing the values of objects during
   * a test.

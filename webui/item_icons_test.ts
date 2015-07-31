@@ -2,7 +2,6 @@ import Q = require('q');
 import react = require('react');
 import react_addons = require('react/addons');
 
-import collectionutil = require('../lib/base/collectionutil');
 import event_stream = require('../lib/base/event_stream');
 import item_icons = require('./item_icons');
 import key_value_store = require('../lib/base/key_value_store');

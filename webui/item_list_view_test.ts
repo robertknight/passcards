@@ -1,7 +1,6 @@
 import react = require('react');
 import react_addons = require('react/addons');
 
-import event_stream = require('../lib/base/event_stream');
 import item_builder = require('../lib/item_builder');
 import item_list_view = require('./item_list_view');
 import item_icons = require('./item_icons');

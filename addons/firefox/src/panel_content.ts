@@ -6,12 +6,9 @@
 // the browser integration interface (an implementation of page_access.PageAccess)
 // for use by the app when it loads.
 
-import collectionutil = require('../../../lib/base/collectionutil');
-import forms = require('../../../webui/forms');
 import stringutil = require('../../../lib/base/stringutil');
 import page_access = require('../../../webui/page_access');
 import rpc = require('../../../lib/net/rpc');
-import site_info_service = require('../../../lib/siteinfo/service');
 
 var selfWorker: ContentWorker = <any>self;
 

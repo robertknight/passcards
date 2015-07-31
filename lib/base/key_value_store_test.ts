@@ -1,5 +1,4 @@
 import assert = require('assert');
-import Q = require('q');
 
 import key_value_store = require('./key_value_store');
 import testLib = require('../test');

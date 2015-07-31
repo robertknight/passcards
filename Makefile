@@ -94,8 +94,10 @@ test: cli webui build/lib/crypto/pbkdf2_bundle.js
 lint_files=$(addprefix build/,$(subst .ts,.ts.lint, $(all_srcs)))
 lint: $(lint_files)
 
-build/%.ts.lint: %.ts
-	$(TSLINT) -f $< || true
+$(lint_files): build/lint_marker
+
+build/lint_marker: $(all_srcs)
+	$(TSLINT) $?
 	@mkdir -p $(dir $@)
 	@touch $@
 
