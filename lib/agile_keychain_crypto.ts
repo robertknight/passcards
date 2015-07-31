@@ -16,7 +16,6 @@ import crypto_worker = require('./crypto_worker');
 import key_agent = require('./key_agent');
 import pbkdf2Lib = require('./crypto/pbkdf2');
 import rpc = require('./net/rpc');
-import perf = require('./base/perf');
 
 export class AESKeyParams {
 	constructor(public key: string, public iv: string) {
