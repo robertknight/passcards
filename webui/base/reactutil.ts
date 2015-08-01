@@ -108,39 +108,24 @@ export function prefix(style: StyleMap): StyleMap {
 	return result;
 }
 
-var nextFrameTimerId: any /* Timer | number */ = null;
-var nextFrameCallbacks: Array<() => void>;
-
+/** Wrapper around Window.requestAnimationFrame() which requests
+  * execution of a callback
+  */
 export function requestAnimationFrame(callback: () => void) {
 	if (env.isChromeExtension()) {
-		// in a Chrome extension, requestAnimationFrame() will only
-		// fire if invoked from a visible view (eg. popup, notification or tab),
-		// not if invoked from the background page
-		//
-		// This solution here is a poor-man's re-implementation of
-		// requestAnimationFrame() using setTimeout(). This could also
-		// be re-used in non-browser contexts
-		if (nextFrameTimerId) {
-			nextFrameCallbacks.push(callback);
-		} else {
-			// assume that browser tries to do 60 FPS animations
-			var FRAME_DELAY = 16;
-			nextFrameTimerId = setTimeout(() => {
-				var callbacks = nextFrameCallbacks;
-
-				// clear timer and callbacks first in case the callback
-				// itself invokes requestAnimationFrame() again
-				nextFrameTimerId = null;
-				nextFrameCallbacks = [];
-
-				callbacks.forEach((callback) => callback());
-			}, FRAME_DELAY);
-
-			nextFrameCallbacks = [callback];
+		// in Chrome extensions, requestAnimationFrame() never fires in
+		// background pages, so find a view which is not hidden and use
+		// rAF on that
+		let views = chrome.extension.getViews();
+		for (let view of views) {
+			if(!view.document.hidden) {
+			view.requestAnimationFrame(callback);
+			break;
 		}
-	} else {
-		window.requestAnimationFrame(callback);
 	}
+} else {
+	window.requestAnimationFrame(callback);
+}
 }
 
 export interface Rect {
