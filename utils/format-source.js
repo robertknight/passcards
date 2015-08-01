@@ -1,21 +1,14 @@
 #!/usr/bin/env node
 
-var find = require('./find');
 var fs = require('fs');
 var path = require('path');
 var Q = require('q');
 var typescript_formatter = require('typescript-formatter');
 
-global.Promise = Q.Promise;
+var tsproject = require('./tsproject');
 
-function findTypeScriptFiles(dir) {
-	return find(dir, {
-		ignoredDirs: ['.git', 'node_modules', 'typings'],
-		filter: function(file, stat) {
-			return path.extname(file) === '.ts';
-		}
-	});
-}
+// required by typescript-formatter
+global.Promise = Q.Promise;
 
 function fixupResult(source) {
 	// Fix up incorrect formatting of function call arguments
@@ -40,8 +33,13 @@ function fixupResult(source) {
 	return result;
 }
 
-findTypeScriptFiles('.').then(function(files) {
-	typescript_formatter.processFiles(files, {
+function formatProjectSources(projectFile) {
+	var project = tsproject.readProjectFile(projectFile);
+	var inputs = project.files.map(function(file) {
+		return path.resolve(path.dirname(projectFile), file);
+	});
+
+	typescript_formatter.processFiles(inputs, {
 		replace: false,
 		tsfmt: true,
 		editorconfig: false,
@@ -60,6 +58,6 @@ findTypeScriptFiles('.').then(function(files) {
 	}).catch(function(err) {
 		console.error('Processing failed: %s', err.toString());
 	});
-}).catch(function(err) {
-	console.error('Failed to find TypeScript files: %s', err.toString());
-});
+}
+
+formatProjectSources(tsproject.findProjectFile());

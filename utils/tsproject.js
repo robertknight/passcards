@@ -28,22 +28,25 @@ function findProjectFile() {
 	return null;
 }
 
+function readProjectFile(projectFile) {
+	if (!projectFile) {
+		throw new Error('Failed to find tsconfig.json project file');
+	}
+	return JSON.parse(fs.readFileSync(projectFile));
+}
+
 commander
   .arguments('<cmd> [tsconfig.json path]')
   .action(function(command, projectFile) {
 	projectFile = projectFile || findProjectFile();
-	if (!projectFile) {
-		throw new Error('Failed to find tsconfig.json project file');
-	}
-	
-	var project = JSON.parse(fs.readFileSync(projectFile));
+	var project = readProjectFile(projectFile);
 
     if (command === 'inputs') {
 		console.log(project.files.join(' '));
 	} else if (command === 'outputs') {
 		var outDir = project.compilerOptions.outDir || '.';
 		var outFiles = project.files.map(function(file) {
-			return path.join(outDir, file.replace(/.ts$/, '.js'));
+			return path.join(outDir, file.replace(/.tsx?$/, '.js'));
 		});
 		console.log(outFiles.join(' '));
 	} else {
@@ -51,5 +54,12 @@ commander
 	}
   });
 
-commander.parse(process.argv);
+module.exports = {
+	findProjectFile: findProjectFile,
+	readProjectFile: readProjectFile
+};
+
+if (require.main === module) {
+	commander.parse(process.argv);
+}
 
