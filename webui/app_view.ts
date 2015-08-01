@@ -147,6 +147,13 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 			focus: itemStoreState.isLocked,
 			onUnlock: () => {
 				this.props.itemStore.update({ isLocked: false });
+				itemStoreState.syncer.syncItems().then(result => {
+					if (result.failed > 0) {
+						this.showError(new Error(`Sync completed but ${result.failed} items failed to sync`));
+					}
+				}).catch(err => {
+					this.showError(new Error(`Unable to sync items: ${err.toString() }`));
+				});
 			},
 			onUnlockErr: (err) => {
 				this.showError(err);

@@ -9,7 +9,6 @@ import key_agent = require('./key_agent');
 /** A temporary store which keeps items only in-memory */
 export class Store implements item_store.SyncableStore {
 	onItemUpdated: event_stream.EventStream<item_store.Item>;
-	onUnlock: event_stream.EventStream<void>;
 	name: string;
 
 	private keys: key_agent.Key[];
@@ -27,7 +26,6 @@ export class Store implements item_store.SyncableStore {
 
 	constructor(agent: key_agent.KeyAgent, name?: string) {
 		this.onItemUpdated = new event_stream.EventStream<item_store.Item>();
-		this.onUnlock = new event_stream.EventStream<void>();
 		this.keyAgent = agent;
 		this.name = name;
 		this.nextRevision = 1;

@@ -289,7 +289,6 @@ export class Vault implements item_store.Store {
 	private indexUpdatePending: boolean;
 
 	onItemUpdated: event_stream.EventStream<item_store.Item>;
-	onUnlock: event_stream.EventStream<void>;
 
 	/** Setup a vault which is stored at @p path in a filesystem.
 	  * @p fs is the filesystem interface through which the
@@ -300,7 +299,6 @@ export class Vault implements item_store.Store {
 		this.path = path;
 		this.keyAgent = agent || new key_agent.SimpleKeyAgent(agile_keychain_crypto.defaultCrypto);
 		this.onItemUpdated = new event_stream.EventStream<item_store.Item>();
-		this.onUnlock = new event_stream.EventStream<void>();
 
 		this.pendingIndexUpdates = new Map<string, item_store.Item>();
 		this.indexUpdated = Q<{}>(null);

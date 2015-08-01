@@ -615,9 +615,6 @@ export interface Store {
 	/** Emits events when items are updated in the store. */
 	onItemUpdated: event_stream.EventStream<Item>;
 
-	/** Emits events when the vault is unlocked. */
-	onUnlock: event_stream.EventStream<void>;
-
 	/** Unlock the vault */
 	unlock(password: string): Q.Promise<void>;
 
@@ -701,7 +698,7 @@ export interface SyncableStore extends Store {
 	setLastSyncedRevision(item: Item,
 		storeID: string,
 		revision?: RevisionPair): Q.Promise<void>;
-	
+
 	/** Retrieves the revision of an item in a store (identified by @p storeID)
 	  * which was last synced with this store.
 	  */
@@ -801,9 +798,6 @@ export function unlockStore(store: Store, agent: key_agent.KeyAgent, password: s
 		keys.forEach((key) => {
 			savedKeys.push(agent.addKey(key.id, key.key));
 		});
-		return asyncutil.eraseResult(Q.all(savedKeys)).then(() => {
-			store.onUnlock.publish(null);
-		});
+		return asyncutil.eraseResult(Q.all(savedKeys));
 	});
 }
-

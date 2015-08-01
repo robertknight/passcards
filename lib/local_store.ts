@@ -93,7 +93,6 @@ export class Store implements item_store.SyncableStore {
 	private itemIndex: cached.Cached<OverviewMap>;
 
 	onItemUpdated: event_stream.EventStream<item_store.Item>;
-	onUnlock: event_stream.EventStream<void>;
 
 	constructor(database: key_value_store.Database, name: string, keyAgent: key_agent.KeyAgent) {
 		this.database = database;
@@ -102,7 +101,6 @@ export class Store implements item_store.SyncableStore {
 		this.name = name;
 
 		this.onItemUpdated = new event_stream.EventStream<item_store.Item>();
-		this.onUnlock = new event_stream.EventStream<void>();
 
 		this.initDatabase();
 
