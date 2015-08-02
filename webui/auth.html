@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+</head>
+<body>
+<script>
+
+function accessTokenFromLocation() {
+	var accessTokenMatch = document.location.hash.match(/access_token=([^&=]+)/);
+	if (accessTokenMatch) {
+		return accessTokenMatch[1];
+	} else {
+		return null;
+	}
+}
+
+window.addEventListener('message', function(event) {
+	var message = event.data;
+	if ('type' in message && message.type === 'auth-query-status') {
+		var accessToken = accessTokenFromLocation();
+		if (accessToken) {
+			event.source.postMessage({
+				type: 'auth-complete',
+				credentials: {
+					accessToken: accessToken
+				}
+			}, event.origin);
+		} else {
+			event.source.postMessage({
+				type: 'auth-failed',
+				error: 'Auth did not complete'
+			}, event.origin);
+		}
+	}
+});
+</script>
+</body>
+</html>

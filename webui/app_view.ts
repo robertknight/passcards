@@ -25,7 +25,6 @@ import sync = require('../lib/sync');
 import toaster = require('./controls/toaster');
 import unlock_view = require('./unlock_view');
 import url_util = require('../lib/base/url_util');
-import vfs = require('../lib/vfs/vfs');
 import ui_item_store = require('./stores/items');
 
 var theme = style.create({
@@ -53,7 +52,6 @@ export interface AppServices {
 	keyAgent: key_agent.KeyAgent;
 	clipboard: page_access.ClipboardAccess;
 	settings?: settings.Store;
-	fs: vfs.VFS;
 }
 
 export interface AppViewProps extends react.Props<void> {
@@ -132,8 +130,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 	render(): react.ReactElement<any> {
 		if (!this.props.itemStore.state.store) {
 			return setup_view.SetupViewF({
-				settings: this.props.services.settings,
-				fs: this.props.services.fs
+				settings: this.props.services.settings
 			});
 		}
 

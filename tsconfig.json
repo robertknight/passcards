@@ -108,6 +108,7 @@
         "./lib/vfs/vfs_test.ts",
         "./webui/app.ts",
         "./webui/app_view.ts",
+        "./webui/auth.ts",
         "./webui/autofill.ts",
         "./webui/autofill_test.ts",
         "./webui/base/focus_mixin.ts",

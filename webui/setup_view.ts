@@ -6,10 +6,12 @@ import style = require('ts-style');
 import typed_react = require('typed-react');
 
 import agile_keychain = require('../lib/agile_keychain');
+import auth = require('./auth');
 import assign = require('../lib/base/assign');
 import button = require('./controls/button');
 import colors = require('./controls/colors');
 import fonts = require('./controls/fonts');
+import http_vfs = require('../lib/vfs/http');
 import reactutil = require('./base/reactutil');
 import ripple = require('./controls/ripple');
 import settings = require('./settings');
@@ -319,7 +321,6 @@ var StoreListF = reactutil.createFactory(StoreList);
 
 export interface SetupViewProps extends react.Props<void> {
 	settings: settings.Store;
-	fs: vfs.VFS;
 }
 
 // active screen in the setup / onboarding dialog
@@ -501,6 +502,8 @@ interface SetupViewScreen {
 }
 
 interface SetupViewState {
+	cloudServiceType?: settings.CloudService;
+	fs?: vfs.VFS;
 	accountInfo?: vfs.AccountInfo;
 	newStore?: NewStoreOptions;
 	status?: status_message.Status;
@@ -511,6 +514,17 @@ interface SetupViewState {
 
 function isResumingOAuthLogin() {
 	return window.location.hash.indexOf('access_token') !== -1;
+}
+
+function cloudServiceName(cloudService: settings.CloudService) {
+	switch (cloudService) {
+		case settings.CloudService.Dropbox:
+			return 'Dropbox';
+		case settings.CloudService.LocalTestingServer:
+			return 'Local Testing Server';
+		default:
+			return 'Unknown';
+	}
 }
 
 /** App setup and onboarding screen.
@@ -532,18 +546,6 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 			screenStack: screenStack,
 			currentScreen: 0
 		};
-	}
-
-	componentDidMount() {
-		if (this.props.fs.isLoggedIn()) {
-			this.props.fs.accountInfo().then((info) => {
-				this.setState({ accountInfo: info });
-			});
-		}
-
-		if (isResumingOAuthLogin()) {
-			this.completeCloudServiceLogin();
-		}
 	}
 
 	private pushScreen(screen: Screen, options?: ScreenOptions) {
@@ -578,6 +580,8 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 			var screenKey: string;
 			var screenContent: react.ReactElement<any>;
 
+			let cloudService = cloudServiceName(this.state.cloudServiceType);
+
 			switch (this.state.screenStack[i].id) {
 				case Screen.Welcome:
 					screenKey = 'screen-welcome';
@@ -593,11 +597,11 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 					break;
 				case Screen.CloudStoreLogin:
 					screenKey = 'screen-cloud-store-login';
-					screenContent = this.renderProgressSlide('Connecting to Dropbox...');
+					screenContent = this.renderProgressSlide(`Connecting to ${cloudService}...`);
 					break;
 				case Screen.CloudStoreSignout:
 					screenKey = 'screen-cloud-store-signout';
-					screenContent = this.renderProgressSlide('Signing out of Dropbox...');
+					screenContent = this.renderProgressSlide(`Signing out of ${cloudService}...`);
 					break;
 				case Screen.CloudStoreList:
 					screenKey = 'screen-cloud-store-list';
@@ -665,48 +669,45 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 				NavButtonF({
 					label: 'Connect to Dropbox',
 					onClick: () => {
-						this.connectToDropbox();
+						this.connectToCloudService();
 					}
 				})
 				)
 			);
 	}
 
-	private completeCloudServiceLogin() {
-		var loggedIn = Q(null);
-		if (!this.props.fs.isLoggedIn()) {
-			// if completeCloudServiceLogin() is called and
-			// isLoggedIn() returns false, this means that
-			// the app has been reloaded after an OAuth redirect
-			// has completed. Call login() to complete the OAuth
-			// login process.
-			loggedIn = this.props.fs.login();
-		}
-		loggedIn.then(() => {
-			return this.props.fs.accountInfo()
-		}).then((accountInfo) => {
-			this.setState({
-				accountInfo: accountInfo
-			});
-			this.pushScreen(Screen.CloudStoreList);
-		}).catch((err) => {
-			// go back to store list
-			this.popScreen();
-			this.reportError(err);
+	private connectToCloudService() {
+		// 'https://www.dropbox.com/1/oauth2/authorize'
+		let authServerURL = `${http_vfs.DEFAULT_URL}/auth/authorize`;
+		let fs = new http_vfs.Client(http_vfs.DEFAULT_URL);
+		let cloudServiceType = settings.CloudService.LocalTestingServer;
+		this.setState({
+			cloudServiceType: cloudServiceType
 		});
-	}
 
-	private connectToDropbox() {
 		this.pushScreen(Screen.CloudStoreLogin, { temporary: true });
 
-		this.props.fs.login().then(() => {
-			// depending on the environment, the login
-			// will either complete in this instance of the app,
-			// or the app will reload and the login completion
-			// will be handled by componentDidMount()
-			this.completeCloudServiceLogin();
-		}).catch((err) => {
-			// go back to store list
+		let authenticator = new auth.OAuthFlow({
+			authServerURL: authServerURL,
+			authRedirectURL: document.location.href.replace('index.html', 'auth.html'),
+			windowSettings: {
+				target: '_blank',
+				width: 800,
+				height: 600
+			}
+		});
+
+		return authenticator.authenticate().then(credentials => {
+			fs.setCredentials(credentials);
+			return fs.accountInfo();
+		}).then(accountInfo => {
+			this.setState({
+				accountInfo: accountInfo,
+				fs: fs,
+				cloudServiceType: cloudServiceType
+			});
+			this.pushScreen(Screen.CloudStoreList);
+		}).catch(err => {
 			this.popScreen();
 			this.reportError(err);
 		});
@@ -734,7 +735,7 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 				this.popScreen();
 			},
 			onCreate: (options) => {
-				var store = agile_keychain.Vault.createVault(this.props.fs,
+				var store = agile_keychain.Vault.createVault(this.state.fs,
 					options.path, options.password, options.hint);
 
 				return store.then((store) => {
@@ -750,7 +751,7 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 	private onSelectStore(path: string) {
 		var account: settings.Account = {
 			id: null,
-			cloudService: settings.CloudService.Dropbox,
+			cloudService: this.state.cloudServiceType,
 			cloudAccountId: this.state.accountInfo.userId,
 			name: this.state.accountInfo.name,
 			storePath: path
@@ -777,7 +778,7 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 		return react.DOM.div({},
 			react.DOM.div(style.mixin(theme.header), `Select store in ${accountName} Dropbox`),
 			CloudStoreListF({
-				vfs: this.props.fs,
+				vfs: this.state.fs,
 				onSelectStore: (path) => {
 					this.onSelectStore(path);
 				}
@@ -801,12 +802,10 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 					onClick: () => {
 						this.popScreen();
 						this.pushScreen(Screen.CloudStoreSignout, { temporary: true });
-						this.props.fs.logout().then(() => {
-							this.popScreen();
-						}).catch((err) => {
-							this.popScreen();
-							this.reportError(err);
-						});
+
+						// TODO - Revoke the access token
+						this.setState({ fs: undefined });
+						this.popScreen();
 					}
 				})
 				)

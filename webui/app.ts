@@ -11,6 +11,7 @@ import app_view = require('./app_view');
 import autofill = require('./autofill');
 import dropboxvfs = require('../lib/vfs/dropbox');
 import env = require('../lib/base/env');
+import http_vfs = require('../lib/vfs/http');
 import item_icons = require('./item_icons');
 import key_agent = require('../lib/key_agent');
 import key_value_store = require('../lib/base/key_value_store');
@@ -35,12 +36,10 @@ export class App {
 
 	private itemStore: ui_item_store.Store;
 	private services: app_view.AppServices;
-	private fs: vfs.VFS;
 
 	constructor() {
 		var settingStore = new settings.LocalStorageStore();
 
-		this.fs = this.setupVfs();
 		var browserExt = this.setupBrowserExtension();
 
 		var keyAgent = new key_agent.SimpleKeyAgent();
@@ -54,8 +53,7 @@ export class App {
 			pageAccess: browserExt.pageAccess,
 			keyAgent: keyAgent,
 			clipboard: browserExt.clipboard,
-			settings: settingStore,
-			fs: this.fs
+			settings: settingStore
 		};
 
 		this.services.keyAgent.onLock().listen(() => {
@@ -113,29 +111,39 @@ export class App {
 		return `passcards-${account.id}`;
 	}
 
+	private createCloudFileSystem(account: settings.Account) {
+		let fs: vfs.VFS;
+		if (account.cloudService === settings.CloudService.Dropbox) {
+			fs = new dropboxvfs.DropboxVFS();
+		} else if (account.cloudService === settings.CloudService.LocalTestingServer) {
+			fs = new http_vfs.Client(http_vfs.DEFAULT_URL);
+		}
+		if (account.credentials) {
+			fs.setCredentials(account.credentials);
+		}
+		return fs;
+	}
+
 	// setup the local store, remote store and item syncing
 	// once the user completes login
 	private initAccount(account: settings.Account) {
-		this.fs.login().then(() => {
-			try {
-				var itemDatabase = new key_value_store.IndexedDBDatabase();
-				var vault = new agile_keychain.Vault(this.fs, account.storePath, this.services.keyAgent);
-				var localDatabaseName = this.databaseKeyForAccount(account);
-				var store = new local_store.Store(itemDatabase, localDatabaseName, this.services.keyAgent);
-				var syncer = new sync.CloudStoreSyncer(store, vault);
-				syncer.syncKeys().then(() => {
-					console.log('Encryption keys synced')
-				}).catch((err) => {
-					this.activeAppView.showError(err);
-				});
+		let fs = this.createCloudFileSystem(account);
+		try {
+			let itemDatabase = new key_value_store.IndexedDBDatabase();
+			let vault = new agile_keychain.Vault(fs, account.storePath, this.services.keyAgent);
+			let localDatabaseName = this.databaseKeyForAccount(account);
+			let store = new local_store.Store(itemDatabase, localDatabaseName, this.services.keyAgent);
+			let syncer = new sync.CloudStoreSyncer(store, vault);
+			syncer.syncKeys().then(() => {
+				console.log('Encryption keys synced')
+			}).catch((err) => {
+				this.activeAppView.showError(err);
+			});
 
-				this.itemStore.update({ store: store, syncer: syncer });
-			} catch (err) {
-				this.activeAppView.showError(err, 'Vault setup failed');
-			}
-		}).catch((err) => {
-			this.activeAppView.showError(err, 'Dropbox login failed');
-		});
+			this.itemStore.update({ store: store, syncer: syncer });
+		} catch (err) {
+			this.activeAppView.showError(err, 'Store setup failed');
+		}
 	}
 
 	private getViewportRect(view: Window) {
@@ -224,29 +232,6 @@ export class App {
 
 		return new item_icons.BasicIconProvider(iconDiskCache.store('icon-cache'),
 			siteInfoProvider, ICON_SIZE);
-	}
-
-	// setup the connection to the cloud file system
-	private setupVfs() {
-		var fs: vfs.VFS;
-		if (env.isFirefoxAddon()) {
-			fs = new dropboxvfs.DropboxVFS({
-				authMode: dropboxvfs.AuthMode.Redirect,
-				authRedirectUrl: firefoxAddOn.oauthRedirectUrl,
-				disableLocationCleanup: true,
-				receiverPage: ''
-			});
-		} else if (env.isChromeExtension()) {
-			fs = new dropboxvfs.DropboxVFS({
-				authMode: dropboxvfs.AuthMode.ChromeExtension,
-				authRedirectUrl: '',
-				disableLocationCleanup: true,
-				receiverPage: 'data/chrome_dropbox_oauth_receiver.html'
-			});
-		} else {
-			fs = new dropboxvfs.DropboxVFS();
-		}
-		return fs;
 	}
 
 	// setup access to the system clipboard and

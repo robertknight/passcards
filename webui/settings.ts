@@ -6,7 +6,8 @@ export function accountKey(account: Account) {
 }
 
 export enum CloudService {
-	Dropbox
+	Dropbox,
+	LocalTestingServer
 }
 
 export interface Account {
@@ -22,6 +23,11 @@ export interface Account {
 
 	/** Name of the user associated with the account */
 	name: string;
+
+	/** Opaque object storing the access credentials for
+	 * this account.
+	 */
+	credentials?: Object;
 }
 
 export interface AccountMap {
@@ -102,7 +108,7 @@ export class LocalStorageStore extends SimpleStore {
 
 	private readSettings() {
 		var settings = <SettingsDict>JSON.parse(window.localStorage.getItem(SETTING_KEY)) || {};
-		
+
 		// settings migration
 		if (Number(settings['Version']) < 1) {
 			// ActiveAccount changed to local ID
@@ -117,4 +123,3 @@ export class LocalStorageStore extends SimpleStore {
 		window.localStorage.setItem(SETTING_KEY, JSON.stringify(newSettings));
 	}
 }
-
