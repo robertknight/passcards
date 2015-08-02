@@ -75,5 +75,5 @@ setup().then(() => {
 		httpVfsServer.close();
 	});
 	testLib.start();
-});
+}).done();
 

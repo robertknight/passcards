@@ -11,7 +11,6 @@
 //
 import Q = require('q');
 import http = require('http');
-import underscore = require('underscore');
 import url = require('url');
 
 import http_client = require('../http_client');
@@ -21,15 +20,20 @@ import vfs = require('./vfs');
 import vfs_util = require('./util');
 
 /** VFS which accesses a file system exposed over HTTP
- * via a simple REST-like API:
+ * via a simple REST-like API. It implements a fake OAuth
+ * authorization endpoint for use in testing.
  *
- * GET /path  - Read file
- * GET /path/ - Read directory. Returns a list of vfs.FileInfo objects
- * PUT /path  - Write file
- * PUT /path/ - Create directory
- * DELETE /path - Delete file
+ * GET /files/path  - Read file
+ * GET /files/path/ - Read directory. Returns a list of vfs.FileInfo objects
+ * PUT /files/path  - Write file
+ * PUT /files/path/ - Create directory
+ * DELETE /files/path - Delete file
+ *
+ * GET /auth/authorize - OAuth2 authorization endpoint.
  */
 export class Client implements vfs.VFS {
+	private _credentials: Object;
+
 	constructor(public url: string) {
 	}
 
@@ -46,15 +50,20 @@ export class Client implements vfs.VFS {
 	}
 
 	credentials(): vfs.Credentials {
-		return {};
+		return this._credentials;
 	}
 
 	setCredentials(credentials: vfs.Credentials): void {
-		// unused
+		this._credentials = credentials;
 	}
 
 	accountInfo() {
-		return Q.reject<vfs.AccountInfo>(new Error('Not implemented'));
+		let account: vfs.AccountInfo = {
+			userId: '42',
+			name: 'John Doe',
+			email: 'john.doe@gmail.com'
+		};
+		return Q(account);
 	}
 
 	stat(path: string): Q.Promise<vfs.FileInfo> {
@@ -64,9 +73,9 @@ export class Client implements vfs.VFS {
 		while (stringutil.endsWith(path, '/')) {
 			path = path.slice(0, path.length - 1);
 		}
-		var fileNameSep = path.lastIndexOf('/');
-		var parentDir = path;
-		var name = path;
+		let fileNameSep = path.lastIndexOf('/');
+		let parentDir = path;
+		let name = path;
 		if (fileNameSep != -1) {
 			name = name.slice(fileNameSep + 1);
 			parentDir = path.slice(0, fileNameSep);
@@ -74,10 +83,8 @@ export class Client implements vfs.VFS {
 			parentDir = '';
 		}
 
-		return this.list(parentDir).then((files) => {
-			var matches = underscore.filter(files, (file) => {
-				return file.name == name;
-			});
+		return this.list(parentDir).then(files => {
+			let matches = files.filter(file => file.name === name);
 			if (matches.length == 0) {
 				return Q.reject<vfs.FileInfo>(`No file ${name} found in ${path}`);
 			} else {
@@ -133,13 +140,15 @@ export class Client implements vfs.VFS {
 		});
 	}
 
-	private request(method: string, path: string, data?: any): Q.Promise<http_client.Reply> {
-		var reqUrl = this.url;
+	private fileURL(path: string) {
 		if (!stringutil.startsWith(path, '/')) {
-			reqUrl += '/';
+			path = `/${path}`;
 		}
-		reqUrl += path;
-		return http_client.request(method, reqUrl, data);
+		return `${this.url}/files/${path}`;
+	}
+
+	private request(method: string, path: string, data?: any): Q.Promise<http_client.Reply> {
+		return http_client.request(method, this.fileURL(path), data);
 	}
 }
 
@@ -150,66 +159,7 @@ export class Server {
 	server: http.Server;
 
 	constructor(public fs: vfs.VFS) {
-		var router = (req: http.ServerRequest, res: http.ServerResponse) => {
-			var fail = (err: any) => {
-				res.statusCode = 400;
-				res.end(JSON.stringify(err));
-			};
-			var done = (content?: any) => {
-				res.statusCode = 200;
-				res.end(content, 'binary');
-			};
-			res.setHeader('Access-Control-Allow-Origin', '*');
-			var path = url.parse(req.url).pathname;
-			if (req.method == 'GET') {
-				this.fs.stat(path).then((fileInfo) => {
-					if (fileInfo.isDir) {
-						this.fs.list(path).then((files) => {
-							done(JSON.stringify(files));
-						}).catch((err) => {
-							fail(err);
-						});
-					} else {
-						this.fs.read(path).then((content) => {
-							done(content);
-						}).catch((err) => {
-							fail(err);
-						});
-					}
-				}).catch((err) => {
-					fail(err);
-				});
-			} else if (req.method == 'PUT') {
-				if (stringutil.endsWith(path, '/')) {
-					this.fs.mkpath(path).then(() => {
-						done();
-					}).catch((err) => {
-						fail(err);
-					});
-				} else {
-					streamutil.readAll(req).then((content) => {
-						this.fs.write(path, content).then(() => {
-							done();
-						}).catch((err) => {
-							fail(err);
-						});
-					});
-				}
-			} else if (req.method == 'DELETE') {
-				this.fs.rm(path).then(() => {
-					done();
-				}).catch((err) => {
-					fail(err);
-				});
-			} else if (req.method == 'OPTIONS') {
-				res.setHeader('Access-Control-Allow-Methods', 'GET, PUT, DELETE');
-				done();
-			} else {
-				throw 'Unhandled method ' + req.method;
-			}
-		};
-
-		this.server = http.createServer(router);
+		this.server = http.createServer(this.handleRequest.bind(this));
 	}
 
 	listen(port: number): Q.Promise<void> {
@@ -226,12 +176,110 @@ export class Server {
 	close() {
 		this.server.close();
 	}
+
+	private handleRequest(req: http.ServerRequest, res: http.ServerResponse) {
+		let parsedURL = url.parse(req.url, true /* parse query string */);
+		if (parsedURL.pathname.match(/^\/files\//)) {
+			this.handleFileRequest(req, res);
+		} else if (parsedURL.pathname === '/auth/authorize') {
+			// mock OAuth endpoint
+			let accessToken = 'dummytoken';
+			let redirectURL = parsedURL.query.redirect_uri;
+			if (!redirectURL) {
+				res.statusCode = 400;
+				res.end('redirect_uri parameter not specified');
+				return;
+			}
+			res.statusCode = 200;
+			res.end(
+				`
+<html>
+<body>
+Authorize app?
+<button id="authButton">Authorize</button>
+<script>
+document.getElementById('authButton').addEventListener('click', function() {
+	document.location.href = '${redirectURL}#access_token=${accessToken}';
+});
+</script>
+</form>
+</body>
+</html>
+`
+				);
+		} else {
+			res.statusCode = 404;
+			res.end('Unknown route');
+		}
+	}
+
+	private handleFileRequest(req: http.ServerRequest, res: http.ServerResponse) {
+		let fail = (err: any) => {
+			res.statusCode = 400;
+			res.end(JSON.stringify(err));
+		};
+		let done = (content?: any) => {
+			res.statusCode = 200;
+			res.end(content, 'binary');
+		};
+		res.setHeader('Access-Control-Allow-Origin', '*');
+		let path = url.parse(req.url).pathname.replace(/^\/files\//, '');
+		if (req.method == 'GET') {
+			this.fs.stat(path).then((fileInfo) => {
+				if (fileInfo.isDir) {
+					this.fs.list(path).then((files) => {
+						done(JSON.stringify(files));
+					}).catch((err) => {
+						fail(err);
+					});
+				} else {
+					this.fs.read(path).then((content) => {
+						done(content);
+					}).catch((err) => {
+						fail(err);
+					});
+				}
+			}).catch((err) => {
+				fail(err);
+			});
+		} else if (req.method == 'PUT') {
+			if (stringutil.endsWith(path, '/')) {
+				this.fs.mkpath(path).then(() => {
+					done();
+				}).catch((err) => {
+					fail(err);
+				});
+			} else {
+				streamutil.readAll(req).then((content) => {
+					this.fs.write(path, content).then(() => {
+						done();
+					}).catch((err) => {
+						fail(err);
+					});
+				});
+			}
+		} else if (req.method == 'DELETE') {
+			this.fs.rm(path).then(() => {
+				done();
+			}).catch((err) => {
+				fail(err);
+			});
+		} else if (req.method == 'OPTIONS') {
+			res.setHeader('Access-Control-Allow-Methods', 'GET, PUT, DELETE');
+			done();
+		} else {
+			throw 'Unhandled method ' + req.method;
+		}
+	}
 }
+
+export const DEFAULT_PORT = 3030;
+export const DEFAULT_URL = `http://localhost:${DEFAULT_PORT}`;
 
 function main() {
 	var nodefs = require('./node');
 
-	var port = 3030;
+	var port = DEFAULT_PORT;
 
 	var dirPath = process.argv[2] || process.cwd();
 	var server = new Server(new nodefs.FileVFS(dirPath));
@@ -243,4 +291,3 @@ function main() {
 if (require.main == module) {
 	main();
 }
-
