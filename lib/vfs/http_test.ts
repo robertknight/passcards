@@ -1,20 +1,23 @@
 import fs = require('fs');
 import os = require('os');
 
-import testLib = require('../test');
 import http_vfs = require('./http');
 import nodefs = require('./node');
+import testLib = require('../test');
+import vfs_util = require('./util');
 
-var PORT = 3002;
+const PORT = 3002;
 
-var fsRoot = <string>(<any>os).tmpdir() + '/http-vfs-test';
+let fsRoot = <string>(<any>os).tmpdir() + '/http-vfs-test';
 
-var fileVfs = new nodefs.FileVFS(fsRoot);
-var httpVfsServer = new http_vfs.Server(fileVfs);
-var httpVfs = new http_vfs.Client('http://127.0.0.1:' + PORT);
+let fileVfs = new nodefs.FileVFS(fsRoot);
+let httpVfsServer = new http_vfs.Server(fileVfs);
+let httpVfs = new http_vfs.Client('http://127.0.0.1:' + PORT);
 
 function setup(): Q.Promise<void> {
-	return fileVfs.mkpath('.').then(() => {
+	return vfs_util.rmrf(fileVfs, '.').then(() => {
+		return fileVfs.mkpath('.');
+	}).then(() => {
 		return fileVfs.mkpath('test-dir');
 	}).then(() => {
 		return fileVfs.write('test-file', 'file-content');

@@ -9,6 +9,9 @@ import assign = require('../lib/base/assign');
 interface Credentials {
 }
 
+/** Interface for handling the auth flow for a
+ * cloud service.
+ */
 interface AuthFlow {
 	/** Start the authentication process and return a promise
 	 * for a set of credentials which is resolved once the login
@@ -22,10 +25,15 @@ interface AuthMessage {
 	credentials: Credentials;
 }
 
-interface WindowSettings {
+/** Window features available for use with window.open() */
+export interface WindowSettings {
 	width?: number;
 	height?: number;
 	target?: string;
+}
+
+function windowSettingsToString(settings: WindowSettings): string {
+	return Object.keys(settings).map(key => `${key}=${settings[key]}`).join(',');
 }
 
 interface OAuthFlowOptions {
@@ -34,10 +42,13 @@ interface OAuthFlowOptions {
 	windowSettings?: WindowSettings;
 }
 
-function windowSettingsToString(settings: WindowSettings): string {
-	return Object.keys(settings).map(key => `${key}=${settings[key]}`).join(',');
-}
-
+/** Drives the UI for OAuth 2.0 authentication for a cloud service
+ * using the implicit grant (aka. 'token') authentication flow.
+ *
+ * This flow opens a popup window at a specified authorization URL,
+ * waits for the user to complete authentication in that popup window
+ * and then returns the credentials for use with API calls for that service.
+ */
 export class OAuthFlow implements AuthFlow {
 	private options: OAuthFlowOptions;
 
