@@ -85,6 +85,9 @@ export interface VFS {
 	/** Sets the login credentials */
 	setCredentials(credentials: Credentials): void;
 
+	/** Returns the URL for the authorization endpoint for this file system, if any. */
+	authURL? (): string;
+
 	/** Returns the metadata of the file at the given path */
 	stat(path: string): Q.Promise<FileInfo>;
 	/** Search for files whose name contains @p namePattern */
@@ -99,9 +102,8 @@ export interface VFS {
 	rm(path: string): Q.Promise<void>;
 	/** Create the directory @p path, creating any parent directories
 	  * that do not already exist if necessary.
-	  * 
+	  *
 	  * Fails with an error if @p path already exists.
 	  */
 	mkpath(path: string): Q.Promise<void>;
 }
-

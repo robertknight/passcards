@@ -1,4 +1,5 @@
 import Q = require('q');
+import url = require('url');
 
 import assign = require('../lib/base/assign');
 
@@ -33,11 +34,7 @@ interface OAuthFlowOptions {
 	windowSettings?: WindowSettings;
 }
 
-// 'https://www.dropbox.com/1/oauth2/authorize'
-
-//const AUTH_REDIRECT_URL = 'https://robertknight.github.io/passcards/auth.html';
-
-function windowSettingsToString(settings: Object): string {
+function windowSettingsToString(settings: WindowSettings): string {
 	return Object.keys(settings).map(key => `${key}=${settings[key]}`).join(',');
 }
 
@@ -60,14 +57,21 @@ export class OAuthFlow implements AuthFlow {
 		if ('target' in this.options.windowSettings) {
 			target = this.options.windowSettings.target;
 		}
-		let authURL = `${this.options.authServerURL}?redirect_uri=${this.options.authRedirectURL}`;
+
+		let parsedAuthURL = url.parse(this.options.authServerURL, true /* parse query string */);
+		parsedAuthURL.query.redirect_uri = this.options.authRedirectURL;
+
+		// clear search property so that query is reconstructed from parsedAuthURL.query
+		parsedAuthURL.search = undefined;
+
+		let authURL = url.format(parsedAuthURL);
 		let authWindow: Window = window.open(authURL, target, authWindowSettings);
 
 		// poll, waiting for auth to complete
 		let pollTimeout = setInterval(() => {
 			authWindow.postMessage({
 				type: 'auth-query-status'
-			}, '*' /* TODO - Restrict origin */);
+			}, this.options.authRedirectURL);
 		}, 200);
 
 		// wait for a message back indicating that authentication
@@ -85,6 +89,7 @@ export class OAuthFlow implements AuthFlow {
 		});
 
 		credentials.promise.finally(() => {
+			authWindow.close();
 			window.removeEventListener('message', authCompleteListener);
 			clearTimeout(pollTimeout);
 		});

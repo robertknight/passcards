@@ -10,6 +10,7 @@ import auth = require('./auth');
 import assign = require('../lib/base/assign');
 import button = require('./controls/button');
 import colors = require('./controls/colors');
+import dropbox_vfs = require('../lib/vfs/dropbox');
 import fonts = require('./controls/fonts');
 import http_vfs = require('../lib/vfs/http');
 import reactutil = require('./base/reactutil');
@@ -231,7 +232,7 @@ class CloudStoreList extends typed_react.Component<CloudStoreListProps, CloudSto
 		if (!this.state.stores) {
 			if (this.state.error) {
 				return react.DOM.div(style.mixin(theme.cloudStoreList),
-					`Unable to search Dropbox for existing stores: ${this.state.error.message}`,
+					`Unable to search for existing stores: ${this.state.error.message}`,
 					react.DOM.div(style.mixin(theme.screenButtons),
 						button.ButtonF({
 							style: button.Style.Rectangular,
@@ -367,6 +368,7 @@ var SlideF = reactutil.createFactory(Slide);
 interface NewStoreFormProps extends react.Props<void> {
 	onGoBack: () => void;
 	onCreate: (options: NewStoreOptions) => Q.Promise<void>;
+	storeName: string;
 }
 
 interface NewStoreFormState {
@@ -398,7 +400,7 @@ class NewStoreForm extends typed_react.Component<NewStoreFormProps, NewStoreForm
 				type: 'text',
 				defaultValue: this.state.options.path,
 				floatingLabel: true,
-				placeHolder: 'Location in Dropbox',
+				placeHolder: `Location in ${this.props.storeName}`,
 				onChange: (e) => {
 					this.setState({
 						options: assign(this.state.options, {
@@ -669,18 +671,27 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 				NavButtonF({
 					label: 'Connect to Dropbox',
 					onClick: () => {
-						this.connectToCloudService();
+						this.connectToCloudService(settings.CloudService.Dropbox);
 					}
 				})
 				)
 			);
 	}
 
-	private connectToCloudService() {
-		// 'https://www.dropbox.com/1/oauth2/authorize'
-		let authServerURL = `${http_vfs.DEFAULT_URL}/auth/authorize`;
-		let fs = new http_vfs.Client(http_vfs.DEFAULT_URL);
-		let cloudServiceType = settings.CloudService.LocalTestingServer;
+	private connectToCloudService(cloudServiceType: settings.CloudService) {
+		let fs: vfs.VFS;
+		switch (cloudServiceType) {
+			case settings.CloudService.Dropbox:
+				fs = new dropbox_vfs.DropboxVFS();
+				break;
+			case settings.CloudService.LocalTestingServer:
+				fs = new http_vfs.Client(http_vfs.DEFAULT_URL);
+				break;
+			default:
+				this.reportError(new Error('Unsupported cloud service'));
+				return Q<void>(null);
+		}
+
 		this.setState({
 			cloudServiceType: cloudServiceType
 		});
@@ -688,7 +699,7 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 		this.pushScreen(Screen.CloudStoreLogin, { temporary: true });
 
 		let authenticator = new auth.OAuthFlow({
-			authServerURL: authServerURL,
+			authServerURL: fs.authURL(),
 			authRedirectURL: document.location.href.replace('index.html', 'auth.html'),
 			windowSettings: {
 				target: '_blank',
@@ -744,7 +755,8 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 					this.reportError(err);
 					throw err;
 				});
-			}
+			},
+			storeName: this.cloudServiceType()
 		});
 	}
 
@@ -769,6 +781,13 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 		return react.DOM.div(style.mixin(theme.header), text);
 	}
 
+	private cloudServiceType() {
+		if (typeof this.state.cloudServiceType !== 'number') {
+			return 'Unknown';
+		}
+		return cloudServiceName(this.state.cloudServiceType);
+	}
+
 	private renderCloudStoreList() {
 		var accountName = 'your';
 		if (this.state.accountInfo) {
@@ -776,7 +795,7 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 		}
 
 		return react.DOM.div({},
-			react.DOM.div(style.mixin(theme.header), `Select store in ${accountName} Dropbox`),
+			react.DOM.div(style.mixin(theme.header), `Select store in ${accountName}'s ${this.cloudServiceType() }`),
 			CloudStoreListF({
 				vfs: this.state.fs,
 				onSelectStore: (path) => {

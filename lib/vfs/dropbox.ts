@@ -25,7 +25,7 @@ export interface Options {
 	  */
 	authRedirectUrl: string;
 	disableLocationCleanup: boolean;
-	
+
 	/** Specifies the URL to the post-authentication receiver
 	  * page when using the Chrome auth driver.
 	  */
@@ -43,12 +43,14 @@ function convertError(error: dropbox.ApiError): vfs.VfsError {
 	return vfsError;
 }
 
+export const CLIENT_ID = '3lq6pyowxfvad8z';
+
 export class DropboxVFS implements vfs.VFS {
 	private client: dropbox.Client;
 
 	constructor(options?: Options) {
 		var clientOpts = {
-			key: "3lq6pyowxfvad8z"
+			key: CLIENT_ID
 		};
 		this.client = new dropbox.Client(clientOpts);
 
@@ -112,6 +114,10 @@ export class DropboxVFS implements vfs.VFS {
 			done.resolve(null);
 		});
 		return done.promise;
+	}
+
+	authURL() {
+		return `https://www.dropbox.com/1/oauth2/authorize?client_id=${CLIENT_ID}&response_type=token`;
 	}
 
 	accountInfo() {
@@ -248,4 +254,3 @@ export class DropboxVFS implements vfs.VFS {
 		};
 	}
 }
-

@@ -37,6 +37,10 @@ export class Client implements vfs.VFS {
 	constructor(public url: string) {
 	}
 
+	authURL() {
+		return `${this.url}/auth/authorize`;
+	}
+
 	login(): Q.Promise<vfs.Credentials> {
 		return Q({});
 	}
