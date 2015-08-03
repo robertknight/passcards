@@ -40,6 +40,7 @@ export interface WriteOptions {
 /** Object containing the login credentials for an account
  */
 export interface Credentials extends Object {
+	/** Access token for services using OAuth */
 	accessToken?: string;
 }
 
@@ -66,16 +67,6 @@ export class VfsError extends err_util.BaseError {
 /** Interface for async file system access.
  */
 export interface VFS {
-	/** Logs in to the VFS service.
-	  * Returns a promise for login credentials.
-	  */
-	login(): Q.Promise<Credentials>;
-	/** Returns true if the user is logged in */
-	isLoggedIn(): boolean;
-	/** Sign out of the account, invalidating the
-	  * access credentials.
-	  */
-	logout(): Q.Promise<void>;
 	/** Returns the name of the account which the user is logged in to */
 	accountInfo(): Q.Promise<AccountInfo>;
 	/** Returns credentials for the logged in account.

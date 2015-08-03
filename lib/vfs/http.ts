@@ -41,18 +41,6 @@ export class Client implements vfs.VFS {
 		return `${this.url}/auth/authorize`;
 	}
 
-	login(): Q.Promise<vfs.Credentials> {
-		return Q({});
-	}
-
-	isLoggedIn(): boolean {
-		return true;
-	}
-
-	logout(): Q.Promise<void> {
-		return Q<void>(null);
-	}
-
 	credentials(): vfs.Credentials {
 		return this._credentials;
 	}

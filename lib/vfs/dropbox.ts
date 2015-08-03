@@ -89,34 +89,6 @@ export class DropboxVFS implements vfs.VFS {
 		}
 	}
 
-	login() {
-		var account = Q.defer<Object>();
-		this.client.authenticate((err) => {
-			if (err) {
-				account.reject(convertError(err));
-				return;
-			}
-			account.resolve(this.client.credentials());
-		});
-		return account.promise;
-	}
-
-	isLoggedIn(): boolean {
-		return this.client.isAuthenticated();
-	}
-
-	logout() {
-		var done = Q.defer<void>();
-		this.client.signOut((err) => {
-			if (err) {
-				done.reject(convertError(err));
-				return;
-			}
-			done.resolve(null);
-		});
-		return done.promise;
-	}
-
 	authURL() {
 		return `https://www.dropbox.com/1/oauth2/authorize?client_id=${CLIENT_ID}&response_type=token`;
 	}
