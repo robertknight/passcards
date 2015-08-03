@@ -4,6 +4,7 @@
 import dropbox = require('dropbox');
 import Q = require('q');
 
+import assign = require('../base/assign');
 import err_util = require('../base/err_util');
 import vfs = require('./vfs');
 
@@ -224,11 +225,14 @@ export class DropboxVFS implements vfs.VFS {
 	}
 
 	credentials(): vfs.Credentials {
-		return this.client.credentials();
+		return <vfs.Credentials>this.client.credentials();
 	}
 
 	setCredentials(credentials: vfs.Credentials) {
-		this.client.setCredentials(credentials);
+		let dropboxCredentials = assign({}, {
+			token: credentials.accessToken
+		}, credentials);
+		this.client.setCredentials(dropboxCredentials);
 	}
 
 	mkpath(path: string): Q.Promise<void> {

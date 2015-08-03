@@ -37,10 +37,10 @@ export interface WriteOptions {
 	parentRevision?: string;
 }
 
-/** Opaque object representing the login credentials
- * for an account.
+/** Object containing the login credentials for an account
  */
 export interface Credentials extends Object {
+	accessToken?: string;
 }
 
 export enum ErrorType {
