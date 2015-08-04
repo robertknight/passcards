@@ -47,6 +47,7 @@ export interface Credentials extends Object {
 export enum ErrorType {
 	Conflict,
 	FileNotFound,
+	AuthError,
 	Other
 }
 

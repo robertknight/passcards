@@ -1,18 +1,22 @@
 import fs = require('fs');
 import os = require('os');
 
+import asyncutil = require('../base/asyncutil');
 import http_vfs = require('./http');
 import nodefs = require('./node');
 import testLib = require('../test');
+import vfs = require('./vfs');
 import vfs_util = require('./util');
 
 const PORT = 3002;
+const HOSTNAME = `http://127.0.0.1:${PORT}`;
 
 let fsRoot = <string>(<any>os).tmpdir() + '/http-vfs-test';
 
 let fileVfs = new nodefs.FileVFS(fsRoot);
 let httpVfsServer = new http_vfs.Server(fileVfs);
-let httpVfs = new http_vfs.Client('http://127.0.0.1:' + PORT);
+let httpVfs = new http_vfs.Client(HOSTNAME);
+httpVfs.setCredentials({ accessToken: http_vfs.ACCESS_TOKEN });
 
 function setup(): Q.Promise<void> {
 	return vfs_util.rmrf(fileVfs, '.').then(() => {
@@ -72,6 +76,14 @@ testLib.addAsyncTest('stat file', (assert) => {
 	});
 });
 
+testLib.addAsyncTest('request fails with wrong credentials', assert => {
+	let httpVfs = new http_vfs.Client(HOSTNAME);
+	httpVfs.setCredentials({ accessToken: 'wrongtoken' });
+	return asyncutil.result(httpVfs.list('.')).then(result => {
+		assert.ok(result.error instanceof vfs.VfsError);
+	});
+});
+
 testLib.cancelAutoStart();
 setup().then(() => {
 	testLib.teardownSuite(() => {
@@ -79,4 +91,3 @@ setup().then(() => {
 	});
 	testLib.start();
 }).done();
-

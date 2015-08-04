@@ -19,6 +19,8 @@ import stringutil = require('../base/stringutil');
 import vfs = require('./vfs');
 import vfs_util = require('./util');
 
+export const ACCESS_TOKEN = 'dummytoken';
+
 /** VFS which accesses a file system exposed over HTTP
  * via a simple REST-like API. It implements a fake OAuth
  * authorization endpoint for use in testing.
@@ -32,7 +34,7 @@ import vfs_util = require('./util');
  * GET /auth/authorize - OAuth2 authorization endpoint.
  */
 export class Client implements vfs.VFS {
-	private _credentials: Object;
+	private _credentials: vfs.Credentials;
 
 	constructor(public url: string) {
 	}
@@ -78,7 +80,7 @@ export class Client implements vfs.VFS {
 		return this.list(parentDir).then(files => {
 			let matches = files.filter(file => file.name === name);
 			if (matches.length == 0) {
-				return Q.reject<vfs.FileInfo>(`No file ${name} found in ${path}`);
+				throw new vfs.VfsError(vfs.ErrorType.FileNotFound, `No file ${name} found in ${path}`);
 			} else {
 				return Q(matches[0]);
 			}
@@ -93,8 +95,12 @@ export class Client implements vfs.VFS {
 		if (stringutil.endsWith(path, '/')) {
 			return Q.reject<string>(new Error(`Cannot read file. ${path} is a directory`));
 		}
-		return http_client.expect(this.request('GET', path), 200).then((content) => {
-			return content;
+		return this.request('GET', path).then(reply => {
+			if (reply.status !== 200) {
+				throw this.translateError(reply);
+			} else {
+				return reply.body;
+			}
 		});
 	}
 
@@ -102,8 +108,12 @@ export class Client implements vfs.VFS {
 		if (stringutil.endsWith(path, '/')) {
 			return Q.reject<vfs.FileInfo>(new Error(`Cannot write file. ${path} is a directory`));
 		}
-		return http_client.expect(this.request('PUT', path, content), 200).then(() => {
-			return this.stat(path);
+		return this.request('PUT', path, content).then(reply => {
+			if (reply.status !== 200) {
+				throw this.translateError(reply);
+			} else {
+				return this.stat(path);
+			}
 		});
 	}
 
@@ -112,14 +122,20 @@ export class Client implements vfs.VFS {
 			path += '/';
 		}
 
-		return http_client.expect(this.request('GET', path), 200).then((content) => {
-			return JSON.parse(content);
+		return this.request('GET', path).then(reply => {
+			if (reply.status !== 200) {
+				throw this.translateError(reply);
+			} else {
+				return JSON.parse(reply.body);
+			}
 		});
 	}
 
 	rm(path: string): Q.Promise<void> {
-		return http_client.expect(this.request('DELETE', path), 200).then(() => {
-			return <void>null;
+		return this.request('DELETE', path).then(reply => {
+			if (reply.status !== 200) {
+				throw this.translateError(reply);
+			}
 		});
 	}
 
@@ -127,9 +143,29 @@ export class Client implements vfs.VFS {
 		if (!stringutil.endsWith(path, '/')) {
 			path += '/';
 		}
-		return http_client.expect(this.request('PUT', path, null), 200).then(() => {
-			return <void>null;
+		return this.request('PUT', path, null).then(reply => {
+			if (reply.status !== 200) {
+				throw this.translateError(reply);
+			}
 		});
+	}
+
+	private translateError(reply: http_client.Reply) {
+		let errorType = vfs.ErrorType.Other;
+		switch (reply.status) {
+			case 401:
+			// fallthrough
+			case 403:
+				errorType = vfs.ErrorType.AuthError;
+				break;
+			case 404:
+				errorType = vfs.ErrorType.FileNotFound;
+				break;
+			case 409:
+				errorType = vfs.ErrorType.Conflict;
+				break;
+		}
+		return new vfs.VfsError(errorType, reply.body);
 	}
 
 	private fileURL(path: string) {
@@ -140,7 +176,15 @@ export class Client implements vfs.VFS {
 	}
 
 	private request(method: string, path: string, data?: any): Q.Promise<http_client.Reply> {
-		return http_client.request(method, this.fileURL(path), data);
+		if (!this._credentials) {
+			return Q.reject<http_client.Reply>(new vfs.VfsError(vfs.ErrorType.AuthError, 'User is not authenticated'));
+		}
+		let requestOpts: http_client.RequestOpts = {
+			headers: {
+				['Authentication']: `Bearer ${this._credentials.accessToken}`
+			}
+		};
+		return http_client.request(method, this.fileURL(path), data, requestOpts);
 	}
 }
 
@@ -175,7 +219,7 @@ export class Server {
 			this.handleFileRequest(req, res);
 		} else if (parsedURL.pathname === '/auth/authorize') {
 			// mock OAuth endpoint
-			let accessToken = 'dummytoken';
+			let accessToken = ACCESS_TOKEN;
 			let redirectURL = parsedURL.query.redirect_uri;
 			if (!redirectURL) {
 				res.statusCode = 400;
@@ -214,6 +258,15 @@ document.getElementById('authButton').addEventListener('click', function() {
 			res.statusCode = 200;
 			res.end(content, 'binary');
 		};
+
+		if (req.headers['authentication'] !== `Bearer ${ACCESS_TOKEN}`) {
+			res.statusCode = 403;
+			res.end(JSON.stringify({
+				error: 'Incorrect or missing access token'
+			}));
+			return;
+		}
+
 		res.setHeader('Access-Control-Allow-Origin', '*');
 		let path = url.parse(req.url).pathname.replace(/^\/files\//, '');
 		if (req.method == 'GET') {

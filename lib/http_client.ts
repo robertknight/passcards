@@ -6,6 +6,7 @@ import https = require('https');
 import Q = require('q');
 import urlLib = require('url');
 
+import assign = require('./base/assign');
 import asyncutil = require('./base/asyncutil');
 import env = require('./base/env');
 import err_util = require('./base/err_util');
@@ -98,13 +99,14 @@ export function get(url: string, opts?: RequestOptions): Q.Promise<Reply> {
 	});
 }
 
-interface RequestOpts {
+export interface RequestOpts {
+	headers?: { [name: string]: string };
 };
 
-export function request<T>(method: string, url: string, data?: T): Q.Promise<Reply> {
-	var urlParts = urlLib.parse(url);
+export function request<T>(method: string, url: string, data?: T, opts?: RequestOpts): Q.Promise<Reply> {
+	let urlParts = urlLib.parse(url);
 
-	var requestOpts = {
+	let requestOpts = {
 		method: method,
 		path: urlParts.path,
 		host: urlParts.hostname,
@@ -117,8 +119,16 @@ export function request<T>(method: string, url: string, data?: T): Q.Promise<Rep
 		//
 		// See comment about https://github.com/substack/http-browserify/issues/65
 		// below
-		responseType: 'arraybuffer'
+		responseType: 'arraybuffer',
+
+		headers: {}
 	};
+
+	if (opts) {
+		if (opts.headers) {
+			requestOpts.headers = assign(requestOpts.headers, opts.headers);
+		}
+	}
 
 	// strip trailing colon from protocol.
 	// Node's http module treats the protocol the same with or without the trailing colon
@@ -127,15 +137,15 @@ export function request<T>(method: string, url: string, data?: T): Q.Promise<Rep
 	// Would be fixed by https://github.com/substack/http-browserify/pull/42
 	requestOpts.scheme = requestOpts.scheme.replace(/:$/, '');
 
-	var requestFunc: (opts: any, callback: (resp: http.ClientResponse) => void) => http.ClientRequest;
+	let requestFunc: (opts: any, callback: (resp: http.ClientResponse) => void) => http.ClientRequest;
 	if (requestOpts.scheme == 'https') {
 		requestFunc = https.request;
 	} else {
 		requestFunc = http.request;
 	}
 
-	var response = Q.defer<Reply>();
-	var request = requestFunc(requestOpts, (resp: http.ClientResponse) => {
+	let response = Q.defer<Reply>();
+	let request = requestFunc(requestOpts, (resp: http.ClientResponse) => {
 		streamutil.readAll(resp)
 		.then((content) => {
 			response.resolve({
@@ -154,7 +164,7 @@ export function request<T>(method: string, url: string, data?: T): Q.Promise<Rep
 		// xhr.responseType successfully due to Firefox not allowing
 		// xhr.responseType to be set until xhr.open() has been called.
 		// See https://github.com/substack/http-browserify/issues/65
-		var browserifyRequest: any = request;
+		let browserifyRequest: any = request;
 		browserifyRequest.xhr.responseType = 'arraybuffer';
 	}
 
@@ -180,4 +190,3 @@ export function request<T>(method: string, url: string, data?: T): Q.Promise<Rep
 
 	return response.promise;
 }
-
