@@ -23,6 +23,7 @@ import Q = require('q');
 import underscore = require('underscore');
 
 import agile_keychain_crypto = require('./agile_keychain_crypto');
+import assign = require('./base/assign');
 import asyncutil = require('./base/asyncutil');
 import cached = require('./base/cached');
 import collectionutil = require('./base/collectionutil');
@@ -249,9 +250,16 @@ export class Store implements item_store.SyncableStore {
 				var item = this.itemFromOverview(uuid, revision.overview);
 				assert.equal(item.revision, revision.overview.revision);
 				item.parentRevision = revision.parentRevision;
+
+				// Restore the prototype of the de-serialized ItemContent
+				// FIXME - Refactor ItemContent and fields to make it
+				// (de-)serializable without needing a hack to restore prototypes
+				let content = new item_store.ItemContent();
+				assign(content, revision.content);
+
 				return {
 					item: item,
-					content: revision.content
+					content: content
 				};
 			});
 		} else {
