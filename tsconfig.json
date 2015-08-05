@@ -93,6 +93,7 @@
         "./lib/siteinfo/service_test.ts",
         "./lib/siteinfo/site_info.ts",
         "./lib/sync.ts",
+        "./lib/sync_int_test.ts",
         "./lib/sync_test.ts",
         "./lib/temp_store.ts",
         "./lib/test.ts",

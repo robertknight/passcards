@@ -4,108 +4,19 @@ import btoa = require('btoa');
 import Q = require('q');
 
 import agile_keychain_crypto = require('./agile_keychain_crypto');
-import collectionutil = require('./base/collectionutil');
 import crypto = require('./base/crypto');
 import item_builder = require('./item_builder');
 import item_store = require('./item_store');
 import key_agent = require('./key_agent');
-import key_value_store = require('./base/key_value_store');
+import mem_key_value_store = require('./base/mem_key_value_store');
 import local_store = require('./local_store');
-import stringutil = require('./base/stringutil');
 import testLib = require('./test');
-
-class FakeKeyValueDatabase implements key_value_store.Database {
-	stores: Map<string, FakeKeyValueStore>;
-	version: number;
-
-	constructor() {
-		this.reset();
-	}
-
-	open(name: string, version: number, schemaUpdateCallback: (schemaUpdater: key_value_store.DatabaseSchemaModifier) => void) {
-		if (version > this.version) {
-			schemaUpdateCallback({
-				createStore: (name: string) => {
-					if (!this.stores.get(name)) {
-						this.stores.set(name, new FakeKeyValueStore);
-					}
-				},
-				deleteStore: (name: string) => {
-					this.stores.delete(name);
-				},
-				storeNames: () => {
-					var keys: string[] = [];
-					this.stores.forEach((_, k) => {
-						keys.push(k);
-					});
-					return keys;
-				},
-				currentVersion: () => {
-					return this.version;
-				}
-			});
-			this.version = version;
-		}
-		return Q<void>(null);
-	}
-
-	store(name: string) {
-		if (!this.stores.get(name)) {
-			this.stores.set(name, new FakeKeyValueStore);
-		}
-		return this.stores.get(name);
-	}
-
-	delete() {
-		if (this.version < 1) {
-			return Q.reject<void>(new Error('Database is not open'));
-		}
-		this.reset();
-		return Q<void>(null);
-	}
-
-	private reset() {
-		this.stores = new collectionutil.PMap<string, FakeKeyValueStore>();
-		this.version = 0;
-	}
-}
-
-class FakeKeyValueStore implements key_value_store.ObjectStore {
-	items: Map<string, any>;
-
-	constructor() {
-		this.items = new collectionutil.PMap<string, any>();
-	}
-
-	set<T>(key: string, value: T) {
-		this.items.set(key, value);
-		return Q<void>(null);
-	}
-
-	get<T>(key: string) {
-		return Q(<T>this.items.get(key));
-	}
-
-	remove(key: string) {
-		this.items.delete(key);
-		return Q<void>(null);
-	}
-
-	iterate<T>(prefix: string, callback: (key: string, value?: T) => void) {
-		this.items.forEach((value, key) => {
-			if (stringutil.startsWith(key, prefix)) {
-				callback(key, value);
-			}
-		});
-		return Q<void>(null);
-	}
-}
 
 interface Env {
 	masterPass: string;
 	masterKey: key_agent.Key;
 	keyAgent: key_agent.SimpleKeyAgent;
-	database: FakeKeyValueDatabase;
+	database: mem_key_value_store.Database;
 	databaseName: string;
 }
 
@@ -132,7 +43,7 @@ let masterKey: key_agent.Key;
 
 function setupEnv(): Env {
 	let keyAgent = new key_agent.SimpleKeyAgent();
-	let database = new FakeKeyValueDatabase();
+	let database = new mem_key_value_store.Database();
 	let masterPass = 'testpass';
 
 	return {

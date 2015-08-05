@@ -3,6 +3,7 @@ import assert = require('assert');
 import key_value_store = require('./key_value_store');
 import testLib = require('../test');
 
+// required by key_value_store.IndexedDBDatabase
 global.indexedDB = require('fake-indexeddb');
 global.IDBKeyRange = require('fake-indexeddb/lib/FDBKeyRange');
 

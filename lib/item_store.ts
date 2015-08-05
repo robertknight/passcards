@@ -407,7 +407,7 @@ export class Item {
 	  */
 	updateOverviewFromContent(content: ItemContent) {
 		this.locations = [];
-		content.urls.forEach((url) => {
+		content.urls.forEach(url => {
 			this.locations.push(url.url);
 		});
 

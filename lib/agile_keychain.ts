@@ -726,12 +726,14 @@ export class Vault implements item_store.Store {
 	  * a given master @p password.
 	  */
 	static createVault(fs: vfs.VFS, path: string, password: string, hint: string,
-		passIterations: number = DEFAULT_VAULT_PASS_ITERATIONS): Q.Promise<Vault> {
+		passIterations: number = DEFAULT_VAULT_PASS_ITERATIONS,
+		keyAgent?: key_agent.KeyAgent): Q.Promise<Vault> {
+
 		if (!stringutil.endsWith(path, '.agilekeychain')) {
 			path += '.agilekeychain';
 		}
 
-		var vault = new Vault(fs, path);
+		let vault = new Vault(fs, path, keyAgent);
 
 		// 1. Check for no existing vault at @p path
 		// 2. Add empty contents.js, encryptionKeys.js, 1Password.keys files
