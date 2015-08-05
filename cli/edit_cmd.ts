@@ -136,12 +136,12 @@ export class EditCommand {
 
 	private addField(content: item_store.ItemContent, sectionName: string, fieldTitle: string, typeName: string,
 		value: string): Q.Promise<void> {
-		var sections = item_search.matchSection(content, sectionName);
+		let sections = item_search.matchSection(content, sectionName);
 		if (sections.length == 0) {
 			return Q.reject<void>(NO_SUCH_SECTION_ERROR);
 		}
 
-		var fieldTypes: { [index: string]: item_store.FieldType } = {
+		let fieldTypes: { [index: string]: item_store.FieldType } = {
 			'text': item_store.FieldType.Text,
 			'password': item_store.FieldType.Password
 		};
@@ -149,12 +149,13 @@ export class EditCommand {
 			return Q.reject<void>(UNKNOWN_FIELD_TYPE_ERROR);
 		}
 
-		var section = sections[0];
-		var field = new item_store.ItemField();
-		field.kind = fieldTypes[typeName];
-		field.title = fieldTitle;
-		field.value = value;
-
+		let section = sections[0];
+		let field = {
+			name: fieldTitle, // FIXME - Should this be an ID?
+			kind: fieldTypes[typeName],
+			title: fieldTitle,
+			value
+		};
 		section.fields.push(field);
 
 		return null;

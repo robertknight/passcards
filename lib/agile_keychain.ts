@@ -140,12 +140,12 @@ export function toAgileKeychainField(field: item_store.ItemField): agile_keychai
 }
 
 export function fromAgileKeychainField(fieldData: agile_keychain_entries.ItemField): item_store.ItemField {
-	var field = new item_store.ItemField;
-	field.kind = fieldKindMap.get2(fieldData.k);
-	field.name = fieldData.n;
-	field.title = fieldData.t;
-	field.value = fieldData.v;
-	return field;
+	return {
+		kind: fieldKindMap.get2(fieldData.k),
+		name: fieldData.n,
+		title: fieldData.t,
+		value: fieldData.v
+	};
 }
 
 /** Convert an item_store.ItemContent entry into a `contents` blob for storage in

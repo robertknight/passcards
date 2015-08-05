@@ -595,7 +595,7 @@ testLib.addTest('Item field value formatting', (assert) => {
 		t: 'Date of Birth',
 		v: 567278822
 	});
-	assert.ok(dateField.valueString().match(/Dec 23 1987/) != null);
+	assert.ok(item_store.fieldValueString(dateField).match(/Dec 23 1987/) != null);
 
 	var monthYearField = agile_keychain.fromAgileKeychainField({
 		k: 'monthYear',
@@ -603,7 +603,7 @@ testLib.addTest('Item field value formatting', (assert) => {
 		t: 'Expiry Date',
 		v: 201405
 	});
-	assert.equal(monthYearField.valueString(), '05/14');
+	assert.equal(item_store.fieldValueString(monthYearField), '05/14');
 });
 
 testLib.addTest('Default item properties', (assert) => {

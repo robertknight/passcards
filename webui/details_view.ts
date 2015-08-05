@@ -722,11 +722,12 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 
 	private renderMenus() {
 		var addField = (type: item_store.FieldType) => {
-			var field = new item_store.ItemField();
-			field.kind = type;
-			field.value = '';
-			field.name = agile_keychain_crypto.newUUID();
-			field.title = 'New Field';
+			let field: item_store.ItemField = {
+				name: agile_keychain_crypto.newUUID(),
+				kind: type,
+				value: '',
+				title: 'New Field'
+			};
 
 			this.setState({
 				autofocusField: field,

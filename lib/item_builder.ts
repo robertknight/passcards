@@ -95,11 +95,12 @@ export class SectionBuilder {
 	}
 
 	addField(kind: item_store.FieldType, title: string, value: any): SectionBuilder {
-		var field = new item_store.ItemField();
-		field.kind = kind;
-		field.title = title;
-		field.value = value;
-		this._section.fields.push(field);
+		this._section.fields.push({
+			name: '',
+			kind,
+			title,
+			value
+		});
 		return this;
 	}
 

@@ -480,7 +480,7 @@ export class ItemContent {
 /** Content of an item which is usually stored unencrypted
   * as part of the overview data.
   */
-export class ItemOpenContents {
+export interface ItemOpenContents {
 	tags: string[];
 
 	/** Indicates where this item will be displayed.
@@ -511,23 +511,23 @@ export class ItemSection {
   * Each field has a data type, an internal name/ID for the field,
   * a user-visible title and a current value.
   */
-export class ItemField {
+export interface ItemField {
 	kind: FieldType;
 	name: string;
 	title: string;
 	value: any;
+}
 
-	valueString(): string {
-		switch (this.kind) {
-			case FieldType.Date:
-				return dateutil.dateFromUnixTimestamp(this.value).toString();
-			case FieldType.MonthYear:
-				var month = this.value % 100;
-				var year = (this.value / 100) % 100;
-				return sprintf('%02d/%d', month, year);
-			default:
-				return this.value;
-		}
+export function fieldValueString(field: ItemField) {
+	switch (field.kind) {
+		case FieldType.Date:
+			return dateutil.dateFromUnixTimestamp(field.value).toString();
+		case FieldType.MonthYear:
+			var month = field.value % 100;
+			var year = (field.value / 100) % 100;
+			return sprintf('%02d/%d', month, year);
+		default:
+			return field.value;
 	}
 }
 
