@@ -229,16 +229,11 @@ function toAgileKeychainSection(section: item_store.ItemSection): agile_keychain
   * an item into an item_store.ItemSection instance.
   */
 function fromAgileKeychainSection(data: agile_keychain_entries.ItemSection): item_store.ItemSection {
-	var section = new item_store.ItemSection();
-	section.name = data.name;
-	section.title = data.title;
-	section.fields = [];
-	if (data.fields) {
-		data.fields.forEach((fieldData) => {
-			section.fields.push(fromAgileKeychainField(fieldData));
-		});
-	}
-	return section;
+	return {
+		name: data.name,
+		title: data.title,
+		fields: (data.fields || []).map(fieldData => fromAgileKeychainField(fieldData))
+	};
 }
 
 function toAgileKeychainFormField(field: item_store.WebFormField): agile_keychain_entries.WebFormField {

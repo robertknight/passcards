@@ -491,19 +491,13 @@ export interface ItemOpenContents {
 }
 
 /** A group of fields in an item. */
-export class ItemSection {
+export interface ItemSection {
 	/** Internal name of the section. */
 	name: string;
 
 	/** User-visible title for the section. */
 	title: string;
 	fields: ItemField[];
-
-	constructor() {
-		this.fields = [];
-		this.title = '';
-		this.name = '';
-	}
 }
 
 /** A specific property/attribute of an item.

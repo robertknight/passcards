@@ -613,9 +613,11 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				value: 'Add Section',
 				color: colors.MATERIAL_COLOR_PRIMARY,
 				onClick: () => {
-					var newSection = new item_store.ItemSection();
-					newSection.name = agile_keychain_crypto.newUUID();
-					newSection.title = 'New Section';
+					let newSection: item_store.ItemSection = {
+						name: agile_keychain_crypto.newUUID(),
+						title: 'New Section',
+						fields: []
+					};
 					item.content.sections.push(newSection);
 
 					this.setState({ autofocusField: newSection });

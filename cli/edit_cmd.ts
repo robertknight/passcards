@@ -127,10 +127,11 @@ export class EditCommand {
 	}
 
 	private addSection(content: item_store.ItemContent, sectionTitle: string): Q.Promise<void> {
-		var section = new item_store.ItemSection;
-		section.name = sectionTitle;
-		section.title = sectionTitle;
-		content.sections.push(section);
+		content.sections.push({
+			name: sectionTitle,
+			title: sectionTitle,
+			fields: []
+		});
 		return null;
 	}
 

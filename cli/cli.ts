@@ -396,7 +396,11 @@ export class CLI {
 				contentReady = this.addLoginFields(content);
 			} else {
 				// add a default section with a blank title
-				content.sections.push(new item_store.ItemSection());
+				content.sections.push({
+					name: '',
+					title: '',
+					fields: []
+				});
 				contentReady = Q(content);
 			}
 

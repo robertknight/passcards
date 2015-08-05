@@ -89,9 +89,11 @@ export class SectionBuilder {
 	private _section: item_store.ItemSection;
 
 	constructor(name: string, title: string) {
-		this._section = new item_store.ItemSection();
-		this._section.name = name;
-		this._section.title = title;
+		this._section = {
+			name,
+			title,
+			fields: []
+		};
 	}
 
 	addField(kind: item_store.FieldType, title: string, value: any): SectionBuilder {
