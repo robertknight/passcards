@@ -10,18 +10,20 @@ function itemWithTitleAndUrl(title: string, url: string): item_store.Item {
 }
 
 function formField(name: string, type: item_store.FormFieldType, value: string): item_store.WebFormField {
-	var field = new item_store.WebFormField;
-	field.name = name;
-	field.type = type;
-	field.value = value;
-
+	let designation: string;
 	if (type == item_store.FormFieldType.Password) {
-		field.designation = 'password';
+		designation = 'password';
 	} else if (type == item_store.FormFieldType.Email) {
-		field.designation = 'username';
+		designation = 'username';
 	}
 
-	return field;
+	return {
+		id: '',
+		name,
+		type,
+		value,
+		designation
+	};
 }
 
 testLib.addTest('match item', (assert) => {

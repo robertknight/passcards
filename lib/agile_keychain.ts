@@ -252,13 +252,13 @@ function toAgileKeychainFormField(field: item_store.WebFormField): agile_keychai
 }
 
 function fromAgileKeychainFormField(keychainField: agile_keychain_entries.WebFormField): item_store.WebFormField {
-	var field = new item_store.WebFormField();
-	field.id = keychainField.id;
-	field.name = keychainField.name;
-	field.type = fieldTypeCodeMap.get2(keychainField.type);
-	field.designation = keychainField.designation;
-	field.value = keychainField.value;
-	return field;
+	return {
+		id: keychainField.id,
+		name: keychainField.name,
+		type: fieldTypeCodeMap.get2(keychainField.type),
+		designation: keychainField.designation,
+		value: keychainField.value
+	};
 }
 
 export function convertKeys(keyList: agile_keychain_entries.EncryptionKeyEntry[]): key_agent.Key[] {

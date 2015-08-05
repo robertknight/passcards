@@ -541,7 +541,7 @@ export enum FormFieldType {
 }
 
 /** Saved value of an input field in a web form. */
-export class WebFormField {
+export interface WebFormField {
 	value: string;
 
 	/** 'id' attribute of the <input> element */
@@ -560,7 +560,7 @@ export class WebFormField {
 }
 
 /** Entry in an item's 'Websites' list. */
-export class ItemUrl {
+export interface ItemUrl {
 	label: string;
 	url: string;
 }
