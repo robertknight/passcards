@@ -17,7 +17,7 @@ global.IDBKeyRange = require('fake-indexeddb/lib/FDBKeyRange');
 
 testLib.addAsyncTest('saves and syncs items', assert => {
 	let db = new key_value_store.IndexedDBDatabase();
-	let fs = new vfs_node.FileVFS('/tmp/sync-integration-test');
+	let fs = new vfs_node.FileVFS(`${testLib.tempDir() }/sync-integration-test`);
 	let keyAgent = new key_agent.SimpleKeyAgent();
 	let agileKeychainStore: item_store.Store;
 	let localStore = new local_store.Store(db, 'local', keyAgent);

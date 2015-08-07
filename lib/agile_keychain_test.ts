@@ -35,7 +35,7 @@ class TestCase {
 	itemDataPath: string;
 }
 
-var TEST_VAULTS: TestCase[] = [
+const TEST_VAULTS: TestCase[] = [
 	{
 		path: 'test.agilekeychain',
 		password: 'logMEin',
@@ -43,7 +43,7 @@ var TEST_VAULTS: TestCase[] = [
 	}
 ];
 
-var fs = new nodefs.FileVFS('lib/test-data');
+let fs = new nodefs.FileVFS('lib/test-data');
 
 class ItemAndContent {
 	item: item_store.Item;
@@ -57,7 +57,7 @@ function createEmptyVault() {
 	let fs = new nodefs.FileVFS('/');
 	let vault: agile_keychain.Vault;
 
-	return vfs_util.mktemp(fs, '/tmp', 'vault.XXX').then(path => {
+	return vfs_util.mktemp(fs, testLib.tempDir(), 'vault.XXX').then(path => {
 		return agile_keychain.Vault.createVault(fs, path, VAULT_PASS, '', VAULT_PASS_ITER);
 	}).then(vault_ => {
 		vault = vault_;
@@ -67,7 +67,7 @@ function createEmptyVault() {
 
 function createTestVault() {
 	let sourcePath = path.resolve('lib/test-data');
-	let copyPath = '/tmp/copy.agilekeychain';
+	let copyPath = testLib.tempDir() + '/copy.agilekeychain';
 
 	let vault: agile_keychain.Vault;
 	let fs = new nodefs.FileVFS('/');
@@ -489,12 +489,12 @@ testLib.addAsyncTest('Encrypt/decrypt key (async)', (assert) => {
 });
 
 testLib.addAsyncTest('Create new vault', (assert) => {
-	var fs = new nodefs.FileVFS('/tmp');
-	var pass = 'test-new-vault-pass';
-	var hint = 'the-password-hint';
-	var vault: agile_keychain.Vault;
-	var keyIterations = 100;
-	var vaultDir = '/new-vault';
+	let fs = new nodefs.FileVFS(testLib.tempDir());
+	let pass = 'test-new-vault-pass';
+	let hint = 'the-password-hint';
+	let vault: agile_keychain.Vault;
+	let keyIterations = 100;
+	let vaultDir = '/new-vault';
 
 	return vfs_util.rmrf(fs, vaultDir + '.agilekeychain').then(() => {
 		return agile_keychain.Vault.createVault(fs, vaultDir, pass, hint, keyIterations)
@@ -618,7 +618,7 @@ testLib.addTest('Default item properties', (assert) => {
 });
 
 testLib.addTest('createVault() fails if directory exists', (assert) => {
-	var fs = new nodefs.FileVFS('/tmp');
+	var fs = new nodefs.FileVFS(testLib.tempDir());
 	var pass = 'pass-1';
 	var hint = 'test-new-vault-hint';
 	var keyIterations = 100;

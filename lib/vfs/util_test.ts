@@ -7,7 +7,7 @@ import asyncutil = require('../base/asyncutil');
 var fs_extra = require('fs-extra');
 
 testLib.addAsyncTest('mktemp', (assert) => {
-	const TEST_DIR = '/tmp/vfs-util-test';
+	const TEST_DIR = `${testLib.tempDir() }/vfs-util-test`;
 	const ITER_COUNT = 10;
 
 	fs_extra.emptyDirSync(TEST_DIR);

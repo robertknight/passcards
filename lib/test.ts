@@ -21,6 +21,7 @@ import assert = require('assert');
 import argparse = require('argparse');
 import colors = require('colors');
 import fs = require('fs');
+import mkdirp = require('mkdirp');
 import path = require('path');
 import underscore = require('underscore');
 import xdiff = require('xdiff');
@@ -289,6 +290,22 @@ export function start(args?: string[]) {
 		console.log('START: %s', path.basename(process.argv[1]));
 		run(tests);
 	}
+}
+
+/** Returns the path to a temporary data directory for
+  * use by the current test suite.
+  */
+export function tempDir() {
+	let tmpDir: string;
+	if (process.env.TMPDIR) {
+		tmpDir = process.env.TMPDIR;
+	} else {
+		tmpDir = '/tmp';
+	}
+	let testSuiteName = path.basename(process.argv[1]);
+	let dirPath = `${tmpDir}/passcards-tests/${testSuiteName}`;
+	mkdirp.sync(dirPath);
+	return dirPath;
 }
 
 function run(tests: TestCase[]) {

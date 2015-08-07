@@ -12,8 +12,8 @@ class StorageEntry {
 }
 
 var createNodeFs = () => {
-	var TEST_DIR = '/tmp/vfs-test';
-	var fs = new nodefs.FileVFS(TEST_DIR);
+	let TEST_DIR = `${testLib.tempDir() }/vfs-test`;
+	let fs = new nodefs.FileVFS(TEST_DIR);
 	return vfs_util.rmrf(fs, '')
 	.then(() => {
 		return fs.mkpath('');
