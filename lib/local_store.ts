@@ -20,10 +20,8 @@
 
 import assert = require('assert');
 import Q = require('q');
-import underscore = require('underscore');
 
 import agile_keychain_crypto = require('./agile_keychain_crypto');
-import assign = require('./base/assign');
 import asyncutil = require('./base/asyncutil');
 import cached = require('./base/cached');
 import collectionutil = require('./base/collectionutil');
@@ -251,15 +249,9 @@ export class Store implements item_store.SyncableStore {
 				assert.equal(item.revision, revision.overview.revision);
 				item.parentRevision = revision.parentRevision;
 
-				// Restore the prototype of the de-serialized ItemContent
-				// FIXME - Refactor ItemContent and fields to make it
-				// (de-)serializable without needing a hack to restore prototypes
-				let content = new item_store.ItemContent();
-				assign(content, revision.content);
-
 				return {
 					item: item,
-					content: content
+					content: revision.content
 				};
 			});
 		} else {
@@ -316,12 +308,8 @@ export class Store implements item_store.SyncableStore {
 			return this.itemStore.get<string>('revisions/' + item.revision);
 		}).then((revisionData) => {
 			return this.decrypt<ItemRevision>(key, revisionData);
-		}).then((revision) => {
-			// TODO - Split item_store.ItemContent into data which can
-			// be serialized directly and methods related to that data
-			var content = new item_store.ItemContent();
-			underscore.extend(content, revision.content);
-			return content;
+		}).then(revision => {
+			return revision.content;
 		});
 	}
 

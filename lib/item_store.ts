@@ -7,7 +7,6 @@
 import clone = require('clone');
 import Q = require('q');
 import sprintf = require('sprintf');
-import underscore = require('underscore');
 
 import agile_keychain_crypto = require('./agile_keychain_crypto');
 import asyncutil = require('./base/asyncutil');
@@ -176,6 +175,77 @@ export class UnsavedItemError extends err_util.BaseError {
 	}
 }
 
+/** Represents the content of an item, usually stored
+  * encrypted in a vault.
+  *
+  * ItemContent and its dependent fields are plain interfaces
+  * to facilitate easy (de-)serialization.
+  */
+export interface ItemContent {
+	sections: ItemSection[];
+	urls: ItemUrl[];
+	notes: string;
+	formFields: WebFormField[];
+	htmlMethod: string;
+	htmlAction: string;
+	htmlId: string;
+}
+
+/** Utility functions for creating and extracting
+  * data from ItemContent instances.
+  */
+export let ContentUtil = {
+	/** Creates a new ItemContent instance with all
+	  * fields set to default values.
+	  */
+	empty(): ItemContent {
+		return {
+			sections: [],
+			urls: [],
+			notes: '',
+			formFields: [],
+			htmlMethod: '',
+			htmlAction: '',
+			htmlId: ''
+		};
+	},
+
+	/** Returns the account name associated with this item.
+	  *
+	  * The field used for the account name depends on the item
+	  * type. For logins, this is the 'username' field.
+	  *
+	  * Returns an empty string if the item has no associated account.
+	  */
+	account(content: ItemContent): string {
+		let field = ContentUtil.accountField(content);
+		return field ? field.value : '';
+	},
+
+	accountField(content: ItemContent): WebFormField {
+		let accountFields = content.formFields.filter(field => field.designation === 'username');
+		return accountFields.length > 0 ? accountFields[0] : null;
+	},
+
+	/** Returns the primary password associated with this item.
+	  *
+	  * This depends upon the item type. For logins, this is
+	  * the 'password' field.
+	  *
+	  * Returns an empty password if the item has no associated
+	  * account.
+	  */
+	password(content: ItemContent): string {
+		let field = ContentUtil.passwordField(content);
+		return field ? field.value : '';
+	},
+
+	passwordField(content: ItemContent): WebFormField {
+		var passFields = content.formFields.filter(field => field.designation === 'password');
+		return passFields.length > 0 ? passFields[0] : null;
+	}
+}
+
 /** Represents a single item in a 1Password vault. */
 export class Item {
 	// store which this item belongs to, or null
@@ -269,7 +339,7 @@ export class Item {
 		if (this.content) {
 			return Q(this.content);
 		} else if (!this.store) {
-			this.content = new ItemContent();
+			this.content = ContentUtil.empty();
 			return Q(this.content);
 		}
 
@@ -318,7 +388,7 @@ export class Item {
 		this.typeName = ItemTypes.TOMBSTONE;
 		this.title = 'Unnamed';
 		this.trashed = true;
-		this.setContent(new ItemContent);
+		this.setContent(ContentUtil.empty());
 		this.folderUuid = '';
 		this.locations = [];
 		this.faveIndex = null;
@@ -411,69 +481,7 @@ export class Item {
 			this.locations.push(url.url);
 		});
 
-		this.account = content.account();
-	}
-}
-
-/** Represents the content of an item, usually stored
-  * encrypted in a vault.
-  */
-export class ItemContent {
-	sections: ItemSection[];
-	urls: ItemUrl[];
-	notes: string;
-	formFields: WebFormField[];
-	htmlMethod: string;
-	htmlAction: string;
-	htmlId: string;
-
-	constructor() {
-		this.sections = [];
-		this.urls = [];
-		this.notes = '';
-		this.formFields = [];
-		this.htmlMethod = '';
-		this.htmlAction = '';
-		this.htmlId = '';
-	}
-
-	/** Returns the account name associated with this item.
-	  *
-	  * The field used for the account name depends on the item
-	  * type. For logins, this is the 'username' field.
-	  *
-	  * Returns an empty string if the item has no associated account.
-	  */
-	account(): string {
-		var field = this.accountField();
-		return field ? field.value : '';
-	}
-
-	accountField(): WebFormField {
-		var accountFields = underscore.filter(this.formFields, (field) => {
-			return field.designation == 'username';
-		});
-		return accountFields.length > 0 ? accountFields[0] : null;
-	}
-
-	/** Returns the primary password associated with this item.
-	  *
-	  * This depends upon the item type. For logins, this is
-	  * the 'password' field.
-	  *
-	  * Returns an empty password if the item has no associated
-	  * account.
-	  */
-	password(): string {
-		var field = this.passwordField();
-		return field ? field.value : '';
-	}
-
-	passwordField(): WebFormField {
-		var passFields = underscore.filter(this.formFields, (field) => {
-			return field.designation == 'password';
-		});
-		return passFields.length > 0 ? passFields[0] : null;
+		this.account = ContentUtil.account(content);
 	}
 }
 

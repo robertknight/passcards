@@ -73,10 +73,10 @@ export class AutoFiller {
 
 					var autofillValue: string;
 					if (isUsernameField) {
-						autofillValue = content.account();
+						autofillValue = item_store.ContentUtil.account(content);
 						foundUsernameField = true;
 					} else if (isPasswordField) {
-						autofillValue = content.password();
+						autofillValue = item_store.ContentUtil.password(content);
 						foundPasswordField = true;
 					}
 
@@ -104,7 +104,7 @@ export class AutoFiller {
 							foundUsernameField = true;
 							autofillEntries.push({
 								key: field.key,
-								value: content.account()
+								value: item_store.ContentUtil.account(content)
 							});
 						}
 					});

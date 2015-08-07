@@ -7,7 +7,7 @@ export class Builder {
 
 	constructor(type: item_store.ItemType) {
 		this._item = new item_store.Item();
-		this._content = new item_store.ItemContent();
+		this._content = item_store.ContentUtil.empty();
 
 		this._item.typeName = type;
 		this._item.setContent(this._content);

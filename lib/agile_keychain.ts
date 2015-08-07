@@ -182,7 +182,7 @@ function toAgileKeychainContent(content: item_store.ItemContent): agile_keychain
   * into an item_store.ItemContent instance.
   */
 function fromAgileKeychainContent(data: agile_keychain_entries.ItemContent): item_store.ItemContent {
-	var content = new item_store.ItemContent();
+	let content = item_store.ContentUtil.empty();
 	if (data.sections) {
 		data.sections.forEach((section) => {
 			content.sections.push(fromAgileKeychainSection(section));

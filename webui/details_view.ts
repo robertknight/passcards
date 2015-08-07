@@ -674,10 +674,10 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 	}
 
 	private renderCoreFields(item: item_store.ItemAndContent, onSave: () => void, editing: boolean) {
-		var coreFields: react.ReactElement<{}>[] = [];
+		let coreFields: react.ReactElement<{}>[] = [];
 
-		var accountField = item.content.accountField();
-		var passwordField = item.content.passwordField();
+		let accountField = item_store.ContentUtil.accountField(item.content);
+		let passwordField = item_store.ContentUtil.passwordField(item.content);
 
 		if (accountField) {
 			coreFields.push(ItemFieldF({

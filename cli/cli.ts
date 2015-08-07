@@ -389,9 +389,9 @@ export class CLI {
 			item.title = title;
 			item.typeName = type;
 
-			var content = new item_store.ItemContent();
+			let content = item_store.ContentUtil.empty();
 
-			var contentReady: Q.Promise<item_store.ItemContent>;
+			let contentReady: Q.Promise<item_store.ItemContent>;
 			if (type == item_store.ItemTypes.LOGIN) {
 				contentReady = this.addLoginFields(content);
 			} else {

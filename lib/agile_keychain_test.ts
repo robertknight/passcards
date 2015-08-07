@@ -262,10 +262,10 @@ testLib.addTest('New item UUID', (assert) => {
 
 testLib.addAsyncTest('Save item', (assert) => {
 	createTestVault().then((vault) => {
-		var item = new item_store.Item(vault);
+		let item = new item_store.Item(vault);
 		item.title = 'New Test Item';
 		item.locations.push('mysite.com');
-		var content = new item_store.ItemContent();
+		let content = item_store.ContentUtil.empty();
 		content.urls.push({
 			url: 'mysite.com',
 			label: 'website'
@@ -302,7 +302,7 @@ testLib.addAsyncTest('Update item', (assert) => {
 		var item = new item_store.Item(vault);
 		item.title = 'Original item title';
 
-		var content = new item_store.ItemContent();
+		let content = item_store.ContentUtil.empty();
 		content.formFields.push({
 			id: '',
 			name: 'password',
@@ -335,7 +335,7 @@ testLib.addAsyncTest('Update item', (assert) => {
 			assert.notEqual(passwordField, null);
 			assert.equal(passwordField.value, 'original-password');
 			assert.equal(passwordField.type, item_store.FormFieldType.Password);
-			assert.equal(content.password(), 'original-password');
+			assert.equal(item_store.ContentUtil.password(content), 'original-password');
 
 			loadedItem.item.title = 'New Item Title';
 			loadedItem.item.faveIndex = 42;
@@ -362,12 +362,12 @@ testLib.addAsyncTest('Update item', (assert) => {
 			// check that Item.updatedAt is updated on save
 			assert.ok(loadedItem.item.updatedAt > originalSaveDate);
 
-			var passwordField = underscore.find(loadedItem.content.formFields, (field) => {
+			let passwordField = underscore.find(loadedItem.content.formFields, (field) => {
 				return field.name == 'password';
 			});
 			assert.notEqual(passwordField, null);
 			assert.equal(passwordField.value, 'new-password');
-			assert.equal(loadedItem.content.password(), 'new-password');
+			assert.equal(item_store.ContentUtil.password(loadedItem.content), 'new-password');
 
 			testLib.continueTests();
 		})
@@ -506,10 +506,10 @@ testLib.addAsyncTest('Create new vault', (assert) => {
 	}).then((items) => {
 		assert.equal(items.length, 0);
 
-		var item = new item_store.Item(vault);
+		let item = new item_store.Item(vault);
 		item.title = 'Item in new vault';
 
-		var content = new item_store.ItemContent();
+		let content = item_store.ContentUtil.empty();
 		content.urls.push({
 			url: 'foobar.com',
 			label: 'website'
@@ -559,7 +559,7 @@ testLib.addAsyncTest('Save existing item to new vault', (assert) => {
 		item = new item_store.Item();
 		item.title = 'Existing Item';
 		item.locations.push('somesite.com');
-		item.setContent(new item_store.ItemContent());
+		item.setContent(item_store.ContentUtil.empty());
 		return item.saveTo(vault);
 	}).then(() => {
 		assert.equal(item.uuid.length, 32);
@@ -570,7 +570,7 @@ testLib.addAsyncTest('Save existing item to new vault', (assert) => {
 });
 
 testLib.addTest('Item content account and password accessors', (assert) => {
-	var content = new item_store.ItemContent();
+	let content = item_store.ContentUtil.empty();
 	content.formFields.push({
 		id: '',
 		name: 'password',
@@ -584,8 +584,8 @@ testLib.addTest('Item content account and password accessors', (assert) => {
 			designation: 'username',
 			value: 'jim.smith@gmail.com'
 		});
-	assert.equal(content.account(), 'jim.smith@gmail.com');
-	assert.equal(content.password(), 'the-item-password');
+	assert.equal(item_store.ContentUtil.account(content), 'jim.smith@gmail.com');
+	assert.equal(item_store.ContentUtil.password(content), 'the-item-password');
 });
 
 testLib.addTest('Item field value formatting', (assert) => {

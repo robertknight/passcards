@@ -27,9 +27,9 @@ function formField(name: string, type: item_store.FormFieldType, value: string):
 }
 
 testLib.addTest('match item', (assert) => {
-	var item = itemWithTitleAndUrl('Google', 'google.com');
+	let item = itemWithTitleAndUrl('Google', 'google.com');
 
-	var content = new item_store.ItemContent();
+	let content = item_store.ContentUtil.empty();
 	content.formFields.push(formField('login', item_store.FormFieldType.Email, 'jimsmith@gmail.com'));
 	content.formFields.push(formField('password', item_store.FormFieldType.Password, 'mypass'));
 	content.formFields.push(formField('remember_me', item_store.FormFieldType.Checkbox, 'Y'));

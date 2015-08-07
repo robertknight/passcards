@@ -28,7 +28,7 @@ testLib.addTest('item revision ID', (assert) => {
 	.itemAndContent();
 	var revA = item_store.generateRevisionId(item);
 
-	item.content.passwordField().value = 'secret2';
+	item_store.ContentUtil.passwordField(item.content).value = 'secret2';
 	var revB = item_store.generateRevisionId(item);
 
 	assert.notEqual(revA, revB);

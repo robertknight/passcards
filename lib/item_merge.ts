@@ -120,7 +120,7 @@ export function merge(a: item_store.ItemAndContent,
 	base?: item_store.ItemAndContent) {
 	var merged = {
 		item: new item_store.Item(null /* store */, a.item.uuid),
-		content: new item_store.ItemContent()
+		content: item_store.ContentUtil.empty()
 	};
 
 	// this is an item that has been updated in either store
