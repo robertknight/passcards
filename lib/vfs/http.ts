@@ -259,7 +259,8 @@ document.getElementById('authButton').addEventListener('click', function() {
 			res.end(content, 'binary');
 		};
 
-		if (req.headers['authentication'] !== `Bearer ${ACCESS_TOKEN}`) {
+		if (req.method !== 'OPTIONS' &&
+			req.headers['authentication'] !== `Bearer ${ACCESS_TOKEN}`) {
 			res.statusCode = 403;
 			res.end(JSON.stringify({
 				error: 'Incorrect or missing access token'
@@ -311,6 +312,7 @@ document.getElementById('authButton').addEventListener('click', function() {
 			});
 		} else if (req.method == 'OPTIONS') {
 			res.setHeader('Access-Control-Allow-Methods', 'GET, PUT, DELETE');
+			res.setHeader('Access-Control-Allow-Headers', 'Authentication');
 			done();
 		} else {
 			throw 'Unhandled method ' + req.method;
