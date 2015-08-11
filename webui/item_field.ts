@@ -4,7 +4,7 @@ import typed_react = require('typed-react');
 
 import button = require('./controls/button');
 import colors = require('./controls/colors');
-import page_access = require('./page_access');
+import browser_access = require('./browser_access');
 import password_gen = require('../lib/password_gen');
 import reactutil = require('./base/reactutil');
 import text_field = require('./controls/text_field');
@@ -25,7 +25,7 @@ export interface ItemFieldProps extends react.Props<void> {
 	label: string;
 	value: string;
 	type: FieldType;
-	clipboard: page_access.ClipboardAccess;
+	clipboard: browser_access.ClipboardAccess;
 	readOnly: boolean;
 
 	// if true, auto-focus the field on load

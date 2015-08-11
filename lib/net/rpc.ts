@@ -8,7 +8,7 @@
   * - Different Window objects
   *
   * The different contexts communicate with each other via
-  * MessagePort implementations. A MessagePort implementation 
+  * MessagePort implementations. A MessagePort implementation
   * must provide two basic methods,
   * emit() to send messages to the communication channel and on()
   * to register a handler to be invoked when a message is received.
@@ -46,7 +46,7 @@
   *    // do something expensive
   *    return result;
   *   });
-  * 
+  *
   * This module uses callbacks rather than promises for portability
   * between different Javascript environments (standard browser
   * context, web workers, priviledged extension scripts, sandboxed
@@ -387,4 +387,3 @@ export class RpcHandler implements Client, Server {
 		});
 	}
 }
-

@@ -17,7 +17,7 @@ import item_list = require('./item_list_view');
 import item_store = require('../lib/item_store');
 import keycodes = require('./base/keycodes');
 import menu = require('./controls/menu');
-import page_access = require('./page_access');
+import browser_access = require('./browser_access');
 import reactutil = require('./base/reactutil');
 import shortcut = require('./base/shortcut');
 import style_util = require('./base/style_util');
@@ -198,7 +198,7 @@ export interface DetailsViewProps extends react.Props<void> {
 
 	item: item_store.Item;
 	iconProvider: item_icons.IconProvider;
-	clipboard: page_access.ClipboardAccess;
+	clipboard: browser_access.ClipboardAccess;
 	editMode: ItemEditMode;
 	focus: boolean;
 	currentUrl: string;

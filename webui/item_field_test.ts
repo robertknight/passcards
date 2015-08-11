@@ -4,13 +4,13 @@ import typed_react = require('typed-react');
 
 import button = require('./controls/button');
 import item_field = require('./item_field');
-import page_access = require('./page_access');
+import browser_access = require('./browser_access');
 import testLib = require('../lib/test');
 import ui_test_utils = require('./test_utils');
 
 let reactTestUtils = react_addons.addons.TestUtils;
 
-let fakeClipboard: page_access.ClipboardAccess = {
+let fakeClipboard: browser_access.ClipboardAccess = {
 	clipboardAvailable() {
 		return true;
 	},

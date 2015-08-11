@@ -15,7 +15,7 @@ import item_icons = require('./item_icons');
 import item_store = require('../lib/item_store');
 import key_agent = require('../lib/key_agent');
 import menu = require('./controls/menu');
-import page_access = require('./page_access');
+import browser_access = require('./browser_access');
 import password_gen = require('../lib/password_gen');
 import reactutil = require('./base/reactutil');
 import settings = require('./settings');
@@ -46,11 +46,11 @@ export interface AppViewState {
 }
 
 export interface AppServices {
-	pageAccess: page_access.PageAccess;
+	pageAccess: browser_access.BrowserAccess;
 	autofiller: autofill.AutoFillHandler;
 	iconProvider: item_icons.IconProvider;
 	keyAgent: key_agent.KeyAgent;
-	clipboard: page_access.ClipboardAccess;
+	clipboard: browser_access.ClipboardAccess;
 	settings?: settings.Store;
 }
 

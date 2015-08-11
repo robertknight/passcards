@@ -26,15 +26,22 @@ class ExtensionUrlFetcher {
 	}
 }
 
+/** Interface for interacting with the system clipboard.
+ */
 export interface ClipboardAccess {
+	/** Returns true if the current environment supports interaction
+	 * with the system clipboard.
+	 */
 	clipboardAvailable(): boolean;
-	copy(type: string, data: string): void;
+	/** Copy data to the system clipboard. */
+	copy(mimeType: string, data: string): void;
 }
 
-/** Interface for interacting with forms in the current web page
-  * from the extension front-end.
-  */
-export interface PageAccess {
+/** Interface for interacting with priviledged browser APIs from
+ * the extension front-end to determine information about the
+ * active tab and collect and auto-fill forms.
+ */
+export interface BrowserAccess {
 	/** Returns the URI that should be used as the redirect target
 	  * for OAuth authentication requests.
 	  *
@@ -52,7 +59,7 @@ export interface PageAccess {
 	  * Returns a promise for the number of fields that were auto-filled.
 	  */
 	autofill(fields: forms.AutoFillEntry[]): Q.Promise<number>;
-	
+
 	/** Emits events when the extension's UI is shown. */
 	showEvents: event_stream.EventStream<void>;
 
@@ -69,7 +76,7 @@ export interface PageAccess {
 	  */
 	siteInfoProvider(): site_info.SiteInfoProvider;
 
-	/** Hide the passcards item list panel. */
+	/** Hide the extension's popup UI. */
 	hidePanel(): void;
 }
 
@@ -103,7 +110,7 @@ export class FakeExtensionConnector implements ExtensionConnector {
   * priviledged extension code via an ExtensionConnector
   * which has access to browser tabs etc.
   */
-export class ExtensionPageAccess implements PageAccess, ClipboardAccess {
+export class ExtensionBrowserAccess implements BrowserAccess, ClipboardAccess {
 	private rpc: rpc.RpcHandler;
 	private connector: ExtensionConnector;
 	private siteInfoService: site_info_service.SiteInfoService;
@@ -173,10 +180,9 @@ interface ChromeExtBackgroundWindow extends Window {
 	notifyPageChanged(tab: chrome.tabs.Tab): void;
 }
 
-/** Connector between the main app and the active tab in the Chrome
-  * extension.
+/** Implements BrowserAccess for the Chrome extension.
   */
-export class ChromeExtensionPageAccess implements PageAccess, ClipboardAccess {
+export class ChromeBrowserAccess implements BrowserAccess, ClipboardAccess {
 	private siteInfoService: site_info_service.SiteInfoService;
 	private tabPorts: {
 		[index: number]: rpc.RpcHandler;

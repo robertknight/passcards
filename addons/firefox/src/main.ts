@@ -82,6 +82,8 @@ function main() {
 				onHide: onPanelHidden
 			});
 
+			// handle requests for priviledged operations from the main
+			// extension app running in the popup panel
 			panelRpc = new rpc.RpcHandler(mainPanel.port, timers);
 
 			mainPanel.port.on('oauth-credentials-received', (hash: string) => {
@@ -109,6 +111,8 @@ function main() {
 				mainPanel.hide();
 			});
 
+			// handle cross-origin XHR requests from the main extension
+			// app running in the popup panel
 			panelRpc.onAsync('fetch-url', (done: (err: any, result: any) => void, url: string) => {
 				// copied from collectionutil.ts
 				function stringFromBuffer(buf: any): string {

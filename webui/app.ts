@@ -16,18 +16,18 @@ import item_icons = require('./item_icons');
 import key_agent = require('../lib/key_agent');
 import key_value_store = require('../lib/base/key_value_store');
 import local_store = require('../lib/local_store');
-import page_access = require('./page_access');
+import browser_access = require('./browser_access');
 import settings = require('./settings');
 import siteinfo_client = require('../lib/siteinfo/client');
 import sync = require('../lib/sync');
 import ui_item_store = require('./stores/items');
 import vfs = require('../lib/vfs/vfs');
 
-declare var firefoxAddOn: page_access.ExtensionConnector;
+declare var firefoxAddOn: browser_access.ExtensionConnector;
 
 interface BrowserExtension {
-	pageAccess: page_access.PageAccess;
-	clipboard: page_access.ClipboardAccess;
+	pageAccess: browser_access.BrowserAccess;
+	clipboard: browser_access.ClipboardAccess;
 }
 
 export class App {
@@ -237,19 +237,19 @@ export class App {
 	// setup access to the system clipboard and
 	// browser tabs via browser extension APIs
 	private setupBrowserExtension() {
-		var pageAccess: page_access.PageAccess;
-		var clipboard: page_access.ClipboardAccess;
+		var pageAccess: browser_access.BrowserAccess;
+		var clipboard: browser_access.ClipboardAccess;
 
 		if (typeof firefoxAddOn != 'undefined') {
-			var extensionPageAccess = new page_access.ExtensionPageAccess(firefoxAddOn);
+			var extensionPageAccess = new browser_access.ExtensionBrowserAccess(firefoxAddOn);
 			pageAccess = extensionPageAccess;
 			clipboard = extensionPageAccess;
 		} else if (env.isChromeExtension()) {
-			var chromePageAccess = new page_access.ChromeExtensionPageAccess();
+			var chromePageAccess = new browser_access.ChromeBrowserAccess();
 			pageAccess = chromePageAccess;
 			clipboard = chromePageAccess;
 		} else {
-			pageAccess = new page_access.ExtensionPageAccess(new page_access.FakeExtensionConnector());
+			pageAccess = new browser_access.ExtensionBrowserAccess(new browser_access.FakeExtensionConnector());
 			clipboard = {
 				copy: (mimeType: string, data: string) => {
 					/* no-op */

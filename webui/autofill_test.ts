@@ -7,11 +7,11 @@ import event_stream = require('../lib/base/event_stream');
 import forms = require('./forms');
 import item_builder = require('../lib/item_builder');
 import item_store = require('../lib/item_store');
-import page_access = require('./page_access');
+import browser_access = require('./browser_access');
 import site_info = require('../lib/siteinfo/site_info');
 import testLib = require('../lib/test');
 
-class FakePageAccess implements page_access.PageAccess {
+class FakePageAccess implements browser_access.BrowserAccess {
 	formList: forms.FieldGroup[];
 	autofillEntries: forms.AutoFillEntry[];
 

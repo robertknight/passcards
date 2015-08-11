@@ -3,11 +3,11 @@
 // the 'content script' for the extension's main panel.
 //
 // This is loaded before the front-end itself so that it can set up
-// the browser integration interface (an implementation of page_access.PageAccess)
+// the browser integration interface (an implementation of browser_access.PageAccess)
 // for use by the app when it loads.
 
 import stringutil = require('../../../lib/base/stringutil');
-import page_access = require('../../../webui/page_access');
+import browser_access = require('../../../webui/browser_access');
 import rpc = require('../../../lib/net/rpc');
 
 var selfWorker: ContentWorker = <any>self;
@@ -18,7 +18,7 @@ if (stringutil.startsWith(window.location.href, OAUTH_REDIRECT_URL)) {
 	selfWorker.port.emit('oauth-credentials-received', window.location.hash);
 }
 
-var pageAccess = createObjectIn<page_access.ExtensionConnector>(unsafeWindow, { defineAs: 'firefoxAddOn' });
+var pageAccess = createObjectIn<browser_access.ExtensionConnector>(unsafeWindow, { defineAs: 'firefoxAddOn' });
 
 // setup handler that sends/receives messages from the priviledged add-on
 // code (in src/main.ts)
@@ -69,4 +69,3 @@ extensionRpc.on('show', () => {
 // the front-end so this event does not indicate that
 // the front-end itself is ready.
 extensionRpc.call('ready', []);
-

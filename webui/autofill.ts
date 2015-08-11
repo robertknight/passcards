@@ -2,7 +2,7 @@ import Q = require('q');
 
 import forms = require('./forms');
 import item_store = require('../lib/item_store');
-import page_access = require('./page_access');
+import browser_access = require('./browser_access');
 import stringutil = require('../lib/base/stringutil');
 
 export interface AutoFillResult {
@@ -20,9 +20,9 @@ export interface AutoFillHandler {
 }
 
 export class AutoFiller {
-	private page: page_access.PageAccess;
+	private page: browser_access.BrowserAccess;
 
-	constructor(page: page_access.PageAccess) {
+	constructor(page: browser_access.BrowserAccess) {
 		this.page = page;
 	}
 
