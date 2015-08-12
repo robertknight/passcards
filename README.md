@@ -43,6 +43,7 @@ Local development requires a version of iojs/Node that is compatible with [jsdom
 
 ```
 git clone https://github.com/robertknight/passcards
+npm install
 make all
 ```
 
