@@ -46,7 +46,7 @@ var theme = style.create({
 	}
 });
 
-interface ControlDemoAppProps {
+interface ControlDemoAppProps extends react.Props<void> {
 	viewportRect: reactutil.Rect;
 }
 
@@ -203,4 +203,3 @@ function main() {
 if (env.isBrowser()) {
 	main();
 }
-

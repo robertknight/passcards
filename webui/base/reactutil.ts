@@ -6,6 +6,17 @@ import env = require('../../lib/base/env');
 import transition_events = require('./transition_events');
 import tsutil = require('../../lib/base/tsutil');
 
+/** Extends the CSSProperties interface which as of 16/08/15
+ * only lists a small subset of CSS properties with one with
+ * a catch-all for other properties.
+ *
+ * See also https://github.com/borisyankov/DefinitelyTyped/pull/5089 for
+ * a discussion on how best to resolve this upstream.
+ */
+export interface ExtendedCSSProperties extends react.CSSProperties {
+	[index: string]: number | string;
+}
+
 /** Component factory returned by createFactory(). This extends
   * React.Factory with an additional property that specifies the
   * type of component which the factory creates.
@@ -179,4 +190,3 @@ export class TransitionEndListener {
 		transition_events.removeEndEventListener(this.node, this.listener);
 	}
 }
-

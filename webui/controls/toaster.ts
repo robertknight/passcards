@@ -52,7 +52,7 @@ var theme = style.create({
 	}
 });
 
-export interface ToasterProps {
+export interface ToasterProps extends react.Props<void> {
 	message: string;
 	progressValue?: number;
 	progressMax?: number;
@@ -97,4 +97,3 @@ export class Toaster extends typed_react.Component<ToasterProps, ToasterState> {
 }
 
 export var ToasterF = reactutil.createFactory(Toaster, transition_mixin.TransitionMixinM);
-

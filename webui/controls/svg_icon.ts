@@ -4,7 +4,11 @@ import underscore = require('underscore');
 
 import reactutil = require('../base/reactutil');
 
-export class SvgIconProps {
+export interface SvgIconProps extends react.Props<react.HTMLComponent>, react.HTMLAttributes {
+	// redeclare 'ref' here to resolve conflict between
+	// react.Props.ref and react.HTMLAttributes.ref
+	ref?: string;
+
 	href: string;
 	fill: string;
 	viewBox: {
@@ -35,4 +39,3 @@ export class SvgIcon extends typed_react.Component<SvgIconProps, {}> {
 }
 
 export var SvgIconF = reactutil.createFactory(SvgIcon);
-

@@ -56,7 +56,7 @@ export interface AppServices {
 	fs: vfs.VFS;
 }
 
-export interface AppViewProps {
+export interface AppViewProps extends react.Props<void> {
 	services: AppServices;
 	viewportRect: reactutil.Rect;
 	itemStore: ui_item_store.Store;
@@ -160,7 +160,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 		children.push(this.renderItemDetails());
 		children.push(this.renderToasters());
 
-		var menu = reactutil.TransitionGroupF({ key: 'toolbar-menu' },
+		var menu = reactutil.TransitionGroupF(<any>{ key: 'toolbar-menu' },
 			this.state.appMenuSourceRect ? this.renderMenu('menu') : null
 			);
 		children.push(menu);
@@ -189,7 +189,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 				progressMax: syncState.total
 			}));
 		}
-		return reactutil.TransitionGroupF({ key: 'toasterList' },
+		return reactutil.TransitionGroupF(<any>{ key: 'toasterList' },
 			toasters
 			);
 	}
@@ -376,4 +376,3 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 }
 
 export var AppViewF = reactutil.createFactory(AppView);
-

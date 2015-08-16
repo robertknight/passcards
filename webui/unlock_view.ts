@@ -108,7 +108,7 @@ interface UnlockViewState {
 	failedUnlockCount?: number;
 }
 
-export class UnlockViewProps {
+export interface UnlockViewProps extends react.Props<void> {
 	store: item_store.Store;
 	isLocked: boolean;
 	onUnlock: () => void;
@@ -226,4 +226,3 @@ export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockVie
 }
 
 export var UnlockViewF = reactutil.createFactory(UnlockView, focus_mixin.FocusMixinM);
-

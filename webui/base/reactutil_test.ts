@@ -3,8 +3,14 @@
 import reactutil = require('./reactutil');
 import testLib = require('../../lib/test');
 
+interface PropMergeResult {
+	id?: string;
+	className?: string;
+	onClick?: string;
+};
+
 testLib.addTest('merge props', (assert) => {
-	assert.deepEqual(reactutil.mergeProps({
+	assert.deepEqual<PropMergeResult>(reactutil.mergeProps({
 		id: 'instanceId',
 		className: 'instanceClass',
 		onClick: 'event handler'
@@ -34,4 +40,3 @@ testLib.addTest('object changes', (assert) => {
 });
 
 testLib.start();
-

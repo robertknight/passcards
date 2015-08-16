@@ -13,6 +13,8 @@ declare module "argparse" {
 		nargs? : any; // number or string
 		type? : string;
 		defaultValue? : any;
+		help?: string;
+		choices?: string[];
 	}
 
 	export interface Subparsers {
@@ -25,4 +27,3 @@ declare module "argparse" {
 		parseArgs(args?: string[]) : any;
 	}
 }
-

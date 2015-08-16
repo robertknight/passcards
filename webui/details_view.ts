@@ -213,7 +213,7 @@ interface ItemFieldState {
 	value?: string;
 }
 
-interface ItemFieldProps {
+interface ItemFieldProps extends react.Props<void> {
 	label: string;
 	value: string;
 	type: FieldType;
@@ -383,7 +383,7 @@ export enum ItemEditMode {
 	EditItem
 }
 
-export interface DetailsViewProps {
+export interface DetailsViewProps extends react.Props<void> {
 	entryRect?: reactutil.Rect;
 	viewportRect: reactutil.Rect;
 	animateEntry: boolean;
@@ -972,7 +972,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		var itemListDetailsStyle: any[] = [headerTheme.iconAndDetails.details.itemList];
 		var detailsViewDetailsStyle: any[] = [headerTheme.iconAndDetails.details.detailsView];
 
-		var contentStyles: react.CSSProperties[] = [{
+		var contentStyles: reactutil.ExtendedCSSProperties[] = [{
 			paddingTop: 16,
 
 			// vertically align left edge of details text with item
@@ -1002,7 +1002,6 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 				bottom: 16
 			}), button.ButtonF({
 					style: button.Style.FloatingAction,
-					accessKey: 'a',
 					backgroundColor: colors.MATERIAL_COLOR_PRIMARY,
 					color: colors.MATERIAL_COLOR_HEADER,
 					rippleColor: 'white',
@@ -1058,4 +1057,3 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 }
 
 export var DetailsViewF = reactutil.createFactory(DetailsView, focus_mixin.FocusMixinM);
-

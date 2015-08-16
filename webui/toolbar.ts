@@ -1,8 +1,10 @@
+import react = require('react');
+
 import assign = require('../lib/base/assign');
 import button = require('./controls/button');
 import colors = require('./controls/colors');
 
-interface ToolbarButtonProps {
+interface ToolbarButtonProps extends react.Props<void> {
 	value: string;
 	iconUrl: string;
 	onClick: () => void;
@@ -17,4 +19,3 @@ export function createButton(props: ToolbarButtonProps) {
 		onClick: null
 	}, props));
 }
-

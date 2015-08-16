@@ -90,7 +90,6 @@ testLib.addAsyncTest('Import item from .1pif file', (assert) => {
 	actualItems.then((items) => {
 		assert.equal(items.length, 1, 'Imported expected number of items');
 		var expectedItem = agile_keychain.fromAgileKeychainItem(null, {
-			"vault": null,
 			"updatedAt": 1398413120,
 			"title": "Facebook",
 			"securityLevel": "SL5",
@@ -725,4 +724,3 @@ testLib.addAsyncTest('Removing item succeeds if file is already removed', assert
 		assert.ok(testVault.items[0].isTombstone());
 	});
 });
-

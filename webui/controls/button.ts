@@ -150,7 +150,7 @@ export enum Style {
 	Icon
 }
 
-export interface ButtonProps {
+export interface ButtonProps extends react.Props<void> {
 	onClick: (e: react.MouseEvent) => void;
 
 	/** Label for the button */
@@ -177,8 +177,6 @@ export interface ButtonProps {
 
 	/** Prevents interaction with the button */
 	disabled?: boolean;
-
-	children?: any;
 }
 
 export class Button extends typed_react.Component<ButtonProps, {}> {
@@ -295,4 +293,3 @@ export class Button extends typed_react.Component<ButtonProps, {}> {
 }
 
 export var ButtonF = reactutil.createFactory(Button);
-

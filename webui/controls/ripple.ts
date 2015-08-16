@@ -1,7 +1,7 @@
 /// <reference path="../../typings/react.d.ts" />
 
 // Material Design style touch-ripple.
-// See https://www.polymer-project.org/docs/elements/paper-elements.html#paper-ripple 
+// See https://www.polymer-project.org/docs/elements/paper-elements.html#paper-ripple
 
 import react = require('react');
 import style = require('ts-style');
@@ -38,7 +38,7 @@ enum Phase {
 	Release
 }
 
-export interface InkRippleProps {
+export interface InkRippleProps extends react.Props<void> {
 	/** Fill style for the expanding ripple.
 	  * The background of the ripple uses a lighter version of
 	  * this color.
@@ -259,4 +259,3 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 	}
 }
 export var InkRippleF = reactutil.createFactory(InkRipple);
-

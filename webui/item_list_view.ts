@@ -152,7 +152,7 @@ interface ItemListViewState {
 	filter?: string;
 }
 
-export class ItemListViewProps {
+export interface ItemListViewProps extends react.Props<void> {
 	items: item_store.Item[];
 	selectedItem: item_store.Item;
 	onSelectedItemChanged: (item: item_store.Item, rect: reactutil.Rect) => void;
@@ -254,7 +254,7 @@ export class ItemListView extends typed_react.Component<ItemListViewProps, ItemL
 
 export var ItemListViewF = reactutil.createFactory(ItemListView, focus_mixin.FocusMixinM);
 
-export interface ItemProps {
+export interface ItemProps extends react.Props<void> {
 	key: string;
 	item: item_store.Item;
 	onSelected: () => void;
@@ -327,7 +327,7 @@ interface ItemListState {
 	itemHeight?: number;
 }
 
-class ItemListProps {
+export interface ItemListProps extends react.Props<void> {
 	items: item_store.Item[];
 	filter: string;
 	filterUrl: string;
@@ -598,7 +598,7 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 
 var ItemListF = reactutil.createFactory(ItemList);
 
-class ItemListToolbarProps {
+export interface ItemListToolbarProps extends react.Props<void> {
 	filterUrl: string;
 
 	onQueryChanged: (query: string) => void;

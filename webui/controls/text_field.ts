@@ -167,7 +167,7 @@ export interface TextFieldStyle {
 	fontFamily?: string;
 }
 
-export interface TextFieldProps {
+export interface TextFieldProps extends react.Props<void> {
 	/** Specifies the type of <input> field */
 	type?: string;
 
@@ -414,4 +414,3 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 }
 
 export var TextFieldF = reactutil.createFactory(TextField);
-

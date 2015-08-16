@@ -164,7 +164,7 @@ export class BasicIconProvider implements IconProvider {
 	private static DEFAULT_ICON = 'dist/icons/default.png';
 
 	updated: event_stream.EventStream<string>;
-	
+
 	/** Create an icon provider which uses @p provider to fetch
 	  * icon data. @p iconSize specifies the size of icon to make from
 	  * the available icons for a given URL.
@@ -402,7 +402,7 @@ class Cache {
 	}
 }
 
-export interface IconControlProps {
+export interface IconControlProps extends react.Props<void> {
 	location: string;
 	iconProvider: IconProvider;
 	isFocused: boolean;
@@ -512,4 +512,3 @@ export class FakeIconProvider implements IconProvider {
 }
 
 export var IconControlF = reactutil.createFactory(IconControl);
-

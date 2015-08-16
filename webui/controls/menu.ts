@@ -77,7 +77,7 @@ var theme = style.create({
 			label: {
 				width: '100%',
 				height: '100%',
-				
+
 				// give menu item label its own stacking context so
 				// that it renders on top of ripple effect
 				transform: 'translate3d(0,0,0)'
@@ -97,7 +97,7 @@ interface MenuState {
 	showTime?: Date;
 }
 
-export interface MenuProps {
+export interface MenuProps extends react.Props<void> {
 	/** The source rect of the icon which triggered the
 	  * menu.
 	  */
@@ -369,4 +369,3 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 }
 
 export var MenuF = reactutil.createFactory(Menu);
-

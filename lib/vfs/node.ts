@@ -174,7 +174,7 @@ export class FileVFS implements vfs.VFS {
 	}
 
 	login(): Q.Promise<vfs.Credentials> {
-		return Q<vfs.Credentials>({ user: process.env.USER });
+		return Q<vfs.Credentials>({});
 	}
 
 	isLoggedIn(): boolean {
@@ -247,4 +247,3 @@ export class FileVFS implements vfs.VFS {
 		return fullPath;
 	}
 }
-

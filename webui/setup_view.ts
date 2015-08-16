@@ -157,7 +157,7 @@ var theme = style.create({
 	}
 });
 
-interface NavButtonProps {
+interface NavButtonProps extends react.Props<void> {
 	label: string;
 	onClick: () => void;
 	iconUrl?: string;
@@ -181,7 +181,7 @@ class NavButton extends typed_react.Component<NavButtonProps, {}> {
 }
 var NavButtonF = reactutil.createFactory(NavButton);
 
-interface CloudStoreListProps {
+interface CloudStoreListProps extends react.Props<void> {
 	vfs: vfs.VFS;
 	onSelectStore: (path: string) => void;
 }
@@ -266,7 +266,7 @@ class CloudStoreList extends typed_react.Component<CloudStoreListProps, CloudSto
 
 var CloudStoreListF = reactutil.createFactory(CloudStoreList);
 
-interface StoreListProps {
+interface StoreListProps extends react.Props<void> {
 	stores: settings.AccountMap;
 	onSelectStore: (account: settings.Account) => void;
 	onAddStore: () => void;
@@ -317,7 +317,7 @@ class StoreList extends typed_react.Component<StoreListProps, {}> {
 
 var StoreListF = reactutil.createFactory(StoreList);
 
-export interface SetupViewProps {
+export interface SetupViewProps extends react.Props<void> {
 	settings: settings.Store;
 	fs: vfs.VFS;
 }
@@ -340,9 +340,7 @@ interface NewStoreOptions {
 	hint?: string;
 }
 
-interface SlideProps {
-	children?: react.ReactElement<any>[];
-
+interface SlideProps extends react.Props<void> {
 	xTranslation: number;
 	opacity: number;
 }
@@ -365,7 +363,7 @@ class Slide extends typed_react.Component<SlideProps, {}> {
 
 var SlideF = reactutil.createFactory(Slide);
 
-interface NewStoreFormProps {
+interface NewStoreFormProps extends react.Props<void> {
 	onGoBack: () => void;
 	onCreate: (options: NewStoreOptions) => Q.Promise<void>;
 }
@@ -817,4 +815,3 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 }
 
 export var SetupViewF = reactutil.createFactory(SetupView);
-

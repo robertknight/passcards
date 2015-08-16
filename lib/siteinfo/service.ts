@@ -58,12 +58,12 @@ import url_util = require('../base/url_util');
 // list of known <link> and <meta> tags that point
 // to an icon for the site.
 //
-// See also: 
+// See also:
 // - http://microformats.org/wiki/existing-rel-values (list of known
 //   values for 'rel' attribute of <link> tags)
 // - http://www.iacquire.com/blog/18-meta-tags-every-webpage-should-have-in-2013
 // - Google structured data testing tool: http://www.google.com/webmasters/tools/richsnippets
-// 
+//
 
 export enum MetaTagType {
 	Meta,
@@ -265,7 +265,6 @@ export class SiteInfoService implements site_info.SiteInfoProvider {
 		var result: site_info.QueryResult = {
 			info: {
 				url: url,
-				iconUrl: null,
 				icons: []
 			},
 			state: site_info.QueryState.Updating
@@ -597,4 +596,3 @@ export class DuckDuckGoClient {
 		}
 	}
 }
-
