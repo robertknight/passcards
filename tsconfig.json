@@ -52,6 +52,7 @@
         "./lib/base/key_value_store.ts",
         "./lib/base/key_value_store_test.ts",
         "./lib/base/logging.ts",
+        "./lib/base/mem_key_value_store.ts",
         "./lib/base/streamutil.ts",
         "./lib/base/streamutil_test.ts",
         "./lib/base/stringutil.ts",
