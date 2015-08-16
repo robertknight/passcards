@@ -39,12 +39,24 @@ Support for older browsers may be possible in future.
 
 ## Development
 
-Local development requires a version of iojs/Node that is compatible with [jsdom](https://github.com/tmpvar/jsdom) and make. To build the CLI and web clients, clone the source and run `make`.
+Local development requires iojs 4.0 or later for compatibility with [jsdom](https://github.com/tmpvar/jsdom) and make. To build the CLI and web clients, clone the source and run `make`.
 
 ```
 git clone https://github.com/robertknight/passcards
 npm install
 make all
+```
+
+Tests can be run with:
+
+```
+make test
+```
+
+To run a specific test, use:
+
+```
+iojs build/modulename_test.js -f <filter>
 ```
 
 ### Running the Web App Locally
