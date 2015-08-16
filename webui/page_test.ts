@@ -12,6 +12,7 @@ const SAMPLE_INPUT_FORM = `
 	<form>
 		<input name="username" placeholder="Email" id="user_field">
 		<input type="password" placeholder="Password" id="pass_field">
+		<input type="submit" placeholder="Sign in">
 	</form>
 `;
 
@@ -88,6 +89,14 @@ testLib.addAsyncTest('should find inputs in document', assert => {
 				type: forms.FieldType.Password,
 				visible: false,
 				placeholder: undefined
+			},
+			{
+				key: 2,
+				id: '',
+				name: '',
+				type: forms.FieldType.Button,
+				visible: false,
+				placeholder: undefined
 			}
 		];
 		assert.deepEqual(fields[0].fields, EXPECTED_FIELDS);
@@ -125,7 +134,7 @@ testLib.addAsyncTest('should autofill inputs in document', assert => {
 
 	return foundFields.promise.then(fieldGroups => {
 		assert.equal(fieldGroups.length, 1);
-		assert.equal(fieldGroups[0].fields.length, 2);
+		assert.equal(fieldGroups[0].fields.length, 3);
 
 		let filled = Q.defer<number>();
 		extensionRpc.call('autofill', [AUTOFILL_VALUES], filled.makeNodeResolver());
@@ -138,4 +147,3 @@ testLib.addAsyncTest('should autofill inputs in document', assert => {
 		assert.equal(passwordChangeCount, 1);
 	});
 });
-

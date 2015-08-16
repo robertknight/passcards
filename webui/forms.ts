@@ -10,6 +10,7 @@ export enum FieldType {
 	Text,
 	Password,
 	Email,
+	Button,
 	Other
 }
 
@@ -32,4 +33,3 @@ export interface AutoFillEntry {
 	key: any;
 	value: string;
 }
-

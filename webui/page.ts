@@ -14,8 +14,10 @@ function inputFieldType(typeStr: string): forms.FieldType {
 			return forms.FieldType.Email;
 		case 'password':
 			return forms.FieldType.Password;
-		case 'checkbox':
+		case 'submit':
 		case 'button':
+			return forms.FieldType.Button;
+		case 'checkbox':
 		case 'radio':
 			return forms.FieldType.Other;
 		default:
