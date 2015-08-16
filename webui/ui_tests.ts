@@ -8,6 +8,8 @@
 import jsdom = require('jsdom');
 import Q = require('q');
 
+import testLib = require('../lib/test');
+
 // setup the fake DOM environment for tests.
 // This function must be called _before_ React
 // is required
@@ -37,11 +39,15 @@ function setupDOM(): Q.Promise<Window> {
 	return fakeWindow.promise;
 }
 
-var testModules = [
-	'./item_list_view_test',
+let testModules = [
+	'./item_field_test',
 	'./item_icons_test',
+	'./item_list_view_test',
 	'./page_test'
 ];
+
+// defer autostart until test modules have been required
+testLib.cancelAutoStart();
 
 setupDOM().then(() => {
 	testModules.forEach(testModule => {
@@ -52,4 +58,5 @@ setupDOM().then(() => {
 			console.error(err.stack);
 		}
 	});
+	testLib.start();
 });
