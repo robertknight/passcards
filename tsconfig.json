@@ -131,6 +131,8 @@
         "./webui/details_view.ts",
         "./webui/forms.ts",
         "./webui/init.ts",
+        "./webui/item_field.ts",
+        "./webui/item_field_test.ts",
         "./webui/item_icons.ts",
         "./webui/item_icons_test.ts",
         "./webui/item_list_view.ts",
