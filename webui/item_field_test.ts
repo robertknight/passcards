@@ -12,7 +12,7 @@ let reactTestUtils = react_addons.addons.TestUtils;
 
 let fakeClipboard: page_access.ClipboardAccess = {
 	clipboardAvailable() {
-		return false;
+		return true;
 	},
 
 	copy(type: string, data: string) {
@@ -73,11 +73,21 @@ testLib.addTest('should display field actions when focused', assert => {
 		let event: typeof Event = (<any>window).Event;
 		passwordFieldInput.dispatchEvent(new event('focus'));
 
-		let passwordButtons = () => reactTestUtils.scryRenderedComponentsWithType(passwordField, button.ButtonF.componentClass);
-		assert.equal(passwordButtons().length, 2);
+		let actionButtons = (field: react.Component<{}, {}>) => reactTestUtils.scryRenderedComponentsWithType(field,
+			button.ButtonF.componentClass);
+
+		assert.equal(actionButtons(passwordField).length, 3);
 
 		// select a different field and verify that the action buttons are hidden
 		usernameFieldInput.dispatchEvent(new event('focus'));
-		assert.equal(passwordButtons().length, 0);
+		assert.equal(actionButtons(passwordField).length, 0);
+		assert.equal(actionButtons(usernameField).length, 1);
+
+		// re-select the password field, check that action buttons are shown
+		passwordFieldInput.dispatchEvent(new event('focus'));
+		// select the document body and verify that the action buttons are still visible
+		document.body.dispatchEvent(new event('focus'));
+		assert.equal(actionButtons(passwordField).length, 3);
+		assert.equal(actionButtons(usernameField).length, 0);
 	});
 });

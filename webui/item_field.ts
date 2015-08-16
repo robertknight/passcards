@@ -72,11 +72,13 @@ export class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldSt
 	}
 
 	componentDidMount() {
-		console.log('Item field component mounted');
 		var field = <HTMLElement>react.findDOMNode(this.refs['itemField']);
 		this.focusListener = (e: FocusEvent) => {
-			console.log('Item field received focus event');
-			this.setState({ selected: field.contains(<HTMLElement>e.target) });
+			let focusedElement = <HTMLElement>e.target;
+			let isSelected = this.state.selected;
+			this.setState({
+				selected: field.contains(focusedElement) || (isSelected && focusedElement.contains(field))
+			});
 		};
 		field.ownerDocument.addEventListener('focus', this.focusListener,
 			true /* useCapture - non-capture focus events do not bubble */);
