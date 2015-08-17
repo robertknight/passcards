@@ -37,6 +37,19 @@ export interface ClipboardAccess {
 	copy(mimeType: string, data: string): void;
 }
 
+export enum MessageType {
+	ActiveTabURLChanged,
+	ExtensionUIShown
+}
+
+export interface BrowserMessage {
+	type: MessageType;
+}
+
+export interface TabURLChangeMessage extends BrowserMessage {
+	url: string;
+}
+
 /** Interface for interacting with priviledged browser APIs from
  * the extension front-end to determine information about the
  * active tab and collect and auto-fill forms.
@@ -60,13 +73,11 @@ export interface BrowserAccess {
 	  */
 	autofill(fields: forms.AutoFillEntry[]): Q.Promise<number>;
 
-	/** Emits events when the extension's UI is shown. */
-	showEvents: event_stream.EventStream<void>;
-
-	/** Emits events when the URL of the active page or
-	  * tab changes.
-	  */
-	pageChanged: event_stream.EventStream<string>;
+	/** Emits notifications about browser events including
+	 * the URL of the current tab changing and
+	 * the extension UI being shown.
+	 */
+	events: event_stream.EventStream<BrowserMessage>;
 
 	/** URL of the active page or tab. */
 	currentUrl: string;
@@ -115,24 +126,27 @@ export class ExtensionBrowserAccess implements BrowserAccess, ClipboardAccess {
 	private connector: ExtensionConnector;
 	private siteInfoService: site_info_service.SiteInfoService;
 
-	showEvents: event_stream.EventStream<void>;
-	pageChanged: event_stream.EventStream<string>;
+	events: event_stream.EventStream<BrowserMessage>;
 	currentUrl: string;
 
 	constructor(extension: ExtensionConnector) {
 		this.connector = extension;
-		this.pageChanged = new event_stream.EventStream<string>();
-		this.showEvents = new event_stream.EventStream<void>();
+		this.events = new event_stream.EventStream<BrowserMessage>();
 		this.rpc = new rpc.RpcHandler(new rpc.WindowMessagePort(window, '*', 'extension-app', 'extension-core'));
 		this.currentUrl = extension.currentUrl;
 		this.siteInfoService = new site_info_service.SiteInfoService(new ExtensionUrlFetcher(this.rpc));
 
 		this.rpc.on<void>('pagechanged', (url: string) => {
 			this.currentUrl = url;
-			this.pageChanged.publish(url);
+			this.events.publish(<TabURLChangeMessage>{
+				type: MessageType.ActiveTabURLChanged,
+				url: url
+			});
 		});
 		this.rpc.on<void>('show', () => {
-			this.showEvents.publish(null);
+			this.events.publish({
+				type: MessageType.ExtensionUIShown
+			});
 		});
 	}
 
@@ -188,14 +202,12 @@ export class ChromeBrowserAccess implements BrowserAccess, ClipboardAccess {
 		[index: number]: rpc.RpcHandler;
 	};
 
-	showEvents: event_stream.EventStream<void>;
-	pageChanged: event_stream.EventStream<string>;
+	events: event_stream.EventStream<BrowserMessage>;
 	currentUrl: string;
 
 	constructor() {
 		this.currentUrl = '';
-		this.showEvents = new event_stream.EventStream<void>();
-		this.pageChanged = new event_stream.EventStream<string>();
+		this.events = new event_stream.EventStream<BrowserMessage>();
 		this.siteInfoService = new site_info_service.SiteInfoService({
 			fetch: (url) => {
 				return Q.reject<site_info_service.UrlResponse>(new Error('URL fetching not implemented in Chrome extension'));
@@ -216,7 +228,10 @@ export class ChromeBrowserAccess implements BrowserAccess, ClipboardAccess {
 			}
 
 			this.currentUrl = currentUrl;
-			this.pageChanged.publish(currentUrl);
+			this.events.publish(<TabURLChangeMessage>{
+				type: MessageType.ActiveTabURLChanged,
+				url: currentUrl
+			});
 
 			if (currentUrl != '') {
 				// if URL is non-empty, load page script for
@@ -226,7 +241,7 @@ export class ChromeBrowserAccess implements BrowserAccess, ClipboardAccess {
 				});
 			}
 
-			this.showEvents.publish(null);
+			this.events.publish({ type: MessageType.ExtensionUIShown });
 		};
 	}
 

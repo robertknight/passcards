@@ -9,6 +9,7 @@ import agile_keychain = require('../lib/agile_keychain');
 import agile_keychain_crypto = require('../lib/agile_keychain_crypto');
 import app_view = require('./app_view');
 import autofill = require('./autofill');
+import browser_access = require('./browser_access');
 import dropboxvfs = require('../lib/vfs/dropbox');
 import env = require('../lib/base/env');
 import http_vfs = require('../lib/vfs/http');
@@ -16,7 +17,6 @@ import item_icons = require('./item_icons');
 import key_agent = require('../lib/key_agent');
 import key_value_store = require('../lib/base/key_value_store');
 import local_store = require('../lib/local_store');
-import browser_access = require('./browser_access');
 import settings = require('./settings');
 import siteinfo_client = require('../lib/siteinfo/client');
 import sync = require('../lib/sync');
@@ -64,22 +64,25 @@ export class App {
 
 		agile_keychain_crypto.CryptoJsCrypto.initWorkers();
 
-		browserExt.pageAccess.showEvents.listen(() => {
-			// in the Firefox add-on the active element loses focus when dismissing the
-			// panel by focusing another UI element such as the URL input bar.
-			//
-			// Restore focus to the active element when the panel is shown again
-			if (document.activeElement) {
-				(<HTMLElement>document.activeElement).focus();
+		browserExt.pageAccess.events.listen(event => {
+			switch (event.type) {
+				case browser_access.MessageType.ExtensionUIShown:
+					// in the Firefox add-on the active element loses focus when dismissing the
+					// panel by focusing another UI element such as the URL input bar.
+					//
+					// Restore focus to the active element when the panel is shown again
+					if (document.activeElement) {
+						(<HTMLElement>document.activeElement).focus();
+					}
+					break;
+				case browser_access.MessageType.ActiveTabURLChanged:
+					this.itemStore.update({ currentUrl: (<browser_access.TabURLChangeMessage>event).url });
+					break;
 			}
 		});
 
 		// update the initial URL when the app is loaded
 		this.itemStore.update({ currentUrl: browserExt.pageAccess.currentUrl });
-
-		browserExt.pageAccess.pageChanged.listen((url) => {
-			this.itemStore.update({ currentUrl: url });
-		});
 
 		// handle login/logout events
 		settingStore.onChanged.listen((setting) => {

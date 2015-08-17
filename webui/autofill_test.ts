@@ -11,19 +11,17 @@ import browser_access = require('./browser_access');
 import site_info = require('../lib/siteinfo/site_info');
 import testLib = require('../lib/test');
 
-class FakePageAccess implements browser_access.BrowserAccess {
+class FakeBrowserAccess implements browser_access.BrowserAccess {
 	formList: forms.FieldGroup[];
 	autofillEntries: forms.AutoFillEntry[];
 
-	showEvents: event_stream.EventStream<void>;
-	pageChanged: event_stream.EventStream<string>;
+	events: event_stream.EventStream<browser_access.BrowserMessage>;
 	currentUrl: string;
 
 	constructor() {
 		this.formList = [];
 		this.autofillEntries = [];
-		this.showEvents = new event_stream.EventStream<void>();
-		this.pageChanged = new event_stream.EventStream<string>();
+		this.events = new event_stream.EventStream<browser_access.BrowserMessage>();
 		this.currentUrl = '';
 	}
 
@@ -64,7 +62,7 @@ function itemWithUsernameAndPassword(user: string, password: string): item_store
 
 testLib.addAsyncTest('simple user/password autofill', (assert) => {
 	var item = itemWithUsernameAndPassword('testuser@gmail.com', 'testpass');
-	var fakePage = new FakePageAccess();
+	var fakePage = new FakeBrowserAccess();
 
 	var form = {
 		fields: [{
@@ -100,7 +98,7 @@ testLib.addAsyncTest('simple user/password autofill', (assert) => {
 
 testLib.addAsyncTest('ignore hidden fields', (assert) => {
 	var item = itemWithUsernameAndPassword('testuser@gmail.com', 'testpass');
-	var fakePage = new FakePageAccess();
+	var fakePage = new FakeBrowserAccess();
 
 	var form = {
 		fields: [{
@@ -126,7 +124,7 @@ testLib.addAsyncTest('ignore hidden fields', (assert) => {
 
 testLib.addAsyncTest('find unlabeled username fields', (assert) => {
 	var item = itemWithUsernameAndPassword('testuser@gmail.com', 'testpass');
-	var fakePage = new FakePageAccess();
+	var fakePage = new FakeBrowserAccess();
 
 	var form = {
 		fields: [{
