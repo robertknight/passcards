@@ -220,6 +220,10 @@ export class Server {
 		} else if (parsedURL.pathname === '/auth/authorize') {
 			// mock OAuth endpoint
 			let accessToken = ACCESS_TOKEN;
+			let stateParam = '';
+			if (parsedURL.query.state) {
+				stateParam = `&state=${parsedURL.query.state}`;
+			}
 			let redirectURL = parsedURL.query.redirect_uri;
 			if (!redirectURL) {
 				res.statusCode = 400;
@@ -235,7 +239,7 @@ Authorize app?
 <button id="authButton">Authorize</button>
 <script>
 document.getElementById('authButton').addEventListener('click', function() {
-	document.location.href = '${redirectURL}#access_token=${accessToken}';
+	document.location.href = '${redirectURL}#access_token=${accessToken}${stateParam}';
 });
 </script>
 </form>
@@ -259,6 +263,8 @@ document.getElementById('authButton').addEventListener('click', function() {
 			res.end(content, 'binary');
 		};
 
+		res.setHeader('Access-Control-Allow-Origin', '*');
+
 		if (req.method !== 'OPTIONS' &&
 			req.headers['authentication'] !== `Bearer ${ACCESS_TOKEN}`) {
 			res.statusCode = 403;
@@ -268,7 +274,6 @@ document.getElementById('authButton').addEventListener('click', function() {
 			return;
 		}
 
-		res.setHeader('Access-Control-Allow-Origin', '*');
 		let path = url.parse(req.url).pathname.replace(/^\/files\//, '');
 		if (req.method == 'GET') {
 			this.fs.stat(path).then((fileInfo) => {

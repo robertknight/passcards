@@ -27,6 +27,7 @@ webui-build: $(webui_script_dir)/platform_bundle.js \
              $(webui_script_dir)/webui_bundle.js \
              $(webui_script_dir)/page_bundle.js \
              $(webui_script_dir)/crypto_worker.js \
+             $(webui_script_dir)/auth_receiver.js \
              $(webui_css_dir)/app.css \
              webui-icons
 
@@ -44,6 +45,9 @@ $(webui_script_dir)/webui_bundle.js: $(compiled_js_files)
 	@echo "Building web app bundle"
 	@mkdir -p $(webui_script_dir)
 	@$(BROWSERIFY) --no-builtins --no-bundle-external --entry build/webui/init.js --outfile $@
+
+$(webui_script_dir)/auth_receiver.js: $(compiled_js_files)
+	cp build/webui/auth_receiver.js $@
 
 $(webui_script_dir)/page_bundle.js: $(compiled_js_files)
 	@echo "Building page autofill bundle"

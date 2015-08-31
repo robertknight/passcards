@@ -121,8 +121,10 @@ export class App {
 		} else if (account.cloudService === settings.CloudService.LocalTestingServer) {
 			fs = new http_vfs.Client(http_vfs.DEFAULT_URL);
 		}
-		if (account.credentials) {
-			fs.setCredentials(account.credentials);
+		if (account.accessToken) {
+			fs.setCredentials({
+				accessToken: account.accessToken
+			});
 		}
 		return fs;
 	}

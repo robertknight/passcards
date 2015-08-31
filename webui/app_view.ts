@@ -69,7 +69,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 	}
 
 	componentWillMount() {
-		this.props.itemStore.stateChanged.listen((state) => {
+		this.props.itemStore.stateChanged.listen(state => {
 			this.forceUpdate();
 		}, this);
 	}

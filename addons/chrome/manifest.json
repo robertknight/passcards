@@ -29,7 +29,7 @@
     "64": "data/dist/icons/icon-64.png"
   },
   "web_accessible_resources": [
-    "data/chrome_dropbox_oauth_receiver.html"
+    "data/auth.html"
   ],
   "background": {
     "page": "data/background.html"

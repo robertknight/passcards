@@ -20,12 +20,9 @@ export function randomBytes(length: number): string {
 
 	// according to MDN, crypto.getRandomValues() is available in
 	// IE 11, Firefox 21, Chrome 11, iOS 6 and later.
-	// 
-	// If we decide to support older browsers in future, we could use
-	// CryptoJS' Math.random() fallback:
 	//
-	// - cryptoJS.lib.WordArray.random(length).toString(this.encoding);
-	//
+	// Older browsers without a native cryptographic
+	// PRNG are not going to be supported.
 	throw new Error('No secure pseudo-random number generator available');
 }
 

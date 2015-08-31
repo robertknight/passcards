@@ -6,17 +6,10 @@
 // the browser integration interface (an implementation of browser_access.PageAccess)
 // for use by the app when it loads.
 
-import stringutil = require('../../../lib/base/stringutil');
 import browser_access = require('../../../webui/browser_access');
 import rpc = require('../../../lib/net/rpc');
 
 var selfWorker: ContentWorker = <any>self;
-
-var OAUTH_REDIRECT_URL = 'http://localhost:8234';
-
-if (stringutil.startsWith(window.location.href, OAUTH_REDIRECT_URL)) {
-	selfWorker.port.emit('oauth-credentials-received', window.location.hash);
-}
 
 var pageAccess = createObjectIn<browser_access.ExtensionConnector>(unsafeWindow, { defineAs: 'firefoxAddOn' });
 
@@ -30,8 +23,6 @@ var appUiRpc = new rpc.RpcHandler(new rpc.WindowMessagePort(document.defaultView
 appUiRpc.clone = (data) => {
 	return cloneInto(data, unsafeWindow);
 };
-
-pageAccess.oauthRedirectUrl = OAUTH_REDIRECT_URL;
 
 // forwards an RPC request from the app UI to the priviledged extension code,
 // which in turn may forward the request to the active tab. When the main

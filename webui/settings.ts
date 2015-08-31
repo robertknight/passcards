@@ -19,15 +19,15 @@ export interface Account {
 
 	/** ID of the account on the cloud service */
 	cloudAccountId: string;
+
+	/** Access token for making API calls */
+	accessToken: string;
+
+	/** Path to the store within the user's account in the cloud storage provider. */
 	storePath: string;
 
 	/** Name of the user associated with the account */
 	name: string;
-
-	/** Opaque object storing the access credentials for
-	 * this account.
-	 */
-	credentials?: Object;
 }
 
 export interface AccountMap {

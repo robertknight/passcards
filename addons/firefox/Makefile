@@ -7,7 +7,8 @@ XPI_PACKAGE=$(PKG_DIR)/$(XPI_PACKAGE_NAME)
 XPI_UPDATE_LINK=$(S3_PACKAGE_URL)/$(XPI_PACKAGE_NAME)
 XPI_UPDATE_RDF_URL=$(S3_PACKAGE_URL)/passcards.update.rdf
 
-webui_build_dir=$(PWD)/../../webui/dist
+webui_src_dir=$(PWD)/../../webui
+webui_build_dir=$(webui_src_dir)/dist
 webui_app_srcs=$(shell find $(webui_build_dir))
 script_build_dir=$(webui_build_dir)/scripts
 
@@ -24,6 +25,7 @@ run: build/xpi_content
 build/xpi_content: lib/main.js \
 				   data/dist \
 				   data/scripts/panel_content.js \
+				   data/auth.html \
                    data/index.html
 	@mkdir -p $@
 	@touch $@
@@ -45,9 +47,13 @@ data/dist: $(webui_app_srcs)
 data/scripts:
 	mkdir -p $@
 
-data/index.html: ../../webui/index.html
+data/auth.html: $(webui_src_dir)/auth.html
 	mkdir -p data
-	cp ../../webui/index.html $@
+	cp $< $@
+
+data/index.html: $(webui_src_dir)/index.html
+	mkdir -p data
+	cp $< $@
 
 data/scripts/panel_content.js: data/scripts src/panel_content.ts
 	$(BROWSERIFY) --no-builtins $(SRC_ROOT)/build/addons/firefox/src/panel_content.js > $@

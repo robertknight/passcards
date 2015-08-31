@@ -11,6 +11,7 @@ import assign = require('../lib/base/assign');
 import button = require('./controls/button');
 import colors = require('./controls/colors');
 import dropbox_vfs = require('../lib/vfs/dropbox');
+import env = require('../lib/base/env');
 import fonts = require('./controls/fonts');
 import http_vfs = require('../lib/vfs/http');
 import reactutil = require('./base/reactutil');
@@ -507,6 +508,7 @@ interface SetupViewState {
 	cloudServiceType?: settings.CloudService;
 	fs?: vfs.VFS;
 	accountInfo?: vfs.AccountInfo;
+	accessToken?: string;
 	newStore?: NewStoreOptions;
 	status?: status_message.Status;
 
@@ -698,9 +700,21 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 
 		this.pushScreen(Screen.CloudStoreLogin, { temporary: true });
 
+		let authRedirectURL = document.location.href.replace(/[a-z]+\.html/, 'auth.html');
+
+		if (env.isFirefoxAddon()) {
+			// for Firefox the auth redirect URL must be an HTTP or HTTPS
+			// URL as HTTP(S) -> resource:// redirects are not permitted.
+			//
+			// The extension intercepts the redirect from the OAuth page
+			// to the dummy URL and redirects it back to the bundled auth.html
+			// page
+			authRedirectURL = 'http://localhost:8000/webui/index.html';
+		}
+
 		let authenticator = new auth.OAuthFlow({
 			authServerURL: fs.authURL(),
-			authRedirectURL: document.location.href.replace('index.html', 'auth.html'),
+			authRedirectURL: authRedirectURL,
 			windowSettings: {
 				target: '_blank',
 				width: 800,
@@ -708,11 +722,17 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 			}
 		});
 
+		let accessToken: string;
 		return authenticator.authenticate().then(credentials => {
+			accessToken = credentials.accessToken;
 			fs.setCredentials(credentials);
 			return fs.accountInfo();
 		}).then(accountInfo => {
+			if (!accessToken) {
+				throw new Error('Failed to retrieve access token for cloud service');
+			}
 			this.setState({
+				accessToken: accessToken,
 				accountInfo: accountInfo,
 				fs: fs,
 				cloudServiceType: cloudServiceType
@@ -765,6 +785,7 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 			id: null,
 			cloudService: this.state.cloudServiceType,
 			cloudAccountId: this.state.accountInfo.userId,
+			accessToken: this.state.accessToken,
 			name: this.state.accountInfo.name,
 			storePath: path
 		};
@@ -821,9 +842,7 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 					onClick: () => {
 						this.popScreen();
 						this.pushScreen(Screen.CloudStoreSignout, { temporary: true });
-
-						// TODO - Revoke the access token
-						this.setState({ fs: undefined });
+						this.setState({ fs: undefined, accessToken: undefined });
 						this.popScreen();
 					}
 				})

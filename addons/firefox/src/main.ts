@@ -39,7 +39,30 @@ function getTabWorker(tab: Tab) {
 	return tabWorkers[tab.id];
 }
 
+// Firefox does not permit HTTP -> non-HTTP redirects,
+// so OAuth authentication flows use a http://localhost redirect
+// URL. The extension intercepts the redirect and reroutes to
+// the auth.html file bundled with the extension.
+function interceptOAuthRedirect(tab: Tab) {
+	const AUTH_URL = 'http://localhost:8000/webui/index.html';
+	if (tab.url.slice(0, AUTH_URL.length) === AUTH_URL) {
+		// extract OAuth token from location hash
+		let accessTokenMatch = tab.url.match(/access_token=([^ &]+)/);
+		if (accessTokenMatch && panelRpc) {
+			let hashParams = tab.url.slice(tab.url.indexOf('#'));
+			let redirectedURL = `${self_.data.url('auth.html') }${hashParams}`;
+			tab.url = redirectedURL;
+			return true;
+		}
+	}
+	return false;
+}
+
 function notifyPageChanged(tab: Tab) {
+	if (interceptOAuthRedirect(tab)) {
+		return;
+	}
+
 	if (panelRpc) {
 		panelRpc.call('pagechanged', [tabs.activeTab.url]);
 	}
@@ -85,10 +108,6 @@ function main() {
 			// handle requests for priviledged operations from the main
 			// extension app running in the popup panel
 			panelRpc = new rpc.RpcHandler(mainPanel.port, timers);
-
-			mainPanel.port.on('oauth-credentials-received', (hash: string) => {
-				mainPanel.contentURL = self_.data.url('index.html') + hash;
-			});
 
 			panelRpc.onAsync('find-fields', (done) => {
 				getTabWorker(tabs.activeTab).rpc.call('find-fields', [], (err, fields) => {
