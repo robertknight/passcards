@@ -816,7 +816,7 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 		}
 
 		return react.DOM.div({},
-			react.DOM.div(style.mixin(theme.header), `Select store in ${accountName}'s ${this.cloudServiceType() }`),
+			react.DOM.div(style.mixin(theme.header), `Select store in ${accountName} ${this.cloudServiceType() }`),
 			CloudStoreListF({
 				vfs: this.state.fs,
 				onSelectStore: (path) => {

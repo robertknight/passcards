@@ -138,11 +138,12 @@ export class OAuthFlow implements AuthFlow {
 					credentials.reject(`Failed to parse OAuth token data: ${ex.toString() }`);
 				}
 			}
-		}, 200);
 
-		authWindow.addEventListener('close', (e: CloseEvent) => {
-			credentials.reject(new Error('Window closed before auth completed'));
-		});
+			// see http://stackoverflow.com/a/17744260/434243
+			if (authWindow.closed) {
+				credentials.reject(new Error('Window closed before auth completed'));
+			}
+		}, 200);
 
 		credentials.promise.finally(() => {
 			authWindow.close();

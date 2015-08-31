@@ -23,7 +23,10 @@ function parseHash(hash: string): ParamsDict {
 	.split('&')
 	.map(splitHashParam)
 	.reduce((obj: ParamsDict, [key, value]: [string, string]) => {
-		obj[key] = value;
+		// the Dropbox OAuth endpoint will URI encode any chars in the
+		// 'state' query string parameter passed to the OAuth /authorize
+		// endpoint, so decode them here
+		obj[key] = decodeURIComponent(value);
 		return obj;
 	}, <ParamsDict>{});
 }
