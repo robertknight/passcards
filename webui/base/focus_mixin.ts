@@ -1,5 +1,6 @@
 /// <reference path="../../typings/react.d.ts" />
 
+import react = require('react');
 import typed_react = require('typed-react');
 
 export interface FocusMixinProps {
@@ -17,7 +18,7 @@ export class FocusMixin extends typed_react.Mixin<FocusMixinProps, {}> {
 		if (focusable.setFocus) {
 			focusable.setFocus();
 		} else {
-			(<HTMLElement>this.getDOMNode()).focus();
+			(<HTMLElement>react.findDOMNode(this)).focus();
 		}
 	}
 

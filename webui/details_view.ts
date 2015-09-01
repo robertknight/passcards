@@ -275,7 +275,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 	}
 
 	componentDidMount() {
-		var root = <HTMLElement>this.getDOMNode();
+		let root = <HTMLElement>react.findDOMNode(this);
 		this.shortcuts = [
 			new shortcut.Shortcut(root, keycodes.Backspace, () => {
 				this.exit();
@@ -298,7 +298,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		});
 	}
 
-	componentDidUnmount() {
+	componentWillUnmount() {
 		this.shortcuts.forEach((shortcut) => {
 			shortcut.remove();
 		});

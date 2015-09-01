@@ -191,7 +191,7 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 
 	componentDidMount() {
 		this.setState({
-			document: (<HTMLElement>this.getDOMNode()).ownerDocument,
+			document: (<HTMLElement>react.findDOMNode(this)).ownerDocument,
 			showTime: new Date
 		});
 	}

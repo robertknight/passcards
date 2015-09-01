@@ -186,8 +186,8 @@ export class Button extends typed_react.Component<ButtonProps, {}> {
 				return;
 			}
 
-			var button = <HTMLElement>(this.getDOMNode());
-			var ripple = <ripple.InkRipple>(this.refs['ripple']);
+			let button = <HTMLElement>(react.findDOMNode(this));
+			let ripple = <ripple.InkRipple>(this.refs['ripple']);
 			ripple.setState({
 				width: button.offsetWidth,
 				height: button.offsetHeight
