@@ -110,6 +110,7 @@
         "./webui/app_view.ts",
         "./webui/auth.ts",
         "./webui/auth_receiver.ts",
+        "./webui/auth_test.ts",
         "./webui/autofill.ts",
         "./webui/autofill_test.ts",
         "./webui/base/focus_mixin.ts",

@@ -1,3 +1,4 @@
+import atob = require('atob');
 import btoa = require('btoa');
 import Q = require('q');
 import url = require('url');
@@ -5,10 +6,8 @@ import url = require('url');
 import assign = require('../lib/base/assign');
 import crypto = require('../lib/base/crypto');
 
-/** Opaque by stringify-able object representing
- * the credentials returned by a login attempt
- */
-interface Credentials {
+export interface Credentials {
+	/** The access token for making requests to the cloud service. */
 	accessToken: string;
 }
 
@@ -67,6 +66,25 @@ interface TokenData {
 	state: string;
 }
 
+/** Subset of the Window interface needed by OAuthFlow to interact
+ * with the authentication window.
+ */
+export interface AuthWindow {
+	close(): void;
+	closed: boolean;
+}
+
+/** Subset of the Window interface needed by OAuthFlow to open
+ * an authentication window.
+ */
+export interface AuthWindowOpener {
+	open(url: string, target: string, options: string): AuthWindow;
+	localStorage: {
+		getItem(key: string): string;
+		removeItem(key: string): void;
+	}
+}
+
 /** Drives the UI for OAuth 2.0 authentication for a cloud service
  * using the implicit grant (aka. 'token') authentication flow.
  *
@@ -74,7 +92,7 @@ interface TokenData {
  * waits for the user to complete authentication in that popup window
  * and then returns the credentials for use with API calls for that service.
  */
-export class OAuthFlow implements AuthFlow {
+export class OAuthFlow {
 	private options: OAuthFlowOptions;
 
 	constructor(options: OAuthFlowOptions) {
@@ -83,7 +101,7 @@ export class OAuthFlow implements AuthFlow {
 		}, options);
 	}
 
-	authenticate() {
+	authenticate(win: AuthWindowOpener) {
 		let credentials = Q.defer<Credentials>();
 
 		// open a window which displays the auth UI
@@ -101,22 +119,22 @@ export class OAuthFlow implements AuthFlow {
 		// clear any existing tokens stored in local storage
 		// TODO - Encrypt this data with a random key so that it isn't usable
 		// if not removed by the call to removeItem() once auth completes
-		window.localStorage.removeItem(OAUTH_TOKEN_KEY);
+		win.localStorage.removeItem(OAUTH_TOKEN_KEY);
 
 		// clear search property so that query is reconstructed from parsedAuthURL.query
 		parsedAuthURL.search = undefined;
 
 		let authURL = url.format(parsedAuthURL);
-		let authWindow: Window = window.open(authURL, target, authWindowSettings);
+		let authWindow: AuthWindow = win.open(authURL, target, authWindowSettings);
 
 		// poll, waiting for auth to complete.
 		// auth_receiver.ts stores the access token in local storage once
 		// the auth flow completes
 		let pollTimeout = setInterval(() => {
-			let tokenDataStr = window.localStorage.getItem(OAUTH_TOKEN_KEY);
+			let tokenDataStr = win.localStorage.getItem(OAUTH_TOKEN_KEY);
 			if (tokenDataStr) {
 				try {
-					window.localStorage.removeItem(OAUTH_TOKEN_KEY);
+					win.localStorage.removeItem(OAUTH_TOKEN_KEY);
 					let tokenData = <TokenData>JSON.parse(tokenDataStr);
 
 					let requiredFields = ['state', 'accessToken'];

@@ -723,7 +723,7 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 		});
 
 		let accessToken: string;
-		return authenticator.authenticate().then(credentials => {
+		return authenticator.authenticate(window).then(credentials => {
 			accessToken = credentials.accessToken;
 			fs.setCredentials(credentials);
 			return fs.accountInfo();
