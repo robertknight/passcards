@@ -26,7 +26,6 @@ data/dist: $(webui_app_srcs)
 scripts: src/*.js
 	@mkdir -p data/scripts
 	@cp src/*.js data/scripts
-	@cp $(NODE_MODULE_DIR)/dropbox/lib/dropbox.js data/scripts
 
 clean:
 	@rm -rf data/dist
