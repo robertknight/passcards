@@ -194,17 +194,6 @@ export class App {
 		});
 		this.activeAppView = react.render(appView, element);
 
-		// in the Chrome extension, the app runs in a background
-		// page but the UI is rendered into a popup window
-		// which is unloaded when dismissed by the user.
-		//
-		// In the Firefox add-on, the popup's HTML page
-		// persists when the popup is dismissed.
-		appWindow.addEventListener('unload', () => {
-			react.unmountComponentAtNode(element);
-			this.activeAppView = null;
-		});
-
 		if (!env.isTouchDevice()) {
 			// the main item list only renders visible items,
 			// so force a re-render when the window size changes.
