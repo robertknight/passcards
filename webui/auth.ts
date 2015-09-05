@@ -164,7 +164,12 @@ export class OAuthFlow {
 		}, 200);
 
 		credentials.promise.finally(() => {
+			// OAuthWindow tries to control when the auth window is opened and closed,
+			// except in the case of the Chrome extension where authWindow.close()
+			// fails to close the window.
+			// TODO - Tested in Chrome 46.0.2486.0. Requires further investigation.
 			authWindow.close();
+
 			clearTimeout(pollTimeout);
 		});
 

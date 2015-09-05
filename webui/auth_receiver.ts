@@ -47,3 +47,19 @@ window.localStorage.setItem('PASSCARDS_OAUTH_TOKEN', JSON.stringify({
 	accessToken: access_token,
 	state: state
 }));
+
+interface MaybeChromeWindow extends Window {
+	// additional APIs present in Chrome extensions
+	chrome?: {
+		extension?: Object;
+	}
+}
+
+// auth.ts tries to close the popup window itself. In the case of the
+// Chrome extension this doesn't work, so the window closes itself
+/* tslint:disable no-unused-variable */
+let chromeWindow = <MaybeChromeWindow>window;
+/* tslint:enable no-unused-variable */
+if (chromeWindow.chrome && chromeWindow.chrome.extension) {
+	window.close();
+}

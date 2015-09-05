@@ -87,6 +87,8 @@ testLib.addTest('auth receiver script', assert => {
 	// receiver script
 	let {window, document } = global;
 	let storage = new Map<string, string>();
+	let windowDidClose = false;
+
 	global.document = {
 		location: {
 			// note use of URL-encoded chars in 'state' parameter,
@@ -99,6 +101,17 @@ testLib.addTest('auth receiver script', assert => {
 			setItem(key: string, value: string) {
 				storage.set(key, value);
 			}
+		},
+
+		// add chrome.extension to the Window API so
+		// that auth_receiver detects the environment as
+		// a Chrome extension
+		chrome: {
+			extension: {}
+		},
+
+		close() {
+			windowDidClose = true;
 		}
 	};
 
@@ -111,6 +124,9 @@ testLib.addTest('auth receiver script', assert => {
 		accessToken: 'dummytoken',
 		state: 'abc=='
 	}));
+
+	// test that the auth window attempts to close itself
+	assert.equal(windowDidClose, true);
 
 	global.window = window;
 	global.document = document;
