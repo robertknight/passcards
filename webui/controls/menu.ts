@@ -243,7 +243,10 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 		var itemFont = theme.menu.item.fontSize + 'px ' + fonts.FAMILY;
 
 		this.props.items.forEach((item) => {
-			var itemWidth = measureText(this.state.document, item.label, itemFont);
+			// under Firefox a small amount of extra padding needs to be added
+			// to the computed text width to avoid wrapping
+			const TEXT_PADDING = 5;
+			var itemWidth = measureText(this.state.document, item.label, itemFont) + TEXT_PADDING;
 			menuWidth = Math.max(menuWidth, itemWidth);
 		});
 		menuWidth += theme.menu.item.paddingLeft + theme.menu.item.paddingRight;
