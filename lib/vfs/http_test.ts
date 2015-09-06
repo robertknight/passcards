@@ -14,7 +14,9 @@ const HOSTNAME = `http://127.0.0.1:${PORT}`;
 let fsRoot = <string>(<any>os).tmpdir() + '/http-vfs-test';
 
 let fileVfs = new nodefs.FileVFS(fsRoot);
-let httpVfsServer = new http_vfs.Server(fileVfs);
+let httpVfsServer = new http_vfs.Server(fileVfs, {
+	requireAuthentication: true
+});
 let httpVfs = new http_vfs.Client(HOSTNAME);
 httpVfs.setCredentials({ accessToken: http_vfs.ACCESS_TOKEN });
 

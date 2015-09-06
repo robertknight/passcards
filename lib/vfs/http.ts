@@ -176,9 +176,6 @@ export class Client implements vfs.VFS {
 	}
 
 	private request(method: string, path: string, data?: any): Q.Promise<http_client.Reply> {
-		if (!this._credentials) {
-			return Q.reject<http_client.Reply>(new vfs.VfsError(vfs.ErrorType.AuthError, 'User is not authenticated'));
-		}
 		let requestOpts: http_client.RequestOpts = {
 			headers: {
 				['Authentication']: `Bearer ${this._credentials.accessToken}`
@@ -188,13 +185,24 @@ export class Client implements vfs.VFS {
 	}
 }
 
+export interface ServerOptions {
+	/** Specifies whether HTTP calls must be authenticated via
+	  * an Authentication header.
+	  */
+	requireAuthentication?: boolean;
+};
+
 /** Exposes an existing file system (eg. a local file system)
   * via a REST API for use with HttpVFS
   */
 export class Server {
+	fs: vfs.VFS;
 	server: http.Server;
+	options: ServerOptions;
 
-	constructor(public fs: vfs.VFS) {
+	constructor(fs: vfs.VFS, options: ServerOptions = {}) {
+		this.fs = fs;
+		this.options = options;
 		this.server = http.createServer(this.handleRequest.bind(this));
 	}
 
@@ -265,7 +273,9 @@ document.getElementById('authButton').addEventListener('click', function() {
 
 		res.setHeader('Access-Control-Allow-Origin', '*');
 
-		if (req.method !== 'OPTIONS' &&
+		// check for Authentication header if OAuth is enabled
+		if (this.options.requireAuthentication &&
+			req.method !== 'OPTIONS' &&
 			req.headers['authentication'] !== `Bearer ${ACCESS_TOKEN}`) {
 			res.statusCode = 403;
 			res.end(JSON.stringify({

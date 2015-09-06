@@ -6,6 +6,7 @@ import fs = require('fs');
 import path = require('path');
 import Q = require('q');
 import underscore = require('underscore');
+import urlLib = require('url');
 
 import asyncutil = require('../base/asyncutil');
 import collection_util = require('../base/collectionutil');
@@ -21,7 +22,12 @@ import testLib = require('../test');
 
 var urlFetcher: site_info_service.UrlFetcher = {
 	fetch(url: string): Q.Promise<site_info_service.UrlResponse> {
-		return http_client.request('GET', url).then((reply) => {
+		// the icon fetchers will fetch URLs with paths such as '/favicon.ico'
+		// http_vfs.Server serves files under '/files/<path>', so we modify the
+		// URL here before dispatching the request
+		let parsedUrl = urlLib.parse(url);
+		parsedUrl.pathname = '/files/' + parsedUrl.pathname;
+		return http_client.request('GET', urlLib.format(parsedUrl)).then((reply) => {
 			return {
 				status: reply.status,
 				body: reply.body
