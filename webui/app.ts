@@ -161,15 +161,6 @@ export class App {
 	}
 
 	/** Render the app into the given HTML element.
-	 *
-	 * In the web app and the Firefox extension this is only
-	 * invoked once when the app starts.
-	 *
-	 * In the Chrome extension
-	 * this is invoked each time the user opens the extension's
-	 * popup from the toolbar, since a new window is created
-	 * each time the popup is opened and terminated when the
-	 * popup is closed.
 	 */
 	renderInto(element: HTMLElement) {
 		var rootInputElement = element.ownerDocument.body;

@@ -8,29 +8,7 @@ import assign = require('../base/assign');
 import err_util = require('../base/err_util');
 import vfs = require('./vfs');
 
-export enum AuthMode {
-	Redirect,
-	ChromeExtension
-}
-
 export interface Options {
-	authMode: AuthMode;
-
-	/** The URL which the browser should be redirected back to
-	  * after completing OAuth login.
-	  *
-	  * This defaults to the current page's URL.
-	  *
-	  * In some environments (eg. Firefox addons) this may need
-	  * to be modified to account for security restrictions.
-	  */
-	authRedirectUrl: string;
-	disableLocationCleanup: boolean;
-
-	/** Specifies the URL to the post-authentication receiver
-	  * page when using the Chrome auth driver.
-	  */
-	receiverPage: string;
 }
 
 function convertError(error: dropbox.ApiError): vfs.VfsError {
@@ -54,39 +32,9 @@ export class DropboxVFS implements vfs.VFS {
 			key: CLIENT_ID
 		};
 		this.client = new dropbox.Client(clientOpts);
-
-		if (!options || options.authMode == AuthMode.Redirect) {
-			var redirectOpts: dropbox.AuthDriver.RedirectDriverOpts = {};
-			if (options) {
-				redirectOpts.redirectUrl = options.authRedirectUrl;
-			}
-			this.client.authDriver(new dropbox.AuthDriver.Redirect(redirectOpts));
-		} else if (options.authMode == AuthMode.ChromeExtension) {
-			this.client.authDriver(new dropbox.AuthDriver.ChromeExtension({
-				receiverPath: options.receiverPage
-			}));
-		}
-
 		this.client.onError.addListener((error) => {
 			console.log('Dropbox API Error:', convertError(error).message);
 		});
-
-		if (options && options.disableLocationCleanup) {
-			// the Dropbox redirect OAuth driver tries to use
-			// window.history.replaceState() to remove the access token
-			// from window.location's hash.
-			//
-			// This fails in the Firefox add-on environment when the
-			// host page is at a resource:// URL , possibly due to the
-			// same security restrictions that prevent the page from
-			// trying to redirect itself to a resource:// URL
-			//
-			// Here we make the cleanupLocation() function a no-op to
-			// prevent this.
-			dropbox.AuthDriver.BrowserBase.cleanupLocation = () => {
-				/* no-op */
-			};
-		}
 	}
 
 	authURL() {
