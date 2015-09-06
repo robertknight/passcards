@@ -69,6 +69,8 @@ testLib.addAsyncTest('should find inputs in document', assert => {
 
 	let pageScriptRpc = new rpc.RpcHandler(serverPort);
 	let extensionRpc = new rpc.RpcHandler(clientPort);
+	let done = Q.defer<void>();
+
 	page.init(pageScriptRpc);
 	extensionRpc.call<forms.FieldGroup[]>('find-fields', [], (err: Error, fields: forms.FieldGroup[]) => {
 		assert.equal(err, undefined);
@@ -100,8 +102,9 @@ testLib.addAsyncTest('should find inputs in document', assert => {
 			}
 		];
 		assert.deepEqual(fields[0].fields, EXPECTED_FIELDS);
-		testLib.continueTests();
+		done.resolve(null);
 	});
+	return done.promise;
 });
 
 testLib.addAsyncTest('should autofill inputs in document', assert => {

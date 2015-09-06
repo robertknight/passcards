@@ -215,6 +215,17 @@ class IconFetcher {
 					var start = collection_util.hexlify(buffer.subarray(0, 50));
 					console.log('Failed to decode icon', url, 'from data of length', buffer.length, start, ex.message);
 				}
+			} else {
+				let error = '';
+				try {
+					let response = JSON.parse(reply.body);
+					if (typeof response === 'object' && response.error) {
+						error = response.error;
+					}
+				} catch (ex) {
+					error = reply.body;
+				}
+				console.warn(`Icon lookup for ${url} failed with status ${reply.status}: ${error}`);
 			}
 		}).catch((e) => {
 			queueItem.status = 0;

@@ -99,9 +99,9 @@ function addTests(fsName: string, createFs: () => Q.Promise<vfs.VFS>) {
 
 	testLib.addAsyncTest(fsName + ': Search folder', (assert) => {
 		var fs = createFs();
-		fs.then((fs) => {
+		return fs.then((fs) => {
 			var fileWritten = fs.write('test-search-folder', 'test-content');
-			fileWritten.then(() => {
+			return fileWritten.then(() => {
 				fs.search('search-fold', (error, files) => {
 					assert.ok(error == null);
 					assert.equal(files.length, 1);
@@ -111,10 +111,9 @@ function addTests(fsName: string, createFs: () => Q.Promise<vfs.VFS>) {
 						isDir: false
 					};
 					testLib.assertEqual(assert, files[0], expectedFile, ['name', 'path', 'isDir']);
-					testLib.continueTests();
 				});
-			}).done();
-		}).done();
+			});
+		});
 	});
 
 	testLib.addAsyncTest(fsName + ': Copy dir', (assert) => {

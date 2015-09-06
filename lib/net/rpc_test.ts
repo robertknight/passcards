@@ -74,10 +74,12 @@ testLib.addAsyncTest('simple rpc call and reply', (assert) => {
 		message = 'hello world';
 	});
 
+	let done = Q.defer<void>();
 	client.call('add', [3, 4], (err, sum) => {
 		assert.equal(sum, 7);
-		testLib.continueTests();
+		done.resolve(null);
 	});
+	return done.promise;
 });
 
 testLib.addAsyncTest('rpc error', (assert) => {
@@ -93,11 +95,14 @@ testLib.addAsyncTest('rpc error', (assert) => {
 		}
 		return a / b;
 	});
+
+	let done = Q.defer<void>();
 	client.call('divide', [4, 0], (err, result) => {
 		assert.ok(err instanceof Error);
 		assert.equal(err.message, 'divide-by-zero');
-		testLib.continueTests();
+		done.resolve(null);
 	});
+	return done.promise;
 });
 
 testLib.addAsyncTest('rpc async call and reply', (assert) => {
@@ -111,10 +116,12 @@ testLib.addAsyncTest('rpc async call and reply', (assert) => {
 		done(null, a + b);
 	});
 
+	let done = Q.defer<void>();
 	client.call('add', [5, 6], (err, sum) => {
 		assert.equal(sum, 11);
-		testLib.continueTests();
+		done.resolve(null);
 	});
+	return done.promise;
 });
 
 testLib.addAsyncTest('rpc async error', (assert) => {
@@ -142,6 +149,7 @@ testLib.addAsyncTest('rpc async error', (assert) => {
 		}
 	});
 
+	let done = Q.defer<void>();
 	client.call('divide', [5, 0], (err, result) => {
 		assert.ok(err instanceof Error);
 		assert.equal(err.message, 'divide-by-zero');
@@ -149,9 +157,10 @@ testLib.addAsyncTest('rpc async error', (assert) => {
 		client.call('divide2', [3, 0], (err, result) => {
 			assert.ok(err instanceof Error);
 			assert.equal(err.message, 'divide-by-zero');
-			testLib.continueTests();
+			done.resolve(null);
 		});
 	});
+	return done.promise;
 });
 
 testLib.addAsyncTest('window.postMessage() rpc call and reply', (assert) => {
@@ -182,12 +191,15 @@ testLib.addAsyncTest('window.postMessage() rpc call and reply', (assert) => {
 		++server2Calls;
 		return 0;
 	});
+
+	let done = Q.defer<void>();
 	client.call('add', [3, 4], (err, sum) => {
 		assert.equal(sum, 7);
 		assert.equal(server1Calls, 1);
 		assert.equal(server2Calls, 0);
-		testLib.continueTests();
+		done.resolve(null);
 	});
+	return done.promise;
 });
 
 testLib.addAsyncTest('rpc-promise bridge', (assert) => {
@@ -220,10 +232,12 @@ testLib.addAsyncTest('reports an error if RPC handler fails to reply within a ti
 		// do nothing
 	});
 
+	let done = Q.defer<void>();
 	client.call('greet', [], (err, result) => {
 		assert.ok(err);
 		assert.equal(result, undefined);
-		testLib.continueTests();
+		done.resolve(null);
 	}, 100 /* use a short timeout */);
+	return done.promise;
 });
 

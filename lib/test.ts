@@ -8,7 +8,7 @@
 
 // test.ts provides a wrapper around QUnitJS (qunitjs.com)
 //
-// Test cases are added using addTest() and addAsyncTest().
+// Test cases are added using addTest().
 //
 // Once all test cases have been added, the test suite should be
 // started using start()
@@ -49,7 +49,6 @@ export interface Assert {
 interface TestCase {
 	name: string;
 	testFunc: (assert: Assert) => void;
-	async: boolean;
 }
 
 var testList: TestCase[] = [];
@@ -130,54 +129,22 @@ function formatStack(trace: string) {
 	}
 }
 
-/** Add a test which completes synchronously.
+/** Add a test which either completes synchronously or returns
+  * a promise.
   *
   * See qunit.test()
   */
 export function addTest(name: string, testFunc: (assert: Assert) => void) {
-	testList.push({ name: name, testFunc: testFunc, async: false });
-	scheduleAutoStart();
-}
-
-/** Add a test which completes asynchronously. @p testFunc must
-  * signal when completion of all async operations started by
-  * the test case. It can do this either by returning a promise
-  * which is resolved when the test completes or by calling
-  * continueTests() once all async operations have completed.
-  *
-  * Note that all asynchronous tests are executed concurrently.
-  *
-  * See qunit.asyncTest()
-  */
-export function addAsyncTest(name: string, testFunc: (assert: Assert) => any) {
 	testList.push({
-		name: name,
-		testFunc: (assert: Assert) => {
-			var result: any = testFunc(assert);
-
-			// if the test case returns a promise, continue the test once
-			// the promise resolves or rejects
-			if (typeof result == 'object' && typeof result.then == 'function') {
-				result.then(() => {
-					continueTests();
-				}).catch((err: Error) => {
-					console.log(colors.red('EXCEPTION: %s'), err);
-					console.log(colors.yellow(formatStack(<string>err.stack).join('\n')));
-					qunit.pushFailure(err.toString());
-					continueTests();
-				});
-			}
-		},
-		async: true
+		name,
+		testFunc
 	});
 	scheduleAutoStart();
 }
 
-/** Inform the test runner that an async test has finished. This must be called
-  * once all async operations in a test added with addAsyncTest() have completed.
-  */
-export function continueTests() {
-	qunit.start();
+/** Alias for addTest() */
+export function addAsyncTest(name: string, testFunc: (assert: Assert) => any) {
+	addTest(name, testFunc);
 }
 
 export interface TestStartParams {
@@ -313,11 +280,7 @@ function run(tests: TestCase[]) {
 	tests = underscore(tests).shuffle();
 
 	tests.forEach((testCase) => {
-		if (testCase.async) {
-			qunit.asyncTest(testCase.name, testCase.testFunc);
-		} else {
-			qunit.test(testCase.name, testCase.testFunc);
-		}
+		qunit.test(testCase.name, testCase.testFunc);
 	});
 
 	if (!timeout()) {

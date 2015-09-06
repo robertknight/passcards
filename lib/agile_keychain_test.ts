@@ -87,7 +87,7 @@ function createTestVault() {
 testLib.addAsyncTest('Import item from .1pif file', (assert) => {
 	var importer = new exportLib.PIFImporter();
 	var actualItems = importer.importItems(fs, 'test.1pif');
-	actualItems.then((items) => {
+	return actualItems.then((items) => {
 		assert.equal(items.length, 1, 'Imported expected number of items');
 		var expectedItem = agile_keychain.fromAgileKeychainItem(null, {
 			"updatedAt": 1398413120,
@@ -136,9 +136,7 @@ testLib.addAsyncTest('Import item from .1pif file', (assert) => {
 		});
 		var diff = testLib.compareObjects(items[0], expectedItem);
 		assert.equal(diff.length, 0, 'Actual/expected imported items match');
-
-		testLib.continueTests();
-	}).done();
+	});
 });
 
 // set of tests which open a vault, unlock it,
@@ -260,7 +258,7 @@ testLib.addTest('New item UUID', (assert) => {
 });
 
 testLib.addAsyncTest('Save item', (assert) => {
-	createTestVault().then((vault) => {
+	return createTestVault().then((vault) => {
 		let item = new item_store.Item(vault);
 		item.title = 'New Test Item';
 		item.locations.push('mysite.com');
@@ -270,7 +268,8 @@ testLib.addAsyncTest('Save item', (assert) => {
 			label: 'website'
 		});
 		item.setContent(content);
-		item.save().then(() => {
+
+		return item.save().then(() => {
 			return vault.loadItem(item.uuid);
 		}).then((loadedItem) => {
 			// check overview data matches
@@ -280,7 +279,7 @@ testLib.addAsyncTest('Save item', (assert) => {
 			testLib.assertEqual(assert, content, loadedItem.content);
 
 			// check new item appears in vault list
-			vault.listItems().then(items => {
+			return vault.listItems().then(items => {
 				// check that selected properties match
 				var comparedProps: any[] = ['title',
 					'uuid', 'trashed', 'typeName',
@@ -288,16 +287,13 @@ testLib.addAsyncTest('Save item', (assert) => {
 
 				var actualOverview = underscore.find(items, item => item.uuid == loadedItem.item.uuid);
 				testLib.assertEqual(assert, actualOverview, loadedItem.item, comparedProps);
-				testLib.continueTests();
-			}).done();
-		})
-		.done();
-	})
-	.done();
+			});
+		});
+	});
 });
 
 testLib.addAsyncTest('Update item', (assert) => {
-	createTestVault().then((vault) => {
+	return createTestVault().then((vault) => {
 		var item = new item_store.Item(vault);
 		item.title = 'Original item title';
 
@@ -324,7 +320,7 @@ testLib.addAsyncTest('Update item', (assert) => {
 		var originalSaveDate = new Date(Date.now() - 2000);
 
 		var loadedItem: item_store.ItemAndContent;
-		item.save().then(() => {
+		return item.save().then(() => {
 			return vault.loadItem(item.uuid);
 		}).then((loadedItem_) => {
 			loadedItem = loadedItem_;
@@ -367,12 +363,8 @@ testLib.addAsyncTest('Update item', (assert) => {
 			assert.notEqual(passwordField, null);
 			assert.equal(passwordField.value, 'new-password');
 			assert.equal(item_store.ContentUtil.password(loadedItem.content), 'new-password');
-
-			testLib.continueTests();
-		})
-		.done();
-	})
-	.done();
+		});
+	});
 });
 
 testLib.addAsyncTest('Remove item', (assert) => {
@@ -532,20 +524,19 @@ testLib.addAsyncTest('Create new vault', (assert) => {
 
 testLib.addAsyncTest('Change vault password', (assert) => {
 	var vault: agile_keychain.Vault;
-	createTestVault().then((vault_) => {
+	return createTestVault().then((vault_) => {
 		vault = vault_;
 		return vault.changePassword('wrong-pass', 'new-pass', 'new-hint');
 	}).catch((err) => {
 		assert.ok(err instanceof key_agent.DecryptionError);
-		vault.changePassword('logMEin', 'new-pass', 'new-hint')
+		return vault.changePassword('logMEin', 'new-pass', 'new-hint')
 		.then(() => {
 			return vault.unlock('new-pass');
 		}).then(() => {
 			return vault.passwordHint();
 		}).then((hint) => {
 			assert.equal(hint, 'new-hint');
-			testLib.continueTests();
-		}).done();
+		});
 	});
 });
 
@@ -616,7 +607,7 @@ testLib.addTest('Default item properties', (assert) => {
 	assert.notEqual(item.uuid, item2.uuid);
 });
 
-testLib.addTest('createVault() fails if directory exists', (assert) => {
+testLib.addAsyncTest('createVault() fails if directory exists', (assert) => {
 	var fs = new nodefs.FileVFS(testLib.tempDir());
 	var pass = 'pass-1';
 	var hint = 'test-new-vault-hint';

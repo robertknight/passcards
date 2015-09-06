@@ -1,3 +1,5 @@
+import Q = require('q');
+
 import crypto_worker = require('./crypto_worker');
 import env = require('./base/env');
 import rpc = require('./net/rpc');
@@ -8,16 +10,20 @@ if (env.isNodeJS()) {
 }
 
 testLib.addAsyncTest('worker test', (assert) => {
-	var scriptPath = crypto_worker.SCRIPT_PATH;
-	var worker = new Worker(scriptPath);
+	let done = Q.defer<void>();
 
-	var rpcHandler = new rpc.RpcHandler(new rpc.WindowMessagePort(worker, '*', 'crypto-worker', 'passcards'));
+	let scriptPath = crypto_worker.SCRIPT_PATH;
+	let worker = new Worker(scriptPath);
+
+	let rpcHandler = new rpc.RpcHandler(new rpc.WindowMessagePort(worker, '*', 'crypto-worker', 'passcards'));
 	rpcHandler.call('pbkdf2Block', ['inputPass', 'inputSalt', 100 /* iterations */, 0 /* blockIndex */],
 		(err: any, block: string) => {
 			assert.equal(err, null);
 			assert.equal(block.length, 20);
 			worker.terminate();
-			testLib.continueTests();
+			done.resolve(null);
 		});
+
+	return done.promise;
 });
 
