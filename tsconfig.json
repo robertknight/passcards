@@ -125,6 +125,7 @@
         "./webui/controls/button.ts",
         "./webui/controls/colors.ts",
         "./webui/controls/demo.ts",
+        "./webui/controls/dialog.ts",
         "./webui/controls/fonts.ts",
         "./webui/controls/menu.ts",
         "./webui/controls/ripple.ts",

@@ -5,6 +5,7 @@ import typed_react = require('typed-react');
 import style = require('ts-style');
 
 import button = require('./button');
+import dialog = require('./dialog');
 import env = require('../../lib/base/env');
 import fonts = require('./fonts');
 import menu = require('./menu');
@@ -44,7 +45,7 @@ var theme = style.create({
 		WebkitTapHighlightColor: 'transparent',
 		WebkitUserSelect: 'none'
 	}
-});
+}, __filename);
 
 interface ControlDemoAppProps extends react.Props<void> {
 	viewportRect: reactutil.Rect;
@@ -55,6 +56,7 @@ interface ControlDemoAppState {
 		left: number;
 		top: number;
 	};
+	showDialog?: boolean;
 }
 
 function componentSection(name: string, ...children: react.ReactElement<any>[]) {
@@ -66,7 +68,9 @@ function componentSection(name: string, ...children: react.ReactElement<any>[]) 
 
 class ControlDemoApp extends typed_react.Component<ControlDemoAppProps, ControlDemoAppState> {
 	getInitialState() {
-		return {};
+		return {
+			showDialog: false
+		};
 	}
 
 	private renderTextFields() {
@@ -129,6 +133,38 @@ class ControlDemoApp extends typed_react.Component<ControlDemoAppProps, ControlD
 			);
 	}
 
+	private renderDialog() {
+		let prompt: react.ReactElement<{}>;
+		if (this.state.showDialog) {
+			prompt = dialog.DialogF({
+				acceptAction: {
+					label: 'Yes',
+					onSelect: () => {
+						this.setState({ showDialog: false });
+						console.log('Dialog accepted');
+					}
+				},
+				rejectAction: {
+					label: 'No',
+					onSelect: () => {
+						this.setState({ showDialog: false });
+						console.log('Dialog rejected');
+					}
+				}
+			}, 'Are you happy with the look of this dialog?');
+		};
+		return componentSection('Dialogs',
+			button.ButtonF({
+				value: 'Show Dialog',
+				onClick: () => {
+					this.setState({ showDialog: true });
+				},
+				style: button.Style.Rectangular
+			}),
+			reactutil.TransitionGroupF({}, prompt)
+			);
+	}
+
 	private renderMenus() {
 		var popupMenu: react.ReactElement<menu.MenuProps>;
 		if (this.state.menuPos) {
@@ -182,7 +218,8 @@ class ControlDemoApp extends typed_react.Component<ControlDemoAppProps, ControlD
 				),
 			this.renderMenus(),
 			this.renderButtons(),
-			this.renderTextFields()
+			this.renderTextFields(),
+			this.renderDialog()
 			);
 	}
 }

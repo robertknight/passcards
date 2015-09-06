@@ -3,8 +3,20 @@ import typed_react = require('typed-react');
 import reactutil = require('./reactutil');
 
 export interface TransitionMixinState {
+	/** The current state of the component's entry/exit transition. */
 	transition?: reactutil.TransitionState;
+	/** The CSS property that is being animated.
+	 * TransitionMixin listens for the CSS transition on this property
+	 * having completed.
+	 */
 	transitionProperty?: string;
+	/** The ref name of the element within the component that is
+	 * being animated. If not specified, defaults to the component itself.
+	 *
+	 * TransitionMixin uses react.findDOMNode(this.refs[transitionComponent])
+	 * to get the HTML element to watch for CSS animation/transition ends.
+	 */
+	transitionComponent?: string;
 }
 
 export interface TransitionMixinProps {
@@ -44,7 +56,8 @@ class TransitionMixin extends typed_react.Mixin<TransitionMixinProps, Transition
 			}
 			this.setState({ transition: reactutil.TransitionState.Entered });
 		}, 10);
-		var listener = new reactutil.TransitionEndListener(this, this.state.transitionProperty, () => {
+
+		let listener = new reactutil.TransitionEndListener(this.transitionComponent(), this.state.transitionProperty, () => {
 			callback();
 			listener.remove();
 		});
@@ -52,11 +65,16 @@ class TransitionMixin extends typed_react.Mixin<TransitionMixinProps, Transition
 
 	componentWillLeave(callback: () => void) {
 		this.setState({ transition: reactutil.TransitionState.Leaving });
-		var listener = new reactutil.TransitionEndListener(this, this.state.transitionProperty, () => {
+
+		let listener = new reactutil.TransitionEndListener(this.transitionComponent(), this.state.transitionProperty, () => {
 			this.setState({ transition: reactutil.TransitionState.Left });
 			callback();
 			listener.remove();
 		});
+	}
+
+	private transitionComponent() {
+		return this.state.transitionComponent ? this.refs[this.state.transitionComponent] : this;
 	}
 }
 
@@ -85,4 +103,3 @@ export function fadeIn(state: reactutil.TransitionState) {
 			};
 	}
 }
-

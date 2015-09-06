@@ -6,5 +6,6 @@ export var SHADOWS = {
 export var Z_LAYERS = {
 	TOASTER: 30,
 	MENU: 10,
-	FLOATING_ACTION_BUTTON: 9,
+	DIALOG: 9,
+	FLOATING_ACTION_BUTTON: 8,
 };
