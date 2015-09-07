@@ -25,7 +25,7 @@ import sync = require('../lib/sync');
 import toaster = require('./controls/toaster');
 import unlock_view = require('./unlock_view');
 import url_util = require('../lib/base/url_util');
-import ui_item_store = require('./stores/items');
+import app_state = require('./stores/app');
 
 var theme = style.create({
 	appView: {
@@ -57,7 +57,7 @@ export interface AppServices {
 export interface AppViewProps extends react.Props<void> {
 	services: AppServices;
 	viewportRect: reactutil.Rect;
-	itemStore: ui_item_store.Store;
+	appState: app_state.Store;
 }
 
 /** The main top-level app view. */
@@ -69,13 +69,13 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 	}
 
 	componentWillMount() {
-		this.props.itemStore.stateChanged.listen(state => {
+		this.props.appState.stateChanged.listen(state => {
 			this.forceUpdate();
 		}, this);
 	}
 
 	componentWillUnmount() {
-		this.props.itemStore.stateChanged.ignoreContext(this);
+		this.props.appState.stateChanged.ignoreContext(this);
 	}
 
 	private showError(error: Error, context?: string) {
@@ -113,7 +113,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 	}
 
 	private setSelectedItem(item: item_store.Item, rect?: reactutil.Rect) {
-		var state = <ui_item_store.State>{
+		var state = <app_state.State>{
 			selectedItem: item,
 		};
 		if (item) {
@@ -123,19 +123,19 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 				state.itemEditMode = details_view.ItemEditMode.AddItem;
 			}
 		}
-		this.props.itemStore.update(state);
+		this.props.appState.update(state);
 		this.setState({ selectedItemRect: rect });
 	}
 
 	render(): react.ReactElement<any> {
-		if (!this.props.itemStore.state.store) {
+		if (!this.props.appState.state.store) {
 			return setup_view.SetupViewF({
 				settings: this.props.services.settings
 			});
 		}
 
 		var children: react.ReactElement<any>[] = [];
-		var itemStoreState = this.props.itemStore.state;
+		var itemStoreState = this.props.appState.state;
 
 		children.push(unlock_view.UnlockViewF({
 			key: 'unlockPane',
@@ -143,7 +143,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 			isLocked: itemStoreState.isLocked,
 			focus: itemStoreState.isLocked,
 			onUnlock: () => {
-				this.props.itemStore.update({ isLocked: false });
+				this.props.appState.update({ isLocked: false });
 				itemStoreState.syncer.syncItems().then(result => {
 					if (result.failed > 0) {
 						this.showError(new Error(`Sync completed but ${result.failed} items failed to sync`));
@@ -183,7 +183,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 			}));
 		}
 
-		var syncState = this.props.itemStore.state.syncState
+		var syncState = this.props.appState.state.syncState
 		if (syncState &&
 			syncState.state !== sync.SyncState.Idle) {
 			toasters.push(toaster.ToasterF({
@@ -199,7 +199,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 	}
 
 	private renderItemList() {
-		var itemStoreState = this.props.itemStore.state;
+		var itemStoreState = this.props.appState.state;
 		return item_list.ItemListViewF({
 			key: 'itemList',
 			ref: 'itemList',
@@ -219,7 +219,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 	}
 
 	private itemStoreState() {
-		return this.props.itemStore.state;
+		return this.props.appState.state;
 	}
 
 	private renderItemDetails() {

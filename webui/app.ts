@@ -20,7 +20,7 @@ import local_store = require('../lib/local_store');
 import settings = require('./settings');
 import siteinfo_client = require('../lib/siteinfo/client');
 import sync = require('../lib/sync');
-import ui_item_store = require('./stores/items');
+import app_state = require('./stores/app');
 import vfs = require('../lib/vfs/vfs');
 
 declare var firefoxAddOn: browser_access.ExtensionConnector;
@@ -34,7 +34,7 @@ export class App {
 	// a reference to the rendered AppView instance
 	private activeAppView: any;
 
-	private itemStore: ui_item_store.Store;
+	private state: app_state.Store;
 	private services: app_view.AppServices;
 
 	constructor() {
@@ -57,10 +57,10 @@ export class App {
 		};
 
 		this.services.keyAgent.onLock().listen(() => {
-			this.itemStore.update({ isLocked: true });
+			this.state.update({ isLocked: true });
 		});
 
-		this.itemStore = new ui_item_store.Store();
+		this.state = new app_state.Store();
 
 		agile_keychain_crypto.CryptoJsCrypto.initWorkers();
 
@@ -76,13 +76,13 @@ export class App {
 					}
 					break;
 				case browser_access.MessageType.ActiveTabURLChanged:
-					this.itemStore.update({ currentUrl: (<browser_access.TabURLChangeMessage>event).url });
+					this.state.update({ currentUrl: (<browser_access.TabURLChangeMessage>event).url });
 					break;
 			}
 		});
 
 		// update the initial URL when the app is loaded
-		this.itemStore.update({ currentUrl: browserExt.pageAccess.currentUrl });
+		this.state.update({ currentUrl: browserExt.pageAccess.currentUrl });
 
 		// handle login/logout events
 		settingStore.onChanged.listen((setting) => {
@@ -95,7 +95,7 @@ export class App {
 					this.initAccount(account);
 				} else {
 					keyAgent.forgetKeys();
-					this.itemStore.update({ store: null, syncer: null });
+					this.state.update({ store: null, syncer: null });
 				}
 			}
 		});
@@ -145,7 +145,7 @@ export class App {
 				this.activeAppView.showError(err);
 			});
 
-			this.itemStore.update({ store: store, syncer: syncer });
+			this.state.update({ store: store, syncer: syncer });
 		} catch (err) {
 			this.activeAppView.showError(err, 'Store setup failed');
 		}
@@ -181,7 +181,7 @@ export class App {
 		var appView = app_view.AppViewF({
 			services: this.services,
 			viewportRect: this.getViewportRect(appWindow),
-			itemStore: this.itemStore
+			appState: this.state
 		});
 		this.activeAppView = react.render(appView, element);
 

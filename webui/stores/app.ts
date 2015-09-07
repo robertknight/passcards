@@ -6,25 +6,30 @@ import event_stream = require('../../lib/base/event_stream');
 import item_store = require('../../lib/item_store');
 import sync = require('../../lib/sync');
 
+/** Describes the shape of the app's state */
 export interface State {
+	/** The selected local item store. */
 	store?: item_store.Store;
-	items?: item_store.Item[];
-	selectedItem?: item_store.Item;
-	itemEditMode?: details_view.ItemEditMode;
+	/** True if {store} is locked */
 	isLocked?: boolean;
 
-	// TODO - Current URL state should live elsewhere
+	/** Items from the open password store */
+	items?: item_store.Item[];
+
+	/** Selected item if showing the details view for a specific item. */
+	selectedItem?: item_store.Item;
+	/** Whether the selected item is being viewed or edited */
+	itemEditMode?: details_view.ItemEditMode;
+
+	/** The URL of the tab that is currently selected in the browser */
 	currentUrl?: string;
 	syncer?: sync.Syncer;
 	syncState?: sync.SyncProgress;
 }
 
-/** Maintains the state of the currently
-  * opened password item store.
-  *
-  * FIXME: This store currently manages a mix of item state
-  * and app state (current URL, selected items etc.). That state
-  * should live elsewhere.
+/** Maintains the state of the application.
+  * TODO - Investigate replacing this with an established Flux implementation
+  * or redux.
   */
 export class Store {
 	stateChanged: event_stream.EventStream<State>;
@@ -110,4 +115,3 @@ export class Store {
 		});
 	}
 }
-
