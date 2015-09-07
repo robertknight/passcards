@@ -14,8 +14,10 @@ export interface Options {
 function convertError(error: dropbox.ApiError): vfs.VfsError {
 	const apiError = new err_util.ApiError(error.url, error.status, error.responseText);
 	let type = vfs.ErrorType.Other;
-	if (error.status == 404) {
+	if (error.status === 404) {
 		type = vfs.ErrorType.FileNotFound;
+	} else if (error.status === 401) {
+		type = vfs.ErrorType.AuthError;
 	}
 	const vfsError = new vfs.VfsError(type, error.responseText);
 	vfsError.sourceErr = apiError;
