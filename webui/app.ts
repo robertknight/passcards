@@ -139,10 +139,23 @@ export class App {
 			let localDatabaseName = this.databaseKeyForAccount(account);
 			let store = new local_store.Store(itemDatabase, localDatabaseName, this.services.keyAgent);
 			let syncer = new sync.CloudStoreSyncer(store, vault);
+
+			// TODO - When setting up a new account, we need to defer the user logging in
+			// until encryption keys have been synced
 			syncer.syncKeys().then(() => {
 				console.log('Encryption keys synced')
-			}).catch((err) => {
-				this.activeAppView.showError(err);
+			}).catch(err => {
+				let handled = false;
+				if (err instanceof vfs.VfsError) {
+					let vfsErr = <vfs.VfsError>err;
+					if (vfsErr.type === vfs.ErrorType.AuthError) {
+						this.state.update({ isSigningIn: true });
+						handled = true;
+					}
+				}
+				if (!handled) {
+					this.activeAppView.showError(err);
+				}
 			});
 
 			this.state.update({ store: store, syncer: syncer });

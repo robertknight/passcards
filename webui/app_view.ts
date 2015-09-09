@@ -6,6 +6,7 @@ import typed_react = require('typed-react');
 import url = require('url');
 
 import app_theme = require('./theme');
+import auth_dialog = require('./auth_dialog');
 import autofill = require('./autofill');
 import colors = require('./controls/colors');
 import details_view = require('./details_view');
@@ -163,6 +164,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 		children.push(this.renderItemList());
 		children.push(this.renderItemDetails());
 		children.push(this.renderToasters());
+		children.push(this.renderDialogs());
 
 		var menu = reactutil.TransitionGroupF(<any>{ key: 'toolbar-menu' },
 			this.state.appMenuSourceRect ? this.renderMenu('menu') : null
@@ -171,6 +173,19 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 
 		return react.DOM.div(style.mixin(theme.appView, { ref: 'app' }),
 			children
+			);
+	}
+
+	private renderDialogs() {
+		let activeDialog: react.ReactElement<{}>;
+		if (this.props.appState.state.isSigningIn) {
+			activeDialog = auth_dialog.AuthDialogF({
+				onComplete: () => { this.props.appState.update({ isSigningIn: false }) }
+			});
+		}
+
+		return reactutil.TransitionGroupF(<react.Props<{}>>{ key: 'dialog-container' },
+			activeDialog
 			);
 	}
 

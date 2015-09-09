@@ -13,6 +13,11 @@ export interface State {
 	/** True if {store} is locked */
 	isLocked?: boolean;
 
+	/** True if the user is being asked to re-authenticate with the cloud
+	 * storage provider.
+	 */
+	isSigningIn?: boolean;
+
 	/** Items from the open password store */
 	items?: item_store.Item[];
 

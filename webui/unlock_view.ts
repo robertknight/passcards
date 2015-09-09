@@ -14,8 +14,6 @@ import item_store = require('../lib/item_store');
 import reactutil = require('./base/reactutil');
 import app_theme = require('./theme');
 
-var UNLOCK_VIEW_Z_LAYER = 20;
-
 var theme = style.create({
 	upper: {
 		backgroundColor: colors.MATERIAL_COLOR_PRIMARY,
@@ -25,7 +23,7 @@ var theme = style.create({
 		right: 0,
 		bottom: '60%',
 		boxShadow: 'rgba(0, 0, 0, 0.26) 0px 2px 5px 0px',
-		zIndex: UNLOCK_VIEW_Z_LAYER + 1
+		zIndex: app_theme.Z_LAYERS.UNLOCK_VIEW + 1
 	},
 
 	lower: {
@@ -36,7 +34,7 @@ var theme = style.create({
 		right: 0,
 		bottom: 0,
 		boxShadow: 'rgba(0, 0, 0, 0.26) 0px 2px -5px 0px',
-		zIndex: UNLOCK_VIEW_Z_LAYER
+		zIndex: app_theme.Z_LAYERS.UNLOCK_VIEW
 	},
 
 	form: {

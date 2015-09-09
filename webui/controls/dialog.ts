@@ -19,6 +19,13 @@ export interface Action {
 export interface DialogProps extends react.Props<void> {
 	acceptAction?: Action;
 	rejectAction?: Action;
+
+	/** Additional styles that are applied to the container of the
+	 * dialog which covers the entire viewport.
+	 *
+	 * This can be used to set the Z index of the dialog for example.
+	 */
+	containerStyle?: react.CSSProperties;
 }
 
 let theme = style.create({
@@ -33,7 +40,8 @@ let theme = style.create({
 		display: 'flex',
 		flexDirection: 'row',
 		justifyContent: 'center',
-		alignItems: 'center'
+		alignItems: 'center',
+		zIndex: controls_theme.Z_LAYERS.DIALOG
 	},
 
 	dialog: {
@@ -43,7 +51,6 @@ let theme = style.create({
 		boxShadow: '0px 8px 10px -5px rgba(0, 0, 0, 0.14),' +
 		'0px 16px 24px 2px rgba(0, 0, 0, 0.098),' +
 		'0px 6px 30px 5px rgba(0, 0, 0, 0.082)',
-		zIndex: controls_theme.Z_LAYERS.DIALOG
 	},
 
 	contentArea: {
@@ -109,7 +116,7 @@ export class Dialog extends typed_react.Component<DialogProps, DialogState> {
 	}
 
 	render() {
-		return react.DOM.div(style.mixin(theme.container),
+		return react.DOM.div(style.mixin([theme.container, this.props.containerStyle]),
 			this.renderOverlay(),
 			this.renderDialog()
 			);

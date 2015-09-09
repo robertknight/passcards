@@ -7,7 +7,8 @@ import style_util = require('./base/style_util');
 export var Z_LAYERS = {
 	TOOLBAR: 5,
 	MENU_LAYER: 30,
-	SETUP_VIEW: 20
+	SETUP_VIEW: 20,
+	UNLOCK_VIEW: 20
 };
 
 export var mixins = style.create({
@@ -101,4 +102,3 @@ export var animations = style.create({
 		}
 	}
 });
-
