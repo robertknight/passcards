@@ -465,7 +465,7 @@ export class Vault implements item_store.Store {
 		// Updates are added to a queue which is then flushed so that an update for one
 		// entry does not clobber an update for another. This also reduces the number
 		// of VFS requests.
-		// 
+		//
 		this.pendingIndexUpdates.set(item.uuid, item);
 		var indexSaved = asyncutil.until(() => {
 			// wait for the current index update to complete
@@ -616,16 +616,18 @@ export class Vault implements item_store.Store {
 		});
 	}
 
-	decryptItemData(level: string, data: string): Q.Promise<string> {
+	// items may identify their encryption key via either the 'keyID' or
+	// 'level' fields
+	decryptItemData(keyID: string, level: string, data: string): Q.Promise<string> {
 		return this.getKeys().then((keys) => {
 			var result: Q.Promise<string>;
-			keys.forEach((key) => {
-				if (key.level == level) {
+			for (let key of keys) {
+				if (key.identifier === keyID || key.level === level) {
 					var cryptoParams = new key_agent.CryptoParams(key_agent.CryptoAlgorithm.AES128_OpenSSLKey);
 					result = this.keyAgent.decrypt(key.identifier, data, cryptoParams);
-					return;
+					break;
 				}
-			});
+			}
 			if (result) {
 				return result;
 			} else {
@@ -638,7 +640,7 @@ export class Vault implements item_store.Store {
 		return this.getKeys().then((keys) => {
 			var result: Q.Promise<string>;
 			keys.forEach((key) => {
-				if (key.level == level) {
+				if (key.level === level) {
 					var cryptoParams = new key_agent.CryptoParams(key_agent.CryptoAlgorithm.AES128_OpenSSLKey);
 					result = this.keyAgent.encrypt(key.identifier, data, cryptoParams);
 					return;
@@ -759,7 +761,7 @@ export class Vault implements item_store.Store {
 		var encryptedContent = this.fs.read(this.itemPath(item.uuid));
 		return encryptedContent.then((content) => {
 			var keychainItem = <agile_keychain_entries.Item>JSON.parse(content);
-			return this.decryptItemData(keychainItem.securityLevel, atob(keychainItem.encrypted));
+			return this.decryptItemData(keychainItem.keyID, keychainItem.securityLevel, atob(keychainItem.encrypted));
 		});
 	}
 
@@ -776,4 +778,3 @@ export class Vault implements item_store.Store {
 		return Q.reject<void>(new Error('Primary vault does not support being cleared'));
 	}
 }
-

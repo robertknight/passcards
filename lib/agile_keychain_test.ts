@@ -724,3 +724,37 @@ testLib.addAsyncTest('Removing item succeeds if file is already removed', assert
 		assert.ok(testVault.items[0].isTombstone());
 	});
 });
+
+// items created by some older versions of 1Password have a 'keyID' field
+// but no 'securityLevel' field.
+// Verify that these items are successfully listed.
+// issue #57
+testLib.addAsyncTest('Should list items with no securityLevel field', assert => {
+	// create a test vault with an item
+	let testVault: TestVault;
+	let keys: key_agent.Key[];
+	let itemPath: string;
+	return createTestVaultWithNItems(1).then(testVault_ => {
+		testVault = testVault_;
+		itemPath = testVault.vault.itemPath(testVault.items[0].uuid);
+		return testVault.vault.listKeys();
+	}).then(_keys => {
+		keys = _keys;
+
+		// read the item's JSON file and clear the `securityLevel` field
+		return testVault.vault.fs.read(itemPath);
+	}).then(json => {
+		let itemJSON = <any>JSON.parse(json);
+		// ensure the item has a `keyID` field but no `securityLevel` field
+		itemJSON.keyID = keys[0].identifier;
+		itemJSON.securityLevel = undefined;
+
+		// save the updated item content, then try to load the item and verify
+		// that it succeeds
+		return testVault.vault.fs.write(itemPath, JSON.stringify(itemJSON));
+	}).then(() => {
+		return testVault.vault.loadItem(testVault.items[0].uuid);
+	}).then(itemAndContent => {
+		assert.ok(itemAndContent.content);
+	});
+});

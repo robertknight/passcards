@@ -152,8 +152,23 @@ export interface Item {
 
 	/** Identifies the encryption key used to encrypt
 	  * the data for this item.
+		*
+		* This refers to the `level` field of the EncryptionKeyEntry
+		* object in encryptionKeys.js
 	  */
-	securityLevel: string;
+	securityLevel?: string;
+
+	/** Identifies the encryption key used to encrypt
+	 * the data for this item.
+	 *
+	 * This refers to the `identifier` field of the EncryptionKeyEntry
+	 * object in encryptionKeys.js
+	 *
+	 * One of the `securityLevel` and `keyID` fields must be
+	 * defined. If both are defined, they should refer to the same
+	 * item.
+	 */
+	keyID?: string;
 
 	/** UNIX timestamp specifying the creation date for this item */
 	createdAt: number;

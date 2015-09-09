@@ -42,7 +42,7 @@ export interface Assert {
 	equal<T>(actual: T, expected: T, message?: string): void;
 	deepEqual<T>(actual: T, expected: T, message?: string): void;
 	strictEqual<T>(actual: T, expected: T, message?: string): void;
-	ok(result: boolean, message?: string): void;
+	ok<T>(result: T, message?: string): void;
 	throws<T>(func: Function, expected?: T, message?: string): void;
 }
 
@@ -436,4 +436,3 @@ export function setTimeout(timeoutMs: number) {
 export function timeout() {
 	return qunit.config.testTimeout;
 }
-
