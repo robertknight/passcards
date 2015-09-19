@@ -8,7 +8,6 @@ import assert = require('assert');
 import Q = require('q');
 
 import asyncutil = require('./asyncutil');
-import collectionutil = require('./collectionutil');
 import err_util = require('./err_util');
 import stringutil = require('./stringutil');
 
@@ -80,7 +79,7 @@ export class IndexedDBDatabase implements Database {
 
 	private reset() {
 		this.database = Q.reject<IDBDatabase>(new Error('Database not opened'));
-		this.stores = new collectionutil.PMap<string, IndexedDBStore>();
+		this.stores = new Map<string, IndexedDBStore>();
 	}
 
 	open(name: string, version: number, schemaUpdateCallback: (schemaModifier: DatabaseSchemaModifier) => void) {
@@ -248,4 +247,3 @@ class IndexedDBStore implements ObjectStore {
 		});
 	}
 }
-

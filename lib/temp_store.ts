@@ -2,7 +2,6 @@ import assert = require('assert');
 import clone = require('clone');
 import Q = require('q');
 
-import collectionutil = require('./base/collectionutil');
 import event_stream = require('./base/event_stream');
 import item_store = require('./item_store');
 import key_agent = require('./key_agent');
@@ -17,10 +16,10 @@ export class Store implements item_store.SyncableStore {
 	private items: item_store.Item[];
 	private keyAgent: key_agent.KeyAgent;
 	private hint: string;
-	
+
 	// map of (revision -> item and content)
 	private content: Map<string, item_store.ItemAndContent>;
-	
+
 	// map of (store ID -> (item UUID -> revision))
 	private lastSyncedRevisions: Map<string, Map<string, item_store.RevisionPair>>;
 
@@ -143,7 +142,7 @@ export class Store implements item_store.SyncableStore {
 	clear() {
 		this.keys = [];
 		this.items = [];
-		this.content = new collectionutil.PMap<string, item_store.ItemAndContent>();
+		this.content = new Map<string, item_store.ItemAndContent>();
 		this.lastSyncedRevisions = new Map<string, Map<string, item_store.RevisionPair>>();
 		return Q<void>(null);
 	}
@@ -188,4 +187,3 @@ export class Store implements item_store.SyncableStore {
 		});
 	}
 }
-

@@ -14,57 +14,6 @@ export interface OMap<T> {
 	[index: string]: T
 }
 
-/** A basic polyfill for ES6 maps */
-export class PMap<K, V> implements Map<K, V> {
-	private map: OMap<V>;
-
-	size: number;
-
-	constructor() {
-		this.clear();
-	}
-
-	set(key: K, value: V) {
-		if (!this.has(key)) {
-			++this.size;
-		}
-		this.map[this.propName(key)] = value;
-		return this;
-	}
-
-	get(key: K) {
-		return this.map[this.propName(key)];
-	}
-
-	delete(key: K) {
-		if (!this.has(key)) {
-			return false;
-		}
-		--this.size;
-		delete this.map[this.propName(key)];
-		return true;
-	}
-
-	clear() {
-		this.size = 0;
-		this.map = {};
-	}
-
-	has(key: K) {
-		return this.map.hasOwnProperty(this.propName(key));
-	}
-
-	forEach(callback: (value: V, index?: K, map?: Map<K, V>) => any) {
-		for (var key in this.map) {
-			callback(this.map[key], key.slice(1), this);
-		}
-	}
-
-	private propName(key: K) {
-		return '$' + key;
-	}
-}
-
 /** A bi-directional map between two types of key.
   *
   * Currently only suitable for small maps.
@@ -228,7 +177,7 @@ export class LittleEndianDataView {
   * than one item.
   */
 export function listToMap<K, T>(list: T[], keyFunc: (item: T) => K) {
-	var map = new PMap<K, T>();
+	var map = new Map<K, T>();
 	list.forEach((item) => {
 		var key = keyFunc(item);
 		if (map.has(key)) {
@@ -247,14 +196,14 @@ export function listToMap<K, T>(list: T[], keyFunc: (item: T) => K) {
   *
   * When items are added to the queue using push(), it is collected
   * together with other updates and submitted to the processing function.
-  * 
+  *
   * Only one batch of updates will be processed at a time.
   *
   * An example use would be for saving updates to a JSON key/value file.
   * The processing function would take a list of key/value pairs to update,
   * load the current data file, apply the updates and save the contents back.
   * The push() function would be invoked with a key/value pair to save.
-  * 
+  *
   * If a large number of updates were submitted consecutively, these would
   * be collected into a small number of batches, so the data file would only
   * be read/updated/written a small number of times instead of once per
@@ -325,4 +274,3 @@ export function keys<K, V>(collection: Map<K, V>) {
 	});
 	return keys;
 }
-

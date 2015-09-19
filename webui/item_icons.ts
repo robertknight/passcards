@@ -11,7 +11,6 @@ import typed_react = require('typed-react');
 import underscore = require('underscore');
 import urijs = require('URIjs');
 
-import collectionutil = require('../lib/base/collectionutil');
 import err_util = require('../lib/base/err_util');
 import event_stream = require('../lib/base/event_stream');
 import image = require('../lib/siteinfo/image');
@@ -181,7 +180,7 @@ export class BasicIconProvider implements IconProvider {
 		iconSize: number,
 		imageLoader?: ImageLoader) {
 
-		this.tempCache = new collectionutil.PMap<string, Icon>();
+		this.tempCache = new Map<string, Icon>();
 		this.diskCache = new Cache(cacheStore);
 		this.provider = provider;
 		this.iconSize = iconSize;

@@ -18,54 +18,10 @@ testLib.addTest('add/fetch keys', (assert) => {
 	assert.equal(map.get2('four'), null);
 });
 
-testLib.addTest('map polyfill basic ops', (assert) => {
-	var map: Map<string, number> = new collectionutil.PMap<string, number>();
-
-	// set(), get(), delete()
-	assert.equal(map.size, 0);
-	assert.ok(!map.has('akey'));
-	assert.equal(map.set('akey', 42), map);
-	assert.equal(map.size, 1);
-	assert.ok(map.has('akey'));
-	assert.equal(map.get('akey'), 42);
-	assert.ok(map.delete('akey'));
-	assert.equal(map.size, 0);
-	assert.ok(!map.delete('akey'));
-
-	// duplicate insert
-	map.set('akey', 13);
-	map.set('akey', 23);
-	assert.equal(map.size, 1);
-	assert.equal(map.get('akey'), 23);
-
-	// map clear()
-	map.clear();
-	assert.equal(map.size, 0);
-	assert.ok(!map.has('akey'));
-});
-
 interface KeyValue {
 	key: string;
 	value: number;
 }
-
-testLib.addTest('map iteration', (assert) => {
-	var map: Map<string, number> = new collectionutil.PMap<string, number>();
-	map.set('foo', 1);
-	map.set('bar', 2);
-
-	var entries: KeyValue[] = [];
-	map.forEach((value, key) => {
-		entries.push({ key: key, value: value });
-	});
-	entries.sort((a, b) => {
-		return a.key.localeCompare(b.key);
-	});
-	assert.deepEqual(entries, [
-		{ key: 'bar', value: 2 },
-		{ key: 'foo', value: 1 }
-	]);
-});
 
 testLib.addTest('convert list to map', (assert) => {
 	var map = collectionutil.listToMap([{ k: 1, v: 1 }, { k: 2, v: 2 }, { k: 3, v: 3 }], (item) => {
@@ -101,4 +57,3 @@ testLib.addAsyncTest('batched updates', (assert) => {
 		});
 	});
 });
-

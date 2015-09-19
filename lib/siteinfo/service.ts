@@ -174,7 +174,7 @@ class IconFetcher {
 		this.fetcher = fetcher;
 		this.done = new event_stream.EventStream<IconFetchState>();
 		this.queue = [];
-		this.fetchedUrls = new collection_util.PMap<string, number>();
+		this.fetchedUrls = new Map<string, number>();
 	}
 
 	/** Returns the number of outstanding URL fetch requests which

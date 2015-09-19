@@ -1,6 +1,5 @@
 import Q = require('q');
 
-import collectionutil = require('./collectionutil');
 import key_value_store = require('./key_value_store');
 import stringutil = require('./stringutil');
 
@@ -55,7 +54,7 @@ export class Database implements key_value_store.Database {
 	}
 
 	private reset() {
-		this.stores = new collectionutil.PMap<string, ObjectStore>();
+		this.stores = new Map<string, ObjectStore>();
 		this.version = 0;
 	}
 }
@@ -64,7 +63,7 @@ class ObjectStore implements key_value_store.ObjectStore {
 	items: Map<string, any>;
 
 	constructor() {
-		this.items = new collectionutil.PMap<string, any>();
+		this.items = new Map<string, any>();
 	}
 
 	set<T>(key: string, value: T) {
@@ -90,4 +89,3 @@ class ObjectStore implements key_value_store.ObjectStore {
 		return Q<void>(null);
 	}
 }
-

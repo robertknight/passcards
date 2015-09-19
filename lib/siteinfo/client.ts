@@ -33,7 +33,7 @@ export class PasscardsClient implements site_info.SiteInfoProvider {
 	updated: event_stream.EventStream<string>;
 
 	constructor(serviceHost: string = DEFAULT_PASSCARDS_SERVICE_URL) {
-		this.cache = new collectionutil.PMap<string, site_info.QueryResult>();
+		this.cache = new Map<string, site_info.QueryResult>();
 		this.rootUrl = serviceHost;
 		this.updated = new event_stream.EventStream<string>();
 	}

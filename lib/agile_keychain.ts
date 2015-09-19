@@ -281,7 +281,7 @@ export class Vault implements item_store.Store {
 
 	// map of (item ID -> Item) for items that have been
 	// modified and require the contents.js index file to be updated
-	private pendingIndexUpdates: collectionutil.PMap<string, item_store.Item>;
+	private pendingIndexUpdates: Map<string, item_store.Item>;
 
 	// promise which is resolved when the current flush of
 	// index updates completes
@@ -302,7 +302,7 @@ export class Vault implements item_store.Store {
 		this.onItemUpdated = new event_stream.EventStream<item_store.Item>();
 		this.onUnlock = new event_stream.EventStream<void>();
 
-		this.pendingIndexUpdates = new collectionutil.PMap<string, item_store.Item>();
+		this.pendingIndexUpdates = new Map<string, item_store.Item>();
 		this.indexUpdated = Q<{}>(null);
 		this.indexUpdatePending = false;
 	}
