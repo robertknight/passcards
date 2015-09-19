@@ -17,6 +17,7 @@
     "sort-stream": "^1.0.1",
     "tsd": "^0.6.0-beta.5",
     "tslint": "^2.4.2",
+    "typescript": "^1.6.2",
     "typescript-formatter": "^0.2.2",
     "xdiff": "^0.2.11"
   },
@@ -46,7 +47,6 @@
     "through2": "^0.6.3",
     "ts-style": "^0.6.0",
     "typed-react": "^3.4.1",
-    "typescript": "^1.5.3",
     "underscore": "^1.8.2",
     "urlrouter": ">=0.5.4"
   },
