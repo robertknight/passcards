@@ -84,7 +84,7 @@ $(webui_css_dir)/controls_demo_theme.css: $(compiled_js_files)
 
 webui-icons:
 	@mkdir -p ${webui_icon_dir}
-	@cp icons/* ${webui_icon_dir}
+	@cp -R icons/* ${webui_icon_dir}
 
 # pbkdf2_bundle.js is a require()-able bundle
 # of the PBKDF2 implementation for use in Web Workers

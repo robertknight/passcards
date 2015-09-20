@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="576"
+   height="144"
+   viewBox="0 0 576 144"
+   id="SVGRoot"
+   version="1.1"
+   inkscape:version="0.91+devel+osxmenu r12898"
+   sodipodi:docname="monochrome-icon+wordmark_pink.svg"
+   inkscape:export-filename="/Users/Sam/Projects/Icons/passcards/monochrome-icon+wordmark_pink.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96">
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ec1561"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="1"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1"
+     inkscape:cx="115.6"
+     inkscape:cy="233"
+     inkscape:document-units="px"
+     inkscape:current-layer="g4661"
+     showgrid="false"
+     inkscape:window-width="1920"
+     inkscape:window-height="970"
+     inkscape:window-x="0"
+     inkscape:window-y="23"
+     inkscape:window-maximized="0"
+     inkscape:grid-bbox="true"
+     inkscape:object-paths="true"
+     inkscape:snap-intersection-paths="true"
+     inkscape:object-nodes="true"
+     inkscape:snap-smooth-nodes="true"
+     inkscape:snap-midpoints="true"
+     showborder="true"
+     inkscape:snap-global="true">
+    <inkscape:grid
+       type="xygrid"
+       id="grid15247"
+       empspacing="4" />
+  </sodipodi:namedview>
+  <defs
+     id="defs14690">
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient4599">
+      <stop
+         style="stop-color:#3a3a3a;stop-opacity:1"
+         offset="0"
+         id="stop4601" />
+      <stop
+         style="stop-color:#636363;stop-opacity:1"
+         offset="1"
+         id="stop4603" />
+    </linearGradient>
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath18807">
+      <rect
+         ry="4"
+         y="8"
+         x="16"
+         height="112"
+         width="64"
+         id="rect18809"
+         style="opacity:1;fill:#009daf;fill-opacity:1;stroke:none;stroke-width:0;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+    </clipPath>
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath25678">
+      <rect
+         style="opacity:0.2;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+         id="rect25680"
+         width="1120"
+         height="336"
+         x="-944"
+         y="-104"
+         ry="1" />
+    </clipPath>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient4599"
+       id="linearGradient4605"
+       x1="400"
+       y1="-24"
+       x2="400"
+       y2="72"
+       gradientUnits="userSpaceOnUse" />
+  </defs>
+  <metadata
+     id="metadata14693">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     style="display:inline"
+     inkscape:label="2"
+     inkscape:groupmode="layer"
+     id="g4661"
+     transform="translate(0,16)">
+    <path
+       style="display:inline;opacity:1;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:8.45750618;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       d="m 48,27.976384 c -4.432,0 -8,3.568 -8,8 l 0,36 76,0 0,-36 c 0,-4.432 -3.568,-8 -8,-8 l -60,0 z m 28,8.046876 c 5.07924,0.0072 9.6038,3.211238 11.29688,8 L 108,43.97638 l 0,8 -4,0.02362 0,4.109376 -8,0 0,-4.101562 -8.70312,0.01562 C 85.6038,56.812164 81.07924,60.015416 76,60.023416 c -6.6274,0 -12,-5.372588 -12,-12.000001 0,-6.627414 5.3726,-12 12,-12 z m 0,8 c -2.20916,0 -4,1.790853 -4,4 0,2.209148 1.79084,4 4,4 2.20916,0 4,-1.790852 4,-4 0,-2.209147 -1.79084,-4 -4,-4 z m -36,31.953124 0,4 c 0,4.432 3.568,8 8,8 l 60,0 c 4.432,0 8,-3.568 8,-8 l 0,-4 -76,0 z"
+       id="rect6136"
+       inkscape:connector-curvature="0" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:40px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;opacity:1;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="151"
+       y="84"
+       id="text4595"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan4597"
+         x="151"
+         y="84"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:80px;font-family:Raleway;-inkscape-font-specification:'Raleway Bold';fill:#ffffff;fill-opacity:1">Passcards</tspan></text>
+  </g>
+</svg>

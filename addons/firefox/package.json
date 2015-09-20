@@ -1,10 +1,11 @@
 {
   "name": "passcards",
-  "title": "passcards",
+  "title": "Passcards",
   "id": "passcards@robertknight.github.io",
   "description": "A Simple Password Manager",
   "author": "Robert Knight",
   "license": "MPL 2.0",
   "version": "0.3",
-  "main": "lib/main.js"
+  "main": "lib/main.js",
+  "icon": "data/dist/icons/app/icon128.png"
 }

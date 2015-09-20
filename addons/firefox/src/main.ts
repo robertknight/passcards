@@ -175,10 +175,10 @@ function main() {
 
 	toolbarButton = new buttons.ToggleButton({
 		id: 'passcards-icon',
-		label: 'passcards Password Manager',
+		label: 'Passcards Password Manager',
 		icon: {
-			'32': self_.data.url('dist/icons/icon-32.png'),
-			'64': self_.data.url('dist/icons/icon-64.png')
+			'18': self_.data.url('dist/icons/app/firefox/firefox_toolbar-icon_18.png'),
+			'20': self_.data.url('dist/icons/app/firefox/firefox_toolbar-icon_20.png')
 		},
 		onChange: showPanel
 	});

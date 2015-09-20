@@ -1,6 +1,6 @@
 {
   "manifest_version": 2,
-  "name": "passcards",
+  "name": "Passcards",
   "description": "A Simple Password Manager",
   "version": "0.3",
   "homepage_url": "https://robertknight.github.io/passcards",
@@ -14,7 +14,7 @@
   ],
 
   "browser_action": {
-    "default_icon": "data/dist/icons/icon-32.png",
+    "default_icon": "data/dist/icons/app/chrome/chrome_toolbar-icon_38.png",
     "default_popup": "data/panel.html"
   },
   "commands" : {
@@ -25,8 +25,8 @@
 	}
   },
   "icons": {
-    "32": "data/dist/icons/icon-32.png",
-    "64": "data/dist/icons/icon-64.png"
+	"48": "data/dist/icons/app/icon48.png",
+	"128": "data/dist/icons/app/icon128.png"
   },
   "web_accessible_resources": [
     "data/auth.html"
