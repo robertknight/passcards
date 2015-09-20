@@ -55,6 +55,9 @@
     },
     "colors/colors.d.ts": {
       "commit": "286c198898978cb6045076c3e47f823a02217b41"
+    },
+    "proxyquire/proxyquire.d.ts": {
+      "commit": "a6cfab4fe934647f16f9b0e65f5c2c52f2601b2d"
     }
   }
 }
