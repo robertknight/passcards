@@ -156,12 +156,12 @@ export function rectHeight(rect: Rect) {
 
 /** Describes the transition state of a view.
   *
-  * The state is initially 'Entering' and transitions to
-  * 'Entered' a moment afterwards.
+  * The state is initially 'WillEnter' and transitions to
+  * 'Entering' a moment afterwards.
   */
 export enum TransitionState {
+	WillEnter,
 	Entering,
-	Entered,
 	Leaving,
 	Left
 }
@@ -189,4 +189,11 @@ export class TransitionEndListener {
 	remove() {
 		transition_events.removeEndEventListener(this.node, this.listener);
 	}
+}
+
+export function awaitTransition(component: react.Component<{}, {}>, property: string, callback: () => void) {
+	let listener = new TransitionEndListener(component, property, () => {
+		callback();
+		listener.remove();
+	});
 }

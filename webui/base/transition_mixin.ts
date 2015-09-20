@@ -49,12 +49,12 @@ class TransitionMixin extends typed_react.Mixin<TransitionMixinProps, Transition
 			console.warn('A component including TransitionMixin did not specify a transitionProperty');
 		}
 
-		this.setState({ transition: reactutil.TransitionState.Entering });
+		this.setState({ transition: reactutil.TransitionState.WillEnter });
 		setTimeout(() => {
 			if (!this.isMounted()) {
 				return;
 			}
-			this.setState({ transition: reactutil.TransitionState.Entered });
+			this.setState({ transition: reactutil.TransitionState.Entering });
 		}, 10);
 
 		let listener = new reactutil.TransitionEndListener(this.transitionComponent(), this.state.transitionProperty, () => {
@@ -85,11 +85,11 @@ export var TransitionMixinM = typed_react.createMixin(TransitionMixin);
   */
 export function fadeIn(state: reactutil.TransitionState) {
 	switch (state) {
-		case reactutil.TransitionState.Entering:
+		case reactutil.TransitionState.WillEnter:
 			return {
 				opacity: 0.01
 			};
-		case reactutil.TransitionState.Entered:
+		case reactutil.TransitionState.Entering:
 			// note: We return an object here
 			// rather than null due to React issue #3409
 			return {

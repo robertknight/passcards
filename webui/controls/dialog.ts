@@ -1,4 +1,3 @@
-import typed_react = require('typed-react');
 import react = require('react');
 import style = require('ts-style');
 
@@ -7,7 +6,7 @@ import button = require('./button');
 import colors = require('./colors');
 import reactutil = require('../base/reactutil');
 import style_util = require('../base/style_util');
-import transition_mixin = require('../base/transition_mixin');
+import { TransitionChildProps } from '../base/transition_container';
 
 export interface Action {
 	/** The label of the dialog action, eg. 'OK', 'Cancel' */
@@ -16,7 +15,7 @@ export interface Action {
 	onSelect: () => void;
 }
 
-export interface DialogProps extends react.Props<void> {
+export interface DialogProps extends TransitionChildProps {
 	acceptAction?: Action;
 	rejectAction?: Action;
 
@@ -27,6 +26,8 @@ export interface DialogProps extends react.Props<void> {
 	 */
 	containerStyle?: react.CSSProperties;
 }
+
+const DIALOG_TRANSITION_DURATION = 300;
 
 let theme = style.create({
 	// container which holds the dialog itself and the overlay
@@ -51,6 +52,12 @@ let theme = style.create({
 		boxShadow: '0px 8px 10px -5px rgba(0, 0, 0, 0.14),' +
 		'0px 16px 24px 2px rgba(0, 0, 0, 0.098),' +
 		'0px 6px 30px 5px rgba(0, 0, 0, 0.082)',
+
+		opacity: 0.01,
+
+		transition: style_util.transitionOn({
+			opacity: DIALOG_TRANSITION_DURATION / 1000.0
+		})
 	},
 
 	contentArea: {
@@ -81,7 +88,7 @@ let theme = style.create({
 		opacity: 0.01,
 
 		transition: style_util.transitionOn({
-			opacity: .3
+			opacity: DIALOG_TRANSITION_DURATION / 1000.0
 		})
 	},
 }, __filename);
@@ -98,22 +105,15 @@ function buttonForAction(action: Action, ref: string) {
 	});
 }
 
-interface DialogState extends transition_mixin.TransitionMixinState {
+function willEnter(state: reactutil.TransitionState) {
+	return state === reactutil.TransitionState.Entering;
 }
-
-const OVERLAY_REF = 'overlay';
 
 /** A modal dialog component.
  *
  * See https://www.google.com/design/spec/components/dialogs.html#dialogs-specs
  */
-export class Dialog extends typed_react.Component<DialogProps, DialogState> {
-	getInitialState() {
-		return {
-			transitionProperty: 'opacity',
-			transitionComponent: OVERLAY_REF
-		};
-	}
+export class Dialog extends react.Component<DialogProps, {}> {
 
 	render() {
 		return react.DOM.div(style.mixin([theme.container, this.props.containerStyle]),
@@ -122,16 +122,24 @@ export class Dialog extends typed_react.Component<DialogProps, DialogState> {
 			);
 	}
 
-	private renderDialog() {
-		if (this.state.transition === reactutil.TransitionState.Leaving ||
-			this.state.transition === reactutil.TransitionState.Left) {
-			return null;
+	componentWillReceiveProps(nextProps: DialogProps) {
+		console.log('will update dialog with props', nextProps);
+		if (nextProps.onEntered) {
+			setTimeout(() => nextProps.onEntered(), DIALOG_TRANSITION_DURATION);
+		} else if (nextProps.onLeft) {
+			setTimeout(() => nextProps.onLeft(), DIALOG_TRANSITION_DURATION);
 		}
+	}
 
+	private renderDialog() {
+		let dialogStyles: Object[] = [theme.dialog];
+		if (willEnter(this.props.transitionState)) {
+			dialogStyles.push({ opacity: 1.0 });
+		}
 		let acceptButton = buttonForAction(this.props.acceptAction, 'accept');
 		let rejectButton = buttonForAction(this.props.rejectAction, 'reject');
 
-		return react.DOM.div(style.mixin(theme.dialog),
+		return react.DOM.div(style.mixin(dialogStyles),
 			react.DOM.div(style.mixin(theme.contentArea), this.props.children),
 			react.DOM.div(style.mixin(theme.actionsArea),
 				rejectButton,
@@ -142,7 +150,7 @@ export class Dialog extends typed_react.Component<DialogProps, DialogState> {
 
 	private renderOverlay() {
 		let overlayStyles: Object[] = [theme.overlay];
-		if (this.state.transition === reactutil.TransitionState.Entered) {
+		if (willEnter(this.props.transitionState)) {
 			overlayStyles.push({ opacity: .2 });
 		}
 
@@ -154,10 +162,9 @@ export class Dialog extends typed_react.Component<DialogProps, DialogState> {
 		}
 
 		return react.DOM.div(style.mixin(overlayStyles, {
-			onClick: clickHandler,
-			ref: OVERLAY_REF
+			onClick: clickHandler
 		}));
 	}
 }
 
-export let DialogF = reactutil.createFactory(Dialog, transition_mixin.TransitionMixinM);
+export let DialogF = react.createFactory(Dialog);
