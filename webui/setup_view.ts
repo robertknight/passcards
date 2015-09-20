@@ -11,7 +11,6 @@ import assign = require('../lib/base/assign');
 import button = require('./controls/button');
 import colors = require('./controls/colors');
 import dropbox_vfs = require('../lib/vfs/dropbox');
-import env = require('../lib/base/env');
 import fonts = require('./controls/fonts');
 import http_vfs = require('../lib/vfs/http');
 import reactutil = require('./base/reactutil');
@@ -700,26 +699,8 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 
 		this.pushScreen(Screen.CloudStoreLogin, { temporary: true });
 
-		let authRedirectURL = document.location.href.replace(/[a-z]+\.html/, 'auth.html');
-
-		if (env.isFirefoxAddon()) {
-			// for Firefox the auth redirect URL must be an HTTP or HTTPS
-			// URL as HTTP(S) -> resource:// redirects are not permitted.
-			//
-			// The extension intercepts the redirect from the OAuth page
-			// to the dummy URL and redirects it back to the bundled auth.html
-			// page
-			authRedirectURL = 'http://localhost:8000/webui/index.html';
-		}
-
 		let authenticator = new auth.OAuthFlow({
-			authServerURL: fs.authURL(),
-			authRedirectURL: authRedirectURL,
-			windowSettings: {
-				target: '_blank',
-				width: 800,
-				height: 600
-			}
+			authServerURL: fs.authURL()
 		});
 
 		let accessToken: string;

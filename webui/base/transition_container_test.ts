@@ -46,6 +46,9 @@ addTest('should render child with transition props', assert => {
 			assert.deepEqual(observedStates, [
 				TransitionState.WillEnter,
 				TransitionState.Entered,
+				// the Entered state is currently seen twice, once
+				// in the next tick after 'WillEnter' and then again
+				// once the entry transition completes
 				TransitionState.Entered
 			]);
 		});

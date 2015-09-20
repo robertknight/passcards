@@ -5,6 +5,7 @@ import url = require('url');
 
 import assign = require('../lib/base/assign');
 import crypto = require('../lib/base/crypto');
+import env = require('../lib/base/env');
 
 export interface Credentials {
 	/** The access token for making requests to the cloud service. */
@@ -96,8 +97,24 @@ export class OAuthFlow {
 	private options: OAuthFlowOptions;
 
 	constructor(options: OAuthFlowOptions) {
+		let defaultRedirectURL: string = document.location.href.replace(/\/[a-z]+\.html|\/$|$/, '/auth.html');
+		if (env.isFirefoxAddon()) {
+			// for Firefox the auth redirect URL must be an HTTP or HTTPS
+			// URL as HTTP(S) -> resource:// redirects are not permitted.
+			//
+			// The extension intercepts the redirect from the OAuth page
+			// to the dummy URL and redirects it back to the bundled auth.html
+			// page
+			defaultRedirectURL = 'http://localhost:8000/webui/index.html';
+		}
+
 		this.options = assign<OAuthFlowOptions>({}, {
-			windowSettings: {}
+			windowSettings: {
+				width: 800,
+				height: 600,
+				target: '_blank'
+			},
+			authRedirectURL: defaultRedirectURL
 		}, options);
 	}
 

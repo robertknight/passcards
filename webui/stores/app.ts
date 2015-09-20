@@ -1,6 +1,7 @@
 import underscore = require('underscore');
 
 import assign = require('../../lib/base/assign');
+import auth = require('../auth');
 import details_view = require('../details_view');
 import event_stream = require('../../lib/base/event_stream');
 import item_store = require('../../lib/item_store');
@@ -17,6 +18,8 @@ export interface State {
 	 * storage provider.
 	 */
 	isSigningIn?: boolean;
+	authServerURL?: string;
+	onReceiveCredentials?: (credentials: auth.Credentials) => void;
 
 	/** Items from the open password store */
 	items?: item_store.Item[];

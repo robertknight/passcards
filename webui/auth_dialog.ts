@@ -1,13 +1,17 @@
 import react = require('react');
 
 import app_theme = require('./theme');
+import auth = require('./auth');
 import dialog = require('./controls/dialog');
+import { TransitionContainerF } from './base/transition_container';
 
 export interface AuthDialogProps {
+	authServerURL: string;
+
 	/** Callback triggered when the user either cancels
 	 * the dialog or completes authentication.
 	 */
-	onComplete: () => void;
+	onComplete: (credentials?: auth.Credentials) => void;
 }
 
 enum AuthStep {
@@ -16,7 +20,9 @@ enum AuthStep {
 }
 
 interface AuthDialogState {
-	step: AuthStep;
+	step?: AuthStep;
+	leaving?: boolean;
+	credentials?: auth.Credentials;
 }
 
 class AuthDialog extends react.Component<AuthDialogProps, AuthDialogState> {
@@ -24,7 +30,8 @@ class AuthDialog extends react.Component<AuthDialogProps, AuthDialogState> {
 		super(props, undefined);
 
 		this.state = {
-			step: AuthStep.PromptToSignIn
+			step: AuthStep.PromptToSignIn,
+			leaving: false
 		};
 	}
 
@@ -33,29 +40,59 @@ class AuthDialog extends react.Component<AuthDialogProps, AuthDialogState> {
 		let showSignInAction = false;
 
 		if (this.state.step === AuthStep.PromptToSignIn) {
-			dialogText = 'You need to sign in to your Dropbox account to sync';
+			dialogText = 'You need to sign in to your Dropbox account to sync your passwords';
 			showSignInAction = true;
 		} else {
 			dialogText = 'Waiting for sign in...';
 		}
 
-		return dialog.DialogF({
-			containerStyle: {
-				zIndex: app_theme.Z_LAYERS.MENU_LAYER
-			},
-			acceptAction: showSignInAction ? {
-				label: 'Sign In',
-				onSelect: () => this.reauthenticate()
-			} : undefined,
-			rejectAction: {
-				label: 'Cancel',
-				onSelect: () => this.props.onComplete()
+		let DIALOG_KEY = 'auth-dialog';
+		let authDialog: react.ReactElement<{}>;
+		if (!this.state.leaving) {
+			authDialog = dialog.DialogF({
+				key: DIALOG_KEY,
+				containerStyle: {
+					zIndex: app_theme.Z_LAYERS.MENU_LAYER
+				},
+				acceptAction: showSignInAction ? {
+					label: 'Sign In',
+					onSelect: () => {
+						this.setState({ step: AuthStep.WaitingForAuth });
+						this.showAuthWindow();
+					}
+				} : undefined,
+				rejectAction: {
+					label: 'Cancel',
+					onSelect: () => this.leave()
+				}
+			}, dialogText);
+		}
+
+		return TransitionContainerF({
+			onComponentRemoved: (key: string) => {
+				if (key === DIALOG_KEY) {
+					this.props.onComplete(this.state.credentials);
+				}
 			}
-		}, dialogText);
+		},
+			authDialog
+			);
 	}
 
-	private reauthenticate() {
-		this.setState({ step: AuthStep.WaitingForAuth });
+	private showAuthWindow() {
+		let authFlow = new auth.OAuthFlow({
+			authServerURL: this.props.authServerURL,
+		});
+		authFlow.authenticate(window).then(credentials => {
+			this.setState({ credentials });
+			this.leave();
+		}).catch(err => {
+			this.leave();
+		});
+	}
+
+	private leave() {
+		this.setState({ leaving: true });
 	}
 }
 

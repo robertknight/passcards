@@ -180,13 +180,16 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 		let activeDialog: react.ReactElement<{}>;
 		if (this.props.appState.state.isSigningIn) {
 			activeDialog = auth_dialog.AuthDialogF({
-				onComplete: () => { this.props.appState.update({ isSigningIn: false }) }
+				authServerURL: this.props.appState.state.authServerURL,
+				onComplete: credentials => {
+					if (credentials) {
+						this.props.appState.state.onReceiveCredentials(credentials);
+					}
+					this.props.appState.update({ isSigningIn: false })
+				}
 			});
 		}
-
-		return reactutil.TransitionGroupF(<react.Props<{}>>{ key: 'dialog-container' },
-			activeDialog
-			);
+		return activeDialog;
 	}
 
 	private renderToasters() {

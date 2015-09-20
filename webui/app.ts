@@ -8,6 +8,7 @@ import react = require('react');
 import agile_keychain = require('../lib/agile_keychain');
 import agile_keychain_crypto = require('../lib/agile_keychain_crypto');
 import app_view = require('./app_view');
+import assign = require('../lib/base/assign');
 import autofill = require('./autofill');
 import browser_access = require('./browser_access');
 import dropboxvfs = require('../lib/vfs/dropbox');
@@ -129,6 +130,12 @@ export class App {
 		return fs;
 	}
 
+	private updateAccount(updatedAccount: settings.Account) {
+		let accounts = this.services.settings.get<settings.AccountMap>(settings.Setting.Accounts);
+		accounts[updatedAccount.id] = updatedAccount;
+		this.services.settings.set(settings.Setting.Accounts, accounts);
+	}
+
 	// setup the local store, remote store and item syncing
 	// once the user completes login
 	private initAccount(account: settings.Account) {
@@ -149,7 +156,16 @@ export class App {
 				if (err instanceof vfs.VfsError) {
 					let vfsErr = <vfs.VfsError>err;
 					if (vfsErr.type === vfs.ErrorType.AuthError) {
-						this.state.update({ isSigningIn: true });
+						// if authentication fails, eg. due to the user revoking
+						// access for the app, then prompt to sign in again
+						this.state.update({
+							isSigningIn: true,
+							authServerURL: fs.authURL(),
+							onReceiveCredentials: credentials => {
+								fs.setCredentials(credentials);
+								this.updateAccount(assign<settings.Account>({}, account, credentials));
+							}
+						});
 						handled = true;
 					}
 				}
