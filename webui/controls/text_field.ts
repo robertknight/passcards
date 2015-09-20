@@ -160,7 +160,7 @@ var theme = style.create({
 			}
 		}
 	}
-});
+}, __filename);
 
 /** Specify custom styling for the component. */
 export interface TextFieldStyle {

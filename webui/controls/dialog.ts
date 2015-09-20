@@ -105,8 +105,15 @@ function buttonForAction(action: Action, ref: string) {
 	});
 }
 
-function willEnter(state: reactutil.TransitionState) {
-	return state === reactutil.TransitionState.Entered;
+/** Returns true if a component with a given TransitionState
+ * has entered the scene.
+ */
+function hasEntered(state: reactutil.TransitionState) {
+	if (typeof state === 'undefined') {
+		return true;
+	} else {
+		return state === reactutil.TransitionState.Entered;
+	}
 }
 
 /** A modal dialog component.
@@ -132,7 +139,7 @@ export class Dialog extends react.Component<DialogProps, {}> {
 
 	private renderDialog() {
 		let dialogStyles: Object[] = [theme.dialog];
-		if (willEnter(this.props.transitionState)) {
+		if (hasEntered(this.props.transitionState)) {
 			dialogStyles.push({ opacity: 1.0 });
 		}
 		let acceptButton = buttonForAction(this.props.acceptAction, 'accept');
@@ -149,7 +156,7 @@ export class Dialog extends react.Component<DialogProps, {}> {
 
 	private renderOverlay() {
 		let overlayStyles: Object[] = [theme.overlay];
-		if (willEnter(this.props.transitionState)) {
+		if (hasEntered(this.props.transitionState)) {
 			overlayStyles.push({ opacity: .2 });
 		}
 

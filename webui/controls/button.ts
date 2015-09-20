@@ -140,7 +140,7 @@ var theme = style.create({
 			}
 		}
 	},
-});
+}, __filename);
 
 export enum Style {
 	Rectangular,

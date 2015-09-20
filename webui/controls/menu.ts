@@ -84,7 +84,7 @@ var theme = style.create({
 			}
 		}
 	}
-});
+}, __filename);
 
 export interface MenuItem {
 	label: string;

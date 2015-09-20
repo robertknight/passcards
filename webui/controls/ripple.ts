@@ -30,7 +30,7 @@ var theme = style.create({
 			zIndex: 0
 		}
 	},
-});
+}, __filename);
 
 enum Phase {
 	Idle,

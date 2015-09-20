@@ -13,6 +13,8 @@ import reactutil = require('../base/reactutil');
 import ripple = require('./ripple');
 import text_field = require('./text_field');
 
+import { TransitionContainerF } from '../base/transition_container';
+
 var theme = style.create({
 	app: {
 		maxWidth: 500,
@@ -161,7 +163,11 @@ class ControlDemoApp extends typed_react.Component<ControlDemoAppProps, ControlD
 				},
 				style: button.Style.Rectangular
 			}),
-			reactutil.TransitionGroupF({}, prompt)
+			TransitionContainerF({
+				onComponentRemoved: (key) => {
+					console.log('Removed component', key);
+				}
+			}, prompt)
 			);
 	}
 

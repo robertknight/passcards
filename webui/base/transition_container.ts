@@ -117,11 +117,11 @@ export class TransitionContainer extends react.Component<TransitionContainerProp
 		let children = react.Children.map(this.props.children, child =>
 			react.createElement(<any>TransitionContainerChild, {
 				key: (<any>child).props.key,
-			onLeft: (key: string | number) => {
-				if (this.props.onComponentRemoved) {
-					this.props.onComponentRemoved(key);
+				onLeft: (key: string | number) => {
+					if (this.props.onComponentRemoved) {
+						this.props.onComponentRemoved(key);
+					}
 				}
-			}
 			}, child)
 			);
 		return react.createElement(react_addons.addons.TransitionGroup, {}, children);

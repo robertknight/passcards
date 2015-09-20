@@ -50,7 +50,7 @@ var theme = style.create({
 			marginRight: 2
 		}
 	}
-});
+}, __filename);
 
 export interface ToasterProps extends react.Props<void> {
 	message: string;
