@@ -118,9 +118,10 @@ declare module 'sdk/self' {
 }
 
 interface Tab {
-	id: string;	
+	id: string;
 	url: string;
 	attach(options: WorkerOptions): ContentWorker;
+	close(callback?: () => any): void;
 }
 
 interface Tabs {
@@ -160,4 +161,3 @@ declare module 'sdk/timers' {
 	};
 	export = timers;
 }
-

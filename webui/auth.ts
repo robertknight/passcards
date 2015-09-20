@@ -81,6 +81,9 @@ export interface AuthWindow {
 export interface AuthWindowOpener {
 	open(url: string, target: string, options: string): AuthWindow;
 	localStorage: {
+		key? (index: number): string;
+		length?: number;
+
 		getItem(key: string): string;
 		removeItem(key: string): void;
 	}
@@ -174,19 +177,19 @@ export class OAuthFlow {
 				}
 			}
 
+			// check for the window being closed before auth completes.
 			// see http://stackoverflow.com/a/17744260/434243
-			if (authWindow.closed) {
+			//
+			// In the Firefox addon this check is avoided because authWindow.closed
+			// returns true once the window has redirected to an external URL,
+			// even though the window is still open.
+			if (!env.isFirefoxAddon() && authWindow.closed) {
 				credentials.reject(new Error('Window closed before auth completed'));
 			}
 		}, 200);
 
 		credentials.promise.finally(() => {
-			// OAuthWindow tries to control when the auth window is opened and closed,
-			// except in the case of the Chrome extension where authWindow.close()
-			// fails to close the window.
-			// TODO - Tested in Chrome 46.0.2486.0. Requires further investigation.
 			authWindow.close();
-
 			clearTimeout(pollTimeout);
 		});
 

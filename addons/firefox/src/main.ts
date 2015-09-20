@@ -41,17 +41,17 @@ function getTabWorker(tab: Tab) {
 
 // Firefox does not permit HTTP -> non-HTTP redirects,
 // so OAuth authentication flows use a http://localhost redirect
-// URL. The extension intercepts the redirect and reroutes to
-// the auth.html file bundled with the extension.
+// URL. The extension intercepts the redirect, extracts the auth params
+// and forwards them to the app
 function interceptOAuthRedirect(tab: Tab) {
 	const AUTH_URL = 'http://localhost:8000/webui/index.html';
 	if (tab.url.slice(0, AUTH_URL.length) === AUTH_URL) {
 		// extract OAuth token from location hash
 		let accessTokenMatch = tab.url.match(/access_token=([^ &]+)/);
 		if (accessTokenMatch && panelRpc) {
-			let hashParams = tab.url.slice(tab.url.indexOf('#'));
-			let redirectedURL = `${self_.data.url('auth.html') }${hashParams}`;
-			tab.url = redirectedURL;
+			let hashStart = tab.url.indexOf('#');
+			panelRpc.call('authCompleted', [tab.url.slice(hashStart)]);
+			tab.close();
 			return true;
 		}
 	}

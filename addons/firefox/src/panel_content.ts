@@ -8,6 +8,7 @@
 
 import browser_access = require('../../../webui/browser_access');
 import rpc = require('../../../lib/net/rpc');
+import url_utils = require('../../../lib/base/url_util');
 
 var selfWorker: ContentWorker = <any>self;
 
@@ -53,6 +54,23 @@ extensionRpc.on<void>('pagechanged', (url: string) => {
 
 extensionRpc.on('show', () => {
 	appUiRpc.call('show', []);
+});
+
+// receives auth credentials from an OAuth login flow and saves
+// them in local storage for the main app UI to pick up.
+//
+// Credentials are saved to localStorage here rather than in auth_receiver.ts
+// (used in the web app and Chrome extension) because of an issue where
+// localStorage writes by a tab/window in the main app on a resource:// URL
+// are not visible to another resource:// page from the same extension loaded
+// in a popup panel (tested with a Firefox 43 Nightly with e10s enabled)
+extensionRpc.on('authCompleted', (hash: string) => {
+	let params = url_utils.parseHash(hash);
+	let {access_token, state } = params;
+	window.localStorage.setItem('PASSCARDS_OAUTH_TOKEN', JSON.stringify({
+		accessToken: access_token,
+		state
+	}));
 });
 
 // notify the add-on that the panel content script is ready.

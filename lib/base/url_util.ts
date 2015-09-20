@@ -4,6 +4,35 @@ import uri_js = require('URIjs');
 
 import stringutil = require('./stringutil');
 
+export interface ParamsDict {
+	[key: string]: string;
+}
+
+// splits a 'key=value' pair into a [key, value]
+// array. The 'value' part may contain '=' chars.
+function splitHashParam(param: string): [string, string] {
+	let separator = param.indexOf('=');
+	if (separator === -1) {
+		return [param, ''];
+	} else {
+		return [param.slice(0, separator),
+			param.slice(separator + 1)];
+	}
+}
+
+export function parseHash(hash: string): ParamsDict {
+	return hash.slice(1) // trim leading '#'
+	.split('&')
+	.map(splitHashParam)
+	.reduce((obj: ParamsDict, [key, value]: [string, string]) => {
+		// the Dropbox OAuth endpoint will URI encode any chars in the
+		// 'state' query string parameter passed to the OAuth /authorize
+		// endpoint, so decode them here
+		obj[key] = decodeURIComponent(value);
+		return obj;
+	}, <ParamsDict>{});
+}
+
 // Returns the part of a URL before the query string
 export function stripQuery(url: string): string {
 	var queryOffset = url.indexOf('?');
@@ -62,4 +91,3 @@ export function domain(url: string): string {
 export function topLevelDomain(url: string) {
 	return uri_js(url).domain();
 }
-
