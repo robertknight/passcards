@@ -2,7 +2,7 @@ import typed_react = require('typed-react');
 
 import reactutil = require('./reactutil');
 
-export interface TransitionMixinState {
+export interface CSSTransitionMixinState {
 	/** The current state of the component's entry/exit transition. */
 	transition?: reactutil.TransitionState;
 	/** The CSS property that is being animated.
@@ -37,7 +37,7 @@ export interface TransitionMixinProps {
  * The mixin watches for the end of a specified CSS transition event and
  * notifies React when that completes.
  */
-class TransitionMixin extends typed_react.Mixin<TransitionMixinProps, TransitionMixinState> {
+class CSSTransitionMixin extends typed_react.Mixin<TransitionMixinProps, CSSTransitionMixinState> {
 	getInitialState() {
 		return {
 			transition: reactutil.TransitionState.Left
@@ -54,7 +54,7 @@ class TransitionMixin extends typed_react.Mixin<TransitionMixinProps, Transition
 			if (!this.isMounted()) {
 				return;
 			}
-			this.setState({ transition: reactutil.TransitionState.Entering });
+			this.setState({ transition: reactutil.TransitionState.Entered });
 		}, 10);
 
 		let listener = new reactutil.TransitionEndListener(this.transitionComponent(), this.state.transitionProperty, () => {
@@ -78,7 +78,7 @@ class TransitionMixin extends typed_react.Mixin<TransitionMixinProps, Transition
 	}
 }
 
-export var TransitionMixinM = typed_react.createMixin(TransitionMixin);
+export var CSSTransitionMixinM = typed_react.createMixin(CSSTransitionMixin);
 
 /** Returns the styling to apply to a component which fades in/out
   * in a given transition state.
@@ -89,7 +89,7 @@ export function fadeIn(state: reactutil.TransitionState) {
 			return {
 				opacity: 0.01
 			};
-		case reactutil.TransitionState.Entering:
+		case reactutil.TransitionState.Entered:
 			// note: We return an object here
 			// rather than null due to React issue #3409
 			return {

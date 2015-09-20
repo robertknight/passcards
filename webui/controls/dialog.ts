@@ -106,7 +106,7 @@ function buttonForAction(action: Action, ref: string) {
 }
 
 function willEnter(state: reactutil.TransitionState) {
-	return state === reactutil.TransitionState.Entering;
+	return state === reactutil.TransitionState.Entered;
 }
 
 /** A modal dialog component.
@@ -123,7 +123,6 @@ export class Dialog extends react.Component<DialogProps, {}> {
 	}
 
 	componentWillReceiveProps(nextProps: DialogProps) {
-		console.log('will update dialog with props', nextProps);
 		if (nextProps.onEntered) {
 			setTimeout(() => nextProps.onEntered(), DIALOG_TRANSITION_DURATION);
 		} else if (nextProps.onLeft) {

@@ -166,7 +166,7 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 	componentWillEnter(callback: () => void) {
 		this.setState({ transition: reactutil.TransitionState.WillEnter });
 		setTimeout(() => {
-			this.setState({ transition: reactutil.TransitionState.Entering });
+			this.setState({ transition: reactutil.TransitionState.Entered });
 		}, 10);
 
 		this.transitionListener = new reactutil.TransitionEndListener(this.refs['menu'], this.transitionProperty(), () => {
@@ -331,7 +331,7 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 		var menuRect = this.getMenuRect();
 		var menuOpacity = 0;
 		var menuTransform = 'translateY(0px)';
-		var enteringOrLeaving = this.state.transition !== reactutil.TransitionState.Entering;
+		var enteringOrLeaving = this.state.transition !== reactutil.TransitionState.Entered;
 
 		if (!enteringOrLeaving || this.displayAsSheet()) {
 			// menus fade in. Sheets slide in from a screen edge

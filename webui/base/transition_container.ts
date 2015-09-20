@@ -57,7 +57,7 @@ class TransitionContainerChild extends react.Component<TransitionContainerChildP
 	componentWillEnter(callback: () => void) {
 		setTimeout(() => {
 			this.setState({
-				transitionState: TransitionState.Entering,
+				transitionState: TransitionState.Entered,
 				enteredCallback: callback
 			});
 		}, 10);
@@ -65,7 +65,7 @@ class TransitionContainerChild extends react.Component<TransitionContainerChildP
 
 	componentDidEnter() {
 		this.setState({
-			transitionState: TransitionState.Entering,
+			transitionState: TransitionState.Entered,
 			enteredCallback: undefined
 		});
 	}
@@ -85,7 +85,7 @@ class TransitionContainerChild extends react.Component<TransitionContainerChildP
 
 	render() {
 		let child = react.Children.only(this.props.children);
-		return react.cloneElement<any>(<react.ReactElement<{}>>child, {
+		return react.cloneElement<any>(child as react.ReactElement<{}>, {
 			transitionState: this.state.transitionState,
 			onEntered: this.state.enteredCallback,
 			onLeft: this.state.leftCallback
@@ -100,7 +100,7 @@ export interface TransitionContainerProps extends react.Props<{}> {
 	onComponentRemoved: (key: string | number) => void;
 }
 
-/** A CSSTransitionGroup-like container for animating the entry and exit of
+/** A React.addons.CSSTransitionGroup-like container for animating the entry and exit of
  * child components. Whereas CSSTransitionGroup animates the entry and exit
  * of children by rendering them with specific CSS classes, TransitionContainer
  * renders its children with a `transitionState` prop that they can use to animate
@@ -108,17 +108,20 @@ export interface TransitionContainerProps extends react.Props<{}> {
  *
  * TransitionContainer also provides a callback that the parent can use to determine
  * when a child component's exit animation has completed.
+ *
+ * The props added to children rendered by TransitionContainer are declared in
+ * TransitionContainerChildProps
  */
 export class TransitionContainer extends react.Component<TransitionContainerProps, {}> {
 	render() {
 		let children = react.Children.map(this.props.children, child =>
 			react.createElement(<any>TransitionContainerChild, {
 				key: (<any>child).props.key,
-				onLeft: (key: string | number) => {
-					if (this.props.onComponentRemoved) {
-						this.props.onComponentRemoved(key);
-					}
+			onLeft: (key: string | number) => {
+				if (this.props.onComponentRemoved) {
+					this.props.onComponentRemoved(key);
 				}
+			}
 			}, child)
 			);
 		return react.createElement(react_addons.addons.TransitionGroup, {}, children);

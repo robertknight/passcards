@@ -58,7 +58,7 @@ export interface ToasterProps extends react.Props<void> {
 	progressMax?: number;
 }
 
-interface ToasterState extends transition_mixin.TransitionMixinState {
+interface ToasterState extends transition_mixin.CSSTransitionMixinState {
 }
 
 /** Control for displaying a temporary notification,
@@ -96,4 +96,4 @@ export class Toaster extends typed_react.Component<ToasterProps, ToasterState> {
 	}
 }
 
-export var ToasterF = reactutil.createFactory(Toaster, transition_mixin.TransitionMixinM);
+export var ToasterF = reactutil.createFactory(Toaster, transition_mixin.CSSTransitionMixinM);
