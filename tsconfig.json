@@ -121,6 +121,7 @@
         "./webui/base/shortcut.ts",
         "./webui/base/style_util.ts",
         "./webui/base/transition_container.ts",
+        "./webui/base/transition_container_test.ts",
         "./webui/base/transition_events.ts",
         "./webui/base/transition_mixin.ts",
         "./webui/browser_access.ts",
