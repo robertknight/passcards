@@ -120,8 +120,8 @@ export function prefix(style: StyleMap): StyleMap {
 }
 
 /** Wrapper around Window.requestAnimationFrame() which requests
-  * execution of a callback
-  */
+* execution of a callback
+*/
 export function requestAnimationFrame(callback: () => void) {
 	if (env.isChromeExtension()) {
 		// in Chrome extensions, requestAnimationFrame() never fires in
@@ -129,7 +129,9 @@ export function requestAnimationFrame(callback: () => void) {
 		// rAF on that
 		let views = chrome.extension.getViews();
 		for (let view of views) {
-			if(!view.document.hidden) {
+			// look for a view which is a) not hidden according to the Page Visiblity API
+			// and b) not the background page
+			if(!view.document.hidden && view !== chrome.extension.getBackgroundPage()) {
 			view.requestAnimationFrame(callback);
 			break;
 		}
