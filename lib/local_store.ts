@@ -92,6 +92,7 @@ export class Store implements item_store.SyncableStore {
 	private indexUpdateQueue: collectionutil.BatchedUpdateQueue<item_store.Item>;
 	private itemIndex: cached.Cached<OverviewMap>;
 
+	onKeysUpdated: event_stream.EventStream<key_agent.Key[]>;
 	onItemUpdated: event_stream.EventStream<item_store.Item>;
 
 	constructor(database: key_value_store.Database, name: string, keyAgent: key_agent.KeyAgent) {
@@ -101,6 +102,7 @@ export class Store implements item_store.SyncableStore {
 		this.name = name;
 
 		this.onItemUpdated = new event_stream.EventStream<item_store.Item>();
+		this.onKeysUpdated = new event_stream.EventStream<key_agent.Key[]>();
 
 		this.initDatabase();
 
@@ -339,7 +341,9 @@ export class Store implements item_store.SyncableStore {
 				keysSaved.push(this.keyStore.set(KEY_ID_PREFIX + key.identifier, key));
 			});
 			keysSaved.push(this.keyStore.set('hint', hint));
-			return asyncutil.eraseResult(Q.all(keysSaved));
+			return Q.all(keysSaved);
+		}).then(() => {
+			this.onKeysUpdated.publish(keys);
 		});
 	}
 

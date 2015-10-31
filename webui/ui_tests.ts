@@ -45,7 +45,8 @@ let testModules = [
 	'./item_field_test',
 	'./item_icons_test',
 	'./item_list_view_test',
-	'./page_test'
+	'./page_test',
+	'./unlock_view_test',
 ];
 
 // defer autostart until test modules have been required

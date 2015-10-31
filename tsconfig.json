@@ -53,6 +53,7 @@
         "./lib/base/key_value_store_test.ts",
         "./lib/base/logging.ts",
         "./lib/base/mem_key_value_store.ts",
+        "./lib/base/pipe.ts",
         "./lib/base/streamutil.ts",
         "./lib/base/streamutil_test.ts",
         "./lib/base/stringutil.ts",
@@ -157,6 +158,7 @@
         "./webui/theme.ts",
         "./webui/toolbar.ts",
         "./webui/ui_tests.ts",
-        "./webui/unlock_view.ts"
+        "./webui/unlock_view.ts",
+        "./webui/unlock_view_test.ts"
     ]
 }

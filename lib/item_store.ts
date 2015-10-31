@@ -615,6 +615,9 @@ export interface Store {
 	/** Emits events when items are updated in the store. */
 	onItemUpdated: event_stream.EventStream<Item>;
 
+	/** Emits events when keys are updated in the store. */
+	onKeysUpdated?: event_stream.EventStream<key_agent.Key[]>;
+
 	/** Unlock the vault */
 	unlock(password: string): Q.Promise<void>;
 

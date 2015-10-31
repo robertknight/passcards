@@ -8,11 +8,13 @@ import typed_react = require('typed-react');
 
 import button = require('./controls/button');
 import colors = require('./controls/colors');
+import event_stream = require('../lib/base/event_stream');
 import focus_mixin = require('./base/focus_mixin');
 import fonts = require('./controls/fonts');
-import item_store = require('../lib/item_store');
 import reactutil = require('./base/reactutil');
 import app_theme = require('./theme');
+
+import pipe, { Pipe } from '../lib/base/pipe';
 
 var theme = style.create({
 	upper: {
@@ -102,12 +104,20 @@ enum UnlockState {
 }
 
 interface UnlockViewState {
+	haveKeys?: boolean;
 	unlockState?: UnlockState;
 	failedUnlockCount?: number;
 }
 
+export interface Store {
+	onKeysUpdated?: event_stream.EventStream<Object[]>;
+	unlock(password: string): Q.Promise<void>;
+	passwordHint(): Q.Promise<string>;
+	listKeys(): Q.Promise<Object[]>;
+}
+
 export interface UnlockViewProps extends react.Props<void> {
-	store: item_store.Store;
+	store: Store;
 	isLocked: boolean;
 	onUnlock: () => void;
 	onUnlockErr: (error: Error) => void;
@@ -116,11 +126,35 @@ export interface UnlockViewProps extends react.Props<void> {
 }
 
 export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockViewState> {
+	pipes: Pipe[];
+
+	constructor() {
+		super();
+		this.pipes = [];
+	}
+
 	getInitialState() {
 		return {
+			haveKeys: false,
 			unlockState: UnlockState.Locked,
 			failedUnlockCount: 0
 		};
+	}
+
+	componentWillMount() {
+		let onKeysChanged = pipe((keys: Object[]) => this.onKeysChanged(keys));
+		this.pipes.push(onKeysChanged);
+
+		this.props.store.onKeysUpdated.listen(keys => this.onKeysChanged(keys),
+			this);
+		this.props.store.listKeys()
+		.then(onKeysChanged)
+		.done();
+	}
+
+	componentWillUnmount() {
+		this.props.store.onKeysUpdated.ignoreContext(this);
+		this.pipes.forEach(pipe => pipe.cancel());
 	}
 
 	setFocus() {
@@ -136,6 +170,10 @@ export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockVie
 			unlockMessage = 'Unlocking...';
 		} else if (this.state.unlockState == UnlockState.Failed) {
 			unlockMessage = '';
+		}
+
+		if (!this.state.haveKeys) {
+			unlockMessage = 'Syncing keys...';
 		}
 
 		var unlockPaneUpper: react.ReactElement<any>;
@@ -162,7 +200,8 @@ export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockVie
 								type: 'password',
 								placeholder: 'Master Password...',
 								ref: 'masterPassField',
-								autoFocus: true
+								autoFocus: true,
+								disabled: !this.state.haveKeys,
 							})),
 							button.ButtonF({
 								style: button.Style.Icon,
@@ -193,6 +232,14 @@ export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockVie
 				transitionName: style.classes(app_theme.animations.slideFromBottom)
 			}, unlockPaneLower)
 			);
+	}
+
+	private onKeysChanged(keys: Object[]) {
+		let haveKeys = keys.length > 0;
+		this.setState({ haveKeys });
+		if (haveKeys) {
+			this.setFocus();
+		}
 	}
 
 	private tryUnlock(password: string) {
