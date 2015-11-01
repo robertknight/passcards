@@ -27,8 +27,15 @@ export var mixins = style.create({
 });
 
 // ReactCSSTransitionGroup animation classes
-var FADE_TRANSITION = style_util.transitionOn({ opacity: .5 });
-var SLIDE_TRANSITION = style_util.transitionOn({ transform: .3 });
+export const FADE_TRANSITION_TIMEOUT = 500;
+const FADE_TRANSITION = style_util.transitionOn({
+	opacity: FADE_TRANSITION_TIMEOUT / 1000.0,
+});
+
+export const SLIDE_TRANSITION_TIMEOUT = 300;
+const SLIDE_TRANSITION = style_util.transitionOn({
+	transform: SLIDE_TRANSITION_TIMEOUT / 1000.0,
+});
 
 export var animations = style.create({
 	slideFromLeft: {
