@@ -7,7 +7,9 @@ var app = new cli.CLI(null /* console IO */, keyAgent);
 var commandArgs = process.argv.slice(2);
 
 if (typeof Map === 'undefined') {
-	require('es6-collections');
+	console.error('Passcards requires Node.js >= 0.12 or later.');
+	console.error('You are currently using %s', process.version);
+	process.exit(1);
 }
 
 app.exec(commandArgs).then(function(status) {

@@ -2,10 +2,6 @@
 /// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
 
 import assert = require('assert');
-import e6c = require('es6-collections');
-/* tslint:disable */
-typeof e6c;
-/* tslint:enable */
 
 import diff = require('./base/diff');
 import item_store = require('./item_store');

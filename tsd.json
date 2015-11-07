@@ -58,6 +58,9 @@
     },
     "proxyquire/proxyquire.d.ts": {
       "commit": "a6cfab4fe934647f16f9b0e65f5c2c52f2601b2d"
+    },
+    "es6-collections/es6-collections.d.ts": {
+      "commit": "421d6610bdb09e1015b71f5991d7a68d079eca21"
     }
   }
 }

@@ -20,8 +20,6 @@ import testLib = require('./test');
 import vfs = require('./vfs/vfs');
 import vfs_util = require('./vfs/util');
 
-require('es6-shim');
-
 class TestCase {
 	/** Relative path to the vault within the test data dir */
 	path: string;

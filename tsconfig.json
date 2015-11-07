@@ -18,6 +18,7 @@
         "!./**/*.d.ts"
     ],
     "files": [
+		"./typings/DefinitelyTyped/es6-collections/es6-collections.d.ts",
         "./addons/firefox/src/main.ts",
         "./addons/firefox/src/panel_content.ts",
         "./cli/agent.ts",

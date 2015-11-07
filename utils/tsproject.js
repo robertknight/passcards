@@ -40,12 +40,15 @@ commander
   .action(function(command, projectFile) {
 	projectFile = projectFile || findProjectFile();
 	var project = readProjectFile(projectFile);
+	var srcFiles = project.files.filter(function (file) {
+		return !file.match(/\.d\.ts$/);
+	});
 
     if (command === 'inputs') {
-		console.log(project.files.join(' '));
+		console.log(srcFiles.join(' '));
 	} else if (command === 'outputs') {
 		var outDir = project.compilerOptions.outDir || '.';
-		var outFiles = project.files.map(function(file) {
+		var outFiles = srcFiles.map(function(file) {
 			return path.join(outDir, file.replace(/.tsx?$/, '.js'));
 		});
 		console.log(outFiles.join(' '));

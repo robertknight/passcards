@@ -1,5 +1,4 @@
 /// <reference path="../../typings/adiff.d.ts" />
-/// <reference path="../../typings/es6-collections.d.ts" />
 
 // 'diff' provides a set of functions for diffing, merging
 // and patching ordered lists and sets.
@@ -15,11 +14,6 @@
 
 import adiff = require('adiff');
 import assert = require('assert');
-
-import e6c = require('es6-collections');
-/* tslint:disable */
-typeof e6c;
-/* tslint:enable */
 
 export enum OpType {
 	Insert,
