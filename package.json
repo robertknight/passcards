@@ -17,8 +17,8 @@
     "qunitjs": "^1.19.0",
     "sort-stream": "^1.0.1",
     "tsd": "^0.6.0-beta.5",
-    "tslint": "^2.5.1",
-    "typescript": "^1.6.2",
+    "tslint": "^3.2.1",
+    "typescript": "^1.8.0-dev.20151223",
     "typescript-formatter": "^0.2.2",
     "xdiff": "^0.2.11"
   },

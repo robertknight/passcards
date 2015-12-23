@@ -403,8 +403,8 @@ export class PageLinkFetcher {
 			}
 
 			var linkType: MetaTagType;
-			var linkRel: string = '';
-			var linkUrl: string = '';
+			var linkRel = '';
+			var linkUrl = '';
 
 			var tagStart = (<any>match).index;
 			var tag = this.parseTag(content.substr(tagStart));

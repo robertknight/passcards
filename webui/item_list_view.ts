@@ -144,116 +144,6 @@ export var theme = style.create({
 	}
 }, __filename);
 
-export interface ToolbarClickEvent {
-	itemRect: reactutil.Rect;
-}
-
-interface ItemListViewState {
-	filter?: string;
-}
-
-export interface ItemListViewProps extends react.Props<void> {
-	items: item_store.Item[];
-	selectedItem: item_store.Item;
-	onSelectedItemChanged: (item: item_store.Item, rect: reactutil.Rect) => void;
-	currentUrl: string;
-	iconProvider: item_icons.IconProvider;
-	focus: boolean;
-
-	onLockClicked: () => void;
-	onMenuClicked: (e: ToolbarClickEvent) => void;
-}
-
-export class ItemListView extends typed_react.Component<ItemListViewProps, ItemListViewState> {
-	getInitialState(): ItemListViewState {
-		return { filter: null };
-	}
-
-	componentDidMount() {
-		if (this.props.focus) {
-			this.setFocus();
-		}
-	}
-
-	componentDidUpdate(prevProps: ItemListViewProps) {
-		if (!prevProps.focus && this.props.focus) {
-			this.setFocus();
-		}
-	}
-
-	private setFocus() {
-		// on the desktop, focus the search field to allow instant searching
-		// via the keyboard. On mobile/touch devices we don't do this to avoid
-		// immediately obscuring most of the list content with a popup
-		// keyboard
-		if (!env.isTouchDevice()) {
-			this.focusSearchField();
-		}
-	}
-
-	private updateFilter(filter: string) {
-		var state = this.state;
-		state.filter = filter;
-		this.setState(state);
-	}
-
-	render() {
-		var filterUrl: string;
-		if (!this.state.filter && this.props.currentUrl) {
-			filterUrl = this.props.currentUrl;
-		}
-
-		return react.DOM.div(style.mixin(theme.container, {
-			tabIndex: 0,
-			onFocus: () => {
-				this.setFocus();
-			}
-		}),
-			ItemListToolbarF({
-				filterUrl: this.props.currentUrl,
-
-				onQueryChanged: (query) => {
-					this.updateFilter(query)
-				},
-				ref: 'searchField',
-				onMoveUp: () => {
-					(<ItemList>this.refs['itemList']).focusPrevItem();
-				},
-				onMoveDown: () => {
-					(<ItemList>this.refs['itemList']).focusNextItem();
-				},
-				onActivate: () => {
-					var itemList = (<ItemList>this.refs['itemList']);
-					var focusedItem = itemList.focusedItem();
-					var itemRect = itemList.itemRect(focusedItem);
-					this.props.onSelectedItemChanged(focusedItem, itemRect);
-				},
-				onLockClicked: () => this.props.onLockClicked(),
-				onMenuClicked: (e) => this.props.onMenuClicked(e)
-			}),
-			ItemListF({
-				items: this.props.items, filter: this.state.filter,
-				filterUrl: filterUrl,
-				onSelectedItemChanged: (item, rect) => {
-					if (!item) {
-						this.focusSearchField();
-					}
-					this.props.onSelectedItemChanged(item, rect);
-				},
-				ref: 'itemList',
-				iconProvider: this.props.iconProvider
-			})
-			);
-	}
-
-	private focusSearchField() {
-		var searchField: ItemListToolbar = <any>this.refs['searchField'];
-		searchField.focus();
-	}
-}
-
-export var ItemListViewF = reactutil.createFactory(ItemListView, focus_mixin.FocusMixinM);
-
 export interface ItemProps extends react.Props<void> {
 	key: string;
 	item: item_store.Item;
@@ -310,6 +200,7 @@ export class Item extends typed_react.Component<ItemProps, {}> {
 			);
 	}
 }
+
 export var ItemF = reactutil.createFactory(Item);
 
 interface ItemListState {
@@ -598,6 +489,10 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 
 var ItemListF = reactutil.createFactory(ItemList);
 
+export interface ToolbarClickEvent {
+	itemRect: reactutil.Rect;
+}
+
 export interface ItemListToolbarProps extends react.Props<void> {
 	filterUrl: string;
 
@@ -702,3 +597,110 @@ class ItemListToolbar extends typed_react.Component<ItemListToolbarProps, {}> {
 }
 
 var ItemListToolbarF = reactutil.createFactory(ItemListToolbar);
+
+interface ItemListViewState {
+	filter?: string;
+}
+
+export interface ItemListViewProps extends react.Props<void> {
+	items: item_store.Item[];
+	selectedItem: item_store.Item;
+	onSelectedItemChanged: (item: item_store.Item, rect: reactutil.Rect) => void;
+	currentUrl: string;
+	iconProvider: item_icons.IconProvider;
+	focus: boolean;
+
+	onLockClicked: () => void;
+	onMenuClicked: (e: ToolbarClickEvent) => void;
+}
+
+export class ItemListView extends typed_react.Component<ItemListViewProps, ItemListViewState> {
+	getInitialState(): ItemListViewState {
+		return { filter: null };
+	}
+
+	componentDidMount() {
+		if (this.props.focus) {
+			this.setFocus();
+		}
+	}
+
+	componentDidUpdate(prevProps: ItemListViewProps) {
+		if (!prevProps.focus && this.props.focus) {
+			this.setFocus();
+		}
+	}
+
+	private setFocus() {
+		// on the desktop, focus the search field to allow instant searching
+		// via the keyboard. On mobile/touch devices we don't do this to avoid
+		// immediately obscuring most of the list content with a popup
+		// keyboard
+		if (!env.isTouchDevice()) {
+			this.focusSearchField();
+		}
+	}
+
+	private updateFilter(filter: string) {
+		var state = this.state;
+		state.filter = filter;
+		this.setState(state);
+	}
+
+	render() {
+		var filterUrl: string;
+		if (!this.state.filter && this.props.currentUrl) {
+			filterUrl = this.props.currentUrl;
+		}
+
+		return react.DOM.div(style.mixin(theme.container, {
+			tabIndex: 0,
+			onFocus: () => {
+				this.setFocus();
+			}
+		}),
+			ItemListToolbarF({
+				filterUrl: this.props.currentUrl,
+
+				onQueryChanged: (query) => {
+					this.updateFilter(query)
+				},
+				ref: 'searchField',
+				onMoveUp: () => {
+					(<ItemList>this.refs['itemList']).focusPrevItem();
+				},
+				onMoveDown: () => {
+					(<ItemList>this.refs['itemList']).focusNextItem();
+				},
+				onActivate: () => {
+					var itemList = (<ItemList>this.refs['itemList']);
+					var focusedItem = itemList.focusedItem();
+					var itemRect = itemList.itemRect(focusedItem);
+					this.props.onSelectedItemChanged(focusedItem, itemRect);
+				},
+				onLockClicked: () => this.props.onLockClicked(),
+				onMenuClicked: (e) => this.props.onMenuClicked(e)
+			}),
+			ItemListF({
+				items: this.props.items, filter: this.state.filter,
+				filterUrl: filterUrl,
+				onSelectedItemChanged: (item, rect) => {
+					if (!item) {
+						this.focusSearchField();
+					}
+					this.props.onSelectedItemChanged(item, rect);
+				},
+				ref: 'itemList',
+				iconProvider: this.props.iconProvider
+			})
+			);
+	}
+
+	private focusSearchField() {
+		var searchField: ItemListToolbar = <any>this.refs['searchField'];
+		searchField.focus();
+	}
+}
+
+export var ItemListViewF = reactutil.createFactory(ItemListView, focus_mixin.FocusMixinM);
+

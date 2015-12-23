@@ -106,7 +106,7 @@ export function searchIn(fs: vfs.VFS, path: string, namePattern: string,
 		}).done();
 }
 
-export function mktemp(fs: vfs.VFS, path: string, template: string = 'tmp.XXX') {
+export function mktemp(fs: vfs.VFS, path: string, template = 'tmp.XXX') {
 	var baseName = template.replace(/X{3,}/, (match) => {
 		var randomized = '';
 		for (var i = 0; i < match.length; i++) {

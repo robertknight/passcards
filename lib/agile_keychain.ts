@@ -355,11 +355,8 @@ export class Vault implements item_store.Store {
 		return this.getKeys().then(convertKeys);
 	}
 
-	saveKeys(keys: key_agent.Key[], hint: string) {
-		if (true) { // suppress TSLint warning about unreachable code
-			throw new Error('onepass.Vault.saveKeys() is not implemented');
-		}
-		return Q<void>(null);
+	saveKeys(keys: key_agent.Key[], hint: string): Q.Promise<void> {
+		throw new Error('onepass.Vault.saveKeys() is not implemented');
 	}
 
 	/** Unlock the vault using the given master password.

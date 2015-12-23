@@ -257,7 +257,7 @@ export class BasicIconProvider implements IconProvider {
 	// perform a (usually remote) lookup or just return
 	// the status of any lookups which have already been
 	// triggered
-	private queryProviderForIcon(url: string, lookup: boolean = true) {
+	private queryProviderForIcon(url: string, lookup = true) {
 		let lookupResult: site_info.QueryResult;
 		if (lookup) {
 			lookupResult = this.provider.lookup(url);
