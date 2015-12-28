@@ -1,7 +1,3 @@
-/// <reference path="../../typings/DefinitelyTyped/q/Q.d.ts" />
-/// <reference path="../../typings/DefinitelyTyped/node/node.d.ts" />
-/// <reference path="../../typings/DefinitelyTyped/underscore/underscore.d.ts" />
-/// <reference path="../../typings/URIjs.d.ts" />
 
 // This module implements a website icon/info provider which fetches
 // icons directly from the source sites.
@@ -18,7 +14,7 @@
 
 import Q = require('q');
 import underscore = require('underscore');
-import urijs = require('URIjs');
+import urijs = require('urijs');
 
 import collection_util = require('../base/collectionutil');
 import event_stream = require('../base/event_stream');

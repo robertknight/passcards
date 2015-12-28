@@ -1,11 +1,3 @@
-/// <reference path="../typings/DefinitelyTyped/colors/colors.d.ts" />
-/// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
-/// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
-/// <reference path="../typings/DefinitelyTyped/semver/semver.d.ts" />
-
-/// <reference path="../typings/argparse.d.ts" />
-/// <reference path="../typings/xdiff.d.ts" />
-
 // test.ts provides a wrapper around QUnitJS (qunitjs.com)
 //
 // Test cases are added using addTest().

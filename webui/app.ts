@@ -1,6 +1,3 @@
-/// <reference path="../typings/fastclick.d.ts" />
-/// <reference path="../typings/react.d.ts" />
-/// <reference path="../node_modules/ts-style/dist/ts-style.d.ts" />
 
 import fastclick = require('fastclick');
 import react = require('react');

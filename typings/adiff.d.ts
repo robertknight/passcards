@@ -6,9 +6,9 @@ declare module "adiff" {
 	  */
 	export interface Diff extends Array<any> {
 		// TODO [TS > 1.1 - Use tuple types]
-		[index: number] : any
+		[index: number]: any
 	}
 
-	export function diff(a: any[], b: any[]) : Diff[];
+	export function diff(a: any[], b: any[]): Diff[];
 }
 

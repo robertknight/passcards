@@ -1,4 +1,3 @@
-/// <reference path="../../typings/DefinitelyTyped/node/node.d.ts" />
 
 import collectionutil = require('../base/collectionutil');
 import testLib = require('../test');

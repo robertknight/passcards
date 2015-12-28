@@ -23,7 +23,6 @@
     "xdiff": "^0.2.11"
   },
   "dependencies": {
-    "URIjs": "^1.14.2",
     "adiff": "^0.2.13",
     "argparse": "^0.1.16",
     "assert": "^1.1.2",
@@ -42,9 +41,10 @@
     "shallow-equals": "0.0.0",
     "sprintf": "^0.1.5",
     "through2": "^0.6.3",
-    "ts-style": "^0.6.0",
+    "ts-style": "^0.7.1",
     "typed-react": "^3.4.1",
     "underscore": "^1.8.2",
+    "urijs": "^1.14.2",
     "urlrouter": ">=0.5.4"
   },
   "bundledDependencies": [

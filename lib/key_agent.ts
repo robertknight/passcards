@@ -1,4 +1,3 @@
-/// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
 
 // key_agent provides the KeyAgent interface for storing encryption keys
 // and encrypting/decrypting data using the stored keys.

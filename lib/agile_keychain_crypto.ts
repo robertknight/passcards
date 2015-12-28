@@ -1,6 +1,3 @@
-/// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
-/// <reference path="../typings/DefinitelyTyped/node-uuid/node-uuid.d.ts" />
-/// <reference path="../typings/dom.d.ts" />
 
 import assert = require('assert');
 var cryptoJS = require('crypto-js');

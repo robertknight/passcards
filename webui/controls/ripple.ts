@@ -1,4 +1,3 @@
-/// <reference path="../../typings/react.d.ts" />
 
 // Material Design style touch-ripple.
 // See https://www.polymer-project.org/docs/elements/paper-elements.html#paper-ripple

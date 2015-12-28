@@ -1,5 +1,3 @@
-/// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
-/// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
 
 // local_store.Store implements an IndexedDB-based store
 // of encryption keys and encrypted item data.

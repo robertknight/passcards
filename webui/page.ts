@@ -1,4 +1,3 @@
-/// <reference path="../addons/firefox/typings/firefox-content-script.d.ts" />
 
 // the page script which is injected into browser tabs
 // to collect details of fill-able fields and auto-fill

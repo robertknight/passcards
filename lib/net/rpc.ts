@@ -1,4 +1,3 @@
-/// <reference path="../../typings/DefinitelyTyped/chrome/chrome.d.ts" />
 
 /** 'rpc' provides a portable abstraction layer for communicating between
   * different JavaScript contexts, such as:

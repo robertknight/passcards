@@ -1,5 +1,3 @@
-/// <reference path="../../typings/DefinitelyTyped/node/node.d.ts" />
-/// <reference path="../../typings/DefinitelyTyped/q/Q.d.ts" />
 
 // This module implements a website icon/info provider which
 // fetches icon details and data from an instance of the

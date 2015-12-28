@@ -1,7 +1,3 @@
-/// <reference path="../typings/DefinitelyTyped/chrome/chrome.d.ts" />
-/// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
-/// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
-/// <reference path="../typings/dom.d.ts" />
 
 import Q = require('q');
 

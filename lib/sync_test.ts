@@ -1,6 +1,3 @@
-/// <reference path="../typings/DefinitelyTyped/clone/clone.d.ts" />
-/// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
-/// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
 
 import clone = require('clone');
 import Q = require('q');

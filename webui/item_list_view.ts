@@ -1,6 +1,3 @@
-/// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
-/// <reference path="../typings/react.d.ts" />
-/// <reference path="../typings/shallow-equals.d.ts" />
 
 import react = require('react');
 import shallow_equals = require('shallow-equals');

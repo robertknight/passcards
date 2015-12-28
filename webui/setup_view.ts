@@ -1,4 +1,3 @@
-/// <reference path="../typings/react.d.ts" />
 
 import Q = require('q');
 import react = require('react');

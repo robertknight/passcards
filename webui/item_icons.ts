@@ -1,15 +1,10 @@
-/// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
-/// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
-/// <reference path="../typings/react.d.ts" />
-/// <reference path="../typings/URIjs.d.ts" />
-/// <reference path="../typings/dom.d.ts" />
 
 import Q = require('q');
 import react = require('react');
 import style = require('ts-style');
 import typed_react = require('typed-react');
 import underscore = require('underscore');
-import urijs = require('URIjs');
+import urijs = require('urijs');
 
 import err_util = require('../lib/base/err_util');
 import event_stream = require('../lib/base/event_stream');
