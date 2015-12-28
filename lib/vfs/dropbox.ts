@@ -1,5 +1,3 @@
-/// <reference path="../../typings/DefinitelyTyped/node/node.d.ts" />
-/// <reference path="../../typings/dropbox.d.ts" />
 
 import dropbox = require('dropbox');
 import Q = require('q');

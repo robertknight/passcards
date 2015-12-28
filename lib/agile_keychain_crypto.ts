@@ -1,14 +1,11 @@
-/// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
-/// <reference path="../typings/DefinitelyTyped/node-uuid/node-uuid.d.ts" />
-/// <reference path="../typings/dom.d.ts" />
 
 import assert = require('assert');
-import btoa = require('btoa');
 var cryptoJS = require('crypto-js');
 import node_crypto = require('crypto');
 import Q = require('q');
 import uuid = require('node-uuid');
 
+import { btoa } from './base/stringutil';
 import agile_keychain_entries = require('./agile_keychain_entries');
 import collectionutil = require('./base/collectionutil');
 import crypto = require('./base/crypto');

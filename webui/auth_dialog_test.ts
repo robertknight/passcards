@@ -1,4 +1,3 @@
-/// <reference path="../typings/DefinitelyTyped/proxyquire/proxyquire.d.ts" />
 
 import { load } from 'proxyquire';
 import { addons } from 'react/addons';

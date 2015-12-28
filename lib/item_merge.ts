@@ -1,5 +1,3 @@
-/// <reference path="../typings/DefinitelyTyped/clone/clone.d.ts" />
-/// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
 
 import assert = require('assert');
 

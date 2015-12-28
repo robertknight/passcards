@@ -16,9 +16,9 @@ interface PageWorker {
 }
 
 interface Port {
-	emit(messageName: string, data?: any) : void;
-	on(messageName: string, callback: (data?: any) => void) : void;
-	once(messageName: string, callback: (data?: any) => void) : void;
+	emit(messageName: string, data?: any): void;
+	on(messageName: string, callback: (data?: any) => void): void;
+	once(messageName: string, callback: (data?: any) => void): void;
 }
 
 declare module 'sdk/hotkeys' {
@@ -28,7 +28,7 @@ declare module 'sdk/hotkeys' {
 	}
 
 	export interface Hotkey {
-		new(opts: Options): Hotkey;
+		new (opts: Options): Hotkey;
 	}
 
 	export var Hotkey: Hotkey;
@@ -64,26 +64,26 @@ declare module 'sdk/panel' {
 	}
 
 	export interface Panel {
-		new(opts: PanelOptions): Panel;
+		new (opts: PanelOptions): Panel;
 
 		port: Port;
 		contentURL: string;
 
-		show(opts: PanelShowOptions) : void;
-		hide() : void;
+		show(opts: PanelShowOptions): void;
+		hide(): void;
 	}
 
 	export var Panel: Panel
 }
 
 declare module 'sdk/preferences/service' {
-	export function set(pref: string, value: any) : void;
-	export function get(pref: string, defaultValue: any) : void;
+	export function set(pref: string, value: any): void;
+	export function get(pref: string, defaultValue: any): void;
 }
 
 declare module 'sdk/system/environment' {
 	export var env: {
-		[index: string] : string;
+		[index: string]: string;
 	};
 }
 
@@ -126,7 +126,7 @@ interface Tab {
 
 interface Tabs {
 	[index: number]: Tab;
-	on(event: string, callback: (tab?: Tab) => void) : void;
+	on(event: string, callback: (tab?: Tab) => void): void;
 	activeTab: Tab;
 }
 
@@ -137,8 +137,8 @@ declare module 'sdk/tabs' {
 
 declare module 'sdk/ui/button/toggle' {
 	export interface ToggleButton {
-		new(opts: ButtonOptions): ToggleButton;
-		state(target: any, state?: ButtonState) : ButtonState;
+		new (opts: ButtonOptions): ToggleButton;
+		state(target: any, state?: ButtonState): ButtonState;
 		click(): void;
 	}
 
@@ -147,8 +147,8 @@ declare module 'sdk/ui/button/toggle' {
 
 declare module 'sdk/clipboard' {
 	var clipboard: {
-		get() : string;
-		set(data: string, type?: string) : void;
+		get(): string;
+		set(data: string, type?: string): void;
 	};
 
 	export = clipboard;

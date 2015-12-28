@@ -1,8 +1,7 @@
-/// <reference path="../typings/DefinitelyTyped/q/Q.d.ts"/>
 
-import btoa = require('btoa');
 import Q = require('q');
 
+import { btoa } from './base/stringutil';
 import agile_keychain_crypto = require('./agile_keychain_crypto');
 import crypto = require('./base/crypto');
 import item_builder = require('./item_builder');
@@ -349,4 +348,3 @@ generateKey(masterPass, 100).then(key => {
 	masterKey = key;
 	testLib.start();
 });
-

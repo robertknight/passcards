@@ -1,5 +1,3 @@
-/// <reference path="../typings/DefinitelyTyped/clone/clone.d.ts" />
-/// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
 
 import assert = require('assert');
 import Q = require('q');

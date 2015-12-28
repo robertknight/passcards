@@ -1,12 +1,11 @@
-/// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
 
 // key_agent provides the KeyAgent interface for storing encryption keys
 // and encrypting/decrypting data using the stored keys.
 
-import atob = require('atob');
 import assert = require('assert');
 import Q = require('q');
 
+import { atob } from './base/stringutil';
 import agile_keychain_crypto = require('./agile_keychain_crypto');
 import crypto = require('./base/crypto');
 import err_util = require('./base/err_util');
@@ -136,7 +135,7 @@ export interface KeyAgent {
 	  * called. Some key agents may not support this.
 	  */
 	onLock? (): event_stream.EventStream<void>;
-	
+
 	/** Reset the timeout for auto-locking this key agent.
 	  * This should be called when the user interacts with the app
 	  * in some way to prevent auto-locking whilst the user is
@@ -166,7 +165,7 @@ export class SimpleKeyAgent implements KeyAgent {
 		this.lockEvents = new event_stream.EventStream<void>();
 		this.autoLockTimeout = 0;
 	}
-	
+
 	/** Reset the auto-lock timer. */
 	public resetAutoLock() {
 		if (!this.autoLockTimeout) {

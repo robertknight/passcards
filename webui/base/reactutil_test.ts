@@ -1,4 +1,3 @@
-/// <reference path="../../typings/react.d.ts" />
 
 import reactutil = require('./reactutil');
 import testLib = require('../../lib/test');

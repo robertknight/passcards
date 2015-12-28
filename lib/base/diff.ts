@@ -1,4 +1,3 @@
-/// <reference path="../../typings/adiff.d.ts" />
 
 // 'diff' provides a set of functions for diffing, merging
 // and patching ordered lists and sets.

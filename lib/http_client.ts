@@ -1,5 +1,3 @@
-/// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
-/// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
 
 import http = require('http');
 import https = require('https');

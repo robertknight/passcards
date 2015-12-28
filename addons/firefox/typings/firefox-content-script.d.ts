@@ -7,9 +7,9 @@ interface ExportFuncOptions {
 	defineAs: string;
 }
 
-declare function createObjectIn<T>(object: Object, options: CreateOptions) : T;
-declare function cloneInto<T>(object: T, target: Window) : T;
-declare function exportFunction<F extends Function>(func: F, target: Object, options?: ExportFuncOptions) : F;
+declare function createObjectIn<T>(object: Object, options: CreateOptions): T;
+declare function cloneInto<T>(object: T, target: Window): T;
+declare function exportFunction<F extends Function>(func: F, target: Object, options?: ExportFuncOptions): F;
 
 declare var unsafeWindow: Window;
 
@@ -22,9 +22,9 @@ interface ContentWorker {
 }
 
 interface Port {
-	emit(messageName: string, data?: any) : void;
-	on(messageName: string, callback: (data?: any) => void) : void;
-	once(messageName: string, callback: (data?: any) => void) : void;
+	emit(messageName: string, data?: any): void;
+	on(messageName: string, callback: (data?: any) => void): void;
+	once(messageName: string, callback: (data?: any) => void): void;
 }
 
 

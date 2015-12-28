@@ -1,10 +1,8 @@
 /// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
-/// <reference path="../typings/atob.d.ts" />
 
-import atob = require('atob');
-import btoa = require('btoa');
 import Q = require('q');
 
+import { atob, btoa } from '../lib/base/stringutil';
 import agent_server = require('./agent_server');
 import http_client = require('../lib/http_client');
 import key_agent = require('../lib/key_agent');

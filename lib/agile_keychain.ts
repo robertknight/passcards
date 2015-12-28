@@ -1,15 +1,10 @@
-/// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
-/// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
-/// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
-/// <reference path="../typings/atob.d.ts" />
 
 import assert = require('assert');
-import atob = require('atob');
-import btoa = require('btoa');
 import Q = require('q');
 import Path = require('path');
 import underscore = require('underscore');
 
+import { atob, btoa } from './base/stringutil';
 import agile_keychain_crypto = require('./agile_keychain_crypto');
 import asyncutil = require('./base/asyncutil');
 import agile_keychain_entries = require('./agile_keychain_entries');

@@ -1,5 +1,3 @@
-/// <reference path="../typings/DefinitelyTyped/clone/clone.d.ts" />
-/// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
 
 // item_store contains the core interfaces and types for
 // encrypted items and storage of them

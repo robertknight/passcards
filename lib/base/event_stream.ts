@@ -1,4 +1,3 @@
-/// <reference path="../../typings/DefinitelyTyped/underscore/underscore.d.ts" />
 
 export interface EventListener<T> {
 	(event?: T): void;

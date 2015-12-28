@@ -1,8 +1,6 @@
-/// <reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
-/// <reference path="../typings/URIjs.d.ts" />
 
 import underscore = require('underscore');
-import urijs = require('URIjs');
+import urijs = require('urijs');
 
 import item_store = require('./item_store');
 import stringutil = require('./base/stringutil');

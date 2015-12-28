@@ -1,10 +1,7 @@
 /// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
 /// <reference path="../typings/DefinitelyTyped/urlrouter/urlrouter.d.ts" />
-/// <reference path="../typings/atob.d.ts" />
 
-import atob = require('atob');
-import btoa = require('btoa');
 import child_process = require('child_process');
 import fs = require('fs');
 import http = require('http');
@@ -12,6 +9,7 @@ import path = require('path');
 import Q = require('q');
 import urlrouter = require('urlrouter');
 
+import { atob, btoa } from '../lib/base/stringutil';
 import agile_keychain_crypto = require('../lib/agile_keychain_crypto');
 import consoleio = require('./console');
 import key_agent = require('../lib/key_agent');
@@ -278,4 +276,3 @@ if (require.main === module) {
 		fs.writeFileSync(AGENT_PID_FILE, process.pid);
 	});
 }
-

@@ -1,4 +1,3 @@
-/// <reference path="../typings/react.d.ts" />
 
 // View for entering master password and unlocking the store
 

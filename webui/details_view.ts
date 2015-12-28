@@ -1,4 +1,3 @@
-/// <reference path="../typings/react.d.ts" />
 
 import react = require('react');
 import style = require('ts-style');

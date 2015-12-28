@@ -1,5 +1,3 @@
-/// <reference path="../../typings/DefinitelyTyped/q/Q.d.ts" />
-/// <reference path="../../typings/dom.d.ts" />
 
 // key_value_store.Database is an interface for IndexedDB-style databases.
 // In the browser it is implemented with IndexedDB.

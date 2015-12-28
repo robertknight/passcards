@@ -2,7 +2,7 @@
   "version": "v4",
   "repo": "borisyankov/DefinitelyTyped",
   "ref": "master",
-  "path": "typings/DefinitelyTyped",
+  "path": "./typings/DefinitelyTyped",
   "bundle": "typings/tsd.d.ts",
   "installed": {
     "react/react.d.ts": {
@@ -61,6 +61,9 @@
     },
     "es6-collections/es6-collections.d.ts": {
       "commit": "421d6610bdb09e1015b71f5991d7a68d079eca21"
+    },
+    "urijs/URIjs.d.ts": {
+      "commit": "dc9dabe74a5be62613b17a3605309783a12ff28a"
     }
   }
 }

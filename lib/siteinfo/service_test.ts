@@ -1,6 +1,3 @@
-/// <reference path="../../typings/DefinitelyTyped/q/Q.d.ts" />
-/// <reference path="../../typings/DefinitelyTyped/underscore/underscore.d.ts" />
-/// <reference path="../../typings/sprintf.d.ts" />
 
 import fs = require('fs');
 import path = require('path');

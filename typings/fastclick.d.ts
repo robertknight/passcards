@@ -14,8 +14,8 @@ declare module "fastclick" {
 		touchBoundary: number;
 		layer: HTMLElement;
 
-		destroy() : void;
+		destroy(): void;
 
-		static attach(layer: HTMLElement, options?: Options) : FastClick;
+		static attach(layer: HTMLElement, options?: Options): FastClick;
 	}
 }

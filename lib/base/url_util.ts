@@ -1,6 +1,5 @@
-/// <reference path="../../typings/URIjs.d.ts" />
 
-import uri_js = require('URIjs');
+import uri_js = require('urijs');
 
 import stringutil = require('./stringutil');
 

@@ -1,5 +1,3 @@
-/// <reference path="../../typings/DefinitelyTyped/chrome/chrome.d.ts" />
-/// <reference path="../../typings/DefinitelyTyped/node/node.d.ts" />
 
 // env.ts provides functions to query the host Javascript
 // environment
