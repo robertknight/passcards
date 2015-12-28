@@ -1,3 +1,7 @@
+// import Buffer explicitly so that the dependency is visible
+// to the vendor bundle build script
+import { Buffer } from 'buffer';
+
 export function startsWith(str: string, prefix: string): boolean {
 	return str.indexOf(prefix) == 0;
 }
