@@ -106,3 +106,20 @@ export function repeat(str: string, count: number): string {
 	return result;
 }
 
+/** Converts a base64 string to a binary string */
+export function atob(str: string) {
+	if (typeof window !== 'undefined') {
+		return window.atob(str);
+	} else {
+		return (new Buffer(str, 'base64')).toString('binary');
+	}
+}
+
+/** Converts a binary string to base64 */
+export function btoa(str: string) {
+	if (typeof window !== 'undefined') {
+		return window.btoa(str);
+	} else {
+		return (new Buffer(str, 'binary')).toString('base64');
+	}
+}

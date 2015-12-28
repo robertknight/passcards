@@ -65,3 +65,12 @@ testLib.addTest('extract suffix after delimiter', (assert) => {
 	assert.equal(stringutil.suffix(path, '?'), path);
 });
 
+const BINARY_STR = (new Buffer([255])).toString('binary');
+
+testLib.addTest('btoa', assert => {
+	assert.equal(stringutil.btoa(BINARY_STR), '/w==');
+});
+
+testLib.addTest('atob', assert => {
+	assert.equal(stringutil.atob('/w=='), BINARY_STR);
+});

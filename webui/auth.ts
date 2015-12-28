@@ -1,8 +1,7 @@
-import atob = require('atob');
-import btoa = require('btoa');
 import Q = require('q');
 import url = require('url');
 
+import { atob, btoa } from '../lib/base/stringutil';
 import assign = require('../lib/base/assign');
 import crypto = require('../lib/base/crypto');
 import env = require('../lib/base/env');
