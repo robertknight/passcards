@@ -13,6 +13,7 @@ before_script:
 - make update-manifest-versions
 script:
 - npm test
+- make chrome-extension
 - make firefox-addon
 - make test-package
 deploy:
