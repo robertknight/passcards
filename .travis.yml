@@ -18,6 +18,7 @@ script:
 deploy:
 - provider: script
   script: utils/deploy.js
+  skip_cleanup: true
   on:
     branch: master
 env:
