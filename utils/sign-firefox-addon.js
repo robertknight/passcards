@@ -50,6 +50,6 @@ exec(jpmBinary, 'sign',
   })
   .catch(function (err) {
     console.log('Signing failed:', err);
-    throw err;
+    process.exit(1);
   });
 

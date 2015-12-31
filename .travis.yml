@@ -4,7 +4,6 @@ language: node_js
 sudo: false
 # Cache ruby gems used by S3 deployment
 cache:
-  bundler: true
   directories:
   - node_modules
 node_js:
@@ -12,38 +11,20 @@ node_js:
 before_script:
 - export PATH=$PWD/node_modules/.bin:$PATH
 - make update-manifest-versions
-after_success:
+script:
+- npm test
 - make firefox-addon
-- make sign-firefox-addon
-- make publish-chrome-extension
-- make publish-passcards-cli
-before_deploy:
 - make test-package
 deploy:
-- provider: s3
-  access_key_id: AKIAJLAC2I2QPV6E33GA
-  secret_access_key:
-    secure: YyxwCqc8aPvsX432y3YhnRye2c/hyYylu6EBSGxgDG0Jg7IXtHKkcslGPvTdjbX8fw5wDliM8a/4J+qGNlbxz7hzXSf5n4Hf7jsTTmTMl/QGqtfwRRElqO2zihEpMaLwU/r9p36G9gOu41emIAsXX7jsrEwCHySm500k60nj6V0=
-  bucket: io.github.robertknight
-  skip_cleanup: true
-  local-dir: pkg
-  upload-dir: passcards/builds/latest
+- provider: script
+  script: utils/deploy.js
   on:
     branch: master
-  acl: public_read
-- provider: s3
-  access_key_id: AKIAJLAC2I2QPV6E33GA
-  secret_access_key:
-    secure: YyxwCqc8aPvsX432y3YhnRye2c/hyYylu6EBSGxgDG0Jg7IXtHKkcslGPvTdjbX8fw5wDliM8a/4J+qGNlbxz7hzXSf5n4Hf7jsTTmTMl/QGqtfwRRElqO2zihEpMaLwU/r9p36G9gOu41emIAsXX7jsrEwCHySm500k60nj6V0=
-  bucket: io.github.robertknight
-  skip_cleanup: true
-  local-dir: webui
-  upload-dir: passcards/web/latest
-  on:
-    branch: master
-  acl: public_read
 env:
   global:
+  - AWS_ACCESS_KEY_ID=AKIAJLAC2I2QPV6E33GA
+  # AWS_SECRET_KEY
+  - secure: "jQ3cFyDDk97Kh1fDwpSTCKTGIHljmTBTmV+4LWLliMNk8LpGuOGjbZRPNNHc+12kqz0i0wd4HaX6Uy8le5RMAQkunIE3r44k9z+9ciCSB4Nznq+AigpEVqgAjT/+MkIHEjCVXPmIeutxKoLY2iZHpHZRfsQbUI7376hIZw2CGQE="
   - CHROME_EXT_CLIENT_ID=663008561130-bgbo9tvbnr7j1ufrfuf52r4k3g8t9j9n.apps.googleusercontent.com
   - CHROME_EXT_APP_ID=olcdnhbhbfgncnocdfojpdjbododkimk
   # CHROME_EXT_REFRESH_TOKEN
