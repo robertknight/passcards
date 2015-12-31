@@ -110,20 +110,22 @@ export function repeat(str: string, count: number): string {
 	return result;
 }
 
-/** Converts a base64 string to a binary string */
+/** Convert a base64-encoded string to a binary string.
+ *
+ * For compatibility with buggy Base64 encoders in
+ * certain official 1Password clients
+ * (see https://github.com/robertknight/passcards/issues/66), this is a
+ * tolerant decoder which ignores invalid characters in the input.
+ *
+ * See base64clean() in
+ * https://github.com/feross/buffer/blob/master/index.js#L1411
+ * for more details on Node's tolerant Base64 decoding.
+ */
 export function atob(str: string) {
-	if (typeof window !== 'undefined') {
-		return window.atob(str);
-	} else {
-		return (new Buffer(str, 'base64')).toString('binary');
-	}
+	return (new Buffer(str, 'base64')).toString('binary');
 }
 
 /** Converts a binary string to base64 */
 export function btoa(str: string) {
-	if (typeof window !== 'undefined') {
-		return window.btoa(str);
-	} else {
-		return (new Buffer(str, 'binary')).toString('base64');
-	}
+	return (new Buffer(str, 'binary')).toString('base64');
 }

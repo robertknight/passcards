@@ -74,3 +74,10 @@ testLib.addTest('btoa', assert => {
 testLib.addTest('atob', assert => {
 	assert.equal(stringutil.atob('/w=='), BINARY_STR);
 });
+
+testLib.addTest('atob with trailing null bytes', assert => {
+	// 1Password for Windows adds trailing null characters
+	// at the end of its input.
+	// See https://github.com/robertknight/passcards/issues/64
+	assert.equal(stringutil.atob('YWJj\u0000'), 'abc');
+});
