@@ -141,6 +141,9 @@ clean:
 firefox-addon: webui-build
 	cd addons/firefox && make
 
+sign-firefox-addon: webui-build
+	./utils/sign-firefox-addon.js
+
 chrome-extension: webui-build
 	cd addons/chrome && make
 
