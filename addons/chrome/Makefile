@@ -7,6 +7,7 @@ all: $(ZIP_PACKAGE)
 zip: $(ZIP_PACKAGE)
 
 $(ZIP_PACKAGE): data/auth.html data/dist scripts
+	@mkdir -p $(PKG_DIR)
 	@rm -f $(ZIP_PACKAGE)
 	@zip --quiet --exclude '.*' -r $(ZIP_PACKAGE) .
 
