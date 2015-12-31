@@ -14,6 +14,7 @@ before_script:
 - make update-manifest-versions
 after_success:
 - make firefox-addon
+- make sign-firefox-addon
 - make publish-chrome-extension
 - make publish-passcards-cli
 before_deploy:
@@ -51,3 +52,7 @@ env:
   - secure: NyDSq2y6xkHzFTTnoZuLrLfIdEmSzNTEQX9vQQCNyGfCWDbN4AYQd2whYAYV0IUaKdOh5/p+ixYvIaodjVol5ixRZ0p1R3IiqRfwV7YPum10goPiAb9e8D+tNgryz0SUMBNtJBT07yc3NsrTZAAsZfEb0ME4Emdp7O9C8q4d9pk=
   # NPM_AUTH_TOKEN
   - secure: "mZc/QM0FmeGwCPrUHsInrXp9gBXkyezEcioM0fyjmajboqerjfjz4uzn0C4iGEYXL5SBEbEuTcFfnaa3Mtuy6ftWrj5l0VbcimHgiwy20+FFeM5cJE4eC6uwnY6BNVECF0KwHM8qIMwY1w94mIVQCg8+P7rzE74xnUVl45k7BEE="
+  # FIREFOX_AMO_KEY
+  - secure: "MbJcrFfIiL9rpBDX1ZDIBkd3nVUwB80OT77A0HcFpVMe79yAKbk5Io9eH3are4i1amn8CUnYXalbMCmGZBUx6EagmYAEhWqenitnpeAQit/MPUMTdx9PHmS+12pWeY/oztVz5fN4WC9f0uzP3y3+e+QfNy211lwWGUkJhDdBqIc="
+  # FIREFOX_AMO_SECRET
+  - secure: "PGV1fgLrVM6xClcYolu/vz6CnV0RYKtXiSgUtUFPes+OYKFscJIvZ5mBUp6y7MuaGLtNBV9spAAlXwz6lEl4yyq8z/oLfxTmiu+9zf4kvlzr16/6ADOOEk0CWDBJHtGd55wAabQDQgP8hbps7oWrGzrEGQOWn9NZXXir4kiRBTs="

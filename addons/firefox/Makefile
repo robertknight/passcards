@@ -17,6 +17,7 @@ all: $(XPI_PACKAGE)
 $(XPI_PACKAGE): build/xpi_content
 	mkdir -p $(PKG_DIR)
 	$(CFX) xpi --update-link=$(XPI_UPDATE_LINK) --update-url=$(XPI_UPDATE_RDF_URL) --output-file=$@
+	zip $@ package.json
 	mv passcards.update.rdf $(PKG_DIR)
 
 run: build/xpi_content

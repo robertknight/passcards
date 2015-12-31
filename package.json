@@ -10,7 +10,7 @@
     "fake-indexeddb": "^1.0.3",
     "findit": "^2.0.0",
     "fs-extra": "^0.21.0",
-    "jpm": "0.0.13",
+    "jpm": "^1.0.4",
     "jsdom": "^5.6.1",
     "module-deps": "^3.5.6",
     "proxyquire": "^1.7.2",
