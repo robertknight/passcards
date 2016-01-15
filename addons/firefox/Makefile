@@ -57,7 +57,7 @@ data/index.html: $(webui_src_dir)/index.html
 	cp $< $@
 
 data/scripts/panel_content.js: data/scripts src/panel_content.ts
-	$(BROWSERIFY) --no-builtins $(SRC_ROOT)/build/addons/firefox/src/panel_content.js > $@
+	$(BROWSERIFY) $(SRC_ROOT)/build/addons/firefox/src/panel_content.js > $@
 
 clean:
 	rm -rf build data lib
