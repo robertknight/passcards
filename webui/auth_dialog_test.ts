@@ -1,7 +1,7 @@
 
 import { load } from 'proxyquire';
-import { addons } from 'react/addons';
-import { render } from 'react';
+import { scryRenderedComponentsWithType } from 'react-addons-test-utils';
+import { render } from 'react-dom';
 import * as Q from 'q';
 
 import { addTest, Assert } from '../lib/test';
@@ -43,7 +43,7 @@ function testDialog(assert: Assert, clickSignIn: boolean) {
 
 		// click on the 'Sign In' button and verify
 		// that the auth dialog begins and the dialog text changes
-		let buttons = addons.TestUtils.scryRenderedComponentsWithType(dialog, ButtonF.componentClass);
+		let buttons = scryRenderedComponentsWithType(dialog, ButtonF.componentClass);
 		if (clickSignIn) {
 			buttons[1].props.onClick(null);
 		} else {

@@ -1,6 +1,7 @@
 import Q = require('q');
 import react = require('react');
-import react_addons = require('react/addons');
+import react_dom = require('react-dom');
+import { findRenderedDOMComponentWithTag } from 'react-addons-test-utils';
 
 import event_stream = require('../lib/base/event_stream');
 import item_icons = require('./item_icons');
@@ -10,10 +11,8 @@ import stringutil = require('../lib/base/stringutil');
 import testLib = require('../lib/test');
 import ui_test_utils = require('./test_utils');
 
-var reactTestUtils = react_addons.addons.TestUtils;
-
 function findDOMElement<T extends HTMLElement>(component: react.Component<{}, {}>, tagname: string) {
-	return <T>react.findDOMNode(reactTestUtils.findRenderedDOMComponentWithTag(component, tagname));
+	return <T>react_dom.findDOMNode(findRenderedDOMComponentWithTag(component, tagname));
 }
 
 testLib.addTest('should display site icon', (assert) => {
@@ -21,7 +20,7 @@ testLib.addTest('should display site icon', (assert) => {
 		var iconProvider = new item_icons.FakeIconProvider();
 		var itemLocation = 'https://www.icloud.com';
 
-		var iconComponent = react.render(item_icons.IconControlF({
+		var iconComponent = react_dom.render(item_icons.IconControlF({
 			location: itemLocation,
 			iconProvider: iconProvider,
 			isFocused: false,
@@ -37,7 +36,7 @@ testLib.addTest('should display site icon', (assert) => {
 			height: 48
 		});
 
-		iconComponent = react.render(item_icons.IconControlF({
+		iconComponent = react_dom.render(item_icons.IconControlF({
 			location: itemLocation,
 			iconProvider: iconProvider,
 			isFocused: false,
@@ -192,4 +191,3 @@ testLib.addTest('should fetch and cache successful lookup', assert => {
 		assert.deepEqual(icon, icon2);
 	});
 });
-

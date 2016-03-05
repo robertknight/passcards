@@ -1,6 +1,6 @@
 
-import react = require('react');
 import typed_react = require('typed-react');
+import react_dom = require('react-dom');
 
 export interface FocusMixinProps {
 	focus: boolean;
@@ -17,7 +17,7 @@ export class FocusMixin extends typed_react.Mixin<FocusMixinProps, {}> {
 		if (focusable.setFocus) {
 			focusable.setFocus();
 		} else {
-			(<HTMLElement>react.findDOMNode(this)).focus();
+			(<HTMLElement>react_dom.findDOMNode(this as any)).focus();
 		}
 	}
 
@@ -35,4 +35,3 @@ export class FocusMixin extends typed_react.Mixin<FocusMixinProps, {}> {
 }
 
 export var FocusMixinM = typed_react.createMixin(FocusMixin);
-

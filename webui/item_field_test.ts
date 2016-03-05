@@ -1,14 +1,12 @@
 import react = require('react');
-import react_addons = require('react/addons');
-import typed_react = require('typed-react');
+import react_dom = require('react-dom');
+import { scryRenderedComponentsWithType } from 'react-addons-test-utils';
 
 import button = require('./controls/button');
 import item_field = require('./item_field');
 import browser_access = require('./browser_access');
 import testLib = require('../lib/test');
 import ui_test_utils = require('./test_utils');
-
-let reactTestUtils = react_addons.addons.TestUtils;
 
 let fakeClipboard: browser_access.ClipboardAccess = {
 	clipboardAvailable() {
@@ -20,7 +18,7 @@ let fakeClipboard: browser_access.ClipboardAccess = {
 	}
 };
 
-class AccountFields extends typed_react.Component<{}, {}> {
+class AccountFields extends react.Component<{}, {}> {
 	render() {
 		return react.DOM.div({}, item_field.ItemFieldF({
 			ref: 'usernameField',
@@ -47,12 +45,12 @@ let AccountFieldsF = react.createFactory(AccountFields);
 
 testLib.addTest('should display field actions when focused', assert => {
 	ui_test_utils.runReactTest(element => {
-		let renderField = () => react.render(AccountFieldsF({}), element);
+		let renderField = () => react_dom.render(AccountFieldsF({}), element);
 
 		let field = renderField();
 
 		// when initially displayed, no actions should be selected
-		let buttons = reactTestUtils.scryRenderedComponentsWithType(field,
+		let buttons = scryRenderedComponentsWithType(field,
 			button.ButtonF.componentClass);
 		assert.equal(buttons.length, 0);
 
@@ -62,10 +60,10 @@ testLib.addTest('should display field actions when focused', assert => {
 		// events for the whole document rather than using onFocus/onBlur handlers
 		// on the component itself, in order to determine when the field loses
 		// focus to another field
-		let usernameField = field.refs['usernameField'];
-		let usernameFieldInput = <HTMLElement>react.findDOMNode(usernameField.refs['textField']);
-		let passwordField = field.refs['passwordField'];
-		let passwordFieldInput = <HTMLElement>react.findDOMNode(passwordField.refs['textField']);
+		let usernameField = field.refs['usernameField'] as react.Component<any, any>;
+		let usernameFieldInput = <HTMLElement>react_dom.findDOMNode(usernameField.refs['textField']);
+		let passwordField = field.refs['passwordField'] as react.Component<any, any>;
+		let passwordFieldInput = <HTMLElement>react_dom.findDOMNode(passwordField.refs['textField']);
 
 		// unlike the browser,
 		// jsdom 6.1.0 does not automatically send a 'focus' event to an element
@@ -73,7 +71,7 @@ testLib.addTest('should display field actions when focused', assert => {
 		let event: typeof Event = (<any>window).Event;
 		passwordFieldInput.dispatchEvent(new event('focus'));
 
-		let actionButtons = (field: react.Component<{}, {}>) => reactTestUtils.scryRenderedComponentsWithType(field,
+		let actionButtons = (field: react.Component<{}, {}>) => scryRenderedComponentsWithType(field,
 			button.ButtonF.componentClass);
 
 		assert.equal(actionButtons(passwordField).length, 3);

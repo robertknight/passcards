@@ -3,6 +3,7 @@
 // See https://www.polymer-project.org/docs/elements/paper-elements.html#paper-ripple
 
 import react = require('react');
+import react_dom = require('react-dom');
 import style = require('ts-style');
 import typed_react = require('typed-react');
 
@@ -108,7 +109,7 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 	componentDidMount() {
 		// start the ripple on touch where supported or mousedown
 		// otherwise
-		var parentNode = <HTMLElement>(react.findDOMNode(this).parentNode);
+		var parentNode = <HTMLElement>(react_dom.findDOMNode(this).parentNode);
 
 		parentNode.addEventListener('mousedown', this.onTouchStart);
 		parentNode.addEventListener('touchstart', this.onTouchStart);
@@ -121,7 +122,7 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 	componentWillUnmount() {
 		this.anim = null;
 
-		var parentNode = <HTMLElement>(react.findDOMNode(this).parentNode);
+		var parentNode = <HTMLElement>(react_dom.findDOMNode(this).parentNode);
 
 		parentNode.removeEventListener('mousedown', this.onTouchStart);
 		parentNode.removeEventListener('touchstart', this.onTouchStart);
@@ -132,7 +133,7 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 	}
 
 	private onTouchStart(e: MouseEvent) {
-		var canvas = <HTMLCanvasElement>(react.findDOMNode(this.refs['canvas']));
+		var canvas = <HTMLCanvasElement>(react_dom.findDOMNode(this.refs['canvas']));
 
 		if (this.state.phase !== Phase.Idle) {
 			return;
@@ -186,8 +187,8 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 	}
 
 	private updateCanvasSize() {
-		var canvas = <HTMLCanvasElement>(react.findDOMNode(this.refs['canvas']));
-		var container = <HTMLElement>(react.findDOMNode(this.refs['container']));
+		var canvas = <HTMLCanvasElement>(react_dom.findDOMNode(this.refs['canvas']));
+		var container = <HTMLElement>(react_dom.findDOMNode(this.refs['container']));
 		canvas.width = container.clientWidth;
 		canvas.height = container.clientHeight;
 	}
@@ -230,7 +231,7 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 			backgroundAlpha *= 1 - (phaseElapsed / RELEASE_PHASE_DURATION);
 		}
 
-		var elem = <HTMLCanvasElement>(react.findDOMNode(this.refs['container']));
+		var elem = <HTMLCanvasElement>(react_dom.findDOMNode(this.refs['container']));
 		var ctx = this.anim.context;
 		ctx.clearRect(0, 0, elem.offsetWidth, elem.offsetHeight);
 		ctx.fillStyle = this.props.color;

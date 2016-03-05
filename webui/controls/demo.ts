@@ -1,5 +1,6 @@
 
 import react = require('react');
+import react_dom = require('react-dom');
 import typed_react = require('typed-react');
 import style = require('ts-style');
 
@@ -235,7 +236,7 @@ function main() {
 	var body = elt.ownerDocument.body;
 
 	var renderRootView = () => {
-		react.render(ControlDemoAppF({ viewportRect: body.getBoundingClientRect() }), elt);
+		react_dom.render(ControlDemoAppF({ viewportRect: body.getBoundingClientRect() }), elt);
 	};
 	elt.ownerDocument.defaultView.onresize = () => {
 		renderRootView();

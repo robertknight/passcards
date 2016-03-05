@@ -1,3 +1,4 @@
+import react = require('react');
 import typed_react = require('typed-react');
 
 import reactutil = require('./reactutil');
@@ -13,7 +14,7 @@ export interface CSSTransitionMixinState {
 	/** The ref name of the element within the component that is
 	 * being animated. If not specified, defaults to the component itself.
 	 *
-	 * TransitionMixin uses react.findDOMNode(this.refs[transitionComponent])
+	 * TransitionMixin uses react_dom.findDOMNode(this.refs[transitionComponent])
 	 * to get the HTML element to watch for CSS animation/transition ends.
 	 */
 	transitionComponent?: string;
@@ -73,8 +74,12 @@ class CSSTransitionMixin extends typed_react.Mixin<TransitionMixinProps, CSSTran
 		});
 	}
 
-	private transitionComponent() {
-		return this.state.transitionComponent ? this.refs[this.state.transitionComponent] : this;
+	private transitionComponent(): react.Component<any, any> {
+		if (this.state.transitionComponent) {
+			return this.refs[this.state.transitionComponent];
+		} else {
+			return this as any;
+		}
 	}
 }
 

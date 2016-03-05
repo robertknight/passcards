@@ -1,6 +1,8 @@
 import react = require('react');
-import react_addons = require('react/addons');
+import react_dom = require('react-dom');
 import typed_react = require('typed-react');
+import * as TransitionGroup from 'react-addons-transition-group';
+import * as CSSTransitionGroup from 'react-addons-css-transition-group';
 
 import env = require('../../lib/base/env');
 import transition_events = require('./transition_events');
@@ -25,8 +27,8 @@ export interface Factory<P> extends react.Factory<P> {
 	componentClass?: react.ComponentClass<P>;
 }
 
-export var TransitionGroupF = react.createFactory(react_addons.addons.TransitionGroup);
-export var CSSTransitionGroupF = react.createFactory(react_addons.addons.CSSTransitionGroup);
+export var TransitionGroupF = react.createFactory(TransitionGroup);
+export var CSSTransitionGroupF = react.createFactory(CSSTransitionGroup);
 
 /** Merge props passed to a parent component with those set in a child
   * component.
@@ -179,7 +181,7 @@ export class TransitionEndListener {
 	  * Use remove() to remove the listener when no longer required.
 	  */
 	constructor(component: react.Component<any, any>, property: string, callback: () => void) {
-		this.node = <HTMLElement>react.findDOMNode(component);
+		this.node = <HTMLElement>react_dom.findDOMNode(component);
 		this.listener = (e) => {
 			if (e.target === this.node && e.propertyName == property) {
 				callback();

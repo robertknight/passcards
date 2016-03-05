@@ -1,5 +1,6 @@
 
 import react = require('react');
+import react_dom = require('react-dom');
 import typed_react = require('typed-react');
 import style = require('ts-style');
 
@@ -190,7 +191,7 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 
 	componentDidMount() {
 		this.setState({
-			document: (<HTMLElement>react.findDOMNode(this)).ownerDocument,
+			document: (<HTMLElement>react_dom.findDOMNode(this)).ownerDocument,
 			showTime: new Date
 		});
 	}

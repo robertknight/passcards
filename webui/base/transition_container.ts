@@ -1,5 +1,5 @@
 import react = require('react');
-import react_addons = require('react/addons');
+import * as TransitionGroup from 'react-addons-transition-group';
 
 import { TransitionState } from './reactutil';
 
@@ -113,11 +113,12 @@ class TransitionContainerChild extends react.Component<TransitionContainerChildP
 
 	render() {
 		let child = react.Children.only(this.props.children);
-		return react.cloneElement<any>(child as react.ReactElement<{}>, {
+		let newProps = {
 			transitionState: this.state.transitionState,
 			onEntered: this.state.enteredCallback,
 			onLeft: this.state.leftCallback
-		});
+		};
+		return react.cloneElement(child, newProps);
 	}
 }
 
@@ -143,7 +144,7 @@ export interface TransitionContainerProps extends react.Props<{}> {
 export class TransitionContainer extends react.Component<TransitionContainerProps, {}> {
 	render() {
 		let children = react.Children.map(this.props.children, child => this.wrapChild(child));
-		return react.createElement(react_addons.addons.TransitionGroup, {}, children);
+		return react.createElement(TransitionGroup, {}, children);
 	}
 
 	// wraps a child with a TransitionContainerChild which maps transition

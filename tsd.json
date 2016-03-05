@@ -6,7 +6,7 @@
   "bundle": "typings/tsd.d.ts",
   "installed": {
     "react/react.d.ts": {
-      "commit": "95d860879fb90c405aeb13eea7b8564f9c0df2bf"
+      "commit": "9f0f926a12026287b5a4a229e5672c01e7549313"
     },
     "react/react-addons.d.ts": {
       "commit": "95d860879fb90c405aeb13eea7b8564f9c0df2bf"
@@ -64,6 +64,12 @@
     },
     "urijs/URIjs.d.ts": {
       "commit": "dc9dabe74a5be62613b17a3605309783a12ff28a"
+    },
+    "react/react-dom.d.ts": {
+      "commit": "9f0f926a12026287b5a4a229e5672c01e7549313"
+    },
+    "react/react-addons-test-utils.d.ts": {
+      "commit": "9f0f926a12026287b5a4a229e5672c01e7549313"
     }
   }
 }

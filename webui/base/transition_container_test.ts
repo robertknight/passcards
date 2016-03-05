@@ -1,4 +1,5 @@
-import { Component, DOM, createFactory, render } from 'react';
+import { Component, DOM, createFactory } from 'react';
+import { render } from 'react-dom';
 import * as Q from 'q';
 
 import { addTest } from '../../lib/test';

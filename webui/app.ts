@@ -1,6 +1,6 @@
 
 import fastclick = require('fastclick');
-import react = require('react');
+import react_dom = require('react-dom');
 
 import agile_keychain = require('../lib/agile_keychain');
 import agile_keychain_crypto = require('../lib/agile_keychain_crypto');
@@ -209,7 +209,7 @@ export class App {
 			viewportRect: this.getViewportRect(appWindow),
 			appState: this.state
 		});
-		this.activeAppView = react.render(appView, element);
+		this.activeAppView = react_dom.render(appView, element);
 
 		if (!env.isTouchDevice()) {
 			// the main item list only renders visible items,

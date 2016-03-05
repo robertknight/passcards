@@ -1,5 +1,5 @@
-import * as react from 'react';
-import { addons } from 'react/addons';
+import { render } from 'react-dom';
+import { findRenderedDOMComponentWithTag } from 'react-addons-test-utils';
 import * as Q from 'q';
 
 import assign = require('../lib/base/assign');
@@ -8,8 +8,6 @@ import { UnlockViewF, Store } from './unlock_view';
 import { runReactTest } from './test_utils';
 
 import { addTest } from '../lib/test';
-
-let {TestUtils } = addons;
 
 let defaultFakeStore: Store = {
 	onKeysUpdated: new EventStream<Object[]>(),
@@ -31,7 +29,7 @@ addTest('should disable password field until keys have been synced',
 		return runReactTest(element => {
 			// render view with no keys saved, the password field should
 			// initially be disabled
-			let view = react.render(UnlockViewF({
+			let view = render(UnlockViewF({
 				store: fakeStore,
 				isLocked: true,
 				onUnlock: () => { },
@@ -39,14 +37,14 @@ addTest('should disable password field until keys have been synced',
 				onMenuClicked: () => { },
 				focus: false,
 			}), element);
-			let passwordInput = TestUtils.findRenderedDOMComponentWithTag(view, 'input');
+			let passwordInput = findRenderedDOMComponentWithTag(view, 'input') as HTMLInputElement;
 
 			return Q('').then(() => {
-				assert.ok(passwordInput.props.disabled);
-				
+				assert.ok(passwordInput.disabled);
+
 				// simulate key being saved
 				fakeStore.onKeysUpdated.publish([null]);
-				assert.ok(!passwordInput.props.disabled);
+				assert.ok(!passwordInput.disabled);
 			});
 		});
 	});
@@ -59,7 +57,7 @@ addTest('should enable password field when keys have already been synced',
 			}
 		});
 		return runReactTest(element => {
-			let view = react.render(UnlockViewF({
+			let view = render(UnlockViewF({
 				store: fakeStore,
 				isLocked: true,
 				onUnlock: () => { },
@@ -67,9 +65,9 @@ addTest('should enable password field when keys have already been synced',
 				onMenuClicked: () => { },
 				focus: false,
 			}), element);
-			let passwordInput = TestUtils.findRenderedDOMComponentWithTag(view, 'input');
+			let passwordInput = findRenderedDOMComponentWithTag(view, 'input') as HTMLInputElement;
 			return Q('').then(() => {
-				assert.ok(!passwordInput.props.disabled);
+				assert.ok(!passwordInput.disabled);
 			});
 		});
 	});

@@ -1,5 +1,6 @@
 
 import react = require('react');
+import react_dom = require('react-dom');
 import style = require('ts-style');
 import typed_react = require('typed-react');
 
@@ -274,7 +275,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 	}
 
 	componentDidMount() {
-		let root = <HTMLElement>react.findDOMNode(this);
+		let root = <HTMLElement>react_dom.findDOMNode(this);
 		this.shortcuts = [
 			new shortcut.Shortcut(root, keycodes.Backspace, () => {
 				this.exit();
@@ -399,7 +400,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 					color: colors.MATERIAL_COLOR_PRIMARY,
 					ref: addButtonRef,
 					onClick: (e) => {
-						var buttonRect = (<HTMLElement>react.findDOMNode(this.refs[addButtonRef])).getBoundingClientRect();
+						var buttonRect = (<HTMLElement>react_dom.findDOMNode(this.refs[addButtonRef])).getBoundingClientRect();
 						this.setState({
 							addingField: {
 								pos: {

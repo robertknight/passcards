@@ -24,6 +24,7 @@
 //		| 16 |---
 
 import react = require('react');
+import react_dom = require('react-dom');
 import typed_react = require('typed-react');
 import style = require('ts-style');
 
@@ -252,7 +253,7 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 	}
 
 	private setFocus() {
-		var textField = <HTMLInputElement>react.findDOMNode(this.refs['textField']);
+		var textField = <HTMLInputElement>react_dom.findDOMNode(this.refs['textField']);
 		textField.select();
 	}
 
@@ -374,8 +375,8 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 		// animate the focused underline, spilling from the horizontal
 		// position of the mouse or touch
 		if (this.state.focusX && this.props.showUnderline) {
-			var underlineRect = react.findDOMNode(this.refs['underlineContainer']).getBoundingClientRect();
-			var focusedUnderline = <HTMLElement>react.findDOMNode(this.refs['focusedUnderline']);
+			var underlineRect = react_dom.findDOMNode(this.refs['underlineContainer']).getBoundingClientRect();
+			var focusedUnderline = <HTMLElement>react_dom.findDOMNode(this.refs['focusedUnderline']);
 
 			this.setState({ focusing: true });
 
@@ -406,7 +407,7 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 		} else if (this.props.defaultValue) {
 			return this.props.defaultValue;
 		} else if (this.isMounted()) {
-			return (<HTMLInputElement>react.findDOMNode(this.refs['textField'])).value;
+			return (<HTMLInputElement>react_dom.findDOMNode(this.refs['textField'])).value;
 		} else {
 			return '';
 		}

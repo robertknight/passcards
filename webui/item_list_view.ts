@@ -1,5 +1,6 @@
 
 import react = require('react');
+import react_dom = require('react-dom');
 import shallow_equals = require('shallow-equals');
 import style = require('ts-style');
 import typed_react = require('typed-react');
@@ -293,7 +294,7 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 	}
 
 	private scrollList(count: number) {
-		var itemList = <HTMLElement>react.findDOMNode(this.refs['itemList']);
+		var itemList = <HTMLElement>react_dom.findDOMNode(this.refs['itemList']);
 		itemList.scrollTop += this.state.itemHeight * count;
 	}
 
@@ -310,7 +311,7 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 			return null;
 		}
 
-		var rect = react.findDOMNode(itemRef).getBoundingClientRect();
+		var rect = react_dom.findDOMNode(itemRef).getBoundingClientRect();
 		return {
 			left: rect.left,
 			top: rect.top,
@@ -383,7 +384,7 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 	}
 
 	private updateVisibleItems() {
-		var itemList = <HTMLElement>react.findDOMNode(this.refs['itemList']);
+		var itemList = <HTMLElement>react_dom.findDOMNode(this.refs['itemList']);
 		if (this.state.matchingItems.length > 0) {
 			var topIndex: number = -1;
 			var bottomIndex: number = -1;
@@ -512,7 +513,7 @@ class ItemListToolbar extends typed_react.Component<ItemListToolbarProps, {}> {
 	}
 
 	private fieldInput() {
-		return <HTMLInputElement>react.findDOMNode(this.refs['searchField']);
+		return <HTMLInputElement>react_dom.findDOMNode(this.refs['searchField']);
 	}
 
 	render() {
@@ -567,7 +568,7 @@ class ItemListToolbar extends typed_react.Component<ItemListToolbarProps, {}> {
 					ref: 'menuButton',
 					onClick: () => {
 						var event = {
-							itemRect: (<HTMLElement>react.findDOMNode(this.refs['menuButton'])).getBoundingClientRect()
+							itemRect: (<HTMLElement>react_dom.findDOMNode(this.refs['menuButton'])).getBoundingClientRect()
 						};
 						this.props.onMenuClicked(event);
 					}
@@ -700,4 +701,3 @@ export class ItemListView extends typed_react.Component<ItemListViewProps, ItemL
 }
 
 export var ItemListViewF = reactutil.createFactory(ItemListView, focus_mixin.FocusMixinM);
-

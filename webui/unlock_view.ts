@@ -2,6 +2,7 @@
 // View for entering master password and unlocking the store
 
 import react = require('react');
+import react_dom = require('react-dom');
 import style = require('ts-style');
 import typed_react = require('typed-react');
 
@@ -158,7 +159,7 @@ export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockVie
 
 	setFocus() {
 		if (this.props.isLocked) {
-			var masterPassField = <HTMLElement>react.findDOMNode(this.refs['masterPassField']);
+			var masterPassField = <HTMLElement>react_dom.findDOMNode(this.refs['masterPassField']);
 			masterPassField.focus();
 		}
 	}
@@ -186,7 +187,7 @@ export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockVie
 						ref: 'unlockPaneForm',
 						onSubmit: (e) => {
 							e.preventDefault();
-							var passwordInputField = <HTMLInputElement>react.findDOMNode(this.refs['masterPassField']);
+							var passwordInputField = <HTMLInputElement>react_dom.findDOMNode(this.refs['masterPassField']);
 							var masterPass = passwordInputField.value;
 							this.tryUnlock(masterPass).then(() => {
 								// clear input field after attempt completes
@@ -211,7 +212,7 @@ export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockVie
 								ref: 'menuButton',
 								onClick: (e) => {
 									e.preventDefault();
-									var itemRect = (<HTMLElement>react.findDOMNode(this.refs['menuButton'])).getBoundingClientRect();
+									var itemRect = (<HTMLElement>react_dom.findDOMNode(this.refs['menuButton'])).getBoundingClientRect();
 									this.props.onMenuClicked(itemRect);
 								}
 							})

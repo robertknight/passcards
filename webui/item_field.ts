@@ -1,4 +1,5 @@
 import react = require('react');
+import react_dom = require('react-dom');
 import style = require('ts-style');
 import typed_react = require('typed-react');
 
@@ -72,7 +73,7 @@ export class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldSt
 	}
 
 	componentDidMount() {
-		var field = <HTMLElement>react.findDOMNode(this.refs['itemField']);
+		var field = <HTMLElement>react_dom.findDOMNode(this.refs['itemField']);
 		this.focusListener = (e: FocusEvent) => {
 			let focusedElement = <HTMLElement>e.target;
 			let isSelected = this.state.selected;
@@ -85,7 +86,7 @@ export class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldSt
 	}
 
 	componentWillUnmount() {
-		var field = react.findDOMNode(this.refs['itemField']);
+		var field = react_dom.findDOMNode(this.refs['itemField']);
 		field.ownerDocument.removeEventListener('focus', this.focusListener, true /* useCapture */);
 		this.focusListener = null;
 	}
