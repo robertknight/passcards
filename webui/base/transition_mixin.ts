@@ -101,5 +101,7 @@ export function fadeIn(state: reactutil.TransitionState) {
 			return {
 				opacity: 0.01
 			};
+		default:
+			return { opacity: 1.0 };
 	}
 }

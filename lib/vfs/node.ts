@@ -197,21 +197,20 @@ export class FileVFS implements vfs.VFS {
 				if (err.code === 'ENOENT') {
 					// parent dir does not exist. Try to create the parent dir
 					// and then retry creation of the current dir
-					return this.mkpathInternal(Path.dirname(path), true).then(() => {
-						this.mkpathInternal(path, allowExisting).then(() => {
-							result.resolve(null);
-						}).catch((err) => {
-							result.reject(convertError(err));
-						});
-					});
+					this.mkpathInternal(Path.dirname(path), true).then(() => {
+						return this.mkpathInternal(path, allowExisting);
+					}).then(() => result.resolve(null))
+					.catch(err => result.reject(err));
 				} else if (err.code === 'EEXIST') {
 					if (allowExisting) {
-						return this.stat(path).then((existingFile) => {
+						this.stat(path).then((existingFile) => {
 							if (existingFile.isDir) {
 								result.resolve(null);
 							} else {
 								result.reject(convertError(err));
 							}
+						}).catch(err => {
+							result.reject(err);
 						});
 					} else {
 						result.reject(convertError(err));

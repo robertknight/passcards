@@ -38,6 +38,8 @@ export class FieldMatch {
 			return this.field.title;
 		} else if (this.formField) {
 			return this.formField.name;
+		} else {
+			return '';
 		}
 	}
 
@@ -58,6 +60,8 @@ export class FieldMatch {
 			return this.field.value;
 		} else if (this.formField) {
 			return this.formField.value;
+		} else {
+			return '';
 		}
 	}
 

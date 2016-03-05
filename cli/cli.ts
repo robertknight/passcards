@@ -545,6 +545,7 @@ export class CLI {
 					this.printf('%s', collectionutil.prettyJSON(data));
 				});
 			}
+			return;
 		});
 	}
 

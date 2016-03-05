@@ -595,7 +595,7 @@ export class DuckDuckGoClient {
 						return Q.reject<string>(new err_util.ApiError(url, result.status, 'DDG query did not return an icon'));
 					}
 				} else {
-					Q.reject<string>(new err_util.ApiError(url, result.status, 'DDG query failed'));
+					return Q.reject<string>(new err_util.ApiError(url, result.status, 'DDG query failed'));
 				}
 			});
 		} else {

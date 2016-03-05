@@ -113,6 +113,7 @@ class Server {
 							logf('Decrypt failed - unknown algorithm');
 							res.statusCode = 400;
 							res.end('Unsupported encryption algorithm');
+							break;
 					}
 				});
 			});
@@ -144,6 +145,7 @@ class Server {
 							logf('Encrypt failed - unknown algorithm');
 							res.statusCode = 400;
 							res.end('Unsupported encryption algorithm');
+							break;
 					}
 				});
 			});

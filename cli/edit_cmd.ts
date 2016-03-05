@@ -105,6 +105,8 @@ export class EditCommand {
 					return this.setField(content, args.field, args.value.join(' '));
 				case 'remove-field':
 					return this.removeField(content, args.field);
+				default:
+					return;
 			}
 		}).then(() => {
 			item.setContent(content);
@@ -197,5 +199,6 @@ export class EditCommand {
 		match.section.fields = underscore.filter(match.section.fields, (field) => {
 			return field != match.field;
 		});
+		return Q<void>(undefined);
 	}
 }

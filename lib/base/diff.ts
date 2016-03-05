@@ -38,7 +38,7 @@ export interface DiffOp<T> {
 
 	/** The value being inserted, removed or moved. */
 	value: T;
-	
+
 	/** Previous index of element in the source array.
 	  */
 	prevPos?: number;
@@ -221,6 +221,7 @@ export function patch<T>(base: T[], patch_: DiffOp<T>[]): T[] {
 				break;
 			default:
 				assert(false, 'Unexpected patch op');
+				break;
 		}
 	});
 	return patched;
@@ -260,4 +261,3 @@ export function mergeSetDiffs<T>(a: DiffOp<T>[], b: DiffOp<T>[]): DiffOp<T>[] {
 
 	return combined;
 }
-

@@ -6,6 +6,8 @@
         "declaration": false,
         "noEmitOnError": false,
         "noImplicitAny": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
         "removeComments": true,
         "noLib": false,
         "preserveConstEnums": true,
