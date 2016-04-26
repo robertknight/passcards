@@ -41,9 +41,6 @@
     "node-uuid/node-uuid.d.ts": {
       "commit": "2d27ff2bdb2e5ff94e6147206ff6fa27ea96a78d"
     },
-    "webrtc/MediaStream.d.ts": {
-      "commit": "2d27ff2bdb2e5ff94e6147206ff6fa27ea96a78d"
-    },
     "jsdom/jsdom.d.ts": {
       "commit": "40eea5dc8f672e511abed203b2bb087026beec60"
     },

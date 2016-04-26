@@ -138,7 +138,6 @@
         "./typings/DefinitelyTyped/underscore/underscore.d.ts",
         "./typings/DefinitelyTyped/urijs/URIjs.d.ts",
         "./typings/DefinitelyTyped/urlrouter/urlrouter.d.ts",
-        "./typings/DefinitelyTyped/webrtc/MediaStream.d.ts",
         "./typings/dom.d.ts",
         "./typings/dropbox.d.ts",
         "./typings/fastclick.d.ts",

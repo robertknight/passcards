@@ -457,7 +457,7 @@ export class CLI {
 			if (newPass != newPass2) {
 				this.printf('Passwords do not match');
 				result.resolve(1);
-				return;
+				return undefined;
 			}
 			return this.io.readLine('Hint for new password: ');
 		}).then((hint) => {
@@ -545,7 +545,7 @@ export class CLI {
 					this.printf('%s', collectionutil.prettyJSON(data));
 				});
 			}
-			return;
+			return undefined;
 		});
 	}
 

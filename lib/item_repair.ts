@@ -24,7 +24,7 @@ export function repairItem(item: item_store.Item, reportError: (err: string) => 
 		}
 
 		if (!wasRepaired) {
-			return;
+			return undefined;
 		}
 
 		return prompt().then((doRepair) => {

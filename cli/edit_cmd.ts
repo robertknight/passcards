@@ -106,7 +106,7 @@ export class EditCommand {
 				case 'remove-field':
 					return this.removeField(content, args.field);
 				default:
-					return;
+					return undefined;
 			}
 		}).then(() => {
 			item.setContent(content);

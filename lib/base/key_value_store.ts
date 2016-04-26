@@ -226,14 +226,18 @@ class IndexedDBStore implements ObjectStore {
 
 			req.onsuccess = () => {
 				var cursor = <IDBCursorWithValue>req.result;
-				if (!cursor || !stringutil.startsWith(cursor.key, prefix)) {
+				var key: string;
+				if (cursor) {
+					key = cursor.key as string;
+				}
+				if (!cursor || !stringutil.startsWith(key, prefix)) {
 					result.resolve(null);
 					return;
 				}
 				if (callback.length < 2) {
-					callback(cursor.key);
+					callback(key);
 				} else {
-					callback(cursor.key, cursor.value);
+					callback(key, cursor.value);
 				}
 				cursor.continue();
 			};
