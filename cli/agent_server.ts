@@ -1,7 +1,3 @@
-/// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
-/// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
-/// <reference path="../typings/DefinitelyTyped/urlrouter/urlrouter.d.ts" />
-
 import child_process = require('child_process');
 import fs = require('fs');
 import http = require('http');

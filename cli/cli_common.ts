@@ -1,3 +1,5 @@
+import Q = require('q');
+
 import item_store = require('../lib/item_store');
 
 export interface CommandHandler {

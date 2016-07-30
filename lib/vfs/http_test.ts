@@ -1,3 +1,4 @@
+import Q = require('q');
 import fs = require('fs');
 import os = require('os');
 

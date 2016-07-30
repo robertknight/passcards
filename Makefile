@@ -16,7 +16,7 @@ nodemodule_marker=build/nodemodule_marker
 dropboxjs_lib=node_modules/dropbox/lib/dropbox.js
 xpi_file=addons/firefox/passcards@robertknight.github.io.xpi
 
-deps=$(submodule_marker) $(nodemodule_marker) $(dropboxjs_lib) typings/DefinitelyTyped
+deps=$(submodule_marker) $(nodemodule_marker) $(dropboxjs_lib)
 
 all: $(compiled_js_files) webui-build
 
@@ -30,11 +30,6 @@ webui-build: $(webui_script_dir)/platform_bundle.js \
              $(webui_script_dir)/auth_receiver.js \
              $(webui_css_dir)/app.css \
              webui-icons
-
-typings/DefinitelyTyped: tsd.json
-	@echo "Installing TypeScript type definitions"
-	@$(TSD) reinstall
-	@touch typings/DefinitelyTyped
 
 $(webui_script_dir)/platform_bundle.js: package.json utils/create-external-modules-bundle.js
 	@echo "Building external modules bundle"

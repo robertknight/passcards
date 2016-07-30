@@ -183,17 +183,12 @@ export class WorkerMessagePort {
 	}
 }
 
-interface ChromeEvent extends chrome.events.Event {
-	addListener(callback: (message: any, sender: any, reply: any) => void): void;
-}
-
 export class ChromeMessagePort {
 	constructor(public targetTab?: number) {
 	}
 
 	on(method: string, handler: Function): void {
-		var onMessage = <ChromeEvent>chrome.runtime.onMessage;
-		onMessage.addListener((msg, sender) => {
+		chrome.runtime.onMessage.addListener((msg, sender) => {
 			if (typeof msg.rpcMethod !== 'string' ||
 				msg.rpcMethod != method) {
 				return;

@@ -1,6 +1,3 @@
-/// <reference path="../typings/DefinitelyTyped/promptly/promptly.d.ts" />
-/// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
-/// <reference path="../typings/DefinitelyTyped/q/Q.d.ts" />
 /// <reference path="../typings/sprintf.d.ts" />
 
 import promptly = require('promptly');

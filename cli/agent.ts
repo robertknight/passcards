@@ -1,5 +1,3 @@
-/// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
-
 import Q = require('q');
 
 import { atob, btoa } from '../lib/base/stringutil';

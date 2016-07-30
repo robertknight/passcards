@@ -1,4 +1,4 @@
-
+import Q = require('q');
 import underscore = require('underscore');
 import urijs = require('urijs');
 

@@ -1,6 +1,6 @@
-
 // View for entering master password and unlocking the store
 
+import Q = require('q');
 import react = require('react');
 import react_dom = require('react-dom');
 import style = require('ts-style');

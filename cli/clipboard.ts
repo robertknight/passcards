@@ -1,5 +1,3 @@
-/// <reference path="../typings/DefinitelyTyped/node/node.d.ts" />
-
 import child_process = require('child_process');
 import os = require('os');
 import Q = require('q');
