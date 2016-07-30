@@ -95,7 +95,7 @@ let theme = style.create({
 
 function buttonForAction(action: Action, ref: string) {
 	if (!action) {
-		return;
+		return null;
 	}
 	return button.ButtonF({
 		ref,

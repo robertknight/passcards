@@ -1,5 +1,4 @@
 import react = require('react');
-import react_dom = require('react-dom');
 import style = require('ts-style');
 import typed_react = require('typed-react');
 
@@ -181,21 +180,6 @@ export interface ButtonProps extends react.Props<void> {
 }
 
 export class Button extends typed_react.Component<ButtonProps, {}> {
-	componentDidMount() {
-		setTimeout(() => {
-			if (!this.isMounted()) {
-				return;
-			}
-
-			let button = <HTMLElement>(react_dom.findDOMNode(this));
-			let ripple = <ripple.InkRipple>(this.refs['ripple']);
-			ripple.setState({
-				width: button.offsetWidth,
-				height: button.offsetHeight
-			});
-		}, 1000);
-	}
-
 	render() {
 		var rippleRadius = 100;
 
