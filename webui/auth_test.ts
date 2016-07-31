@@ -85,18 +85,19 @@ testLib.addAsyncTest('OAuth login', assert => {
 testLib.addTest('auth receiver script', assert => {
 	// stub out the parts of Window and Document used by the auth
 	// receiver script
-	let {window, document } = global;
+	var global_: any = global;
+	let {window, document } = global_;
 	let storage = new Map<string, string>();
 	let windowDidClose = false;
 
-	global.document = {
+	global_.document = {
 		location: {
 			// note use of URL-encoded chars in 'state' parameter,
 			// which should be URI-decoded before being saved
 			hash: '#access_token=dummytoken&state=abc%3D%3D'
 		}
 	};
-	global.window = {
+	global_.window = {
 		localStorage: {
 			setItem(key: string, value: string) {
 				storage.set(key, value);
@@ -128,6 +129,6 @@ testLib.addTest('auth receiver script', assert => {
 	// test that the auth window attempts to close itself
 	assert.equal(windowDidClose, true);
 
-	global.window = window;
-	global.document = document;
+	global_.window = window;
+	global_.document = document;
 });

@@ -23,6 +23,8 @@ export function isNodeJS() {
 	return process && process.version;
 }
 
+declare function importScripts(...urls: string[]): void;
+
 /** Returns true if running from a Web Worker context
   * in a browser (or a compatible environment)
   */

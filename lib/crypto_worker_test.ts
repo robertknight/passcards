@@ -6,7 +6,7 @@ import rpc = require('./net/rpc');
 import testLib = require('./test');
 
 if (env.isNodeJS()) {
-	global.Worker = require('./node_worker').Worker;
+	(global as any).Worker = require('./node_worker').Worker;
 }
 
 testLib.addAsyncTest('worker test', (assert) => {

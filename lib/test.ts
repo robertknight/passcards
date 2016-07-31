@@ -44,7 +44,7 @@ interface TestCase {
 }
 
 var testList: TestCase[] = [];
-var testStartTimer: number;
+var testStartTimer: NodeJS.Timer;
 
 function scheduleAutoStart() {
 	if (!testStartTimer) {

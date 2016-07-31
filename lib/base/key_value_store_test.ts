@@ -4,8 +4,9 @@ import key_value_store = require('./key_value_store');
 import testLib = require('../test');
 
 // required by key_value_store.IndexedDBDatabase
-global.indexedDB = require('fake-indexeddb');
-global.IDBKeyRange = require('fake-indexeddb/lib/FDBKeyRange');
+var global_: any = global;
+global_.indexedDB = require('fake-indexeddb');
+global_.IDBKeyRange = require('fake-indexeddb/lib/FDBKeyRange');
 
 function setupDB(name: string) {
 	let db = new key_value_store.IndexedDBDatabase();
