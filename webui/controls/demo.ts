@@ -204,7 +204,7 @@ class ControlDemoApp extends typed_react.Component<ControlDemoAppProps, ControlD
 			button.ButtonF({
 				value: 'Show Menu',
 				style: button.Style.RaisedRectangular,
-				onClick: (e: react.MouseEvent) => {
+				onClick: (e: react.MouseEvent<Element>) => {
 					this.setState({ menuPos: { left: e.pageX, top: e.pageY } });
 				}
 			}),

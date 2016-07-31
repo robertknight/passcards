@@ -577,7 +577,7 @@ class ItemListToolbar extends typed_react.Component<ItemListToolbarProps, {}> {
 			);
 	}
 
-	private handleSearchFieldKey(e: react.KeyboardEvent) {
+	private handleSearchFieldKey(e: react.KeyboardEvent<Element>) {
 		var handled = true;
 		if (e.which == keycodes.DownArrow) {
 			this.props.onMoveDown();

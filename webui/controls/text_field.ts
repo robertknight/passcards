@@ -205,9 +205,9 @@ export interface TextFieldProps extends react.Props<void> {
 	  */
 	focus?: boolean;
 
-	onChange?: react.FormEventHandler;
-	onBlur?: react.FocusEventHandler;
-	onFocus?: react.FocusEventHandler;
+	onChange?: react.FormEventHandler<Element>;
+	onBlur?: react.FocusEventHandler<Element>;
+	onFocus?: react.FocusEventHandler<Element>;
 
 	style?: TextFieldStyle;
 }
@@ -335,14 +335,14 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 			);
 	}
 
-	onMouseDown(e: react.MouseEvent) {
+	onMouseDown(e: react.MouseEvent<Element>) {
 		if (this.state.focus) {
 			return;
 		}
 		this.setState({ focusX: e.clientX });
 	}
 
-	onTouchStart(e: react.TouchEvent) {
+	onTouchStart(e: react.TouchEvent<Element>) {
 		if (this.state.focus) {
 			return;
 		}
@@ -350,13 +350,13 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 		this.setState({ focusX: touch.clientX });
 	}
 
-	onChange(e: react.FormEvent) {
+	onChange(e: react.FormEvent<Element>) {
 		if (this.props.onChange) {
 			this.props.onChange(e);
 		}
 	}
 
-	onBlur(e: react.FocusEvent) {
+	onBlur(e: react.FocusEvent<Element>) {
 		this.setState({
 			focus: false,
 			focusX: null
@@ -366,7 +366,7 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 		}
 	}
 
-	onFocus(e: react.FocusEvent) {
+	onFocus(e: react.FocusEvent<Element>) {
 		this.setState({
 			focus: true
 		});

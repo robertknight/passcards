@@ -352,7 +352,7 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 			zIndex: this.props.zIndex
 		}]),
 			react.DOM.div(style.mixin(overlayStyles, {
-				onClick: (e: react.MouseEvent) => {
+				onClick: (e: react.MouseEvent<Element>) => {
 					this.props.onDismiss();
 				}
 			})),

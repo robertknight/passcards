@@ -160,7 +160,7 @@ export class Dialog extends react.Component<DialogProps, {}> {
 			overlayStyles.push({ opacity: .2 });
 		}
 
-		let clickHandler: react.MouseEventHandler;
+		let clickHandler: react.MouseEventHandler<Element>;
 		if (this.props.rejectAction) {
 			clickHandler = this.props.rejectAction.onSelect;
 		} else if (this.props.acceptAction) {

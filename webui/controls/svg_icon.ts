@@ -4,7 +4,7 @@ import underscore = require('underscore');
 
 import reactutil = require('../base/reactutil');
 
-export interface SvgIconProps extends react.HTMLAttributes {
+export interface SvgIconProps extends react.HTMLAttributes<Element> {
 	// redeclare 'ref' here to resolve conflict between
 	// react.Props.ref and react.HTMLAttributes.ref
 	ref?: string;

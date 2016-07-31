@@ -151,7 +151,7 @@ export enum Style {
 }
 
 export interface ButtonProps extends react.Props<void> {
-	onClick: (e: react.MouseEvent) => void;
+	onClick: (e: react.MouseEvent<Element>) => void;
 
 	/** Label for the button */
 	value: string;
@@ -260,7 +260,7 @@ export class Button extends typed_react.Component<ButtonProps, {}> {
 
 		return react.DOM.button(style.mixin(containerStyles, {
 			tabIndex: 0,
-			onClick: (e: react.MouseEvent) => this.props.onClick(e),
+			onClick: (e: react.MouseEvent<Element>) => this.props.onClick(e),
 			title: this.props.value,
 			type: 'button',
 			disabled: this.props.disabled
