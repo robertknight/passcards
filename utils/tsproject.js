@@ -12,7 +12,10 @@
 
 var commander = require('commander');
 var fs = require('fs');
+var glob = require('glob');
 var path = require('path');
+
+var tsinputs = require('./tsinputs');
 
 // Walk up the directory tree starting from the current directory
 // until a tsconfig.json file is found
@@ -40,9 +43,7 @@ commander
   .action(function(command, projectFile) {
 	projectFile = projectFile || findProjectFile();
 	var project = readProjectFile(projectFile);
-	var srcFiles = project.files.filter(function (file) {
-		return !file.match(/\.d\.ts$/);
-	});
+	var srcFiles = tsinputs(project);
 
     if (command === 'inputs') {
 		console.log(srcFiles.join(' '));

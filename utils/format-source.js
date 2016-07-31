@@ -5,6 +5,7 @@ var path = require('path');
 var Q = require('q');
 var typescript_formatter = require('typescript-formatter');
 
+var tsinputs = require('./tsinputs');
 var tsproject = require('./tsproject');
 
 // required by typescript-formatter
@@ -35,9 +36,7 @@ function fixupResult(source) {
 
 function formatProjectSources(projectFile) {
 	var project = tsproject.readProjectFile(projectFile);
-	var inputs = project.files.map(function(file) {
-		return path.resolve(path.dirname(projectFile), file);
-	});
+  var inputs = tsinputs(project, projectFile);
 
 	typescript_formatter.processFiles(inputs, {
 		replace: false,

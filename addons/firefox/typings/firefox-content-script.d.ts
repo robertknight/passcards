@@ -27,4 +27,3 @@ interface Port {
 	once(messageName: string, callback: (data?: any) => void): void;
 }
 
-

@@ -32,6 +32,7 @@
     "jpm": "^1.0.4",
     "jsdom": "^5.6.1",
     "module-deps": "^3.5.6",
+    "node-glob": "^1.2.0",
     "orchestrator": "^0.3.7",
     "proxyquire": "^1.7.2",
     "qunitjs": "^1.19.0",
