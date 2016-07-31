@@ -5,8 +5,7 @@
         "declaration": false,
         "lib": [
             "dom",
-            "es2015",
-            "webworker"
+            "es2015"
         ],
         "noEmitOnError": false,
         "noImplicitAny": true,
