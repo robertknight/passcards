@@ -372,7 +372,7 @@ export class Vault implements item_store.Store {
 	  * Only once the vault is unlocked can item contents be retrieved using item_store.Item.getContents()
 	  */
 	isLocked(): Q.Promise<boolean> {
-		return Q.all([this.keyAgent.listKeys(), this.getKeys()]).spread<boolean>(
+		return asyncutil.all2([this.keyAgent.listKeys(), this.getKeys()]).spread<boolean>(
 			(keyIDs: string[], keyEntries: agile_keychain_entries.EncryptionKeyEntry[]) => {
 
 				var locked = false;
@@ -396,7 +396,7 @@ export class Vault implements item_store.Store {
 		var contentInfo = this.fs.stat(this.itemPath(uuid));
 		var contentData = this.fs.read(this.itemPath(uuid));
 		var item: item_store.Item;
-		return Q.all([contentInfo, contentData]).then((contentData: [vfs.FileInfo, string]) => {
+		return asyncutil.all2([contentInfo, contentData]).then((contentData: [vfs.FileInfo, string]) => {
 			let contentInfo = contentData[0];
 			let contentJSON = contentData[1];
 			let encryptedItem = fromAgileKeychainItem(this, JSON.parse(contentJSON));
@@ -476,7 +476,7 @@ export class Vault implements item_store.Store {
 			});
 		});
 
-		return <any>Q.all([itemSaved, indexSaved]).then(() => {
+		return <any>asyncutil.all2([itemSaved, indexSaved]).then(() => {
 			this.onItemUpdated.publish(item);
 		});
 	}
@@ -733,7 +733,7 @@ export class Vault implements item_store.Store {
 		}).then(keyList => {
 			let keysSaved = vault.writeKeys(keyList, hint);
 			let contentsSaved = fs.write(vault.contentsFilePath(), '[]');
-			return Q.all([keysSaved, contentsSaved]);
+			return asyncutil.all2([keysSaved, contentsSaved]);
 		}).then(() => {
 			return vault;
 		});

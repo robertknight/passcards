@@ -98,3 +98,19 @@ export function result<T, Error>(promise: Q.Promise<T>) {
 	});
 }
 
+/**
+ * A helper which works around the fact that the `Q.all` type definition
+ * expects all values in the `values` array to have the same type.
+ *
+ * Whereas the TypeScript-provided `Promise.all` definition allows for the
+ * values argument to contain different types, the `Q.all` definition does not.
+ * This is a workaround until uses of `Q.all` can be migrated to `Promise.all`.
+ */
+export function all2<T1, T2>(values: [Q.Promise<T1>, Q.Promise<T2>]): Q.Promise<[T1, T2]> {
+	return (Q.all as any)(values);
+}
+
+/** Same as `all2()` but for use when the argument to `Q.all` is a tuple of length 3. */
+export function all3<T1, T2, T3>(values: [Q.Promise<T1>, Q.Promise<T2>, Q.Promise<T3>]): Q.Promise<[T1, T2, T3]> {
+	return (Q.all as any)(values);
+}

@@ -29,9 +29,10 @@ function setupDOM(): Q.Promise<Window> {
 
 			// expose document and window on app globals
 			// for use by tests
-			global.window = window;
-			global.document = window.document;
-			global.navigator = window.navigator;
+			var global_: any = global;
+			global_.window = window;
+			global_.document = window.document;
+			global_.navigator = window.navigator;
 
 			fakeWindow.resolve(window);
 		}

@@ -2,6 +2,7 @@
 import Q = require('q');
 
 import { btoa } from './base/stringutil';
+import asyncutil = require('./base/asyncutil');
 import agile_keychain_crypto = require('./agile_keychain_crypto');
 import crypto = require('./base/crypto');
 import item_builder = require('./item_builder');
@@ -75,7 +76,7 @@ testLib.addAsyncTest('save and load keys and hint', (assert) => {
 	var passHint = 'password hint';
 
 	return store.saveKeys([env.masterKey], passHint).then(() => {
-		return Q.all([store.listKeys(), store.passwordHint()]);
+		return asyncutil.all2([store.listKeys(), store.passwordHint()]);
 	}).then((keysAndHint) => {
 		var keys = <key_agent.Key[]>keysAndHint[0];
 		var hint = <string>keysAndHint[1];

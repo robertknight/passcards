@@ -181,7 +181,7 @@ export class Store implements item_store.SyncableStore {
 			return item.uuid;
 		});
 
-		return Q.all([this.itemIndex.get(), this.getLastSyncEntries(updatedItemIds)])
+		return asyncutil.all2([this.itemIndex.get(), this.getLastSyncEntries(updatedItemIds)])
 		.then((result) => {
 			overviewMap = <OverviewMap>result[0];
 			if (!overviewMap) {
@@ -237,7 +237,7 @@ export class Store implements item_store.SyncableStore {
 
 	loadItem(uuid: string, revision?: string): Q.Promise<item_store.ItemAndContent> {
 		if (revision) {
-			return Q.all([this.overviewKey(), this.itemStore.get<string>('revisions/' + revision)])
+			return asyncutil.all2([this.overviewKey(), this.itemStore.get<string>('revisions/' + revision)])
 			.then(keyAndRevision => {
 				var key = <string>keyAndRevision[0];
 				var revisionData = <string>keyAndRevision[1];

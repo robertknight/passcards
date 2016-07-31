@@ -2,6 +2,7 @@
 import assert = require('assert');
 import Q = require('q');
 
+import asyncutil = require('./base/asyncutil');
 import collectionutil = require('./base/collectionutil');
 import dateutil = require('./base/dateutil');
 import err_util = require('./base/err_util');
@@ -132,7 +133,7 @@ export class CloudStoreSyncer implements Syncer {
 			return '';
 		});
 
-		return Q.all([keys, hint]).then((keysAndHint) => {
+		return asyncutil.all2([keys, hint]).then((keysAndHint) => {
 			var keys = <key_agent.Key[]>keysAndHint[0];
 			var hint = <string>keysAndHint[1];
 			return this.localStore.saveKeys(keys, hint);
@@ -189,7 +190,7 @@ export class CloudStoreSyncer implements Syncer {
 		let remoteItems = this.cloudStore.listItemStates();
 		let lastSyncRevisions = this.localStore.lastSyncRevisions(REMOTE_STORE);
 
-		Q.all([localItems, remoteItems, lastSyncRevisions]).then(itemLists => {
+		asyncutil.all3([localItems, remoteItems, lastSyncRevisions]).then(itemLists => {
 			let localItems = <item_store.ItemState[]>itemLists[0];
 			let remoteItems = <item_store.ItemState[]>itemLists[1];
 			let lastSyncedRevisions = <Map<string, item_store.RevisionPair>>itemLists[2];

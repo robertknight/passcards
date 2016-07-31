@@ -1,6 +1,5 @@
-import Q = require('q');
-
 import agile_keychain = require('./agile_keychain');
+import asyncutil = require('./base/asyncutil');
 import item_builder = require('./item_builder');
 import item_store = require('./item_store');
 import key_agent = require('./key_agent');
@@ -12,8 +11,8 @@ import vfs_node = require('./vfs/node');
 import vfs_util = require('./vfs/util');
 
 // required by key_value_store.IndexedDBDatabase
-global.indexedDB = require('fake-indexeddb');
-global.IDBKeyRange = require('fake-indexeddb/lib/FDBKeyRange');
+(global as any).indexedDB = require('fake-indexeddb');
+(global as any).IDBKeyRange = require('fake-indexeddb/lib/FDBKeyRange');
 
 testLib.addAsyncTest('saves and syncs items', assert => {
 	let db = new key_value_store.IndexedDBDatabase();
@@ -47,7 +46,7 @@ testLib.addAsyncTest('saves and syncs items', assert => {
 	}).then(() => {
 		return localStore.unlock(TEST_PASS);
 	}).then(() => {
-		return Q.all([itemA.saveTo(localStore), itemB.saveTo(agileKeychainStore)])
+		return asyncutil.all2([itemA.saveTo(localStore), itemB.saveTo(agileKeychainStore)])
 	}).then(() => {
 		return syncer.syncItems();
 	}).then(syncResult => {
@@ -57,7 +56,7 @@ testLib.addAsyncTest('saves and syncs items', assert => {
 		assert.equal(syncResult.total, 2);
 		assert.equal(syncResult.failed, 0);
 
-		return Q.all([localStore.listItemStates(), agileKeychainStore.listItemStates()]);
+		return asyncutil.all2([localStore.listItemStates(), agileKeychainStore.listItemStates()]);
 	}).then((result: [item_store.ItemState[], item_store.ItemState[]]) => {
 		let[localItems, remoteItems] = result;
 		assert.equal(localItems.length, 2);

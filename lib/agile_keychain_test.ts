@@ -168,7 +168,7 @@ testLib.addAsyncTest('Compare vaults against .1pif files', (assert) => {
 			actualItems.resolve(itemContents);
 		}).done();
 
-		Q.all([expectedItems, actualItems.promise]).then((expectedActual) => {
+		asyncutil.all2([expectedItems, actualItems.promise]).then((expectedActual) => {
 			var expectedAry = <item_store.Item[]> expectedActual[0];
 			var actualAry = <ItemAndContent[]> expectedActual[1];
 
@@ -663,7 +663,7 @@ testLib.addAsyncTest('listItemStates() matches listItems() output', assert => {
 	return createTestVaultWithNItems(3).then(result => {
 		vault = result.vault;
 		items = result.items;
-		return Q.all([vault.listItemStates(), vault.listItems()]);
+		return asyncutil.all2([vault.listItemStates(), vault.listItems()]);
 	}).then((items: [item_store.ItemState[], item_store.Item[]]) => {
 		assert.equal(items[0].length, items[1].length);
 

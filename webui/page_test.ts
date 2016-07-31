@@ -5,8 +5,9 @@ import rpc = require('../lib/net/rpc');
 import page = require('../webui/page');
 import testLib = require('../lib/test');
 
-global.HTMLFormElement = global.window.HTMLFormElement;
-global.Event = global.window.Event;
+var global_: any = global;
+global_.HTMLFormElement = global_.window.HTMLFormElement;
+global_.Event = global_.window.Event;
 
 const SAMPLE_INPUT_FORM = `
 	<form>
@@ -59,7 +60,7 @@ function createClientServerPortPair(): [RpcPort, RpcPort] {
 }
 
 function setupTestPage() {
-	global.document.getElementById('app').innerHTML = SAMPLE_INPUT_FORM;
+	global_.document.getElementById('app').innerHTML = SAMPLE_INPUT_FORM;
 }
 
 testLib.addAsyncTest('should find inputs in document', assert => {

@@ -4,6 +4,7 @@ import Q = require('q');
 
 import agile_keychain = require('./agile_keychain');
 import agile_keychain_crypto = require('./agile_keychain_crypto');
+import asyncutil = require('./base/asyncutil');
 import item_builder = require('./item_builder');
 import item_store = require('./item_store');
 import key_agent = require('./key_agent');
@@ -32,10 +33,10 @@ function setup(): Q.Promise<Env> {
 	return agile_keychain_crypto.generateMasterKey(VAULT_PASS,
 		VAULT_PASS_ITERATIONS).then(keyList => {
 		let keys = agile_keychain.convertKeys(keyList.list);
-		return Q.all([localStore.saveKeys(keys, VAULT_PASS_HINT),
+		return asyncutil.all2([localStore.saveKeys(keys, VAULT_PASS_HINT),
 			cloudStore.saveKeys(keys, VAULT_PASS_HINT)]);
 	}).then(() => {
-		return Q.all([localStore.unlock(VAULT_PASS), cloudStore.unlock(VAULT_PASS)]);
+		return asyncutil.all2([localStore.unlock(VAULT_PASS), cloudStore.unlock(VAULT_PASS)]);
 	}).then(() => {
 		return {
 			localStore: localStore,
@@ -86,7 +87,7 @@ testLib.addAsyncTest('sync keys and password hint from cloud to local', (assert)
 		env = _env;
 		return env.syncer.syncKeys();
 	}).then(() => {
-		return Q.all([env.localStore.listKeys(), env.localStore.passwordHint()]);
+		return asyncutil.all2([env.localStore.listKeys(), env.localStore.passwordHint()]);
 	}).then(keyAndHint => {
 		let keys = <key_agent.Key[]>keyAndHint[0];
 		let hint = <string>keyAndHint[1];
@@ -109,7 +110,7 @@ testLib.addAsyncTest('sync keys without hint', assert => {
 	}).then(() => {
 		return env.syncer.syncKeys();
 	}).then(() => {
-		return Q.all([env.localStore.listKeys(), env.localStore.passwordHint()]);
+		return asyncutil.all2([env.localStore.listKeys(), env.localStore.passwordHint()]);
 	}).then((keysAndHint: [key_agent.Key[], string]) => {
 		assert.equal(keysAndHint[0].length, 1);
 		assert.equal(keysAndHint[1], '');
@@ -244,11 +245,11 @@ testLib.addAsyncTest('merge local and cloud item updates', (assert) => {
 		// update item in cloudStore and store and save to both
 		vaultItem.item.trashed = true;
 		item.title = 'acme.org - client update';
-		return Q.all([item.save(), vaultItem.item.save()]);
+		return asyncutil.all2([item.save(), vaultItem.item.save()]);
 	}).then(() => {
 		return syncItems(env.syncer);
 	}).then(() => {
-		return Q.all([env.localStore.loadItem(item.uuid), env.cloudStore.loadItem(item.uuid)]);
+		return asyncutil.all2([env.localStore.loadItem(item.uuid), env.cloudStore.loadItem(item.uuid)]);
 	}).then((items) => {
 		var storeItem = <item_store.Item>items[0].item;
 		var vaultItem = <item_store.Item>items[1].item;
@@ -407,7 +408,7 @@ testLib.addAsyncTest('item deleted in cloud and locally', assert => {
 		.then(item => item.item.remove());
 		let deletedInCloud = env.cloudStore.loadItem(uuid)
 		.then(item => item.item.remove());
-		return Q.all([deletedLocally, deletedInCloud]);
+		return asyncutil.all2([deletedLocally, deletedInCloud]);
 	}).then(() => {
 		return syncItems(env.syncer);
 	}).then(result => {
