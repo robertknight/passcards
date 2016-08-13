@@ -51,7 +51,7 @@ testLib.addTest('should display field actions when focused', assert => {
 
 		// when initially displayed, no actions should be selected
 		let buttons = scryRenderedComponentsWithType(field,
-			button.ButtonF.componentClass);
+			button.ButtonF.componentClass as any);
 		assert.equal(buttons.length, 0);
 
 		// now give focus to the field and update.
@@ -72,7 +72,7 @@ testLib.addTest('should display field actions when focused', assert => {
 		passwordFieldInput.dispatchEvent(new event('focus'));
 
 		let actionButtons = (field: react.Component<{}, {}>) => scryRenderedComponentsWithType(field,
-			button.ButtonF.componentClass);
+			button.ButtonF.componentClass as any);
 
 		assert.equal(actionButtons(passwordField).length, 3);
 

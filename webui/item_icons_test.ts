@@ -26,7 +26,7 @@ testLib.addTest('should display site icon', (assert) => {
 			isFocused: false,
 			onClick: () => { }
 		}), element);
-		var iconImage = findDOMElement<HTMLImageElement>(iconComponent, 'img');
+		var iconImage = findDOMElement<HTMLImageElement>(iconComponent as any, 'img');
 
 		var testIconUrl = 'https://www.mysite.com/icon.png';
 		iconProvider.addIcon(itemLocation, {
@@ -42,7 +42,7 @@ testLib.addTest('should display site icon', (assert) => {
 			isFocused: false,
 			onClick: () => { }
 		}), element);
-		iconImage = findDOMElement<HTMLImageElement>(iconComponent, 'img');
+		iconImage = findDOMElement<HTMLImageElement>(iconComponent as any, 'img');
 		assert.equal(iconImage.getAttribute('src'), testIconUrl);
 	});
 });

@@ -34,8 +34,8 @@ testLib.addTest('should display store items', (assert) => {
 			onMenuClicked: (e) => { }
 		}), element);
 
-		var renderedItems = test_utils.scryRenderedComponentsWithType(itemList,
-			item_list_view.ItemF.componentClass);
+		var renderedItems = test_utils.scryRenderedComponentsWithType(itemList as any,
+			item_list_view.ItemF.componentClass as any);
 		assert.equal(renderedItems.length, testItems.length);
 	});
 });
@@ -60,9 +60,9 @@ testLib.addTest('should display item details', (assert) => {
 		};
 
 		// should render icon with site's primary location
-		var itemComponent = renderItem();
-		var iconComponent = test_utils.findRenderedComponentWithType(itemComponent,
-			item_icons.IconControlF.componentClass);
+		var itemComponent = renderItem() as any;
+		var iconComponent = test_utils.findRenderedComponentWithType(itemComponent as any,
+			item_icons.IconControlF.componentClass as any) as any;
 		assert.equal(iconComponent.props.location, testItems[0].primaryLocation());
 
 		// should invoke onSelected() handler when clicked

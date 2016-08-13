@@ -1,5 +1,6 @@
 
 import { load } from 'proxyquire';
+import { Component } from 'react';
 import { scryRenderedComponentsWithType } from 'react-addons-test-utils';
 import { render } from 'react-dom';
 import * as Q from 'q';
@@ -39,11 +40,11 @@ function testDialog(assert: Assert, clickSignIn: boolean) {
 		let dialog = render(AuthDialogF({
 			authServerURL,
 			onComplete: (credentials: any) => receivedCredentials.resolve(credentials)
-		}), element);
+		}), element) as Component<auth_dialog.AuthDialogProps, {}>;
 
 		// click on the 'Sign In' button and verify
 		// that the auth dialog begins and the dialog text changes
-		let buttons = scryRenderedComponentsWithType(dialog, ButtonF.componentClass);
+		let buttons = scryRenderedComponentsWithType(dialog, ButtonF.componentClass as any) as any;
 		if (clickSignIn) {
 			buttons[1].props.onClick(null);
 		} else {

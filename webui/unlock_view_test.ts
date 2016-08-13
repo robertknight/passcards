@@ -37,7 +37,7 @@ addTest('should disable password field until keys have been synced',
 				onMenuClicked: () => { },
 				focus: false,
 			}), element);
-			let passwordInput = findRenderedDOMComponentWithTag(view, 'input') as HTMLInputElement;
+			let passwordInput = findRenderedDOMComponentWithTag(view as any, 'input') as HTMLInputElement;
 
 			return Q('').then(() => {
 				assert.ok(passwordInput.disabled);
@@ -65,7 +65,7 @@ addTest('should enable password field when keys have already been synced',
 				onMenuClicked: () => { },
 				focus: false,
 			}), element);
-			let passwordInput = findRenderedDOMComponentWithTag(view, 'input') as HTMLInputElement;
+			let passwordInput = findRenderedDOMComponentWithTag(view as any, 'input') as HTMLInputElement;
 			return Q('').then(() => {
 				assert.ok(!passwordInput.disabled);
 			});
