@@ -119,7 +119,9 @@ export interface Crypto {
 // crypto implementation using Node.js' crypto lib
 export class NodeCrypto implements Crypto {
 	aesCbcDecrypt(key: string, cipherText: string, iv: string) {
-		var decipher = node_crypto.createDecipheriv('AES-128-CBC', key, iv);
+		var keyBuf = new Buffer(key, 'binary');
+		var ivBuf = new Buffer(iv, 'binary');
+		var decipher = node_crypto.createDecipheriv('AES-128-CBC', keyBuf, ivBuf);
 		let result = '';
 		result += decipher.update(cipherText, 'binary', 'binary');
 		result += decipher.final('binary');
@@ -127,7 +129,9 @@ export class NodeCrypto implements Crypto {
 	}
 
 	aesCbcEncrypt(key: string, plainText: string, iv: string): Q.Promise<string> {
-		var cipher = node_crypto.createCipheriv('AES-128-CBC', key, iv);
+		var keyBuf = new Buffer(key, 'binary');
+		var ivBuf = new Buffer(iv, 'binary');
+		var cipher = node_crypto.createCipheriv('AES-128-CBC', keyBuf, ivBuf);
 		var result = '';
 		result += cipher.update(plainText, 'binary', 'binary');
 		result += cipher.final('binary');
