@@ -20,7 +20,7 @@ export function isBrowser() {
   * (or a compatible environment)
   */
 export function isNodeJS() {
-	return process && process.version;
+	return typeof process === 'object' && process.version;
 }
 
 declare function importScripts(...urls: string[]): void;
@@ -61,4 +61,3 @@ export function isTouchDevice() {
 	       (navigator.maxTouchPoints > 0) ||
 	       (navigator.msMaxTouchPoints > 0);
 }
-
