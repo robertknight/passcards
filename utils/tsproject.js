@@ -45,18 +45,23 @@ commander
 	var project = readProjectFile(projectFile);
 	var srcFiles = tsinputs(project);
 
-    if (command === 'inputs') {
-		console.log(srcFiles.join(' '));
-	} else if (command === 'outputs') {
-		var outDir = project.compilerOptions.outDir || '.';
-		var outFiles = srcFiles.map(function(file) {
-			return path.join(outDir, file.replace(/.tsx?$/, '.js'));
-		});
-		console.log(outFiles.join(' '));
-	} else {
-		throw new Error('Unrecognized command ' + command);
-	}
-  });
+  if (command === 'inputs') {
+    console.log(srcFiles.join(' '));
+  } else if (command === 'outputs') {
+    var outDir = project.compilerOptions.outDir || '.';
+    var outFiles = srcFiles.filter(function (path) {
+      // Exclude definitions files as they do not generate outputs
+      return !path.match(/\.d\.ts$/);
+    }).map(function(file) {
+      // Source file path relative to project file
+      var relPath = path.relative(path.dirname(path.resolve(projectFile)), file);
+      return path.join(outDir, relPath.replace(/.tsx?$/, '.js'));
+    });
+    console.log(outFiles.join(' '));
+  } else {
+    throw new Error('Unrecognized command ' + command);
+  }
+});
 
 module.exports = {
 	findProjectFile: findProjectFile,
