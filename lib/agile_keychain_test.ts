@@ -234,10 +234,10 @@ testLib.addAsyncTest('AES encrypt/decrypt', (assert) => {
 testLib.addAsyncTest('Encrypt/decrypt item data', (assert) => {
 	let impls = createCryptos();
 	let done: Q.Promise<void>[] = [];
-	for (var impl of impls) {
-		var itemData = JSON.stringify({ secret: 'secret-data' });
-		var itemPass = 'item password';
-		var encrypted = agile_keychain_crypto.encryptAgileKeychainItemData(impl, itemPass, itemData);
+	for (let impl of impls) {
+		let itemData = JSON.stringify({ secret: 'secret-data' });
+		let itemPass = 'item password';
+		let encrypted = agile_keychain_crypto.encryptAgileKeychainItemData(impl, itemPass, itemData);
 
 		done.push(encrypted.then(encrypted => {
 			return agile_keychain_crypto.decryptAgileKeychainItemData(impl, itemPass, encrypted);
