@@ -42,7 +42,6 @@
     "react-addons-transition-group": "^0.14.7",
     "s3": "^4.4.0",
     "sort-stream": "^1.0.1",
-    "tsd": "^0.6.0-beta.5",
     "tslint": "^3.2.1",
     "typescript": "^2.0.0",
     "typescript-formatter": "^0.2.2",
