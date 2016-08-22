@@ -1,6 +1,4 @@
-
-import dropbox = require('dropbox');
-
+import dropbox = require('dropbox-v1');
 import assign = require('../base/assign');
 import err_util = require('../base/err_util');
 import vfs = require('./vfs');

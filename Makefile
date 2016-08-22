@@ -11,7 +11,7 @@ webui_icon_dir=$(webui_dist_dir)/icons
 
 # marker files used to trigger npm updates prior to build
 nodemodule_marker=build/nodemodule_marker
-dropboxjs_lib=node_modules/dropbox/lib/dropbox.js
+dropboxjs_lib=node_modules/dropbox-v1/lib/dropbox.js
 
 firefox_extension_id=passcards@robertknight.github.io
 webext_common_args=-s addons/chrome -a pkg
@@ -104,11 +104,11 @@ $(nodemodule_marker): package.json
 	@$(NODE_BIN_DIR)/check-dependencies
 	@mkdir -p build && touch $(nodemodule_marker)
 
-node_modules/dropbox/lib/dropbox.js: node_modules/dropbox/package.json
+node_modules/dropbox-v1/lib/dropbox.js: node_modules/dropbox-v1/package.json
 	@# Build dropbox-js. As long as we are using a fork of dropbox-js,
 	@# we'll need to run this to build Dropbox before using it
 	@echo "Building dropbox-js..."
-	@(cd ./node_modules/dropbox && npm install --quiet . $(SILENCE_STDOUT))
+	@(cd ./node_modules/dropbox-v1 && npm install --quiet . $(SILENCE_STDOUT))
 
 test-package: all
 	cd `$(TMP_DIR_CMD)` \

@@ -1,5 +1,5 @@
 // see http://coffeedoc.info/github/dropbox/dropbox-js/master/class_index.html
-declare module "dropbox" {
+declare module "dropbox-v1" {
 	export interface ApiKeys {
 		key: string
 		secret?: string
