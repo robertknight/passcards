@@ -3,6 +3,7 @@ import os = require('os');
 import Q = require('q');
 
 import asyncutil = require('../lib/base/asyncutil');
+import { defer } from '../lib/base/promise_util';
 
 export interface Clipboard {
 	setData(content: string): Q.Promise<void>;
@@ -35,7 +36,7 @@ export class FakeClipboard implements Clipboard {
 // run an external command, feeding it 'input' if non-null and return
 // a promise for the output
 function exec(command: string, input?: string): Q.Promise<string> {
-	var stdout = Q.defer<string>();
+	var stdout = defer<string>();
 	var child = child_process.exec(command, (err, _stdout, stderr) => {
 		if (err) {
 			stdout.reject(err);
@@ -92,4 +93,3 @@ export function createPlatformClipboard(): Clipboard {
 		return new FakeClipboard();
 	}
 }
-

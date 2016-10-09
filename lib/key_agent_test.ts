@@ -2,6 +2,7 @@ import Q = require('q');
 
 import key_agent = require('./key_agent');
 import testLib = require('./test');
+import { defer } from './base/promise_util';
 
 testLib.addAsyncTest('auto-lock', (assert) => {
 	let agent = new key_agent.SimpleKeyAgent();
@@ -10,7 +11,7 @@ testLib.addAsyncTest('auto-lock', (assert) => {
 		lockEvents += 1
 	});
 
-	let done = Q.defer<void>();
+	let done = defer<void>();
 
 	// setup auto-lock and unlock the agent
 	agent.setAutoLockTimeout(20);
@@ -39,4 +40,3 @@ testLib.addAsyncTest('auto-lock', (assert) => {
 
 	return done.promise;
 });
-

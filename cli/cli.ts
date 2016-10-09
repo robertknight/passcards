@@ -21,6 +21,7 @@ import key_agent = require('../lib/key_agent');
 import nodefs = require('../lib/vfs/node');
 import password_gen = require('../lib/password_gen');
 import vfs = require('../lib/vfs/vfs');
+import { defer } from '../lib/base/promise_util';
 
 interface HandlerMap {
 	[index: string]: (args: any) => Q.Promise<any>;
@@ -198,7 +199,7 @@ export class CLI {
 	}
 
 	private findExistingVaultInDropbox(storage: vfs.VFS, dropboxRoot: string): Q.Promise<string> {
-		var path = Q.defer<string>();
+		var path = defer<string>();
 		var settingsFilePath = pathLib.join(dropboxRoot, '.ws.agile.1Password.settings');
 		var rootFile = storage.read(settingsFilePath);
 		rootFile.then((content) => {
@@ -285,7 +286,7 @@ export class CLI {
 		}
 
 		var authenticated = Q<void>(null);
-		var vault = Q.defer<agile_keychain.Vault>();
+		var vault = defer<agile_keychain.Vault>();
 
 		authenticated.then(() => {
 			var vaultPath: Q.Promise<string>;
@@ -435,7 +436,7 @@ export class CLI {
 	}
 
 	private setPasswordCommand(vault: agile_keychain.Vault, iterations?: number): Q.Promise<number> {
-		var result = Q.defer<number>();
+		var result = defer<number>();
 		var currentPass: string;
 		var newPass: string;
 		var newPass2: string;
@@ -698,7 +699,7 @@ export class CLI {
 		};
 
 		// process commands
-		var exitStatus = Q.defer<number>();
+		var exitStatus = defer<number>();
 		vaultReady.then(() => {
 			var handler = handlers[args.command];
 			if (handler) {

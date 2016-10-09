@@ -1,10 +1,11 @@
 
 import Q = require('q');
+import { Deferred } from './promise_util';
 
 /** Resolve or reject promise @p a with the result of promise @p b.
   * Returns the promise associated with @p a
   */
-export function resolveWith<T>(a: Q.Deferred<T>, b: Q.Promise<T>): Q.Promise<T> {
+export function resolveWith<T>(a: Deferred<T>, b: Q.Promise<T>): Q.Promise<T> {
 	b.then((result) => {
 		a.resolve(result);
 	})
@@ -19,7 +20,7 @@ export function resolveWith<T>(a: Q.Deferred<T>, b: Q.Promise<T>): Q.Promise<T> 
   *
   * Returns the promise associated with @p a
   */
-export function resolveWithValue<T, U>(a: Q.Deferred<T>, b: Q.Promise<U>, value: T): Q.Promise<T> {
+export function resolveWithValue<T, U>(a: Deferred<T>, b: Q.Promise<U>, value: T): Q.Promise<T> {
 	b.then(() => {
 		a.resolve(value);
 	})

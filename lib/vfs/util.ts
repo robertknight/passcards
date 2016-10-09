@@ -3,6 +3,7 @@ import Path = require('path');
 
 import asyncutil = require('../base/asyncutil');
 import vfs = require('./vfs');
+import { defer } from '../base/promise_util';
 
 /** Utility functions for virtual file system operations,
   * built on top of the main vfs.VFS interface methods.
@@ -10,7 +11,7 @@ import vfs = require('./vfs');
 
 /** Remove the directory @p path and all of its contents, if it exists. */
 export function rmrf(fs: vfs.VFS, path: string): Q.Promise<void> {
-	var result = Q.defer<void>();
+	var result = defer<void>();
 
 	fs.stat(path).then(() => {
 		var fileList = fs.list(path);
@@ -39,7 +40,7 @@ export function rmrf(fs: vfs.VFS, path: string): Q.Promise<void> {
 
 /** Recursively enumerate the contents of @p path */
 export function listRecursive(fs: vfs.VFS, src: string): Q.Promise<vfs.FileInfo[]> {
-	var result = Q.defer<vfs.FileInfo[]>();
+	var result = defer<vfs.FileInfo[]>();
 
 	fs.list(src).then((files) => {
 		var listOps: Q.Promise<vfs.FileInfo[]>[] = [];
@@ -127,4 +128,3 @@ export function mktemp(fs: vfs.VFS, path: string, template = 'tmp.XXX') {
 export function readJSON<T>(fs: vfs.VFS, path: string) {
 	return fs.read(path).then(json => <T>JSON.parse(json));
 }
-

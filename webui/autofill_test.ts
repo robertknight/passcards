@@ -9,6 +9,7 @@ import item_store = require('../lib/item_store');
 import browser_access = require('./browser_access');
 import site_info = require('../lib/siteinfo/site_info');
 import testLib = require('../lib/test');
+import { defer } from '../lib/base/promise_util';
 
 class FakeBrowserAccess implements browser_access.BrowserAccess {
 	formList: forms.FieldGroup[];
@@ -29,7 +30,7 @@ class FakeBrowserAccess implements browser_access.BrowserAccess {
 	}
 
 	findForms() {
-		let result = Q.defer<forms.FieldGroup[]>();
+		let result = defer<forms.FieldGroup[]>();
 		setTimeout(() => {
 			result.resolve(this.formList);
 		});

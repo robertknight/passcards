@@ -3,6 +3,7 @@ import Q = require('q');
 import crypto_worker = require('./crypto_worker');
 import env = require('./base/env');
 import rpc = require('./net/rpc');
+import { defer } from './base/promise_util';
 import testLib = require('./test');
 
 if (env.isNodeJS()) {
@@ -10,7 +11,7 @@ if (env.isNodeJS()) {
 }
 
 testLib.addAsyncTest('worker test', (assert) => {
-	let done = Q.defer<void>();
+	let done = defer<void>();
 
 	let scriptPath = crypto_worker.SCRIPT_PATH;
 	let worker = new Worker(scriptPath);
@@ -26,4 +27,3 @@ testLib.addAsyncTest('worker test', (assert) => {
 
 	return done.promise;
 });
-

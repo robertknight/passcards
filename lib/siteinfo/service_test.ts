@@ -16,6 +16,7 @@ import site_info = require('./site_info');
 import site_info_service = require('./service');
 import stringutil = require('../base/stringutil');
 import testLib = require('../test');
+import { defer } from '../base/promise_util';
 
 var urlFetcher: site_info_service.UrlFetcher = {
 	fetch(url: string): Q.Promise<site_info_service.UrlResponse> {
@@ -214,7 +215,7 @@ function serveAndFetchIcons(port: number, siteRoot: string, queryPath: string): 
 
 	return server.listen(port).then(() => {
 		return asyncutil.until(() => {
-			var next = Q.defer<boolean>();
+			var next = defer<boolean>();
 			result = provider.lookup(queryUrl);
 			if (result.state == site_info.QueryState.Ready) {
 				return Q(true);
@@ -301,4 +302,3 @@ testLib.addAsyncTest('fetch site icon with DuckDuckGo', (assert) => {
 		assert.equal(icon, 'https://duckduckgo.com/i/img.png');
 	});
 });
-

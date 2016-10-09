@@ -6,6 +6,7 @@ import { addTest } from '../../lib/test';
 import { TransitionContainerF, TransitionChildProps } from './transition_container';
 import { TransitionState } from './reactutil';
 import { runReactTest } from '../test_utils';
+import { defer } from '../../lib/base/promise_util';
 
 interface ChildProps extends TransitionChildProps {
 	transitionStates?: TransitionState[];
@@ -58,7 +59,7 @@ addTest('should render child with transition props', assert => {
 
 addTest('should invoke callback when component is removed', assert => {
 	return runReactTest(element => {
-		let componentRemoved = Q.defer<void>();
+		let componentRemoved = defer<void>();
 
 		// render container with child
 		let renderContainer = (withChild: boolean) => {

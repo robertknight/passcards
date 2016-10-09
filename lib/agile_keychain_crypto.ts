@@ -13,6 +13,7 @@ import crypto_worker = require('./crypto_worker');
 import key_agent = require('./key_agent');
 import pbkdf2Lib = require('./crypto/pbkdf2');
 import rpc = require('./net/rpc');
+import { defer, Deferred, nodeResolver } from '../lib/base/promise_util';
 
 export class AESKeyParams {
 	constructor(public key: string, public iv: string) {
@@ -144,7 +145,7 @@ export class NodeCrypto implements Crypto {
 	}
 
 	pbkdf2(masterPwd: string, salt: string, iterCount: number, keyLen: number): Q.Promise<string> {
-		var key = Q.defer<string>();
+		var key = defer<string>();
 		// FIXME - Type definition for crypto.pbkdf2() is wrong, result
 		// is a Buffer, not a string.
 		node_crypto.pbkdf2(masterPwd, salt, iterCount, keyLen, (err, derivedKey) => {
@@ -259,13 +260,13 @@ export class CryptoJsCrypto implements Crypto {
 			var PBKDF2_BLOCK_SIZE = 20;
 			var blockCount = Math.round(keyLen / PBKDF2_BLOCK_SIZE);
 
-			var processBlock = (blockIndex: number, keyBlock: Q.Deferred<string>) => {
+			var processBlock = (blockIndex: number, keyBlock: Deferred<string>) => {
 				var rpc = CryptoJsCrypto.workers[blockIndex % CryptoJsCrypto.workers.length].rpc;
-				rpc.call('pbkdf2Block', [pass, salt, iterCount, blockIndex], keyBlock.makeNodeResolver());
+				rpc.call('pbkdf2Block', [pass, salt, iterCount, blockIndex], nodeResolver(keyBlock));
 			};
 
 			for (var blockIndex = 0; blockIndex < blockCount; blockIndex++) {
-				var keyBlock = Q.defer<string>();
+				var keyBlock = defer<string>();
 				processBlock(blockIndex, keyBlock);
 				keyBlocks.push(keyBlock.promise);
 			}

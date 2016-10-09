@@ -11,6 +11,7 @@ import item_merge = require('./item_merge');
 import item_store = require('./item_store');
 import key_agent = require('./key_agent');
 import logging = require('./base/logging');
+import { defer, Deferred } from './base/promise_util';
 
 export class SyncError extends err_util.BaseError {
 	constructor(message: string, sourceErr?: Error) {
@@ -111,7 +112,7 @@ export class CloudStoreSyncer implements Syncer {
 	// promise for the result of the
 	// current sync task or null if no sync
 	// is in progress
-	private currentSync: Q.Deferred<SyncProgress>;
+	private currentSync: Deferred<SyncProgress>;
 
 	onProgress: event_stream.EventStream<SyncProgress>;
 
@@ -148,7 +149,7 @@ export class CloudStoreSyncer implements Syncer {
 		}
 		syncLog.info('Starting sync');
 
-		var result = Q.defer<SyncProgress>();
+		var result = defer<SyncProgress>();
 		this.currentSync = result;
 		this.currentSync.promise.then(() => {
 			syncLog.info('Sync completed');

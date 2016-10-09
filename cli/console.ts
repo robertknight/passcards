@@ -5,6 +5,7 @@ import sprintf = require('sprintf');
 import Q = require('q');
 
 import asyncutil = require('../lib/base/asyncutil');
+import { defer } from '../lib/base/promise_util';
 
 /** Interface for terminal input/output. */
 export interface TermIO {
@@ -19,7 +20,7 @@ export class ConsoleIO implements TermIO {
 	}
 
 	readPassword(prompt: string): Q.Promise<string> {
-		var result = Q.defer<string>();
+		var result = defer<string>();
 		promptly.password(prompt, (err, password) => {
 			if (err) {
 				result.reject(err);
@@ -31,7 +32,7 @@ export class ConsoleIO implements TermIO {
 	}
 
 	readLine(prompt: string): Q.Promise<string> {
-		var result = Q.defer<string>();
+		var result = defer<string>();
 		promptly.prompt(prompt, (err, text) => {
 			if (err) {
 				result.reject(err);
@@ -70,4 +71,3 @@ export function passwordFieldPrompt(io: TermIO, randomPassFunc: () => string): Q
 		return password;
 	});
 }
-

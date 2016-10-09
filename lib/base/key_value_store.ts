@@ -8,9 +8,10 @@ import Q = require('q');
 import asyncutil = require('./asyncutil');
 import err_util = require('./err_util');
 import stringutil = require('./stringutil');
+import { defer } from './promise_util';
 
 function promisify<T>(req: IDBRequest): Q.Promise<T> {
-	var result = Q.defer<T>();
+	var result = defer<T>();
 	req.onsuccess = () => {
 		result.resolve(req.result);
 	};
@@ -90,7 +91,7 @@ export class IndexedDBDatabase implements Database {
 		// Browser Console but does not return a useful error to the
 		// onerror() handler below.
 
-		var _db = Q.defer<IDBDatabase>();
+		var _db = defer<IDBDatabase>();
 		var req = indexedDB.open(name, version);
 		req.onupgradeneeded = (e) => {
 			var db = <IDBDatabase>req.result;
@@ -222,7 +223,7 @@ class IndexedDBStore implements ObjectStore {
 		return this.db.then((db) => {
 			var store = this.getStore(db);
 			var req = store.openCursor(IDBKeyRange.lowerBound(prefix));
-			var result = Q.defer<void>();
+			var result = defer<void>();
 
 			req.onsuccess = () => {
 				var cursor = <IDBCursorWithValue>req.result;

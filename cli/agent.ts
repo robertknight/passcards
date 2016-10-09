@@ -1,6 +1,7 @@
 import Q = require('q');
 
 import { atob, btoa } from '../lib/base/stringutil';
+import { defer } from '../lib/base/promise_util';
 import agent_server = require('./agent_server');
 import http_client = require('../lib/http_client');
 import key_agent = require('../lib/key_agent');
@@ -15,7 +16,7 @@ export class HttpKeyAgent implements key_agent.KeyAgent {
 	}
 
 	addKey(id: string, key: string): Q.Promise<void> {
-		var done = Q.defer<void>();
+		var done = defer<void>();
 		this.sendRequest('POST', '/keys', {
 			id: id,
 			key: btoa(key)
@@ -26,7 +27,7 @@ export class HttpKeyAgent implements key_agent.KeyAgent {
 	}
 
 	listKeys(): Q.Promise<string[]> {
-		var keys = Q.defer<string[]>();
+		var keys = defer<string[]>();
 		this.sendRequest('GET', '/keys', {}).then((reply) => {
 			keys.resolve(JSON.parse(reply));
 		}).done();
@@ -34,7 +35,7 @@ export class HttpKeyAgent implements key_agent.KeyAgent {
 	}
 
 	forgetKeys(): Q.Promise<void> {
-		var done = Q.defer<void>();
+		var done = defer<void>();
 		this.sendRequest('DELETE', '/keys', {}).then(() => {
 			done.resolve(null);
 		}).done();
@@ -42,7 +43,7 @@ export class HttpKeyAgent implements key_agent.KeyAgent {
 	}
 
 	decrypt(id: string, cipherText: string, params: key_agent.CryptoParams): Q.Promise<string> {
-		var plainText = Q.defer<string>();
+		var plainText = defer<string>();
 		this.sendRequest<agent_server.DecryptRequest>('POST', '/decrypt', {
 			id: id,
 			algo: key_agent.CryptoAlgorithm.AES128_OpenSSLKey,
@@ -54,7 +55,7 @@ export class HttpKeyAgent implements key_agent.KeyAgent {
 	}
 
 	encrypt(id: string, plainText: string, params: key_agent.CryptoParams): Q.Promise<string> {
-		var cipherText = Q.defer<string>();
+		var cipherText = defer<string>();
 		this.sendRequest<agent_server.EncryptRequest>('POST', '/encrypt', {
 			id: id,
 			algo: key_agent.CryptoAlgorithm.AES128_OpenSSLKey,

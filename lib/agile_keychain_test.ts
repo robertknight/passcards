@@ -17,6 +17,7 @@ import password_gen = require('./password_gen');
 import testLib = require('./test');
 import vfs = require('./vfs/vfs');
 import vfs_util = require('./vfs/util');
+import { defer } from '../lib/base/promise_util';
 
 class TestCase {
 	/** Relative path to the vault within the test data dir */
@@ -143,11 +144,11 @@ testLib.addAsyncTest('Compare vaults against .1pif files', (assert) => {
 	var importer = new exportLib.PIFImporter();
 
 	TEST_VAULTS.forEach((tst) => {
-		var result = Q.defer<boolean>();
+		var result = defer<boolean>();
 		done.push(result.promise);
 
 		var expectedItems = importer.importItems(fs, tst.itemDataPath);
-		var actualItems = Q.defer<ItemAndContent[]>();
+		var actualItems = defer<ItemAndContent[]>();
 
 		var vault = new agile_keychain.Vault(fs, tst.path);
 		var items: item_store.Item[];

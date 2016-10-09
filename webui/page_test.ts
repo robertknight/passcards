@@ -4,6 +4,7 @@ import forms = require('../webui/forms');
 import rpc = require('../lib/net/rpc');
 import page = require('../webui/page');
 import testLib = require('../lib/test');
+import { defer, nodeResolver } from '../lib/base/promise_util';
 
 var global_: any = global;
 global_.HTMLFormElement = global_.window.HTMLFormElement;
@@ -70,7 +71,7 @@ testLib.addAsyncTest('should find inputs in document', assert => {
 
 	let pageScriptRpc = new rpc.RpcHandler(serverPort);
 	let extensionRpc = new rpc.RpcHandler(clientPort);
-	let done = Q.defer<void>();
+	let done = defer<void>();
 
 	page.init(pageScriptRpc);
 	extensionRpc.call<forms.FieldGroup[]>('find-fields', [], (err: Error, fields: forms.FieldGroup[]) => {
@@ -133,15 +134,15 @@ testLib.addAsyncTest('should autofill inputs in document', assert => {
 			value: 'secret'
 		}];
 
-	let foundFields = Q.defer<forms.FieldGroup[]>();
-	extensionRpc.call('find-fields', [], foundFields.makeNodeResolver());
+	let foundFields = defer<forms.FieldGroup[]>();
+	extensionRpc.call('find-fields', [], nodeResolver(foundFields));
 
 	return foundFields.promise.then(fieldGroups => {
 		assert.equal(fieldGroups.length, 1);
 		assert.equal(fieldGroups[0].fields.length, 3);
 
-		let filled = Q.defer<number>();
-		extensionRpc.call('autofill', [AUTOFILL_VALUES], filled.makeNodeResolver());
+		let filled = defer<number>();
+		extensionRpc.call('autofill', [AUTOFILL_VALUES], nodeResolver(filled));
 		return filled.promise;
 	}).then(count => {
 		assert.equal(count, 2);

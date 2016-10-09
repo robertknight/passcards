@@ -7,6 +7,7 @@ import rpc = require('../lib/net/rpc');
 import site_info = require('../lib/siteinfo/site_info');
 import site_info_service = require('../lib/siteinfo/service');
 import stringutil = require('../lib/base/stringutil');
+import { defer, nodeResolver } from '../lib/base/promise_util';
 
 class ExtensionUrlFetcher {
 	private rpc: rpc.RpcHandler;
@@ -16,8 +17,8 @@ class ExtensionUrlFetcher {
 	}
 
 	fetch(url: string): Q.Promise<site_info_service.UrlResponse> {
-		var result = Q.defer<site_info_service.UrlResponse>();
-		this.rpc.call('fetch-url', [url], result.makeNodeResolver());
+		var result = defer<site_info_service.UrlResponse>();
+		this.rpc.call('fetch-url', [url], nodeResolver(result));
 		return result.promise;
 	}
 }
@@ -147,8 +148,8 @@ export class ExtensionBrowserAccess implements BrowserAccess, ClipboardAccess {
 	}
 
 	findForms() {
-		let fieldGroups = Q.defer<forms.FieldGroup[]>();
-		this.rpc.call('find-fields', [], fieldGroups.makeNodeResolver());
+		let fieldGroups = defer<forms.FieldGroup[]>();
+		this.rpc.call('find-fields', [], nodeResolver(fieldGroups));
 		return fieldGroups.promise;
 	}
 
@@ -157,8 +158,8 @@ export class ExtensionBrowserAccess implements BrowserAccess, ClipboardAccess {
 	}
 
 	autofill(fields: forms.AutoFillEntry[]): Q.Promise<number> {
-		var filled = Q.defer<number>();
-		this.rpc.call('autofill', [fields], filled.makeNodeResolver());
+		var filled = defer<number>();
+		this.rpc.call('autofill', [fields], nodeResolver(filled));
 		return filled.promise;
 	}
 
@@ -248,9 +249,9 @@ export class ChromeBrowserAccess implements BrowserAccess, ClipboardAccess {
 	}
 
 	findForms(): Q.Promise<forms.FieldGroup[]> {
-		let result = Q.defer<forms.FieldGroup[]>();
+		let result = defer<forms.FieldGroup[]>();
 		this.connectToCurrentTab().then((rpc) => {
-			rpc.call('find-fields', [], result.makeNodeResolver());
+			rpc.call('find-fields', [], nodeResolver(result));
 		}).catch(err => {
 			result.reject(err);
 		});
@@ -258,9 +259,9 @@ export class ChromeBrowserAccess implements BrowserAccess, ClipboardAccess {
 	}
 
 	autofill(fields: forms.AutoFillEntry[]): Q.Promise<number> {
-		var filled = Q.defer<number>();
+		var filled = defer<number>();
 		this.connectToCurrentTab().then((rpc) => {
-			rpc.call('autofill', [fields], filled.makeNodeResolver());
+			rpc.call('autofill', [fields], nodeResolver(filled));
 		});
 		return filled.promise;
 	}
@@ -290,7 +291,7 @@ export class ChromeBrowserAccess implements BrowserAccess, ClipboardAccess {
 	}
 
 	private connectToCurrentTab(): Q.Promise<rpc.RpcHandler> {
-		var tabRpc = Q.defer<rpc.RpcHandler>();
+		var tabRpc = defer<rpc.RpcHandler>();
 		chrome.windows.getCurrent((window) => {
 			chrome.tabs.query({ active: true, windowId: window.id }, (tabs) => {
 				if (tabs.length == 0) {

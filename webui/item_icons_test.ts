@@ -10,6 +10,7 @@ import site_info = require('../lib/siteinfo/site_info');
 import stringutil = require('../lib/base/stringutil');
 import testLib = require('../lib/test');
 import ui_test_utils = require('./test_utils');
+import { defer } from '../lib/base/promise_util';
 
 function findDOMElement<T extends HTMLElement>(component: react.Component<{}, {}>, tagname: string) {
 	return <T>react_dom.findDOMNode(findRenderedDOMComponentWithTag(component, tagname));
@@ -128,7 +129,7 @@ class FakeIconSource implements site_info.SiteInfoProvider {
 // returns a promise for data in the next event of
 // an event stream
 function await<T>(stream: event_stream.EventStream<T>): Q.Promise<T> {
-	let done = Q.defer<T>();
+	let done = defer<T>();
 	let listener = stream.listen(result => {
 		done.resolve(result);
 		stream.ignore(listener);

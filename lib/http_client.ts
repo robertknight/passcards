@@ -9,6 +9,7 @@ import asyncutil = require('./base/asyncutil');
 import env = require('./base/env');
 import err_util = require('./base/err_util');
 import streamutil = require('./base/streamutil');
+import { defer } from './base/promise_util';
 
 export interface Reply {
 	url: string;
@@ -142,7 +143,7 @@ export function request<T>(method: string, url: string, data?: T, opts?: Request
 		requestFunc = http.request;
 	}
 
-	let response = Q.defer<Reply>();
+	let response = defer<Reply>();
 	let request = requestFunc(requestOpts, (resp: http.ClientResponse) => {
 		streamutil.readAll(resp)
 		.then((content) => {

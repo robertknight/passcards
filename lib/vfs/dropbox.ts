@@ -5,6 +5,7 @@ import Q = require('q');
 import assign = require('../base/assign');
 import err_util = require('../base/err_util');
 import vfs = require('./vfs');
+import { defer } from '../base/promise_util';
 
 export interface Options {
 }
@@ -42,7 +43,7 @@ export class DropboxVFS implements vfs.VFS {
 	}
 
 	accountInfo() {
-		var result = Q.defer<vfs.AccountInfo>();
+		var result = defer<vfs.AccountInfo>();
 		this.client.getAccountInfo({}, (err, info) => {
 			if (err) {
 				result.reject(convertError(err));
@@ -59,7 +60,7 @@ export class DropboxVFS implements vfs.VFS {
 	}
 
 	stat(path: string): Q.Promise<vfs.FileInfo> {
-		var result = Q.defer<vfs.FileInfo>();
+		var result = defer<vfs.FileInfo>();
 		this.client.stat(path, {}, (err, stat) => {
 			if (err) {
 				result.reject(convertError(err));
@@ -85,7 +86,7 @@ export class DropboxVFS implements vfs.VFS {
 	}
 
 	read(path: string): Q.Promise<string> {
-		var result = Q.defer<string>();
+		var result = defer<string>();
 		this.client.readFile(path, {}, (error, content) => {
 			if (error) {
 				result.reject(convertError(error));
@@ -97,7 +98,7 @@ export class DropboxVFS implements vfs.VFS {
 	}
 
 	write(path: string, content: string, options: vfs.WriteOptions = {}): Q.Promise<vfs.FileInfo> {
-		var result = Q.defer<vfs.FileInfo>();
+		var result = defer<vfs.FileInfo>();
 		var dropboxWriteOpts: dropbox.WriteFileOptions = {};
 
 		if (options && options.parentRevision) {
@@ -117,7 +118,7 @@ export class DropboxVFS implements vfs.VFS {
 	}
 
 	list(path: string): Q.Promise<vfs.FileInfo[]> {
-		var result = Q.defer<vfs.FileInfo[]>();
+		var result = defer<vfs.FileInfo[]>();
 		this.client.readdir(path, {}, (error, names, folderInfo, files) => {
 			if (error) {
 				result.reject(convertError(error));
@@ -133,7 +134,7 @@ export class DropboxVFS implements vfs.VFS {
 	}
 
 	rm(path: string): Q.Promise<void> {
-		var result = Q.defer<void>();
+		var result = defer<void>();
 		this.client.remove(path, (error) => {
 			if (error) {
 				result.reject(convertError(error));
@@ -156,7 +157,7 @@ export class DropboxVFS implements vfs.VFS {
 	}
 
 	mkpath(path: string): Q.Promise<void> {
-		var result = Q.defer<void>();
+		var result = defer<void>();
 		this.client.mkdir(path, (err, stat) => {
 			if (err) {
 				result.reject(convertError(err));

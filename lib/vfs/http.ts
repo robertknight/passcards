@@ -18,6 +18,7 @@ import streamutil = require('../base/streamutil');
 import stringutil = require('../base/stringutil');
 import vfs = require('./vfs');
 import vfs_util = require('./util');
+import { defer } from '../base/promise_util';
 
 export const ACCESS_TOKEN = 'dummytoken';
 
@@ -207,7 +208,7 @@ export class Server {
 	}
 
 	listen(port: number): Q.Promise<void> {
-		var ready = Q.defer<void>();
+		var ready = defer<void>();
 		this.server.listen(port, () => {
 			ready.resolve(null);
 		});

@@ -17,6 +17,7 @@ import key_agent = require('./key_agent');
 import stringutil = require('./base/stringutil');
 import vfs = require('./vfs/vfs');
 import vfs_util = require('./vfs/util');
+import { defer } from '../lib/base/promise_util';
 
 type IndexEntry =[
 string, // uuid
@@ -308,7 +309,7 @@ export class Vault implements item_store.Store {
 	}
 
 	private loadKeys(): Q.Promise<agile_keychain_entries.EncryptionKeyEntry[]> {
-		var keys = Q.defer<agile_keychain_entries.EncryptionKeyEntry[]>();
+		var keys = defer<agile_keychain_entries.EncryptionKeyEntry[]>();
 		var content = this.fs.read(Path.join(this.dataFolderPath(), 'encryptionKeys.js'));
 		content.then((content: string) => {
 			var keyList: agile_keychain_entries.EncryptionKeyList = JSON.parse(content);
@@ -483,7 +484,7 @@ export class Vault implements item_store.Store {
 
 	// save pending changes to the contents.js index file
 	private saveContentsFile() {
-		var overviewSaved = Q.defer<{}>();
+		var overviewSaved = defer<{}>();
 		var revision: string;
 
 		this.indexUpdated = this.fs.stat(this.contentsFilePath()).then(stat => {

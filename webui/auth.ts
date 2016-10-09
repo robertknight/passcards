@@ -5,6 +5,7 @@ import { atob, btoa } from '../lib/base/stringutil';
 import assign = require('../lib/base/assign');
 import crypto = require('../lib/base/crypto');
 import env = require('../lib/base/env');
+import { defer } from '../lib/base/promise_util';
 
 export interface Credentials {
 	/** The access token for making requests to the cloud service. */
@@ -121,7 +122,7 @@ export class OAuthFlow {
 	}
 
 	authenticate(win: AuthWindowOpener) {
-		let credentials = Q.defer<Credentials>();
+		let credentials = defer<Credentials>();
 
 		// open a window which displays the auth UI
 		let authWindowSettings = windowSettingsToString(this.options.windowSettings);

@@ -4,6 +4,7 @@ import forms = require('./forms');
 import item_store = require('../lib/item_store');
 import browser_access = require('./browser_access');
 import stringutil = require('../lib/base/stringutil');
+import { defer } from '../lib/base/promise_util';
 
 export interface AutoFillResult {
 	count: number;
@@ -35,7 +36,7 @@ export class AutoFiller {
 	}
 
 	autofill(item: item_store.Item): Q.Promise<AutoFillResult> {
-		var result = Q.defer<AutoFillResult>();
+		var result = defer<AutoFillResult>();
 		var usernameKeys = ['email', 'user', 'account'];
 		let content: item_store.ItemContent;
 

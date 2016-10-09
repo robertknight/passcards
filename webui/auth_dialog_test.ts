@@ -8,6 +8,7 @@ import * as Q from 'q';
 import { addTest, Assert } from '../lib/test';
 import { ButtonF } from './controls/button';
 import { runReactTest } from './test_utils';
+import { defer } from '../lib/base/promise_util';
 
 import * as auth_dialog from './auth_dialog';
 
@@ -33,7 +34,7 @@ let {AuthDialogF } = load<typeof auth_dialog>('./auth_dialog', {
 
 function testDialog(assert: Assert, clickSignIn: boolean) {
 	return runReactTest(element => {
-		let receivedCredentials = Q.defer<any>();
+		let receivedCredentials = defer<any>();
 		let authServerURL = 'https://acmestorage.com/oauth2/authorize';
 
 		// render the auth dialog

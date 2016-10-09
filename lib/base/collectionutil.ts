@@ -1,5 +1,7 @@
 import Q = require('q');
 
+import { defer, Deferred } from './promise_util';
+
 interface BiDiMapEntry<T1, T2> {
 	key1: T1;
 	key2: T2;
@@ -223,7 +225,7 @@ export class BatchedUpdateQueue<T> {
 	// promise for the result of the next batch of
 	// updates which will be submitted once the current
 	// batch is complete
-	private nextFlush: Q.Deferred<void>;
+	private nextFlush: Deferred<void>;
 
 	/** Construct a new queue which calls @p updateFn with
 	  * batches of updates to process.
@@ -251,7 +253,7 @@ export class BatchedUpdateQueue<T> {
 			return this.nextFlush.promise;
 		}
 
-		this.nextFlush = Q.defer<void>();
+		this.nextFlush = defer<void>();
 		this.currentFlush.then(() => {
 			this.currentFlush = this.updateFn(this.pendingUpdates);
 			this.pendingUpdates = [];

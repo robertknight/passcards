@@ -9,6 +9,7 @@ import jsdom = require('jsdom');
 import Q = require('q');
 
 import testLib = require('../lib/test');
+import { defer } from '../lib/base/promise_util';
 
 // setup the fake DOM environment for tests.
 // This function must be called _before_ React
@@ -18,7 +19,7 @@ function setupDOM(): Q.Promise<Window> {
 		return Q(window);
 	}
 
-	var fakeWindow = Q.defer<Window>();
+	var fakeWindow = defer<Window>();
 	jsdom.env({
 		url: 'https://robertknight.github.io/passcards',
 		html: '<div id="app"></div>',

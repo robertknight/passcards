@@ -4,6 +4,7 @@ import Q = require('q');
 
 import vfs = require('./vfs');
 import vfs_util = require('./util');
+import { defer } from '../base/promise_util';
 
 function convertError(error: NodeJS.ErrnoException): vfs.VfsError {
 	let type = vfs.ErrorType.Other;
@@ -42,7 +43,7 @@ export class FileVFS implements vfs.VFS {
 	}
 
 	stat(path: string): Q.Promise<vfs.FileInfo> {
-		var result = Q.defer<vfs.FileInfo>();
+		var result = defer<vfs.FileInfo>();
 		fs.stat(this.absPath(path), (err, info) => {
 			if (err) {
 				result.reject(convertError(err));
@@ -65,7 +66,7 @@ export class FileVFS implements vfs.VFS {
 	}
 
 	read(path: string): Q.Promise<string> {
-		var result = Q.defer<string>();
+		var result = defer<string>();
 		fs.readFile(this.absPath(path), (error, content) => {
 			if (error) {
 				result.reject(convertError(error));
@@ -77,7 +78,7 @@ export class FileVFS implements vfs.VFS {
 	}
 
 	write(path: string, content: string, options: vfs.WriteOptions = {}): Q.Promise<vfs.FileInfo> {
-		var result = Q.defer<{}>();
+		var result = defer<{}>();
 
 		var fullPath = this.absPath(path);
 		var tempPath = '';
@@ -116,7 +117,7 @@ export class FileVFS implements vfs.VFS {
 	}
 
 	list(path: string): Q.Promise<vfs.FileInfo[]> {
-		var result = Q.defer<vfs.FileInfo[]>();
+		var result = defer<vfs.FileInfo[]>();
 		var absPath = this.absPath(path);
 		fs.readdir(absPath, (err, files) => {
 			if (err) {
@@ -139,7 +140,7 @@ export class FileVFS implements vfs.VFS {
 	}
 
 	rmdir(path: string): Q.Promise<void> {
-		var result = Q.defer<void>();
+		var result = defer<void>();
 		fs.rmdir(this.absPath(path), (error) => {
 			if (error) {
 				result.reject(convertError(error));
@@ -151,7 +152,7 @@ export class FileVFS implements vfs.VFS {
 	}
 
 	rm(path: string): Q.Promise<void> {
-		var result = Q.defer<void>();
+		var result = defer<void>();
 		fs.unlink(this.absPath(path), (error) => {
 			if (error) {
 				// unlink() on a directory returns EISDIR on Linux and
@@ -190,7 +191,7 @@ export class FileVFS implements vfs.VFS {
 	}
 
 	private mkpathInternal(path: string, allowExisting?: boolean): Q.Promise<void> {
-		var result = Q.defer<void>();
+		var result = defer<void>();
 
 		fs.mkdir(this.absPath(path), 511 /* 0777 */, (err) => {
 			if (err) {

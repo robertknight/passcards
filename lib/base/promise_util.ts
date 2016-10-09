@@ -23,3 +23,11 @@ export function defer<T>(): Deferred<T> {
 		reject,
 	};
 }
+
+/**
+ * Return a Node-style callback function which resolves or rejects a promise.
+ */
+export function nodeResolver<T>(d: Deferred<T>): (err: any, result: T) => void {
+	return (err, result) => err ? d.reject(err) : d.resolve(result);
+}
+
