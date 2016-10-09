@@ -5,6 +5,7 @@ import path = require('path');
 import Q = require('q');
 import urlrouter = require('urlrouter');
 
+import { defer } from '../lib/base/promise_util';
 import { atob, btoa } from '../lib/base/stringutil';
 import agile_keychain_crypto = require('../lib/agile_keychain_crypto');
 import consoleio = require('./console');
@@ -158,7 +159,7 @@ class Server {
 	}
 
 	listen(port: number): Q.Promise<void> {
-		var ready = Q.defer<void>();
+		var ready = defer<void>();
 		this.httpServer.listen(port, () => {
 			logf('Agent listening on port %d', port);
 			ready.resolve(null);
@@ -178,7 +179,7 @@ class Server {
 }
 
 function isCurrentVersionRunning(): Q.Promise<boolean> {
-	var result = Q.defer<boolean>();
+	var result = defer<boolean>();
 	var req = http.get({ host: 'localhost', port: AGENT_PORT, path: '/version' }, (resp: http.ClientResponse) => {
 		streamutil.readAll(resp).then((content) => {
 			if (content == currentVersion()) {
@@ -205,7 +206,7 @@ export function agentPID(): number {
 }
 
 function launchAgent(): Q.Promise<number> {
-	var pid = Q.defer<number>();
+	var pid = defer<number>();
 
 	var agentOut = fs.openSync(AGENT_LOG, 'a');
 	var agentErr = fs.openSync(AGENT_LOG, 'a');
