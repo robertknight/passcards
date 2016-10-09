@@ -309,13 +309,11 @@ export class Vault implements item_store.Store {
 	}
 
 	private loadKeys(): Q.Promise<agile_keychain_entries.EncryptionKeyEntry[]> {
-		var keys = defer<agile_keychain_entries.EncryptionKeyEntry[]>();
 		var content = this.fs.read(Path.join(this.dataFolderPath(), 'encryptionKeys.js'));
-		content.then((content: string) => {
+		return content.then((content: string) => {
 			var keyList: agile_keychain_entries.EncryptionKeyList = JSON.parse(content);
 			if (!keyList.list) {
-				keys.reject('Missing `list` entry in encryptionKeys.js file');
-				return;
+				throw new Error('Missing `list` entry in encryptionKeys.js file');
 			}
 			var vaultKeys: agile_keychain_entries.EncryptionKeyEntry[] = [];
 			keyList.list.forEach((entry) => {
@@ -327,13 +325,8 @@ export class Vault implements item_store.Store {
 					vaultKeys.push(entry);
 				}
 			});
-			keys.resolve(vaultKeys);
-		}, (err) => {
-				keys.reject(err);
-			})
-		.done();
-
-		return keys.promise;
+			return vaultKeys;
+		});
 	}
 
 	private writeKeys(keyList: agile_keychain_entries.EncryptionKeyList, passHint: string): Q.Promise<void> {

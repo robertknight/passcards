@@ -72,5 +72,5 @@ testLib.teardownSuite(() => {
 
 agent_server.stopAgent().then(() => {
 	testLib.start();
-}).done();
+}).catch(err => console.error(err));
 

@@ -11,55 +11,27 @@ import { defer } from '../base/promise_util';
 
 /** Remove the directory @p path and all of its contents, if it exists. */
 export function rmrf(fs: vfs.VFS, path: string): Q.Promise<void> {
-	var result = defer<void>();
-
-	fs.stat(path).then(() => {
-		var fileList = fs.list(path);
-		var removeOps: Q.Promise<any>[] = [];
-		fileList.then((files) => {
-			files.forEach((file) => {
-				if (file.isDir) {
-					removeOps.push(rmrf(fs, file.path));
-				} else {
-					removeOps.push(fs.rm(file.path));
-				}
-			});
-
-			asyncutil.resolveWithValue(result, Q.all(removeOps).then(() => {
-				return fs.rm(path);
-			}), null);
-		}).done();
-	}, (err) => {
-			// TODO - Only resolve the promise if
-			// the error is that the file does not exist
-			result.resolve(null);
-		}).done();
-
-	return result.promise;
+	return fs.stat(path).then(() => {
+		return fs.list(path);
+	}).catch(err => {
+		// TODO - Throw error unless the `err` is that the file does not exist
+		return [];
+	}).then(files =>
+		Q.all(files.map(file => file.isDir ?
+			rmrf(fs, file.path) : fs.rm(file.path)))
+	).then(() => fs.rm(path));
 }
 
 /** Recursively enumerate the contents of @p path */
 export function listRecursive(fs: vfs.VFS, src: string): Q.Promise<vfs.FileInfo[]> {
-	var result = defer<vfs.FileInfo[]>();
-
-	fs.list(src).then((files) => {
-		var listOps: Q.Promise<vfs.FileInfo[]>[] = [];
-		files.forEach((file) => {
-			if (file.isDir) {
-				listOps.push(listRecursive(fs, file.path));
-			}
-		});
-
-		var allFiles = files;
-		Q.all(listOps).then((subdirFiles) => {
-			subdirFiles.forEach((files) => {
-				allFiles = allFiles.concat(files);
-			});
-			result.resolve(allFiles);
-		}).done();
-	}).done();
-
-	return result.promise;
+	return fs.list(src).then((files) => {
+		var subdirLists = files.map(file =>
+			file.isDir ? listRecursive(fs, file.path) : Q([file])
+		);
+		return Q.all(subdirLists);
+	}).then(subdirFiles => {
+		return subdirFiles.reduce((allFiles, f) => allFiles.concat(f), []);
+	});
 }
 
 /** Copy the directory @p path and all of its contents to a new location */
@@ -102,9 +74,7 @@ export function searchIn(fs: vfs.VFS, path: string, namePattern: string,
 				searchIn(fs, file.path, namePattern, cb);
 			}
 		});
-	}, (error) => {
-			cb(error, null);
-		}).done();
+	}).catch(err => cb(err, null));
 }
 
 export function mktemp(fs: vfs.VFS, path: string, template = 'tmp.XXX') {

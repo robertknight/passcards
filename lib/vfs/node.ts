@@ -162,8 +162,8 @@ export class FileVFS implements vfs.VFS {
 					this.rmdir(path).then(() => {
 						result.resolve(null);
 					}, (err) => {
-							result.reject(convertError(err));
-						}).done();
+						result.reject(convertError(err));
+					});
 				} else {
 					result.reject(convertError(error));
 				}

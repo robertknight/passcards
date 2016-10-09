@@ -16,54 +16,36 @@ export class HttpKeyAgent implements key_agent.KeyAgent {
 	}
 
 	addKey(id: string, key: string): Q.Promise<void> {
-		var done = defer<void>();
-		this.sendRequest('POST', '/keys', {
+		return this.sendRequest('POST', '/keys', {
 			id: id,
 			key: btoa(key)
-		}).then((reply) => {
-			done.resolve(null);
-		}).done();
-		return done.promise;
+		}).then(() => null);
 	}
 
 	listKeys(): Q.Promise<string[]> {
-		var keys = defer<string[]>();
-		this.sendRequest('GET', '/keys', {}).then((reply) => {
-			keys.resolve(JSON.parse(reply));
-		}).done();
-		return keys.promise;
+		return this.sendRequest('GET', '/keys', {}).then((reply) => {
+			return JSON.parse(reply);
+		});
 	}
 
 	forgetKeys(): Q.Promise<void> {
-		var done = defer<void>();
-		this.sendRequest('DELETE', '/keys', {}).then(() => {
-			done.resolve(null);
-		}).done();
-		return done.promise;
+		return this.sendRequest('DELETE', '/keys', {}).then(() => null);
 	}
 
 	decrypt(id: string, cipherText: string, params: key_agent.CryptoParams): Q.Promise<string> {
-		var plainText = defer<string>();
-		this.sendRequest<agent_server.DecryptRequest>('POST', '/decrypt', {
+		return this.sendRequest<agent_server.DecryptRequest>('POST', '/decrypt', {
 			id: id,
 			algo: key_agent.CryptoAlgorithm.AES128_OpenSSLKey,
 			cipherText: btoa(cipherText)
-		}).then((result) => {
-			plainText.resolve(atob(result));
-		}).done();
-		return plainText.promise;
+		}).then(result => atob(result));
 	}
 
 	encrypt(id: string, plainText: string, params: key_agent.CryptoParams): Q.Promise<string> {
-		var cipherText = defer<string>();
-		this.sendRequest<agent_server.EncryptRequest>('POST', '/encrypt', {
+		return this.sendRequest<agent_server.EncryptRequest>('POST', '/encrypt', {
 			id: id,
 			algo: key_agent.CryptoAlgorithm.AES128_OpenSSLKey,
 			plainText: btoa(plainText)
-		}).then((result) => {
-			cipherText.resolve(atob(result));
-		}).done();
-		return cipherText.promise;
+		}).then(result => atob(result));
 	}
 
 	resetAutoLock() {

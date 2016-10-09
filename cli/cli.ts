@@ -286,25 +286,14 @@ export class CLI {
 		}
 
 		var authenticated = Q<void>(null);
-		var vault = defer<agile_keychain.Vault>();
 
-		authenticated.then(() => {
-			var vaultPath: Q.Promise<string>;
+		return authenticated.then(() => {
 			if (customVaultPath) {
-				vaultPath = Q(customVaultPath);
+				return customVaultPath;
 			} else {
-				vaultPath = this.findExistingVaultInDropbox(storage, dropboxRoot);
+				return this.findExistingVaultInDropbox(storage, dropboxRoot);
 			}
-			vaultPath.then((path) => {
-				vault.resolve(new agile_keychain.Vault(storage, path, this.keyAgent));
-			}, (err) => {
-					vault.reject(err);
-				}).done();
-		}, (err) => {
-				vault.reject(err);
-			}).done();
-
-		return vault.promise;
+		}).then(path => new agile_keychain.Vault(storage, path, this.keyAgent));
 	}
 
 	private passwordFieldPrompt(): Q.Promise<string> {
@@ -699,35 +688,31 @@ export class CLI {
 		};
 
 		// process commands
-		var exitStatus = defer<number>();
-		vaultReady.then(() => {
+		return vaultReady.then(() => {
 			var handler = handlers[args.command];
 			if (handler) {
-				handler(args).then((result) => {
+				return handler(args).then((result) => {
 					if (typeof result == 'number') {
 						// if the handler returns an exit status, use that
-						exitStatus.resolve(<number>result);
+						return <number>result;
 					} else {
 						// otherwise assume success
-						exitStatus.resolve(0);
+						return 0;
 					}
 				}).catch((err) => {
 					this.printf('%s', err);
 					if (args.debug) {
 						this.printf('%s', err.stack);
 					}
-					exitStatus.resolve(1);
+					return 1;
 				});
 			} else {
 				this.printf('Unknown command: %s', args.command);
-				exitStatus.resolve(1);
+				return 1;
 			}
-		}, (err) => {
-				this.printf('Unlocking failed: %s', err.message);
-				exitStatus.resolve(2);
-			})
-		.done();
-
-		return exitStatus.promise;
+		}).catch(err => {
+			this.printf('Unlocking failed: %s', err.message);
+			return 2;
+		});
 	}
 }

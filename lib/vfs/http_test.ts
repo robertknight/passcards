@@ -93,4 +93,4 @@ setup().then(() => {
 		httpVfsServer.close();
 	});
 	testLib.start();
-}).done();
+}).catch(err => console.error(err));

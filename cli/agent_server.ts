@@ -51,7 +51,7 @@ function parseJSONRequest(req: http.ServerRequest, rsp: http.ServerResponse, cb:
 		console.log(err);
 		rsp.statusCode = 400;
 		rsp.end('Failed to parse request: ' + err);
-	}).done();
+	});
 }
 
 class Server {

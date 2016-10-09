@@ -140,19 +140,14 @@ testLib.addAsyncTest('Import item from .1pif file', (assert) => {
 // fetch all items and compare to an expected set
 // of items in .1pif format
 testLib.addAsyncTest('Compare vaults against .1pif files', (assert) => {
-	var done: Q.Promise<boolean>[] = [];
 	var importer = new exportLib.PIFImporter();
 
-	TEST_VAULTS.forEach((tst) => {
-		var result = defer<boolean>();
-		done.push(result.promise);
-
+	var done = TEST_VAULTS.map((tst) => {
 		var expectedItems = importer.importItems(fs, tst.itemDataPath);
-		var actualItems = defer<ItemAndContent[]>();
 
 		var vault = new agile_keychain.Vault(fs, tst.path);
 		var items: item_store.Item[];
-		vault.unlock(tst.password).then(() => {
+		var actualItems = vault.unlock(tst.password).then(() => {
 			return vault.listItems();
 		}).then((_items) => {
 			items = _items;
@@ -166,10 +161,10 @@ testLib.addAsyncTest('Compare vaults against .1pif files', (assert) => {
 			items.forEach((item, index) => {
 				itemContents.push({ item: item, content: contents[index] });
 			});
-			actualItems.resolve(itemContents);
-		}).done();
+			return itemContents;
+		});
 
-		asyncutil.all2([expectedItems, actualItems.promise]).then((expectedActual) => {
+		return asyncutil.all2([expectedItems, actualItems]).then((expectedActual) => {
 			var expectedAry = <item_store.Item[]> expectedActual[0];
 			var actualAry = <ItemAndContent[]> expectedActual[1];
 
@@ -197,9 +192,7 @@ testLib.addAsyncTest('Compare vaults against .1pif files', (assert) => {
 				}
 				assert.equal(diff.length, 0, 'actual and expected item contents match');
 			}
-
-			result.resolve(true);
-		}).done();
+		});
 	});
 
 	return Q.all(done);

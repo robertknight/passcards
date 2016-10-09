@@ -153,9 +153,7 @@ export function request<T>(method: string, url: string, data?: T, opts?: Request
 				body: content,
 				headers: resp.headers
 			});
-		}, (err) => {
-				response.reject(err);
-			}).done();
+		}).catch(err => response.reject(err));
 	});
 
 	if (env.isBrowser()) {
