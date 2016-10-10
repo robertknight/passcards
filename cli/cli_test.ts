@@ -1,6 +1,5 @@
 import os = require('os');
 import path = require('path');
-import Q = require('q');
 import underscore = require('underscore');
 
 import asyncutil = require('../lib/base/asyncutil');
@@ -38,21 +37,21 @@ class FakeIO implements consoleio.TermIO {
 		this.output.push(text);
 	}
 
-	readLine(prompt: string): Q.Promise<string> {
+	readLine(prompt: string): Promise<string> {
 		var reply = underscore.find(this.replies, (reply) => {
 			return prompt.match(reply.match) != null;
 		});
 		if (reply) {
-			return Q(reply.response);
+			return Promise.resolve(reply.response);
 		} else {
-			return Q.reject<string>('No pattern matched the prompt: "' + prompt + '"');
+			return Promise.reject<string>('No pattern matched the prompt: "' + prompt + '"');
 		}
 	}
 
-	readPassword(prompt: string): Q.Promise<string> {
+	readPassword(prompt: string): Promise<string> {
 		if (prompt.match('Master password')) {
 			++this.passRequestCount;
-			return Q(this.password);
+			return Promise.resolve(this.password);
 		} else {
 			return this.readLine(prompt);
 		}
@@ -74,35 +73,35 @@ class FakeIO implements consoleio.TermIO {
 // implementation updates keys synchronously
 class FakeKeyAgent extends key_agent.SimpleKeyAgent {
 
-	private delay(): Q.Promise<void> {
+	private delay(): Promise<void> {
 		return delay<void>(null, 0);
 	}
 
-	addKey(id: string, key: string): Q.Promise<void> {
+	addKey(id: string, key: string): Promise<void> {
 		return this.delay().then(() => {
 			return super.addKey(id, key);
 		});
 	}
 
-	listKeys(): Q.Promise<string[]> {
+	listKeys(): Promise<string[]> {
 		return this.delay().then(() => {
 			return super.listKeys();
 		});
 	}
 
-	forgetKeys(): Q.Promise<void> {
+	forgetKeys(): Promise<void> {
 		return this.delay().then(() => {
 			return super.forgetKeys();
 		});
 	}
 
-	decrypt(id: string, cipherText: string, params: key_agent.CryptoParams): Q.Promise<string> {
+	decrypt(id: string, cipherText: string, params: key_agent.CryptoParams): Promise<string> {
 		return this.delay().then(() => {
 			return super.decrypt(id, cipherText, params);
 		});
 	}
 
-	encrypt(id: string, plainText: string, params: key_agent.CryptoParams): Q.Promise<string> {
+	encrypt(id: string, plainText: string, params: key_agent.CryptoParams): Promise<string> {
 		return this.delay().then(() => {
 			return super.encrypt(id, plainText, params);
 		});
@@ -184,12 +183,12 @@ class CLITest {
 	}
 
 	/** Run a CLI command, expecting it to exit successfully. */
-	run(...args: string[]): Q.Promise<number> {
+	run(...args: string[]): Promise<number> {
 		return this.runExpectingStatus.apply(this,(<any>[0]).concat(args));
 	}
 
 	/** Run a CLI command, expecting a given exit status */
-	runExpectingStatus(expectedStatus: number, ...args: string[]): Q.Promise<number> {
+	runExpectingStatus(expectedStatus: number, ...args: string[]): Promise<number> {
 		var vaultArgs = ['--vault', this.vaultPath];
 		return this.app.exec(vaultArgs.concat(args)).then((status) => {
 			if (status != expectedStatus) {
@@ -394,7 +393,7 @@ testLib.addAsyncTest('change password', (assert) => {
 testLib.addAsyncTest('item pattern formats', (assert) => {
 	var env = new CLITest(assert);
 	var patterns = ['facebook', 'FACEB', 'ca20', 'CA20'];
-	var tests: Array<() => Q.Promise<any>> = [];
+	var tests: Array<() => Promise<any>> = [];
 
 	patterns.forEach((pattern, index) => {
 		tests.push(() => {

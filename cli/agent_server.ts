@@ -2,7 +2,6 @@ import child_process = require('child_process');
 import fs = require('fs');
 import http = require('http');
 import path = require('path');
-import Q = require('q');
 import urlrouter = require('urlrouter');
 
 import { defer } from '../lib/base/promise_util';
@@ -158,7 +157,7 @@ class Server {
 		this.httpServer = http.createServer(router);
 	}
 
-	listen(port: number): Q.Promise<void> {
+	listen(port: number): Promise<void> {
 		var ready = defer<void>();
 		this.httpServer.listen(port, () => {
 			logf('Agent listening on port %d', port);
@@ -178,7 +177,7 @@ class Server {
 	}
 }
 
-function isCurrentVersionRunning(): Q.Promise<boolean> {
+function isCurrentVersionRunning(): Promise<boolean> {
 	var result = defer<boolean>();
 	var req = http.get({ host: 'localhost', port: AGENT_PORT, path: '/version' }, (resp: http.ClientResponse) => {
 		streamutil.readAll(resp).then((content) => {
@@ -205,7 +204,7 @@ export function agentPID(): number {
 	}
 }
 
-function launchAgent(): Q.Promise<number> {
+function launchAgent(): Promise<number> {
 	var pid = defer<number>();
 
 	var agentOut = fs.openSync(AGENT_LOG, 'a');
@@ -235,12 +234,12 @@ function launchAgent(): Q.Promise<number> {
 	return pid.promise;
 }
 
-export function startAgent(): Q.Promise<number> {
+export function startAgent(): Promise<number> {
 	var existingPID = agentPID();
 	if (existingPID) {
 		return isCurrentVersionRunning().then((isCurrent) => {
 			if (isCurrent) {
-				return Q(existingPID);
+				return Promise.resolve(existingPID);
 			} else {
 				return stopAgent().then(() => {
 					return launchAgent();
@@ -252,21 +251,21 @@ export function startAgent(): Q.Promise<number> {
 	}
 }
 
-export function stopAgent(): Q.Promise<void> {
+export function stopAgent(): Promise<void> {
 	var pid = agentPID();
 	if (!pid) {
-		return Q<void>(null);
+		return Promise.resolve<void>(null);
 	}
 	try {
 		process.kill(pid);
 	} catch (ex) {
 		if (ex.code == 'ESRCH') {
 			// no such process
-			return Q<void>(null);
+			return Promise.resolve<void>(null);
 		}
-		return Q.reject<void>('Failed to stop agent:' + ex);
+		return Promise.reject<void>('Failed to stop agent:' + ex);
 	}
-	return Q<void>(null);
+	return Promise.resolve<void>(null);
 }
 
 if (require.main === module) {
