@@ -6,7 +6,6 @@
 // so the fake DOM needs to be set up first.
 
 import jsdom = require('jsdom');
-import Q = require('q');
 
 import testLib = require('../lib/test');
 import { defer } from '../lib/base/promise_util';
@@ -14,9 +13,9 @@ import { defer } from '../lib/base/promise_util';
 // setup the fake DOM environment for tests.
 // This function must be called _before_ React
 // is required
-function setupDOM(): Q.Promise<Window> {
+function setupDOM(): Promise<Window> {
 	if (typeof window !== 'undefined') {
-		return Q(window);
+		return Promise.resolve(window);
 	}
 
 	var fakeWindow = defer<Window>();

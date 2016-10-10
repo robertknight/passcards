@@ -1,6 +1,4 @@
 
-import Q = require('q');
-
 import event_stream = require('../lib/base/event_stream');
 import forms = require('./forms');
 import rpc = require('../lib/net/rpc');
@@ -16,7 +14,7 @@ class ExtensionUrlFetcher {
 		this.rpc = rpc;
 	}
 
-	fetch(url: string): Q.Promise<site_info_service.UrlResponse> {
+	fetch(url: string): Promise<site_info_service.UrlResponse> {
 		var result = defer<site_info_service.UrlResponse>();
 		this.rpc.call('fetch-url', [url], nodeResolver(result));
 		return result.promise;
@@ -63,12 +61,12 @@ export interface BrowserAccess {
 	oauthRedirectUrl(): string;
 
 	/** Fetch a list of auto-fillable fields on the current page. */
-	findForms(): Q.Promise<forms.FieldGroup[]>;
+	findForms(): Promise<forms.FieldGroup[]>;
 
 	/** Auto-fill fields on the current page.
 	  * Returns a promise for the number of fields that were auto-filled.
 	  */
-	autofill(fields: forms.AutoFillEntry[]): Q.Promise<number>;
+	autofill(fields: forms.AutoFillEntry[]): Promise<number>;
 
 	/** Emits notifications about browser events including
 	 * the URL of the current tab changing and
@@ -157,7 +155,7 @@ export class ExtensionBrowserAccess implements BrowserAccess, ClipboardAccess {
 		return this.connector.oauthRedirectUrl;
 	}
 
-	autofill(fields: forms.AutoFillEntry[]): Q.Promise<number> {
+	autofill(fields: forms.AutoFillEntry[]): Promise<number> {
 		var filled = defer<number>();
 		this.rpc.call('autofill', [fields], nodeResolver(filled));
 		return filled.promise;
@@ -207,7 +205,7 @@ export class ChromeBrowserAccess implements BrowserAccess, ClipboardAccess {
 		this.events = new event_stream.EventStream<BrowserMessage>();
 		this.siteInfoService = new site_info_service.SiteInfoService({
 			fetch: (url) => {
-				return Q.reject<site_info_service.UrlResponse>(new Error('URL fetching not implemented in Chrome extension'));
+				return Promise.reject<site_info_service.UrlResponse>(new Error('URL fetching not implemented in Chrome extension'));
 			}
 		});
 		this.tabPorts = {};
@@ -248,7 +246,7 @@ export class ChromeBrowserAccess implements BrowserAccess, ClipboardAccess {
 		return null;
 	}
 
-	findForms(): Q.Promise<forms.FieldGroup[]> {
+	findForms(): Promise<forms.FieldGroup[]> {
 		let result = defer<forms.FieldGroup[]>();
 		this.connectToCurrentTab().then((rpc) => {
 			rpc.call('find-fields', [], nodeResolver(result));
@@ -258,7 +256,7 @@ export class ChromeBrowserAccess implements BrowserAccess, ClipboardAccess {
 		return result.promise;
 	}
 
-	autofill(fields: forms.AutoFillEntry[]): Q.Promise<number> {
+	autofill(fields: forms.AutoFillEntry[]): Promise<number> {
 		var filled = defer<number>();
 		this.connectToCurrentTab().then((rpc) => {
 			rpc.call('autofill', [fields], nodeResolver(filled));
@@ -290,7 +288,7 @@ export class ChromeBrowserAccess implements BrowserAccess, ClipboardAccess {
 		return true;
 	}
 
-	private connectToCurrentTab(): Q.Promise<rpc.RpcHandler> {
+	private connectToCurrentTab(): Promise<rpc.RpcHandler> {
 		var tabRpc = defer<rpc.RpcHandler>();
 		chrome.windows.getCurrent((window) => {
 			chrome.tabs.query({ active: true, windowId: window.id }, (tabs) => {

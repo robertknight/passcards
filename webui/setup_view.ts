@@ -1,5 +1,3 @@
-
-import Q = require('q');
 import react = require('react');
 import style = require('ts-style');
 import typed_react = require('typed-react');
@@ -366,7 +364,7 @@ var SlideF = reactutil.createFactory(Slide);
 
 interface NewStoreFormProps extends react.Props<void> {
 	onGoBack: () => void;
-	onCreate: (options: NewStoreOptions) => Q.Promise<void>;
+	onCreate: (options: NewStoreOptions) => Promise<void>;
 	storeName: string;
 }
 
@@ -689,7 +687,7 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 				break;
 			default:
 				this.reportError(new Error('Unsupported cloud service'));
-				return Q<void>(null);
+				return Promise.resolve<void>(null);
 		}
 
 		this.setState({

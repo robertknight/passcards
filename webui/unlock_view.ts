@@ -1,6 +1,5 @@
 // View for entering master password and unlocking the store
 
-import Q = require('q');
 import react = require('react');
 import react_dom = require('react-dom');
 import style = require('ts-style');
@@ -111,9 +110,9 @@ interface UnlockViewState {
 
 export interface Store {
 	onKeysUpdated?: event_stream.EventStream<Object[]>;
-	unlock(password: string): Q.Promise<void>;
-	passwordHint(): Q.Promise<string>;
-	listKeys(): Q.Promise<Object[]>;
+	unlock(password: string): Promise<void>;
+	passwordHint(): Promise<string>;
+	listKeys(): Promise<Object[]>;
 }
 
 export interface UnlockViewProps extends react.Props<void> {
@@ -149,7 +148,7 @@ export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockVie
 			this);
 		this.props.store.listKeys()
 		.then(onKeysChanged)
-		.done();
+		.catch(err => console.error(err));
 	}
 
 	componentWillUnmount() {

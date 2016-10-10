@@ -1,6 +1,5 @@
 import { render } from 'react-dom';
 import { findRenderedDOMComponentWithTag } from 'react-addons-test-utils';
-import * as Q from 'q';
 
 import assign = require('../lib/base/assign');
 import { EventStream } from '../lib/base/event_stream';
@@ -12,13 +11,13 @@ import { addTest } from '../lib/test';
 let defaultFakeStore: Store = {
 	onKeysUpdated: new EventStream<Object[]>(),
 	unlock(password: string) {
-		return Q<void>(null);
+		return Promise.resolve<void>(null);
 	},
 	passwordHint() {
-		return Q('');
+		return Promise.resolve('');
 	},
 	listKeys() {
-		return Q([]);
+		return Promise.resolve([]);
 	}
 };
 
@@ -39,7 +38,7 @@ addTest('should disable password field until keys have been synced',
 			}), element);
 			let passwordInput = findRenderedDOMComponentWithTag(view as any, 'input') as HTMLInputElement;
 
-			return Q('').then(() => {
+			return Promise.resolve('').then(() => {
 				assert.ok(passwordInput.disabled);
 
 				// simulate key being saved
@@ -53,7 +52,7 @@ addTest('should enable password field when keys have already been synced',
 	assert => {
 		let fakeStore = assign<Store>({}, defaultFakeStore, {
 			listKeys: () => {
-				return Q([null]);
+				return Promise.resolve([null]);
 			}
 		});
 		return runReactTest(element => {
@@ -66,7 +65,7 @@ addTest('should enable password field when keys have already been synced',
 				focus: false,
 			}), element);
 			let passwordInput = findRenderedDOMComponentWithTag(view as any, 'input') as HTMLInputElement;
-			return Q('').then(() => {
+			return Promise.resolve('').then(() => {
 				assert.ok(!passwordInput.disabled);
 			});
 		});

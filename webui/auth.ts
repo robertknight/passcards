@@ -1,4 +1,3 @@
-import Q = require('q');
 import url = require('url');
 
 import { atob, btoa } from '../lib/base/stringutil';
@@ -20,7 +19,7 @@ interface AuthFlow {
 	 * for a set of credentials which is resolved once the login
 	 * completes.
 	 */
-	authenticate(): Q.Promise<Credentials>;
+	authenticate(): Promise<Credentials>;
 }
 
 interface AuthMessage {
@@ -188,7 +187,9 @@ export class OAuthFlow {
 			}
 		}, 200);
 
-		credentials.promise.finally(() => {
+		credentials.promise
+			.catch(() => {})
+			.then(() => {
 			authWindow.close();
 			clearTimeout(pollTimeout);
 		});

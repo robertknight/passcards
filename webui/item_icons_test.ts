@@ -1,4 +1,3 @@
-import Q = require('q');
 import react = require('react');
 import react_dom = require('react-dom');
 import { findRenderedDOMComponentWithTag } from 'react-addons-test-utils';
@@ -57,16 +56,16 @@ class FakeObjectStore implements key_value_store.ObjectStore {
 
 	set<T>(key: string, value: T) {
 		this.map.set(key, value);
-		return Q<void>(null);
+		return Promise.resolve<void>(null);
 	}
 
 	get<T>(key: string) {
-		return Q(this.map.get(key));
+		return Promise.resolve(this.map.get(key));
 	}
 
 	remove(key: string) {
 		this.map.delete(key);
-		return Q<void>(null);
+		return Promise.resolve<void>(null);
 	}
 
 	iterate<T>(prefix: string, callback: (key: string, value?: T) => void) {
@@ -75,7 +74,7 @@ class FakeObjectStore implements key_value_store.ObjectStore {
 				callback(key, value);
 			}
 		});
-		return Q<void>(null);
+		return Promise.resolve<void>(null);
 	}
 }
 
@@ -128,7 +127,7 @@ class FakeIconSource implements site_info.SiteInfoProvider {
 
 // returns a promise for data in the next event of
 // an event stream
-function await<T>(stream: event_stream.EventStream<T>): Q.Promise<T> {
+function await<T>(stream: event_stream.EventStream<T>): Promise<T> {
 	let done = defer<T>();
 	let listener = stream.listen(result => {
 		done.resolve(result);

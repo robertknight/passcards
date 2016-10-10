@@ -1,5 +1,3 @@
-
-import Q = require('q');
 import react = require('react');
 import style = require('ts-style');
 import typed_react = require('typed-react');
@@ -369,28 +367,28 @@ class Cache {
 	  * Resolves with the cache entry if found or undefined
 	  * if no such entry exists.
 	  */
-	query(url: string): Q.Promise<CacheEntry> {
+	query(url: string): Promise<CacheEntry> {
 		return this.withKey(url, (key) => {
 			return this.store.get<CacheEntry>(key);
 		});
 	}
 
-	insert(url: string, icons: CacheEntry): Q.Promise<void> {
+	insert(url: string, icons: CacheEntry): Promise<void> {
 		return this.withKey(url, (key) => {
 			return this.store.set(key, icons);
 		});
 	}
 
-	clear(url: string): Q.Promise<void> {
+	clear(url: string): Promise<void> {
 		return this.withKey(url, (key) => {
 			return this.store.remove(key);
 		});
 	}
 
-	private withKey<T>(url: string, f: (key: string) => Q.Promise<T>): Q.Promise<T> {
+	private withKey<T>(url: string, f: (key: string) => Promise<T>): Promise<T> {
 		var key = urijs(url_util.normalize(url)).hostname();
 		if (!key) {
-			return Q.reject<T>(new err_util.BaseError('Invalid URL'));
+			return Promise.reject<T>(new err_util.BaseError('Invalid URL'));
 		}
 		return f(key);
 	}

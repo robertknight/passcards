@@ -1,12 +1,11 @@
 import { Component, DOM, createFactory } from 'react';
 import { render } from 'react-dom';
-import * as Q from 'q';
 
 import { addTest } from '../../lib/test';
 import { TransitionContainerF, TransitionChildProps } from './transition_container';
 import { TransitionState } from './reactutil';
 import { runReactTest } from '../test_utils';
-import { defer } from '../../lib/base/promise_util';
+import { defer, delay } from '../../lib/base/promise_util';
 
 interface ChildProps extends TransitionChildProps {
 	transitionStates?: TransitionState[];
@@ -44,7 +43,7 @@ addTest('should render child with transition props', assert => {
 		render(TransitionContainerF({},
 			ChildF({ transitionStates: observedStates })), element);
 
-		return Q.delay(100).then(() => {
+		return delay(null, 100).then(() => {
 			assert.deepEqual(observedStates, [
 				TransitionState.WillEnter,
 				TransitionState.Entered,

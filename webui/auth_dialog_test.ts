@@ -3,7 +3,6 @@ import { load } from 'proxyquire';
 import { Component } from 'react';
 import { scryRenderedComponentsWithType } from 'react-addons-test-utils';
 import { render } from 'react-dom';
-import * as Q from 'q';
 
 import { addTest, Assert } from '../lib/test';
 import { ButtonF } from './controls/button';
@@ -20,7 +19,7 @@ class MockAuthFlow {
 	}
 
 	authenticate() {
-		return Q({
+		return Promise.resolve({
 			accessToken: 'mock-auth-token'
 		});
 	}

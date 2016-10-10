@@ -1,6 +1,4 @@
 
-import Q = require('q');
-
 import autofill = require('./autofill');
 import event_stream = require('../lib/base/event_stream');
 import forms = require('./forms');
@@ -37,9 +35,9 @@ class FakeBrowserAccess implements browser_access.BrowserAccess {
 		return result.promise;
 	}
 
-	autofill(fields: forms.AutoFillEntry[]): Q.Promise<number> {
+	autofill(fields: forms.AutoFillEntry[]): Promise<number> {
 		this.autofillEntries = fields;
-		return Q(fields.length);
+		return Promise.resolve(fields.length);
 	}
 
 	siteInfoProvider(): site_info.SiteInfoProvider {

@@ -1,5 +1,4 @@
 import assert = require('assert');
-import Q = require('q');
 import react = require('react');
 import style = require('ts-style');
 import typed_react = require('typed-react');
@@ -27,6 +26,7 @@ import toaster = require('./controls/toaster');
 import unlock_view = require('./unlock_view');
 import url_util = require('../lib/base/url_util');
 import app_state = require('./stores/app');
+import { delay } from '../lib/base/promise_util';
 
 var theme = style.create({
 	appView: {
@@ -270,7 +270,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 					// defer saving the item until the details view has
 					// transitioned out
 					var SAVE_DELAY = 1000;
-					Q.delay(SAVE_DELAY).then(() => {
+					delay(null, SAVE_DELAY).then(() => {
 						return updatedItem.item.saveTo(this.itemStoreState().store);
 					}).then(() => {
 						return this.itemStoreState().syncer.syncItems();

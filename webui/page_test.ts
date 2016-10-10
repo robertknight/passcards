@@ -1,5 +1,3 @@
-import Q = require('q');
-
 import forms = require('../webui/forms');
 import rpc = require('../lib/net/rpc');
 import page = require('../webui/page');

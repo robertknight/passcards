@@ -1,5 +1,3 @@
-import Q = require('q');
-
 import forms = require('./forms');
 import item_store = require('../lib/item_store');
 import browser_access = require('./browser_access');
@@ -17,7 +15,7 @@ export interface AutoFillHandler {
 	/** Autofill fields on the current page with values from a given @p item.
 	  * Returns a promise for the auto-filled entries.
 	  */
-	autofill(item: item_store.Item): Q.Promise<AutoFillResult>
+	autofill(item: item_store.Item): Promise<AutoFillResult>
 }
 
 export class AutoFiller {
@@ -35,7 +33,7 @@ export class AutoFiller {
 		return keyMatch(field.id) || keyMatch(field.name) || keyMatch(field.ariaLabel) || keyMatch(field.placeholder);
 	}
 
-	autofill(item: item_store.Item): Q.Promise<AutoFillResult> {
+	autofill(item: item_store.Item): Promise<AutoFillResult> {
 		var result = defer<AutoFillResult>();
 		var usernameKeys = ['email', 'user', 'account'];
 		let content: item_store.ItemContent;

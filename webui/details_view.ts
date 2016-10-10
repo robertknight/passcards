@@ -313,7 +313,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			}
 			this.setState({ itemContent: content });
 			this.resetEdits({ item: item, content: content });
-		}).done();
+		});
 	}
 
 	private resetEdits(base: item_store.ItemAndContent) {
