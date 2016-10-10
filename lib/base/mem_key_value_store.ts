@@ -1,5 +1,3 @@
-import Q = require('q');
-
 import key_value_store = require('./key_value_store');
 import stringutil = require('./stringutil');
 
@@ -35,7 +33,7 @@ export class Database implements key_value_store.Database {
 			});
 			this.version = version;
 		}
-		return Q<void>(null);
+		return Promise.resolve<void>(null);
 	}
 
 	store(name: string) {
@@ -47,10 +45,10 @@ export class Database implements key_value_store.Database {
 
 	delete() {
 		if (this.version < 1) {
-			return Q.reject<void>(new Error('Database is not open'));
+			return Promise.reject<void>(new Error('Database is not open'));
 		}
 		this.reset();
-		return Q<void>(null);
+		return Promise.resolve<void>(null);
 	}
 
 	private reset() {
@@ -68,16 +66,16 @@ class ObjectStore implements key_value_store.ObjectStore {
 
 	set<T>(key: string, value: T) {
 		this.items.set(key, value);
-		return Q<void>(null);
+		return Promise.resolve<void>(null);
 	}
 
 	get<T>(key: string) {
-		return Q(<T>this.items.get(key));
+		return Promise.resolve(<T>this.items.get(key));
 	}
 
 	remove(key: string) {
 		this.items.delete(key);
-		return Q<void>(null);
+		return Promise.resolve<void>(null);
 	}
 
 	iterate<T>(prefix: string, callback: (key: string, value?: T) => void) {
@@ -86,6 +84,6 @@ class ObjectStore implements key_value_store.ObjectStore {
 				callback(key, value);
 			}
 		});
-		return Q<void>(null);
+		return Promise.resolve<void>(null);
 	}
 }

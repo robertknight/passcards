@@ -3,7 +3,6 @@
 // fetches icon details and data from an instance of the
 // Passcards site info service (https://github.com/robertknight/passcards-siteinfo-server)
 
-import Q = require('q');
 import urlLib = require('url');
 
 import client_api = require('./client_api');
@@ -63,7 +62,7 @@ export class PasscardsClient implements site_info.SiteInfoProvider {
 					icon.height >= MIN_ICON_SIZE && icon.height <= MAX_ICON_SIZE;
 			});
 
-			let pendingIcons: Q.Promise<void>[] = [];
+			let pendingIcons: Promise<void>[] = [];
 			selectedIcons.forEach(icon => {
 				let iconUrl = this.rootUrl + icon.dataUrl;
 				pendingIcons.push(http_client.get(iconUrl).then(reply => {
@@ -80,7 +79,7 @@ export class PasscardsClient implements site_info.SiteInfoProvider {
 					}
 				}));
 			});
-			Q.all(pendingIcons).finally(() => {
+			Promise.all(pendingIcons).catch(() => {}).then(() => {
 				let entry = this.cache.get(domain);
 				entry.state = site_info.QueryState.Ready;
 				this.updated.publish(url);
@@ -103,14 +102,14 @@ export class PasscardsClient implements site_info.SiteInfoProvider {
 		this.cache.delete(url);
 	}
 
-	private queryDomainInfo(domain: string): Q.Promise<client_api.LookupResponse> {
+	private queryDomainInfo(domain: string): Promise<client_api.LookupResponse> {
 		let TIMEOUT = 3000;
 		let url = `${this.rootUrl}/siteinfo/${domain}?timeout=${TIMEOUT}`;
 		return http_client.get(url).then(reply => {
 			if (reply.status === 200) {
-				return Q(<client_api.LookupResponse>JSON.parse(reply.body));
+				return Promise.resolve(<client_api.LookupResponse>JSON.parse(reply.body));
 			} else {
-				return Q.reject<client_api.LookupResponse>(
+				return Promise.reject<client_api.LookupResponse>(
 					new Error(`Failed to query site icons for ${domain}: ${reply.status}`)
 					);
 			}

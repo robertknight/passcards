@@ -3,7 +3,6 @@
 // and encrypting/decrypting data using the stored keys.
 
 import assert = require('assert');
-import Q = require('q');
 
 import { atob } from './base/stringutil';
 import agile_keychain_crypto = require('./agile_keychain_crypto');
@@ -90,8 +89,8 @@ export class DecryptionError extends err_util.BaseError {
 }
 
 /** Decrypt a set of keys using a password. */
-export function decryptKeys(keys: Key[], password: string): Q.Promise<DecryptedKey[]> {
-	let decryptedKeys: Q.Promise<DecryptedKey>[] = [];
+export function decryptKeys(keys: Key[], password: string): Promise<DecryptedKey[]> {
+	let decryptedKeys: Promise<DecryptedKey>[] = [];
 	keys.forEach(key => {
 		assert.equal(key.format, KeyFormat.AgileKeychainKey);
 		var saltCipher = agile_keychain_crypto.extractSaltAndCipherText(atob(key.data));
@@ -104,7 +103,7 @@ export function decryptKeys(keys: Key[], password: string): Q.Promise<DecryptedK
 		}));
 		decryptedKeys.push(decryptedKey);
 	});
-	return Q.all(decryptedKeys);
+	return Promise.all(decryptedKeys);
 }
 
 /** Interface for agent which handles storage of decryption
@@ -113,23 +112,23 @@ export function decryptKeys(keys: Key[], password: string): Q.Promise<DecryptedK
   */
 export interface KeyAgent {
 	/** Register a key with the agent for future use when decrypting items. */
-	addKey(id: string, key: string): Q.Promise<void>;
+	addKey(id: string, key: string): Promise<void>;
 	/** Returns the IDs of stored keys. */
-	listKeys(): Q.Promise<string[]>;
+	listKeys(): Promise<string[]>;
 	/** Clear all stored keys. */
-	forgetKeys(): Q.Promise<void>;
+	forgetKeys(): Promise<void>;
 	/** Decrypt data for an item using the given key ID and crypto
 	  * parameters.
 	  *
 	  * Returns a promise for the decrypted plaintext.
 	  */
-	decrypt(id: string, cipherText: string, params: CryptoParams): Q.Promise<string>;
+	decrypt(id: string, cipherText: string, params: CryptoParams): Promise<string>;
 	/** Encrypt data for an item using the given key ID and crypto
 	  * parameters.
 	  *
 	  * Returns a promise for the encrypted text.
 	  */
-	encrypt(id: string, plainText: string, params: CryptoParams): Q.Promise<string>;
+	encrypt(id: string, plainText: string, params: CryptoParams): Promise<string>;
 
 	/** Optional event stream which emits events when forgetKeys() is
 	  * called. Some key agents may not support this.
@@ -193,49 +192,49 @@ export class SimpleKeyAgent implements KeyAgent {
 		}
 	}
 
-	addKey(id: string, key: string): Q.Promise<void> {
+	addKey(id: string, key: string): Promise<void> {
 		this.keys[id] = key;
 		this.resetAutoLock();
-		return Q<void>(null);
+		return Promise.resolve<void>(null);
 	}
 
-	listKeys(): Q.Promise<string[]> {
-		return Q(Object.keys(this.keys));
+	listKeys(): Promise<string[]> {
+		return Promise.resolve(Object.keys(this.keys));
 	}
 
-	forgetKeys(): Q.Promise<void> {
+	forgetKeys(): Promise<void> {
 		if (this.lockTimeout) {
 			clearTimeout(this.lockTimeout);
 			this.lockTimeout = null;
 		}
 		this.keys = {};
 		this.lockEvents.publish(null);
-		return Q<void>(null);
+		return Promise.resolve<void>(null);
 	}
 
-	decrypt(id: string, cipherText: string, params: CryptoParams): Q.Promise<string> {
+	decrypt(id: string, cipherText: string, params: CryptoParams): Promise<string> {
 		if (!this.keys.hasOwnProperty(id)) {
-			return Q.reject<string>(new DecryptionError('No such key: ' + id));
+			return Promise.reject<string>(new DecryptionError('No such key: ' + id));
 		}
 		switch (params.algo) {
 			case CryptoAlgorithm.AES128_OpenSSLKey:
 				return agile_keychain_crypto.decryptAgileKeychainItemData(this.crypto,
 					this.keys[id], cipherText);
 			default:
-				return Q.reject<string>(new Error('Unknown encryption algorithm'));
+				return Promise.reject<string>(new Error('Unknown encryption algorithm'));
 		}
 	}
 
-	encrypt(id: string, plainText: string, params: CryptoParams): Q.Promise<string> {
+	encrypt(id: string, plainText: string, params: CryptoParams): Promise<string> {
 		if (!this.keys.hasOwnProperty(id)) {
-			return Q.reject<string>(new Error('No such key: ' + id));
+			return Promise.reject<string>(new Error('No such key: ' + id));
 		}
 		switch (params.algo) {
 			case CryptoAlgorithm.AES128_OpenSSLKey:
 				return agile_keychain_crypto.encryptAgileKeychainItemData(this.crypto,
 					this.keys[id], plainText);
 			default:
-				return Q.reject<string>(new Error('Unknown encryption algorithm'));
+				return Promise.reject<string>(new Error('Unknown encryption algorithm'));
 		}
 	}
 
@@ -252,7 +251,7 @@ export class SimpleKeyAgent implements KeyAgent {
   * @param validation Validation data used to verify whether decryption was successful.
   *  This is a copy of the decrypted version of @p encryptedKey, encrypted with itself.
   */
-export function decryptKey(derivedKey: string, encryptedKey: string, validation: string): Q.Promise<string> {
+export function decryptKey(derivedKey: string, encryptedKey: string, validation: string): Promise<string> {
 	let aesKey = derivedKey.substring(0, 16);
 	let iv = derivedKey.substring(16, 32);
 	let keyDecrypted = agile_keychain_crypto.defaultCrypto.aesCbcDecrypt(aesKey, encryptedKey, iv);
@@ -283,7 +282,7 @@ export function keyFromPasswordSync(pass: string, salt: string, iterCount: numbe
 /** Derive an encryption key from a password for use with decryptKey()
   * This version is asynchronous and will not block the UI.
   */
-export function keyFromPassword(pass: string, salt: string, iterCount: number): Q.Promise<string> {
+export function keyFromPassword(pass: string, salt: string, iterCount: number): Promise<string> {
 	return agile_keychain_crypto.defaultCrypto.pbkdf2(pass, salt, iterCount, AES_128_KEY_LEN);
 }
 
@@ -291,7 +290,7 @@ export function keyFromPassword(pass: string, salt: string, iterCount: number): 
   * @param derivedKey An encryption key for the master key, derived from a password using keyFromPassword()
   * @param decryptedKey The master key for the vault to be encrypted.
   */
-export function encryptKey(derivedKey: string, decryptedKey: string): Q.Promise<EncryptedKey> {
+export function encryptKey(derivedKey: string, decryptedKey: string): Promise<EncryptedKey> {
 	let aesKey = derivedKey.substring(0, 16);
 	let iv = derivedKey.substring(16, 32);
 	let encryptedKey = agile_keychain_crypto.defaultCrypto.aesCbcEncrypt(aesKey, decryptedKey, iv);
@@ -302,7 +301,7 @@ export function encryptKey(derivedKey: string, decryptedKey: string): Q.Promise<
 
 	let validation = agile_keychain_crypto.defaultCrypto.aesCbcEncrypt(keyParams.key, decryptedKey, keyParams.iv);
 
-	return Q.all([encryptedKey, validation]).then((result: [string, string]) => {
+	return Promise.all([encryptedKey, validation]).then((result: [string, string]) => {
 		let encryptedKey = result[0];
 		let validation = 'Salted__' + validationSalt + result[1];
 		return { key: encryptedKey, validation: validation };

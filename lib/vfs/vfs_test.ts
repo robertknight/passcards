@@ -1,5 +1,3 @@
-import Q = require('q');
-
 import asyncutil = require('../base/asyncutil');
 import nodefs = require('./node');
 import testLib = require('../test');
@@ -27,7 +25,7 @@ var createNodeFs = () => {
 	});
 }
 
-function addTests(fsName: string, createFs: () => Q.Promise<vfs.VFS>) {
+function addTests(fsName: string, createFs: () => Promise<vfs.VFS>) {
 	testLib.addAsyncTest(fsName + ': Read and write file', (assert) => {
 		var fs: vfs.VFS;
 		return createFs().then((_fs) => {
@@ -182,7 +180,7 @@ function addTests(fsName: string, createFs: () => Q.Promise<vfs.VFS>) {
 				.then(() => true).catch(() => false);
 			var attemptB = fs.write('test-file-conflict', 'content-v2-b-b', writeOpts)
 				.then(() => true).catch(() => false);
-			return Q.all([attemptA, attemptB]);
+			return Promise.all([attemptA, attemptB]);
 		}).then((ok) => {
 			var successCount = ok.reduce((total, ok) => ok ? total + 1 : total, 0);
 			assert.equal(successCount, 1);

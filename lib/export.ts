@@ -1,28 +1,25 @@
-
-import Q = require('q');
-
 import item_store = require('./item_store');
 import onepass = require('./agile_keychain');
 import vfs = require('./vfs/vfs');
 
 export interface Exporter {
-	exportItems(fs: vfs.VFS, path: string, items: item_store.Item[]): Q.Promise<boolean>;
+	exportItems(fs: vfs.VFS, path: string, items: item_store.Item[]): Promise<boolean>;
 }
 
 export interface Importer {
-	importItems(fs: vfs.VFS, path: string): Q.Promise<item_store.Item[]>
+	importItems(fs: vfs.VFS, path: string): Promise<item_store.Item[]>
 }
 
 /** Exporter for 1Password's .1pif format */
 export class PIFExporter implements Exporter {
-	exportItems(fs: vfs.VFS, path: string, items: item_store.Item[]): Q.Promise<boolean> {
-		return Q.reject<boolean>("not implemented");
+	exportItems(fs: vfs.VFS, path: string, items: item_store.Item[]): Promise<boolean> {
+		return Promise.reject<boolean>("not implemented");
 	}
 };
 
 /** Importer for 1Password's .1pif format */
 export class PIFImporter {
-	importItems(fs: vfs.VFS, path: string): Q.Promise<item_store.Item[]> {
+	importItems(fs: vfs.VFS, path: string): Promise<item_store.Item[]> {
 		var content = fs.read(path);
 		return content.then((content) => {
 			// .1pif files contain unencrypted JSON blobs separated by

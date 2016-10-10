@@ -1,6 +1,4 @@
 
-import Q = require('q');
-
 import { btoa } from './base/stringutil';
 import asyncutil = require('./base/asyncutil');
 import agile_keychain_crypto = require('./agile_keychain_crypto');
@@ -20,7 +18,7 @@ interface Env {
 	databaseName: string;
 }
 
-function generateKey(password: string, iterations: number): Q.Promise<key_agent.Key> {
+function generateKey(password: string, iterations: number): Promise<key_agent.Key> {
 	let masterKey = crypto.randomBytes(1024);
 	let salt = crypto.randomBytes(8);
 	let derivedKey = key_agent.keyFromPassword(password, salt, iterations);

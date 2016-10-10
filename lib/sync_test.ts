@@ -1,6 +1,5 @@
 
 import clone = require('clone');
-import Q = require('q');
 
 import agile_keychain = require('./agile_keychain');
 import agile_keychain_crypto = require('./agile_keychain_crypto');
@@ -19,7 +18,7 @@ interface Env {
 	keyAgent: key_agent.KeyAgent;
 }
 
-function setup(): Q.Promise<Env> {
+function setup(): Promise<Env> {
 	const VAULT_PASS = 'testpass';
 	const VAULT_PASS_ITERATIONS = 100;
 	const VAULT_PASS_HINT = 'testhint';
@@ -60,7 +59,7 @@ function syncItems(syncer: sync.Syncer) {
 // create a cloud store, a local store and a syncer.
 // Add a single item to the cloudStore and the cloudStore, local store, syncer and
 // a reference to the item in the cloudStore
-function setupWithItem(): Q.Promise<{ env: Env; item: item_store.Item }> {
+function setupWithItem(): Promise<{ env: Env; item: item_store.Item }> {
 	var env: Env;
 
 	var item = new item_builder.Builder(item_store.ItemTypes.LOGIN)
@@ -105,7 +104,7 @@ testLib.addAsyncTest('sync keys without hint', assert => {
 		// verify that syncing keys succeeds if the password
 		// hint is not available
 		env.cloudStore.passwordHint = () => {
-			return Q.reject<string>(new Error('Fail to fetch hint'));
+			return Promise.reject<string>(new Error('Fail to fetch hint'));
 		};
 	}).then(() => {
 		return env.syncer.syncKeys();
@@ -462,7 +461,7 @@ testLib.addAsyncTest('sync many items', (assert) => {
 	return setup().then((_env) => {
 		env = _env;
 
-		var saves: Q.Promise<void>[] = [];
+		var saves: Promise<void>[] = [];
 		while (saves.length < ITEM_COUNT) {
 			var item = new item_builder.Builder(item_store.ItemTypes.LOGIN)
 			.setTitle('sync me ' + saves.length)
@@ -472,7 +471,7 @@ testLib.addAsyncTest('sync many items', (assert) => {
 			saves.push(item.saveTo(env.cloudStore));
 		}
 
-		return Q.all(saves);
+		return Promise.all(saves);
 	}).then(() => {
 		return syncItems(env.syncer);
 	}).then(() => {
@@ -502,7 +501,7 @@ testLib.addAsyncTest('sync should complete if errors occur', assert => {
 		let originalLoadItem = env.cloudStore.loadItem.bind(env.cloudStore);
 		env.cloudStore.loadItem = uuid => {
 			if (uuid === item.uuid) {
-				return Q.reject<item_store.ItemAndContent>('Could not load item');
+				return Promise.reject<item_store.ItemAndContent>('Could not load item');
 			} else {
 				return originalLoadItem(uuid);
 			}

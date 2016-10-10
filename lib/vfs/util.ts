@@ -1,4 +1,3 @@
-import Q = require('q');
 import Path = require('path');
 
 import asyncutil = require('../base/asyncutil');
@@ -10,43 +9,44 @@ import { defer } from '../base/promise_util';
   */
 
 /** Remove the directory @p path and all of its contents, if it exists. */
-export function rmrf(fs: vfs.VFS, path: string): Q.Promise<void> {
+export function rmrf(fs: vfs.VFS, path: string): Promise<void> {
 	return fs.stat(path).then(() => {
 		return fs.list(path);
 	}).catch(err => {
 		// TODO - Throw error unless the `err` is that the file does not exist
 		return [];
-	}).then(files =>
-		Q.all(files.map(file => file.isDir ?
-			rmrf(fs, file.path) : fs.rm(file.path)))
-	).then(() => fs.rm(path));
+	}).then((files: vfs.FileInfo[]) => {
+		var filesRemoved = files.map(file =>
+			file.isDir ? rmrf(fs, file.path) : fs.rm(file.path));
+		return Promise.all(filesRemoved);
+	}).then(() => fs.rm(path));
 }
 
 /** Recursively enumerate the contents of @p path */
-export function listRecursive(fs: vfs.VFS, src: string): Q.Promise<vfs.FileInfo[]> {
+export function listRecursive(fs: vfs.VFS, src: string): Promise<vfs.FileInfo[]> {
 	return fs.list(src).then((files) => {
 		var subdirLists = files.map(file =>
-			file.isDir ? listRecursive(fs, file.path) : Q([file])
+			file.isDir ? listRecursive(fs, file.path) : Promise.resolve([file])
 		);
-		return Q.all(subdirLists);
+		return Promise.all(subdirLists);
 	}).then(subdirFiles => {
 		return subdirFiles.reduce((allFiles, f) => allFiles.concat(f), []);
 	});
 }
 
 /** Copy the directory @p path and all of its contents to a new location */
-export function cp(fs: vfs.VFS, src: vfs.FileInfo, dest: string): Q.Promise<{}> {
+export function cp(fs: vfs.VFS, src: vfs.FileInfo, dest: string): Promise<{}> {
 	if (src.isDir) {
 		return fs.mkpath(dest).then(() => {
 			return fs.list(src.path);
 		})
 		.then((srcFiles) => {
-			var copyOps: Q.Promise<{}>[] = [];
+			var copyOps: Promise<{}>[] = [];
 			srcFiles.forEach((srcFile) => {
 				var destPath = dest + '/' + srcFile.name;
 				copyOps.push(cp(fs, srcFile, destPath));
 			});
-			return Q.all(copyOps);
+			return Promise.all(copyOps);
 		})
 	} else {
 		return fs.read(src.path).then((content) => {

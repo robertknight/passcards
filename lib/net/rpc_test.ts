@@ -1,6 +1,3 @@
-
-import Q = require('q');
-
 import rpc = require('./rpc');
 import testLib = require('../test');
 import { defer, nodeResolver } from '../base/promise_util';

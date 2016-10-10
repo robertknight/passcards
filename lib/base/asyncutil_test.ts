@@ -1,5 +1,3 @@
-import Q = require('q');
-
 import testLib = require('../test');
 import asyncutil = require('./asyncutil');
 
@@ -7,11 +5,11 @@ testLib.addAsyncTest('test run sequence', (assert) => {
 	var values = [1, 1, 2, 3, 5, 8, 13];
 	var runOrder: number[] = [];
 
-	var funcs: Array<() => Q.Promise<number>> = [];
+	var funcs: Array<() => Promise<number>> = [];
 	values.forEach((value, index) => {
 		funcs.push(() => {
 			runOrder.push(index + 1);
-			return Q(value);
+			return Promise.resolve(value);
 		});
 	});
 
@@ -26,10 +24,10 @@ testLib.addAsyncTest('async while loop', (assert) => {
 
 	return asyncutil.until(() => {
 		if (counter == 5) {
-			return Q(true);
+			return Promise.resolve(true);
 		} else {
 			++counter;
-			return Q(false);
+			return Promise.resolve(false);
 		}
 	}).then((done) => {
 		testLib.assertEqual(assert, done, true);
@@ -38,8 +36,8 @@ testLib.addAsyncTest('async while loop', (assert) => {
 });
 
 testLib.addAsyncTest('promise to result', (assert) => {
-	var resolvedPromise = Q('hello');
-	var rejectedPromise = Q.reject<string>(new Error('failed'));
+	var resolvedPromise = Promise.resolve('hello');
+	var rejectedPromise = Promise.reject<string>(new Error('failed'));
 
 	return asyncutil.result<string, Error>(resolvedPromise).then((result) => {
 		assert.equal(result.value, 'hello');

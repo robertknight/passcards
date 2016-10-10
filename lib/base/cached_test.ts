@@ -1,15 +1,13 @@
-import Q = require('q');
-
 import cached = require('./cached');
 import testLib = require('../test');
 
 testLib.addAsyncTest('read / write cached value', (assert) => {
 	var value = 5;
 	var cachedValue = new cached.Cached<number>(
-		() => { return Q(value); },
+		() => { return Promise.resolve(value); },
 		(newValue) => {
 			value = newValue;
-			return Q<void>(null);
+			return Promise.resolve<void>(null);
 		}
 		);
 
@@ -31,10 +29,10 @@ testLib.addAsyncTest('read / write cached value', (assert) => {
 testLib.addAsyncTest('clear cached value', (assert) => {
 	var value = 7;
 	var cachedValue = new cached.Cached<number>(
-		() => { return Q(value); },
+		() => { return Promise.resolve(value); },
 		(newValue) => {
 			value = newValue;
-			return Q<void>(null);
+			return Promise.resolve<void>(null);
 		}
 		);
 

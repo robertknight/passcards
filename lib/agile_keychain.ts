@@ -1,6 +1,5 @@
 
 import assert = require('assert');
-import Q = require('q');
 import Path = require('path');
 import underscore = require('underscore');
 
@@ -273,7 +272,7 @@ export class Vault implements item_store.Store {
 	path: string;
 
 	private keyAgent: key_agent.KeyAgent;
-	private keys: Q.Promise<agile_keychain_entries.EncryptionKeyEntry[]>;
+	private keys: Promise<agile_keychain_entries.EncryptionKeyEntry[]>;
 
 	// map of (item ID -> Item) for items that have been
 	// modified and require the contents.js index file to be updated
@@ -281,7 +280,7 @@ export class Vault implements item_store.Store {
 
 	// promise which is resolved when the current flush of
 	// index updates completes
-	private indexUpdated: Q.Promise<{}>;
+	private indexUpdated: Promise<{}>;
 	private indexUpdatePending: boolean;
 
 	onItemUpdated: event_stream.EventStream<item_store.Item>;
@@ -297,18 +296,18 @@ export class Vault implements item_store.Store {
 		this.onItemUpdated = new event_stream.EventStream<item_store.Item>();
 
 		this.pendingIndexUpdates = new Map<string, item_store.Item>();
-		this.indexUpdated = Q<{}>(null);
+		this.indexUpdated = Promise.resolve<{}>(null);
 		this.indexUpdatePending = false;
 	}
 
-	private getKeys(): Q.Promise<agile_keychain_entries.EncryptionKeyEntry[]> {
+	private getKeys(): Promise<agile_keychain_entries.EncryptionKeyEntry[]> {
 		if (!this.keys) {
 			this.keys = this.loadKeys();
 		}
 		return this.keys;
 	}
 
-	private loadKeys(): Q.Promise<agile_keychain_entries.EncryptionKeyEntry[]> {
+	private loadKeys(): Promise<agile_keychain_entries.EncryptionKeyEntry[]> {
 		var content = this.fs.read(Path.join(this.dataFolderPath(), 'encryptionKeys.js'));
 		return content.then((content: string) => {
 			var keyList: agile_keychain_entries.EncryptionKeyList = JSON.parse(content);
@@ -329,7 +328,7 @@ export class Vault implements item_store.Store {
 		});
 	}
 
-	private writeKeys(keyList: agile_keychain_entries.EncryptionKeyList, passHint: string): Q.Promise<void> {
+	private writeKeys(keyList: agile_keychain_entries.EncryptionKeyList, passHint: string): Promise<void> {
 		// FIXME - Improve handling of concurrent attempts to update encryptionKeys.js.
 		// If the file in the VFS has been modified since the original read, the operation
 		// should fail.
@@ -337,46 +336,48 @@ export class Vault implements item_store.Store {
 		var keyJSON = collectionutil.prettyJSON(keyList);
 		var keysSaved = this.fs.write(Path.join(this.dataFolderPath(), 'encryptionKeys.js'), keyJSON);
 		var hintSaved = this.fs.write(Path.join(this.dataFolderPath(), '.password.hint'), passHint);
-		return asyncutil.eraseResult(Q.all([keysSaved, hintSaved]));
+		return asyncutil.eraseResult(Promise.all([keysSaved, hintSaved]));
 	}
 
-	listKeys(): Q.Promise<key_agent.Key[]> {
+	listKeys(): Promise<key_agent.Key[]> {
 		return this.getKeys().then(convertKeys);
 	}
 
-	saveKeys(keys: key_agent.Key[], hint: string): Q.Promise<void> {
+	saveKeys(keys: key_agent.Key[], hint: string): Promise<void> {
 		throw new Error('onepass.Vault.saveKeys() is not implemented');
 	}
 
 	/** Unlock the vault using the given master password.
 	  * This must be called before item contents can be decrypted.
 	  */
-	unlock(pwd: string): Q.Promise<void> {
+	unlock(pwd: string): Promise<void> {
 		return item_store.unlockStore(this, this.keyAgent, pwd);
 	}
 
 	/** Lock the vault. This discards decrypted master keys for the vault
 	  * created via a call to unlock()
 	  */
-	lock(): Q.Promise<void> {
+	lock(): Promise<void> {
 		return this.keyAgent.forgetKeys();
 	}
 
 	/** Returns true if the vault was successfully unlocked using unlock().
 	  * Only once the vault is unlocked can item contents be retrieved using item_store.Item.getContents()
 	  */
-	isLocked(): Q.Promise<boolean> {
-		return asyncutil.all2([this.keyAgent.listKeys(), this.getKeys()]).spread<boolean>(
-			(keyIDs: string[], keyEntries: agile_keychain_entries.EncryptionKeyEntry[]) => {
+	isLocked(): Promise<boolean> {
+		var keyIDs = this.keyAgent.listKeys();
+		var keyEntries = this.getKeys();
 
-				var locked = false;
-				keyEntries.forEach((entry) => {
-					if (keyIDs.indexOf(entry.identifier) == -1) {
-						locked = true;
-					}
-				});
-				return locked;
+		return Promise.all([keyIDs, keyEntries]).then(result => {
+			var [keyIDs, keyEntries] = result as [string[], agile_keychain_entries.EncryptionKeyEntry[]];
+			var locked = false;
+			keyEntries.forEach((entry) => {
+				if (keyIDs.indexOf(entry.identifier) == -1) {
+					locked = true;
+				}
 			});
+			return locked;
+		});
 	}
 
 	/** Returns the path to the file containing the encrypted data
@@ -386,7 +387,7 @@ export class Vault implements item_store.Store {
 		return Path.join(this.path, 'data/default/' + uuid + '.1password')
 	}
 
-	loadItem(uuid: string): Q.Promise<item_store.ItemAndContent> {
+	loadItem(uuid: string): Promise<item_store.ItemAndContent> {
 		var contentInfo = this.fs.stat(this.itemPath(uuid));
 		var contentData = this.fs.read(this.itemPath(uuid));
 		var item: item_store.Item;
@@ -406,7 +407,7 @@ export class Vault implements item_store.Store {
 		}));
 	}
 
-	saveItem(item: item_store.Item, source?: item_store.ChangeSource): Q.Promise<void> {
+	saveItem(item: item_store.Item, source?: item_store.ChangeSource): Promise<void> {
 		if (source !== item_store.ChangeSource.Sync) {
 			item.updateTimestamps();
 		} else {
@@ -415,7 +416,7 @@ export class Vault implements item_store.Store {
 
 		// update the '<item ID>.1password' file
 		let itemPath = this.itemPath(item.uuid);
-		let itemSaved: Q.Promise<void>;
+		let itemSaved: Promise<void>;
 		if (item.isTombstone()) {
 			itemSaved = this.fs.rm(itemPath).catch((err: Error | vfs.VfsError) => {
 				if (err instanceof vfs.VfsError) {
@@ -547,8 +548,8 @@ export class Vault implements item_store.Store {
 		});
 	}
 
-	listItemStates(): Q.Promise<item_store.ItemState[]> {
-		return Q.all([this.listDeletedItems(), this.listCurrentItems()])
+	listItemStates(): Promise<item_store.ItemState[]> {
+		return Promise.all([this.listDeletedItems(), this.listCurrentItems()])
 		.then((items: [item_store.ItemState[], item_store.ItemState[]]) => {
 			// if an item is listed as a tombstone in the contents.js file
 			// but a .1password file also exists then the deletion takes precedence.
@@ -572,15 +573,15 @@ export class Vault implements item_store.Store {
 	/** Returns a list of overview data for all items in the vault,
 	  * and tombstone markers for deleted items.
 	  */
-	listItems(opts: item_store.ListItemsOptions = {}): Q.Promise<item_store.Item[]> {
+	listItems(opts: item_store.ListItemsOptions = {}): Promise<item_store.Item[]> {
 		return this.listItemStates().then(itemStates => {
-			let loadedItems: Q.Promise<item_store.ItemAndContent>[] = [];
+			let loadedItems: Promise<item_store.ItemAndContent>[] = [];
 			for (let state of itemStates) {
 				if (state.deleted) {
 					if (opts.includeTombstones) {
 						let item = new item_store.Item(this, state.uuid);
 						item.typeName = item_store.ItemTypes.TOMBSTONE;
-						loadedItems.push(Q({
+						loadedItems.push(Promise.resolve({
 							item: item,
 							content: null
 						}));
@@ -589,7 +590,7 @@ export class Vault implements item_store.Store {
 					loadedItems.push(this.loadItem(state.uuid));
 				}
 			}
-			return Q.all(loadedItems);
+			return Promise.all(loadedItems);
 		}).then((items: item_store.ItemAndContent[]) => {
 			// Early versions of Passcards would update .1password
 			// files when items were removed rather than deleting them.
@@ -602,9 +603,9 @@ export class Vault implements item_store.Store {
 
 	// items may identify their encryption key via either the 'keyID' or
 	// 'level' fields
-	decryptItemData(keyID: string, level: string, data: string): Q.Promise<string> {
+	decryptItemData(keyID: string, level: string, data: string): Promise<string> {
 		return this.getKeys().then((keys) => {
-			var result: Q.Promise<string>;
+			var result: Promise<string>;
 			for (let key of keys) {
 				if (key.identifier === keyID || key.level === level) {
 					var cryptoParams = new key_agent.CryptoParams(key_agent.CryptoAlgorithm.AES128_OpenSSLKey);
@@ -615,14 +616,14 @@ export class Vault implements item_store.Store {
 			if (result) {
 				return result;
 			} else {
-				return Q.reject<string>('No key ' + level + ' found');
+				return Promise.reject<string>('No key ' + level + ' found');
 			}
 		});
 	}
 
-	encryptItemData(level: string, data: string): Q.Promise<string> {
+	encryptItemData(level: string, data: string): Promise<string> {
 		return this.getKeys().then((keys) => {
-			var result: Q.Promise<string>;
+			var result: Promise<string>;
 			keys.forEach((key) => {
 				if (key.level === level) {
 					var cryptoParams = new key_agent.CryptoParams(key_agent.CryptoAlgorithm.AES128_OpenSSLKey);
@@ -633,7 +634,7 @@ export class Vault implements item_store.Store {
 			if (result) {
 				return result;
 			} else {
-				return Q.reject<string>('No key ' + level + ' found');
+				return Promise.reject<string>('No key ' + level + ' found');
 			}
 		});
 	}
@@ -649,20 +650,20 @@ export class Vault implements item_store.Store {
 	  *  to use when generating an encryption key from @p newPass. If not specified,
 	  *  use the same number of iterations as the existing key.
 	  */
-	changePassword(oldPass: string, newPass: string, newPassHint: string, iterations?: number): Q.Promise<void> {
+	changePassword(oldPass: string, newPass: string, newPassHint: string, iterations?: number): Promise<void> {
 		return this.isLocked().then((locked) => {
 			if (locked) {
-				return Q.reject<agile_keychain_entries.EncryptionKeyEntry[]>(
+				return Promise.reject<agile_keychain_entries.EncryptionKeyEntry[]>(
 					new Error('Vault must be unlocked before changing the password')
 					);
 			}
 			return this.getKeys();
 		}).then(keys => {
-			let newKeys: Q.Promise<agile_keychain_entries.EncryptionKeyEntry>[] = [];
+			let newKeys: Promise<agile_keychain_entries.EncryptionKeyEntry>[] = [];
 			for (let key of keys) {
 				newKeys.push(this.reencryptKey(key, oldPass, newPass, iterations));
 			}
-			return Q.all(newKeys);
+			return Promise.all(newKeys);
 		}).then(newKeys => {
 			let keyList = <agile_keychain_entries.EncryptionKeyList>{
 				list: newKeys
@@ -708,7 +709,7 @@ export class Vault implements item_store.Store {
 	  */
 	static createVault(fs: vfs.VFS, path: string, password: string, hint: string,
 		passIterations: number = DEFAULT_VAULT_PASS_ITERATIONS,
-		keyAgent?: key_agent.KeyAgent): Q.Promise<Vault> {
+		keyAgent?: key_agent.KeyAgent): Promise<Vault> {
 
 		if (!stringutil.endsWith(path, '.agilekeychain')) {
 			path += '.agilekeychain';
@@ -733,7 +734,7 @@ export class Vault implements item_store.Store {
 		});
 	}
 
-	passwordHint(): Q.Promise<string> {
+	passwordHint(): Promise<string> {
 		return this.fs.read(Path.join(this.dataFolderPath(), '.password.hint'));
 	}
 
@@ -741,7 +742,7 @@ export class Vault implements item_store.Store {
 		return this.path;
 	}
 
-	getRawDecryptedData(item: item_store.Item): Q.Promise<string> {
+	getRawDecryptedData(item: item_store.Item): Promise<string> {
 		var encryptedContent = this.fs.read(this.itemPath(item.uuid));
 		return encryptedContent.then((content) => {
 			var keychainItem = <agile_keychain_entries.Item>JSON.parse(content);
@@ -749,7 +750,7 @@ export class Vault implements item_store.Store {
 		});
 	}
 
-	getContent(item: item_store.Item): Q.Promise<item_store.ItemContent> {
+	getContent(item: item_store.Item): Promise<item_store.ItemContent> {
 		return this.getRawDecryptedData(item).then((data: string) => {
 			var content = <agile_keychain_entries.ItemContent>(JSON.parse(data));
 			return fromAgileKeychainContent(content);
@@ -759,6 +760,6 @@ export class Vault implements item_store.Store {
 	clear() {
 		// not implemented for onepass.Vault since this is the user's
 		// primary data source.
-		return Q.reject<void>(new Error('Primary vault does not support being cleared'));
+		return Promise.reject<void>(new Error('Primary vault does not support being cleared'));
 	}
 }

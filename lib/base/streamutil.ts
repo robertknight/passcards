@@ -1,10 +1,7 @@
-
-import Q = require('q');
-
 import collectionutil = require('./collectionutil');
 import { defer } from './promise_util';
 
-export function readAll(readable: NodeJS.ReadableStream): Q.Promise<string> {
+export function readAll(readable: NodeJS.ReadableStream): Promise<string> {
 	var result = defer<string>();
 	var body = '';
 	readable.on('data', (chunk: any) => {
@@ -23,8 +20,8 @@ export function readAll(readable: NodeJS.ReadableStream): Q.Promise<string> {
 	return result.promise;
 }
 
-export function readJSON(readable: NodeJS.ReadableStream): Q.Promise<any> {
+export function readJSON(readable: NodeJS.ReadableStream): Promise<any> {
 	return readAll(readable).then((content) => {
-		return Q(JSON.parse(content));
+		return Promise.resolve(JSON.parse(content));
 	});
 }

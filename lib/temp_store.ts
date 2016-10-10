@@ -1,6 +1,5 @@
 import assert = require('assert');
 import clone = require('clone');
-import Q = require('q');
 
 import event_stream = require('./base/event_stream');
 import item_store = require('./item_store');
@@ -33,21 +32,21 @@ export class Store implements item_store.SyncableStore {
 		this.clear();
 	}
 
-	unlock(password: string): Q.Promise<void> {
+	unlock(password: string): Promise<void> {
 		return item_store.unlockStore(this, this.keyAgent, password);
 	}
 
 	listKeys() {
-		return Q(this.keys);
+		return Promise.resolve(this.keys);
 	}
 
 	saveKeys(keys: key_agent.Key[], hint: string) {
 		this.keys = <key_agent.Key[]>clone(keys);
 		this.hint = hint;
-		return Q<void>(null);
+		return Promise.resolve<void>(null);
 	}
 
-	listItemStates(): Q.Promise<item_store.ItemState[]> {
+	listItemStates(): Promise<item_store.ItemState[]> {
 		return item_store.itemStates(this);
 	}
 
@@ -59,7 +58,7 @@ export class Store implements item_store.SyncableStore {
 			return true;
 		});
 
-		return Q(matches);
+		return Promise.resolve(matches);
 	}
 
 	saveItem(item: item_store.Item, source: item_store.ChangeSource) {
@@ -111,30 +110,30 @@ export class Store implements item_store.SyncableStore {
 				return item.uuid == uuid;
 			});
 			if (items.length == 0) {
-				return Q.reject<item_store.ItemAndContent>(new Error('No such item'));
+				return Promise.reject<item_store.ItemAndContent>(new Error('No such item'));
 			}
 			if (items[0].isTombstone()) {
-				return Q.reject<item_store.ItemAndContent>(new Error('Item has been deleted'));
+				return Promise.reject<item_store.ItemAndContent>(new Error('Item has been deleted'));
 			}
 			if (!revision) {
 				revision = items[0].revision;
 			}
-			return Q(this.content.get(revision));
+			return Promise.resolve(this.content.get(revision));
 		});
 	}
 
 	getContent(item: item_store.Item) {
 		return this.checkUnlocked().then(() => {
 			if (this.content.has(item.revision)) {
-				return Q(this.content.get(item.revision).content);
+				return Promise.resolve(this.content.get(item.revision).content);
 			} else {
-				return Q.reject<item_store.ItemContent>(new Error('No such item'));
+				return Promise.reject<item_store.ItemContent>(new Error('No such item'));
 			}
 		});
 	}
 
 	getRawDecryptedData(item: item_store.Item) {
-		return Q.reject<string>(new Error('Not implemented in TempStore'));
+		return Promise.reject<string>(new Error('Not implemented in TempStore'));
 	}
 
 	clear() {
@@ -142,19 +141,19 @@ export class Store implements item_store.SyncableStore {
 		this.items = [];
 		this.content = new Map<string, item_store.ItemAndContent>();
 		this.lastSyncedRevisions = new Map<string, Map<string, item_store.RevisionPair>>();
-		return Q<void>(null);
+		return Promise.resolve<void>(null);
 	}
 
 	passwordHint() {
-		return Q(this.hint);
+		return Promise.resolve(this.hint);
 	}
 
 	getLastSyncedRevision(uuid: string, storeID: string) {
 		let storeRevisions = this.lastSyncedRevisions.get(storeID);
 		if (storeRevisions) {
-			return Q(storeRevisions.get(uuid));
+			return Promise.resolve(storeRevisions.get(uuid));
 		} else {
-			return Q<item_store.RevisionPair>(null);
+			return Promise.resolve<item_store.RevisionPair>(null);
 		}
 	}
 
@@ -167,14 +166,14 @@ export class Store implements item_store.SyncableStore {
 		} else {
 			this.lastSyncedRevisions.get(storeID).delete(item.uuid);
 		}
-		return Q<void>(null);
+		return Promise.resolve<void>(null);
 	}
 
 	lastSyncRevisions(storeID: string) {
 		if (!this.lastSyncedRevisions.has(storeID)) {
 			this.lastSyncedRevisions.set(storeID, new Map<string, item_store.RevisionPair>());
 		}
-		return Q(this.lastSyncedRevisions.get(storeID));
+		return Promise.resolve(this.lastSyncedRevisions.get(storeID));
 	}
 
 	private checkUnlocked() {

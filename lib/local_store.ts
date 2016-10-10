@@ -17,7 +17,6 @@
 //                                   // a particular revision of an item
 
 import assert = require('assert');
-import Q = require('q');
 
 import agile_keychain_crypto = require('./agile_keychain_crypto');
 import asyncutil = require('./base/asyncutil');
@@ -146,15 +145,15 @@ export class Store implements item_store.SyncableStore {
 		});
 	}
 
-	unlock(pwd: string): Q.Promise<void> {
+	unlock(pwd: string): Promise<void> {
 		return item_store.unlockStore(this, this.keyAgent, pwd);
 	}
 
-	listItemStates(): Q.Promise<item_store.ItemState[]> {
+	listItemStates(): Promise<item_store.ItemState[]> {
 		return item_store.itemStates(this);
 	}
 
-	listItems(opts: item_store.ListItemsOptions = {}): Q.Promise<item_store.Item[]> {
+	listItems(opts: item_store.ListItemsOptions = {}): Promise<item_store.Item[]> {
 		return this.itemIndex.get().then((overviewMap) => {
 			var items: item_store.Item[] = [];
 			Object.keys(overviewMap).forEach((key) => {
@@ -169,8 +168,8 @@ export class Store implements item_store.SyncableStore {
 		});
 	}
 
-	private getLastSyncEntries(ids: string[]): Q.Promise<LastSyncEntry[]> {
-		return Q.all(ids.map((id) => {
+	private getLastSyncEntries(ids: string[]): Promise<LastSyncEntry[]> {
+		return Promise.all(ids.map((id) => {
 			return this.itemStore.get<LastSyncEntry>('lastSynced/' + id);
 		}));
 	}
@@ -235,7 +234,7 @@ export class Store implements item_store.SyncableStore {
 		};
 	}
 
-	loadItem(uuid: string, revision?: string): Q.Promise<item_store.ItemAndContent> {
+	loadItem(uuid: string, revision?: string): Promise<item_store.ItemAndContent> {
 		if (revision) {
 			return asyncutil.all2([this.overviewKey(), this.itemStore.get<string>('revisions/' + revision)])
 			.then(keyAndRevision => {
@@ -263,7 +262,7 @@ export class Store implements item_store.SyncableStore {
 		}
 	}
 
-	saveItem(item: item_store.Item, source: item_store.ChangeSource): Q.Promise<void> {
+	saveItem(item: item_store.Item, source: item_store.ChangeSource): Promise<void> {
 		if (source !== item_store.ChangeSource.Sync) {
 			// set last-modified time to current time
 			item.updateTimestamps();
@@ -293,13 +292,13 @@ export class Store implements item_store.SyncableStore {
 		}).then(revisionData => {
 			var indexUpdated = this.indexUpdateQueue.push(item);
 			var revisionSaved = this.itemStore.set('revisions/' + item.revision, revisionData);
-			return asyncutil.eraseResult(Q.all([indexUpdated, revisionSaved]));
+			return asyncutil.eraseResult(Promise.all([indexUpdated, revisionSaved]));
 		}).then(() => {
 			this.onItemUpdated.publish(item);
 		});
 	}
 
-	getContent(item: item_store.Item): Q.Promise<item_store.ItemContent> {
+	getContent(item: item_store.Item): Promise<item_store.ItemContent> {
 		var key: string;
 		return this.keyForItem(item).then((_key) => {
 			key = _key;
@@ -311,41 +310,41 @@ export class Store implements item_store.SyncableStore {
 		});
 	}
 
-	getRawDecryptedData(item: item_store.Item): Q.Promise<string> {
-		return Q.reject<string>(new Error('getRawDecryptedData() is not implemented'));
+	getRawDecryptedData(item: item_store.Item): Promise<string> {
+		return Promise.reject<string>(new Error('getRawDecryptedData() is not implemented'));
 	}
 
-	listKeys(): Q.Promise<key_agent.Key[]> {
+	listKeys(): Promise<key_agent.Key[]> {
 		return key_value_store.listKeys(this.keyStore, KEY_ID_PREFIX).then(keyIds => {
-			var keys: Q.Promise<key_agent.Key>[] = [];
+			var keys: Promise<key_agent.Key>[] = [];
 			keyIds.forEach((id) => {
 				keys.push(this.keyStore.get<key_agent.Key>(id));
 			});
-			return Q.all(keys);
+			return Promise.all(keys);
 		});
 	}
 
-	saveKeys(keys: key_agent.Key[], hint: string): Q.Promise<void> {
+	saveKeys(keys: key_agent.Key[], hint: string): Promise<void> {
 		return key_value_store.listKeys(this.keyStore, KEY_ID_PREFIX).then(keyIds => {
 			// remove existing keys
 			var removeOps = keyIds.map((id) => {
 				return this.keyStore.remove(id);
 			});
-			return Q.all(removeOps);
+			return Promise.all(removeOps);
 		}).then(() => {
 			// save new keys and hint
-			var keysSaved: Q.Promise<void>[] = [];
+			var keysSaved: Promise<void>[] = [];
 			keys.forEach((key) => {
 				keysSaved.push(this.keyStore.set(KEY_ID_PREFIX + key.identifier, key));
 			});
 			keysSaved.push(this.keyStore.set('hint', hint));
-			return Q.all(keysSaved);
+			return Promise.all(keysSaved);
 		}).then(() => {
 			this.onKeysUpdated.publish(keys);
 		});
 	}
 
-	passwordHint(): Q.Promise<string> {
+	passwordHint(): Promise<string> {
 		return this.keyStore.get<string>('hint');
 	}
 
@@ -362,7 +361,7 @@ export class Store implements item_store.SyncableStore {
 
 	setLastSyncedRevision(item: item_store.Item, storeID: string, revision?: item_store.RevisionPair) {
 		let key = `lastSynced/${storeID}/${item.uuid}`;
-		let saved: Q.Promise<void>;
+		let saved: Promise<void>;
 		if (revision) {
 			saved = this.itemStore.set(key, {
 				local: revision.local,
@@ -407,7 +406,7 @@ export class Store implements item_store.SyncableStore {
 			if (encryptedItemIndex) {
 				return this.decrypt<OverviewMap>(key, encryptedItemIndex);
 			} else {
-				return Q(<OverviewMap>{});
+				return Promise.resolve(<OverviewMap>{});
 			}
 		});
 	}
@@ -432,7 +431,7 @@ export class Store implements item_store.SyncableStore {
 		return this.keyAgent.encrypt(key, JSON.stringify(data), cryptoParams);
 	}
 
-	private decrypt<T>(key: string, data: string): Q.Promise<T> {
+	private decrypt<T>(key: string, data: string): Promise<T> {
 		var cryptoParams = new key_agent.CryptoParams(key_agent.CryptoAlgorithm.AES128_OpenSSLKey);
 		return this.keyAgent.decrypt(key, data, cryptoParams).then((decrypted) => {
 			return <T>JSON.parse(decrypted);

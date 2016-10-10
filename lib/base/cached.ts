@@ -1,21 +1,19 @@
 
-import Q = require('q');
-
 /** Utility for implementing caching of data which is
   * slow to retrieve or expensive to compute.
   */
 export class Cached<T> {
 	private cached: T;
-	private getter: () => Q.Promise<T>;
-	private setter: (value: T) => Q.Promise<void>;
-	private reading: Q.Promise<T>;
+	private getter: () => Promise<T>;
+	private setter: (value: T) => Promise<void>;
+	private reading: Promise<T>;
 
 	/** Construct a Cached<T> instance which reads
 	  * a value using @p getter and writes it using
 	  * @p setter.
 	  */
-	constructor(getter: () => Q.Promise<T>,
-		setter: (value: T) => Q.Promise<void>) {
+	constructor(getter: () => Promise<T>,
+		setter: (value: T) => Promise<void>) {
 		this.getter = getter;
 		this.setter = setter;
 	}
@@ -25,9 +23,9 @@ export class Cached<T> {
 	  * the result. Subsequent calls retrieve the cached
 	  * result.
 	  */
-	get(): Q.Promise<T> {
+	get(): Promise<T> {
 		if (this.cached) {
-			return Q(this.cached);
+			return Promise.resolve(this.cached);
 		} else if (this.reading) {
 			return this.reading;
 		} else {
@@ -44,7 +42,7 @@ export class Cached<T> {
 	  * the cached value and then invokes the setter
 	  * passed to the constructor to set the value.
 	  */
-	set(value: T): Q.Promise<void> {
+	set(value: T): Promise<void> {
 		this.cached = value;
 		return this.setter(value);
 	}

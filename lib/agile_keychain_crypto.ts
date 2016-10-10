@@ -2,7 +2,6 @@
 import assert = require('assert');
 var cryptoJS = require('crypto-js');
 import node_crypto = require('crypto');
-import Q = require('q');
 import uuid = require('node-uuid');
 
 import { btoa } from './base/stringutil';
@@ -32,7 +31,7 @@ export class SaltedCipherText {
   * for a vault and encrypts it using a key derived from @p password
   * using @p passIterations iterations of PBKDF2.
   */
-export function generateMasterKey(password: string, passIterations: number): Q.Promise<agile_keychain_entries.EncryptionKeyList> {
+export function generateMasterKey(password: string, passIterations: number): Promise<agile_keychain_entries.EncryptionKeyList> {
 	let masterKey = crypto.randomBytes(1024);
 	let salt = crypto.randomBytes(8);
 
@@ -104,13 +103,13 @@ export function newUUID(): string {
 export interface Crypto {
 	/** Decrypt @p cipherText using AES-128 with the given key and initialization vector.
 	  */
-	aesCbcDecrypt(key: string, cipherText: string, iv: string): Q.Promise<string>;
-	aesCbcEncrypt(key: string, plainText: string, iv: string): Q.Promise<string>;
+	aesCbcDecrypt(key: string, cipherText: string, iv: string): Promise<string>;
+	aesCbcEncrypt(key: string, plainText: string, iv: string): Promise<string>;
 
 	/** Derive a key of length @p keyLen from a password using @p iterCount iterations
 	  * of PBKDF2
 	  */
-	pbkdf2(masterPwd: string, salt: string, iterCount: number, keyLen: number): Q.Promise<string>;
+	pbkdf2(masterPwd: string, salt: string, iterCount: number, keyLen: number): Promise<string>;
 
 	pbkdf2Sync(masterPwd: string, salt: string, iterCount: number, keyLen: number): string;
 
@@ -126,17 +125,17 @@ export class NodeCrypto implements Crypto {
 		let result = '';
 		result += decipher.update(cipherText, 'binary', 'binary');
 		result += decipher.final('binary');
-		return Q<string>(result);
+		return Promise.resolve<string>(result);
 	}
 
-	aesCbcEncrypt(key: string, plainText: string, iv: string): Q.Promise<string> {
+	aesCbcEncrypt(key: string, plainText: string, iv: string): Promise<string> {
 		var keyBuf = new Buffer(key, 'binary');
 		var ivBuf = new Buffer(iv, 'binary');
 		var cipher = node_crypto.createCipheriv('AES-128-CBC', keyBuf, ivBuf);
 		var result = '';
 		result += cipher.update(plainText, 'binary', 'binary');
 		result += cipher.final('binary');
-		return Q(result);
+		return Promise.resolve(result);
 	}
 
 	pbkdf2Sync(masterPwd: string, salt: string, iterCount: number, keyLen: number): string {
@@ -144,7 +143,7 @@ export class NodeCrypto implements Crypto {
 		return derivedKey.toString('binary');
 	}
 
-	pbkdf2(masterPwd: string, salt: string, iterCount: number, keyLen: number): Q.Promise<string> {
+	pbkdf2(masterPwd: string, salt: string, iterCount: number, keyLen: number): Promise<string> {
 		var key = defer<string>();
 		// FIXME - Type definition for crypto.pbkdf2() is wrong, result
 		// is a Buffer, not a string.
@@ -198,7 +197,7 @@ export class CryptoJsCrypto implements Crypto {
 		this.encoding = cryptoJS.enc.Latin1;
 	}
 
-	aesCbcEncrypt(key: string, plainText: string, iv: string): Q.Promise<string> {
+	aesCbcEncrypt(key: string, plainText: string, iv: string): Promise<string> {
 		assert.equal(key.length, 16);
 		assert.equal(iv.length, 16);
 
@@ -210,7 +209,7 @@ export class CryptoJsCrypto implements Crypto {
 			padding: cryptoJS.pad.Pkcs7,
 			iv: ivArray
 		});
-		return Q(encrypted.ciphertext.toString(this.encoding));
+		return Promise.resolve(encrypted.ciphertext.toString(this.encoding));
 	}
 
 	aesCbcDecrypt(key: string, cipherText: string, iv: string) {
@@ -228,7 +227,7 @@ export class CryptoJsCrypto implements Crypto {
 			padding: cryptoJS.pad.Pkcs7,
 			iv: ivArray
 		}).toString(this.encoding);
-		return Q(result);
+		return Promise.resolve(result);
 	}
 
 	/** Derive a key from a password using PBKDF2. Depending on the number of iterations,
@@ -254,9 +253,9 @@ export class CryptoJsCrypto implements Crypto {
 	  * this will run asynchronously and in parallel in a worker, otherwise it will fall back to
 	  * pbkdf2Sync()
 	  */
-	pbkdf2(pass: string, salt: string, iterCount: number, keyLen: number): Q.Promise<string> {
+	pbkdf2(pass: string, salt: string, iterCount: number, keyLen: number): Promise<string> {
 		if (CryptoJsCrypto.workers) {
-			var keyBlocks: Q.Promise<string>[] = [];
+			var keyBlocks: Promise<string>[] = [];
 			var PBKDF2_BLOCK_SIZE = 20;
 			var blockCount = Math.round(keyLen / PBKDF2_BLOCK_SIZE);
 
@@ -271,12 +270,12 @@ export class CryptoJsCrypto implements Crypto {
 				keyBlocks.push(keyBlock.promise);
 			}
 
-			return Q.all(keyBlocks).then((blocks) => {
+			return Promise.all(keyBlocks).then((blocks) => {
 				return blocks.join('').slice(0, keyLen);
 			});
 		} else {
 			// fall back to sync calculation
-			return Q(this.pbkdf2Sync(pass, salt, iterCount, keyLen));
+			return Promise.resolve(this.pbkdf2Sync(pass, salt, iterCount, keyLen));
 		}
 	}
 

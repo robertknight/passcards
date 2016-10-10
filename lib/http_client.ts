@@ -1,7 +1,6 @@
 
 import http = require('http');
 import https = require('https');
-import Q = require('q');
 import urlLib = require('url');
 
 import assign = require('./base/assign');
@@ -47,7 +46,7 @@ export class RedirectLimitExceeded extends BaseError {
   * and returns a promise for the content of the reply if it has
   * an expected status code or rejects the promise otherwise.
   */
-export function expect(reply: Q.Promise<Reply>, status: number): Q.Promise<string> {
+export function expect(reply: Promise<Reply>, status: number): Promise<string> {
 	return reply.then((reply) => {
 		if (reply.status == status) {
 			return reply.body;
@@ -65,7 +64,7 @@ export interface RequestOptions {
 	redirectLimit: number;
 }
 
-export function get(url: string, opts?: RequestOptions): Q.Promise<Reply> {
+export function get(url: string, opts?: RequestOptions): Promise<Reply> {
 	var currentUrl = url;
 	var finalReply: Reply;
 	var redirectCount = 0;
@@ -102,7 +101,7 @@ export interface RequestOpts {
 	headers?: { [name: string]: string };
 };
 
-export function request<T>(method: string, url: string, data?: T, opts?: RequestOpts): Q.Promise<Reply> {
+export function request<T>(method: string, url: string, data?: T, opts?: RequestOpts): Promise<Reply> {
 	let urlParts = urlLib.parse(url);
 
 	let requestOpts = {

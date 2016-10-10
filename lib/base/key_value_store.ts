@@ -3,14 +3,13 @@
 // In the browser it is implemented with IndexedDB.
 
 import assert = require('assert');
-import Q = require('q');
 
 import asyncutil = require('./asyncutil');
 import err_util = require('./err_util');
 import stringutil = require('./stringutil');
 import { defer } from './promise_util';
 
-function promisify<T>(req: IDBRequest): Q.Promise<T> {
+function promisify<T>(req: IDBRequest): Promise<T> {
 	var result = defer<T>();
 	req.onsuccess = () => {
 		result.resolve(req.result);
@@ -30,27 +29,27 @@ export interface DatabaseSchemaModifier {
 
 export interface Database {
 	/** Open a database with a given name and version number. */
-	open(name: string, version: number, schemaUpdateCallback: (schemaUpdater: DatabaseSchemaModifier) => void): Q.Promise<void>;
+	open(name: string, version: number, schemaUpdateCallback: (schemaUpdater: DatabaseSchemaModifier) => void): Promise<void>;
 
 	/** Return an object store within the current database. */
 	store(name: string): ObjectStore;
 
 	/** Close and remove the open database. */
-	delete(): Q.Promise<void>;
+	delete(): Promise<void>;
 }
 
 export interface ObjectStore {
-	set<T>(key: string, value: T): Q.Promise<void>;
-	get<T>(key: string): Q.Promise<T>;
-	remove(key: string): Q.Promise<void>;
+	set<T>(key: string, value: T): Promise<void>;
+	get<T>(key: string): Promise<T>;
+	remove(key: string): Promise<void>;
 
 	/** Iterate over keys in an object store beginning with @p prefix,
 	  * invoking callback() for each match.
 	  */
-	iterate<T>(prefix: string, callback: (key: string, value?: T) => void): Q.Promise<void>;
+	iterate<T>(prefix: string, callback: (key: string, value?: T) => void): Promise<void>;
 }
 
-export function listKeys(store: ObjectStore, prefix = ''): Q.Promise<string[]> {
+export function listKeys(store: ObjectStore, prefix = ''): Promise<string[]> {
 	let keys: string[] = [];
 	return store.iterate<void>(prefix, key => {
 		keys.push(key);
@@ -61,15 +60,15 @@ export function listKeys(store: ObjectStore, prefix = ''): Q.Promise<string[]> {
 }
 
 export function setItems<V>(store: ObjectStore, items: [string, V][]) {
-	let saved: Q.Promise<void>[] = [];
+	let saved: Promise<void>[] = [];
 	for (let item of items) {
 		saved.push(store.set(item[0], item[1]));
 	}
-	return Q.all(saved);
+	return Promise.all(saved);
 }
 
 export class IndexedDBDatabase implements Database {
-	private database: Q.Promise<IDBDatabase>;
+	private database: Promise<IDBDatabase>;
 	private stores: Map<string, IndexedDBStore>;
 
 	constructor() {
@@ -77,7 +76,7 @@ export class IndexedDBDatabase implements Database {
 	}
 
 	private reset() {
-		this.database = Q.reject<IDBDatabase>(new Error('Database not opened'));
+		this.database = Promise.reject<IDBDatabase>(new Error('Database not opened'));
 		this.stores = new Map<string, IndexedDBStore>();
 	}
 
@@ -156,7 +155,7 @@ export class IndexedDBDatabase implements Database {
 
 	delete() {
 		if (!this.database) {
-			return Q.reject<void>(new Error('Database is not open'));
+			return Promise.reject<void>(new Error('Database is not open'));
 		}
 
 		return this.database.then((db) => {
@@ -175,7 +174,7 @@ export class IndexedDBDatabase implements Database {
 }
 
 class IndexedDBStore implements ObjectStore {
-	private db: Q.Promise<IDBDatabase>;
+	private db: Promise<IDBDatabase>;
 
 	// the active transaction, if any.
 	// Transactions are started automatically when any
@@ -184,7 +183,7 @@ class IndexedDBStore implements ObjectStore {
 	// which happens when control returns to the event loop
 	private transaction: IDBTransaction;
 
-	constructor(database: Q.Promise<IDBDatabase>, public storeName: string) {
+	constructor(database: Promise<IDBDatabase>, public storeName: string) {
 		this.db = database;
 	}
 
@@ -194,32 +193,32 @@ class IndexedDBStore implements ObjectStore {
 			// remains active until control returns to the event loop, at which
 			// point it becomes closed for new requests
 			this.transaction = db.transaction(this.storeName, 'readwrite');
-			Q(true).then(() => {
+			Promise.resolve(true).then(() => {
 				this.transaction = null;
 			});
 		}
 		return this.transaction.objectStore(this.storeName);
 	}
 
-	set<T>(key: string, value: T): Q.Promise<void> {
+	set<T>(key: string, value: T): Promise<void> {
 		return this.db.then(db => {
 			return promisify<void>(this.getStore(db).put(value, key));
 		});
 	}
 
-	get<T>(key: string): Q.Promise<T> {
+	get<T>(key: string): Promise<T> {
 		return this.db.then(db => {
 			return promisify<T>(this.getStore(db).get(key));
 		});
 	}
 
-	remove(key: string): Q.Promise<void> {
+	remove(key: string): Promise<void> {
 		return this.db.then(db => {
 			return promisify<void>(this.getStore(db).delete(key));
 		});
 	}
 
-	iterate<T>(prefix: string, callback: (key: string, value?: T) => void): Q.Promise<void> {
+	iterate<T>(prefix: string, callback: (key: string, value?: T) => void): Promise<void> {
 		return this.db.then((db) => {
 			var store = this.getStore(db);
 			var req = store.openCursor(IDBKeyRange.lowerBound(prefix));

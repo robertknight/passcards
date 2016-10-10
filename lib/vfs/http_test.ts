@@ -1,4 +1,3 @@
-import Q = require('q');
 import fs = require('fs');
 import os = require('os');
 
@@ -21,7 +20,7 @@ let httpVfsServer = new http_vfs.Server(fileVfs, {
 let httpVfs = new http_vfs.Client(HOSTNAME);
 httpVfs.setCredentials({ accessToken: http_vfs.ACCESS_TOKEN });
 
-function setup(): Q.Promise<void> {
+function setup(): Promise<void> {
 	return vfs_util.rmrf(fileVfs, '.').then(() => {
 		return fileVfs.mkpath('.');
 	}).then(() => {

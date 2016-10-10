@@ -1,5 +1,3 @@
-
-import Q = require('q');
 import path = require('path');
 import underscore = require('underscore');
 
@@ -151,11 +149,11 @@ testLib.addAsyncTest('Compare vaults against .1pif files', (assert) => {
 			return vault.listItems();
 		}).then((_items) => {
 			items = _items;
-			var contents: Q.Promise<item_store.ItemContent>[] = [];
+			var contents: Promise<item_store.ItemContent>[] = [];
 			items.forEach((item) => {
 				contents.push(item.getContent());
 			});
-			return Q.all(contents);
+			return Promise.all(contents);
 		}).then((contents) => {
 			var itemContents: ItemAndContent[] = [];
 			items.forEach((item, index) => {
@@ -195,7 +193,7 @@ testLib.addAsyncTest('Compare vaults against .1pif files', (assert) => {
 		});
 	});
 
-	return Q.all(done);
+	return Promise.all(done);
 });
 
 function createCryptos(): agile_keychain_crypto.Crypto[] {
@@ -208,7 +206,7 @@ function createCryptos(): agile_keychain_crypto.Crypto[] {
 }
 
 testLib.addAsyncTest('AES encrypt/decrypt', (assert) => {
-	let done: Q.Promise<void>[] = [];
+	let done: Promise<void>[] = [];
 	let impls = createCryptos();
 	for (var impl of impls) {
 		var plainText = 'foo bar';
@@ -222,12 +220,12 @@ testLib.addAsyncTest('AES encrypt/decrypt', (assert) => {
 			assert.equal(decrypted, plainText);
 		}));
 	}
-	return Q.all(done);
+	return Promise.all(done);
 });
 
 testLib.addAsyncTest('Encrypt/decrypt item data', (assert) => {
 	let impls = createCryptos();
-	let done: Q.Promise<void>[] = [];
+	let done: Promise<void>[] = [];
 	for (let impl of impls) {
 		let itemData = JSON.stringify({ secret: 'secret-data' });
 		let itemPass = 'item password';
@@ -239,7 +237,7 @@ testLib.addAsyncTest('Encrypt/decrypt item data', (assert) => {
 			assert.equal(decrypted, itemData);
 		}));
 	}
-	return Q.all(done);
+	return Promise.all(done);
 });
 
 testLib.addTest('New item UUID', (assert) => {
@@ -633,18 +631,18 @@ interface TestVault {
 	items: item_store.Item[];
 }
 
-function createTestVaultWithNItems(n: number): Q.Promise<TestVault> {
+function createTestVaultWithNItems(n: number): Promise<TestVault> {
 	let vault: agile_keychain.Vault;
 	let items: item_store.Item[] = [];
 	return createEmptyVault().then(_vault => {
 		vault = _vault;
-		let saved: Q.Promise<void>[] = [];
+		let saved: Promise<void>[] = [];
 		for (let i = 0; i < n; i++) {
 			var item = createTestLoginItem(i);
 			items.push(item);
 			saved.push(item.saveTo(vault));
 		}
-		return Q.all(saved);
+		return Promise.all(saved);
 	}).then(() => ({
 		vault: vault,
 		items: items

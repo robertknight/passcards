@@ -1,9 +1,7 @@
-import * as Q from 'q';
-
 export interface Deferred<T> {
 	resolve: (result: T) => void;
 	reject: (err: any) => void;
-	promise: Q.Promise<T>;
+	promise: Promise<T>;
 }
 
 /**
@@ -12,7 +10,7 @@ export interface Deferred<T> {
 export function defer<T>(): Deferred<T> {
 	let resolve: (result: T) => void;
 	let reject: (err: any) => void;
-	let promise = Q.Promise<T>((_resolve, _reject) => {
+	let promise = new Promise<T>((_resolve, _reject) => {
 		resolve = _resolve;
 		reject = _reject;
 	});
@@ -35,6 +33,6 @@ export function nodeResolver<T>(d: Deferred<T>): (err: any, result: T) => void {
   * Return a Promise which resolves with `value` after `ms` milliseconds.
   */
 export function delay<T>(value: T, ms: number) {
-	return Q.Promise<T>(resolve => setTimeout(() => resolve(value), ms));
+	return new Promise<T>(resolve => setTimeout(() => resolve(value), ms));
 }
 

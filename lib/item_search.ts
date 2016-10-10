@@ -1,4 +1,3 @@
-import Q = require('q');
 import underscore = require('underscore');
 import urijs = require('urijs');
 
@@ -117,7 +116,7 @@ export function matchItem(item: item_store.Item, pattern: string): boolean {
 }
 
 /** Returns a list of items in @p store which match a given pattern. */
-export function lookupItems(store: item_store.Store, pattern: string): Q.Promise<item_store.Item[]> {
+export function lookupItems(store: item_store.Store, pattern: string): Promise<item_store.Item[]> {
 	return store.listItems().then((items) => {
 		return underscore.filter(items, (item) => {
 			return matchItem(item, pattern);

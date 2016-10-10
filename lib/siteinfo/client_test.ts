@@ -1,6 +1,3 @@
-
-import Q = require('q');
-
 import asyncutil = require('../base/asyncutil');
 import client = require('./client');
 import site_info = require('./site_info');
@@ -16,7 +13,7 @@ testLib.addAsyncTest('fetch google.com icons', (assert) => {
 	return asyncutil.until(() => {
 		result = passcardsClient.lookup(TEST_DOMAIN);
 		if (result.state == site_info.QueryState.Ready) {
-			return Q(true);
+			return Promise.resolve(true);
 		} else {
 			return delay(false, 50);
 		}

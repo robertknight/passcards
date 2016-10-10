@@ -1,5 +1,3 @@
-import Q = require('q');
-
 import crypto_worker = require('./crypto_worker');
 import env = require('./base/env');
 import rpc = require('./net/rpc');

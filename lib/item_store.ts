@@ -3,7 +3,6 @@
 // encrypted items and storage of them
 
 import clone = require('clone');
-import Q = require('q');
 import sprintf = require('sprintf');
 
 import agile_keychain_crypto = require('./agile_keychain_crypto');
@@ -333,12 +332,12 @@ export class Item {
 	  * The item's store must be unlocked using Store.unlock() before
 	  * item content can be retrieved.
 	  */
-	getContent(): Q.Promise<ItemContent> {
+	getContent(): Promise<ItemContent> {
 		if (this.content) {
-			return Q(this.content);
+			return Promise.resolve(this.content);
 		} else if (!this.store) {
 			this.content = ContentUtil.empty();
-			return Q(this.content);
+			return Promise.resolve(this.content);
 		}
 
 		return this.store.getContent(this);
@@ -351,25 +350,25 @@ export class Item {
 	/** Return the raw decrypted JSON data for an item.
 	  * This is only available for saved items.
 	  */
-	getRawDecryptedData(): Q.Promise<string> {
+	getRawDecryptedData(): Promise<string> {
 		if (!this.store) {
-			return Q.reject<string>(new UnsavedItemError());
+			return Promise.reject<string>(new UnsavedItemError());
 		}
 		return this.store.getRawDecryptedData(this);
 	}
 
 	/** Save this item to its associated store */
-	save(): Q.Promise<void> {
+	save(): Promise<void> {
 		if (!this.store) {
-			return Q.reject<void>(new UnsavedItemError());
+			return Promise.reject<void>(new UnsavedItemError());
 		}
 		return this.saveTo(this.store);
 	}
 
 	/** Save this item to the specified store */
-	saveTo(store: Store): Q.Promise<void> {
+	saveTo(store: Store): Promise<void> {
 		if (!this.content && !this.isSaved()) {
-			return Q.reject<void>(new Error('Unable to save new item, no content set'));
+			return Promise.reject<void>(new Error('Unable to save new item, no content set'));
 		}
 		this.store = store;
 		return this.store.saveItem(this);
@@ -379,9 +378,9 @@ export class Item {
 	  * This erases all of the item's data and leaves behind a 'tombstone'
 	  * entry for syncing purposes.
 	  */
-	remove(): Q.Promise<void> {
+	remove(): Promise<void> {
 		if (!this.store) {
-			return Q.reject<void>(new UnsavedItemError());
+			return Promise.reject<void>(new UnsavedItemError());
 		}
 		this.typeName = ItemTypes.TOMBSTONE;
 		this.title = 'Unnamed';
@@ -617,15 +616,15 @@ export interface Store {
 	onKeysUpdated?: event_stream.EventStream<key_agent.Key[]>;
 
 	/** Unlock the vault */
-	unlock(password: string): Q.Promise<void>;
+	unlock(password: string): Promise<void>;
 
 	/** List the states (ID, last update time and whether deleted)
 	  * of all items in the store.
 	  */
-	listItemStates(): Q.Promise<ItemState[]>;
+	listItemStates(): Promise<ItemState[]>;
 
 	/** List all of the items in the store */
-	listItems(opts?: ListItemsOptions): Q.Promise<Item[]>;
+	listItems(opts?: ListItemsOptions): Promise<Item[]>;
 
 	/** Load the item with a specific ID.
 	  *
@@ -636,7 +635,7 @@ export interface Store {
 	  * Deleted items are only available as tombstone entries in the
 	  * list returned by listItemStates().
 	  */
-	loadItem(uuid: string, revision?: string): Q.Promise<ItemAndContent>;
+	loadItem(uuid: string, revision?: string): Promise<ItemAndContent>;
 
 	/** Save changes to the overview data and item content
 	  * back to the store. The @p source specifies whether
@@ -645,29 +644,29 @@ export interface Store {
 	  *
 	  * Saving an item assigns a new revision to it.
 	  */
-	saveItem(item: Item, source?: ChangeSource): Q.Promise<void>;
+	saveItem(item: Item, source?: ChangeSource): Promise<void>;
 
 	/** Fetch and decrypt the item's secure contents. */
-	getContent(item: Item): Q.Promise<ItemContent>;
+	getContent(item: Item): Promise<ItemContent>;
 
 	/** Fetch and decrypt item's secure contents and return
 	  * as a raw string - ie. without parsing the data and converting
 	  * to an ItemContent instance.
 	  */
-	getRawDecryptedData(item: Item): Q.Promise<string>;
+	getRawDecryptedData(item: Item): Promise<string>;
 
 	/** Retrieve the master encryption keys for this store. */
-	listKeys(): Q.Promise<key_agent.Key[]>;
+	listKeys(): Promise<key_agent.Key[]>;
 
 	/** Update the encryption keys in this store. */
-	saveKeys(keys: key_agent.Key[], hint: string): Q.Promise<void>;
+	saveKeys(keys: key_agent.Key[], hint: string): Promise<void>;
 
 	/** Permanently delete all data from the store.
 	  */
-	clear(): Q.Promise<void>;
+	clear(): Promise<void>;
 
 	/** Return the user-provided password hint. */
-	passwordHint(): Q.Promise<string>;
+	passwordHint(): Promise<string>;
 }
 
 /** Represents a pair of revision strings for
@@ -698,18 +697,18 @@ export interface SyncableStore extends Store {
 	  */
 	setLastSyncedRevision(item: Item,
 		storeID: string,
-		revision?: RevisionPair): Q.Promise<void>;
+		revision?: RevisionPair): Promise<void>;
 
 	/** Retrieves the revision of an item in a store (identified by @p storeID)
 	  * which was last synced with this store.
 	  */
-	getLastSyncedRevision(uuid: string, storeID: string): Q.Promise<RevisionPair>;
+	getLastSyncedRevision(uuid: string, storeID: string): Promise<RevisionPair>;
 
 	/** Retrieve a map of (item ID -> last-synced revision) for
 	 * all items in the store which have previously been synced with
 	 * @p storeID.
 	 */
-	lastSyncRevisions(storeID: string): Q.Promise<Map<string, RevisionPair>>;
+	lastSyncRevisions(storeID: string): Promise<Map<string, RevisionPair>>;
 }
 
 /** Copy an item and its contents, using @p uuid as the ID for
@@ -777,7 +776,7 @@ export function generateRevisionId(item: ItemAndContent) {
   * the information returned by listItems(), stores may be able to
   * provide more efficient implementations.
   */
-export function itemStates(store: Store): Q.Promise<ItemState[]> {
+export function itemStates(store: Store): Promise<ItemState[]> {
 	return store.listItems({ includeTombstones: true }).then(items => items.map(item => ({
 		uuid: item.uuid,
 		revision: item.revision,
@@ -788,17 +787,17 @@ export function itemStates(store: Store): Q.Promise<ItemState[]> {
 /** Decrypt the encryption keys for @p store and add
   * the keys to @p agent.
   */
-export function unlockStore(store: Store, agent: key_agent.KeyAgent, password: string): Q.Promise<void> {
+export function unlockStore(store: Store, agent: key_agent.KeyAgent, password: string): Promise<void> {
 	return store.listKeys().then((keys) => {
 		if (keys.length == 0) {
 			throw new Error('Unable to unlock store: No encryption keys have been saved');
 		}
-		return Q(key_agent.decryptKeys(keys, password));
+		return key_agent.decryptKeys(keys, password);
 	}).then(keys => {
-		let savedKeys: Q.Promise<void>[] = [];
+		let savedKeys: Promise<void>[] = [];
 		keys.forEach((key) => {
 			savedKeys.push(agent.addKey(key.id, key.key));
 		});
-		return asyncutil.eraseResult(Q.all(savedKeys));
+		return asyncutil.eraseResult(Promise.all(savedKeys));
 	});
 }

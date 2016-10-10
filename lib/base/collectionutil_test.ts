@@ -1,8 +1,6 @@
 import collectionutil = require('./collectionutil');
 import testLib = require('../test');
 
-import Q = require('q');
-
 testLib.addTest('add/fetch keys', (assert) => {
 	var map = new collectionutil.BiDiMap<number, string>();
 	map.add(1, 'one')
@@ -43,14 +41,14 @@ testLib.addAsyncTest('batched updates', (assert) => {
 		updates.forEach((pair) => {
 			savedItems[pair.key] = pair.value;
 		});
-		return Q<void>(null);
+		return Promise.resolve<void>(null);
 	});
 
 	var update1 = queue.push({ key: 'one', value: 1 });
 	var update2 = queue.push({ key: 'one', value: 2 });
 	var update3 = queue.push({ key: 'two', value: 3 });
 
-	return Q.all([update1, update2, update3]).then(() => {
+	return Promise.all([update1, update2, update3]).then(() => {
 		assert.deepEqual(savedItems, <KeyValueMap>{
 			one: 2,
 			two: 3

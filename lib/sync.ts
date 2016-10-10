@@ -1,6 +1,5 @@
 
 import assert = require('assert');
-import Q = require('q');
 
 import asyncutil = require('./base/asyncutil');
 import collectionutil = require('./base/collectionutil');
@@ -87,7 +86,7 @@ export interface Syncer {
 	/** Sync encryption keys from the remote store to the local one.
 	  * This does not require the remote store to be unlocked.
 	  */
-	syncKeys(): Q.Promise<void>;
+	syncKeys(): Promise<void>;
 
 	/** Sync items between the local and remote stores.
 	  * Returns a promise which is resolved when the current sync completes.
@@ -95,7 +94,7 @@ export interface Syncer {
 	  * Syncing items requires both local and remote stores
 	  * to be unlocked first.
 	  */
-	syncItems(): Q.Promise<SyncProgress>;
+	syncItems(): Promise<SyncProgress>;
 }
 
 /** Syncer implementation which syncs changes between an item_store.Store
@@ -123,7 +122,7 @@ export class CloudStoreSyncer implements Syncer {
 		this.syncQueue = [];
 	}
 
-	syncKeys(): Q.Promise<void> {
+	syncKeys(): Promise<void> {
 		let keys = this.cloudStore.listKeys();
 
 		// sync the password hint on a best-effort basis.
@@ -141,7 +140,7 @@ export class CloudStoreSyncer implements Syncer {
 		});
 	}
 
-	syncItems(): Q.Promise<SyncProgress> {
+	syncItems(): Promise<SyncProgress> {
 		if (this.currentSync) {
 			// if a sync is already in progress, complete the current sync first.
 			// This should queue up a new sync to complete once the current one finishes.
@@ -339,12 +338,12 @@ export class CloudStoreSyncer implements Syncer {
 		// fetch content for local and remote items and the last-synced
 		// version of the item in order to perform a 3-way merge
 		let uuid = item.localItem ? item.localItem.uuid : item.remoteItem.uuid;
-		let localItemContent: Q.Promise<item_store.ItemAndContent>;
-		let remoteItemContent: Q.Promise<item_store.ItemAndContent>;
+		let localItemContent: Promise<item_store.ItemAndContent>;
+		let remoteItemContent: Promise<item_store.ItemAndContent>;
 
 		if (item.localItem) {
 			if (item.localItem.deleted) {
-				localItemContent = Q(this.createTombstone(this.localStore, uuid));
+				localItemContent = Promise.resolve(this.createTombstone(this.localStore, uuid));
 			} else {
 				localItemContent = this.localStore.loadItem(uuid);
 			}
@@ -352,13 +351,13 @@ export class CloudStoreSyncer implements Syncer {
 
 		if (item.remoteItem) {
 			if (item.remoteItem.deleted) {
-				remoteItemContent = Q(this.createTombstone(this.cloudStore, uuid));
+				remoteItemContent = Promise.resolve(this.createTombstone(this.cloudStore, uuid));
 			} else {
 				remoteItemContent = this.cloudStore.loadItem(uuid);
 			}
 		}
 
-		let contents = Q.all([localItemContent, remoteItemContent]);
+		let contents = Promise.all([localItemContent, remoteItemContent]);
 		contents.then((contents: [item_store.ItemAndContent, item_store.ItemAndContent]) => {
 			// merge changes between local/remote store items and update the
 			// last-synced revision
@@ -382,7 +381,7 @@ export class CloudStoreSyncer implements Syncer {
 
 	// returns the item and content for the last-synced version of an item,
 	// or null if the item has not been synced before
-	private getLastSyncedItemRevision(uuid: string): Q.Promise<item_store.ItemAndContent> {
+	private getLastSyncedItemRevision(uuid: string): Promise<item_store.ItemAndContent> {
 		return this.localStore.getLastSyncedRevision(uuid, REMOTE_STORE).then(revision => {
 			if (revision) {
 				return this.localStore.loadItem(uuid, revision.local);
@@ -411,7 +410,7 @@ export class CloudStoreSyncer implements Syncer {
 		}
 
 		let updatedStoreItem: item_store.Item;
-		let saved: Q.Promise<void>;
+		let saved: Promise<void>;
 
 		// revision of the item which was saved
 		let newLocalRevision: string;
@@ -429,7 +428,7 @@ export class CloudStoreSyncer implements Syncer {
 
 				let mergedRemoteItem = item_store.cloneItem(mergedStoreItem, mergedStoreItem.item.uuid);
 
-				return Q.all([
+				return Promise.all([
 					this.localStore.saveItem(mergedStoreItem.item, item_store.ChangeSource.Sync),
 					this.cloudStore.saveItem(mergedRemoteItem.item, item_store.ChangeSource.Sync)
 				]);

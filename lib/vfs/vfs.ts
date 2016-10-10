@@ -1,6 +1,3 @@
-
-import Q = require('q');
-
 import err_util = require('../base/err_util');
 
 /** Holds details of a file retrieved by a VFS implementation */
@@ -66,7 +63,7 @@ export class VfsError extends err_util.BaseError {
  */
 export interface VFS {
 	/** Returns the name of the account which the user is logged in to */
-	accountInfo(): Q.Promise<AccountInfo>;
+	accountInfo(): Promise<AccountInfo>;
 	/** Returns credentials for the logged in account.
 	 * This is an opaque object which can later be restored.
 	 */
@@ -78,21 +75,21 @@ export interface VFS {
 	authURL? (): string;
 
 	/** Returns the metadata of the file at the given path */
-	stat(path: string): Q.Promise<FileInfo>;
+	stat(path: string): Promise<FileInfo>;
 	/** Search for files whose name contains @p namePattern */
 	search(namePattern: string, cb: (err: Error, files: FileInfo[]) => any): void;
 	/** Read the contents of a file at @p path */
-	read(path: string): Q.Promise<string>
+	read(path: string): Promise<string>
 	/** Write the contents of a file at @p path */
-	write(path: string, content: string, options?: WriteOptions): Q.Promise<FileInfo>;
+	write(path: string, content: string, options?: WriteOptions): Promise<FileInfo>;
 	/** List the contents of a directory */
-	list(path: string): Q.Promise<FileInfo[]>;
+	list(path: string): Promise<FileInfo[]>;
 	/** Remove a file or directory */
-	rm(path: string): Q.Promise<void>;
+	rm(path: string): Promise<void>;
 	/** Create the directory @p path, creating any parent directories
 	  * that do not already exist if necessary.
 	  *
 	  * Fails with an error if @p path already exists.
 	  */
-	mkpath(path: string): Q.Promise<void>;
+	mkpath(path: string): Promise<void>;
 }

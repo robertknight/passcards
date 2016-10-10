@@ -1,5 +1,3 @@
-import Q = require('q');
-
 import key_agent = require('./key_agent');
 import testLib = require('./test');
 import { defer } from './base/promise_util';

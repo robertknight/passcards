@@ -1,5 +1,3 @@
-import Q = require('q');
-
 import { defer, Deferred } from './promise_util';
 
 interface BiDiMapEntry<T1, T2> {
@@ -211,7 +209,7 @@ export function listToMap<K, T>(list: T[], keyFunc: (item: T) => K) {
   */
 export class BatchedUpdateQueue<T> {
 	// callback to invoke to process a batch of updates
-	private updateFn: (items: T[]) => Q.Promise<void>;
+	private updateFn: (items: T[]) => Promise<void>;
 
 	// next batch of pending updates. These will be
 	// passed to updateFn when the current batch
@@ -220,7 +218,7 @@ export class BatchedUpdateQueue<T> {
 
 	// promise for the result of the active call to
 	// updateFn
-	private currentFlush: Q.Promise<void>;
+	private currentFlush: Promise<void>;
 
 	// promise for the result of the next batch of
 	// updates which will be submitted once the current
@@ -235,9 +233,9 @@ export class BatchedUpdateQueue<T> {
 	  * saved to disk). Only one batch of updates will be processed
 	  * at a time.
 	  */
-	constructor(updateFn: (items: T[]) => Q.Promise<void>) {
+	constructor(updateFn: (items: T[]) => Promise<void>) {
 		this.updateFn = updateFn;
-		this.currentFlush = Q<void>(null);
+		this.currentFlush = Promise.resolve<void>(null);
 		this.pendingUpdates = [];
 	}
 
@@ -247,7 +245,7 @@ export class BatchedUpdateQueue<T> {
 	  * Updates are collected together and passed to the processing function
 	  * in batches.
 	  */
-	push(update: T): Q.Promise<void> {
+	push(update: T): Promise<void> {
 		this.pendingUpdates.push(update);
 		if (this.nextFlush) {
 			return this.nextFlush.promise;

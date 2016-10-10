@@ -12,7 +12,6 @@
 //  - The URL is fetched and links to icons are parsed from <link> and
 //    <meta> tags on the page
 
-import Q = require('q');
 import underscore = require('underscore');
 import urijs = require('urijs');
 
@@ -98,7 +97,7 @@ export interface UrlResponse {
 /** Interface used by SiteInfoService service for fetching arbitrary URLs.
   */
 export interface UrlFetcher {
-	fetch(url: string): Q.Promise<UrlResponse>;
+	fetch(url: string): Promise<UrlResponse>;
 }
 
 /** Determines the type and width/height of an icon fetched from
@@ -141,7 +140,7 @@ export function iconFromData(url: string, buffer: Uint8Array): site_info.Icon {
 
 interface IconFetchState {
 	url: string;
-	reply: Q.Promise<UrlResponse>;
+	reply: Promise<UrlResponse>;
 	icon: site_info.Icon;
 	status: number;
 }
@@ -226,7 +225,7 @@ class IconFetcher {
 		}).catch((e) => {
 			queueItem.status = 0;
 			this.fetchedUrls.set(url, 0);
-		}).finally(() => {
+		}).then(() => {
 			this.queue.splice(this.queue.indexOf(queueItem), 1);
 			this.done.publish(queueItem);
 		});
@@ -337,7 +336,7 @@ export class SiteInfoService implements site_info.SiteInfoProvider {
 					iconFetcher.addUrl(absoluteLinkUrl.toString());
 				}
 			});
-		}).finally(() => {
+		}).catch(() => {}).then(() => {
 			++sourcesQueried;
 			updateQueryState();
 		});
@@ -439,7 +438,7 @@ export class PageLinkFetcher {
 		return links;
 	}
 
-	fetch(url: string): Q.Promise<PageLink[]> {
+	fetch(url: string): Promise<PageLink[]> {
 		return this.fetcher.fetch(url).then((response) => {
 			return this.extractLinks(response.body);
 		});
@@ -582,7 +581,7 @@ export class DuckDuckGoClient {
 	/** Fetch the URL for the icon associated with a given URL's
 	  * domain.
 	  */
-	fetchIconUrl(url: string): Q.Promise<string> {
+	fetchIconUrl(url: string): Promise<string> {
 		var itemDomain = urijs(url).domain();
 		if (itemDomain.length > 0) {
 			var ddgQuery = this.fetcher.fetch('https://api.duckduckgo.com/?q=' + itemDomain + '&format=json');
@@ -590,16 +589,16 @@ export class DuckDuckGoClient {
 				if (result.status == 200) {
 					var queryResult = JSON.parse(result.body);
 					if (queryResult.Image && queryResult.ImageIsLogo) {
-						return Q(queryResult.Image);
+						return Promise.resolve(queryResult.Image);
 					} else {
-						return Q.reject<string>(new err_util.ApiError(url, result.status, 'DDG query did not return an icon'));
+						return Promise.reject<string>(new err_util.ApiError(url, result.status, 'DDG query did not return an icon'));
 					}
 				} else {
-					return Q.reject<string>(new err_util.ApiError(url, result.status, 'DDG query failed'));
+					return Promise.reject<string>(new err_util.ApiError(url, result.status, 'DDG query failed'));
 				}
 			});
 		} else {
-			return Q.reject<string>(new err_util.BaseError('Could not extract domain for URL: ' + url));
+			return Promise.reject<string>(new err_util.BaseError('Could not extract domain for URL: ' + url));
 		}
 	}
 }

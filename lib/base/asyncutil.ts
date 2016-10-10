@@ -1,11 +1,10 @@
 
-import Q = require('q');
 import { Deferred } from './promise_util';
 
 /** Resolve or reject promise @p a with the result of promise @p b.
   * Returns the promise associated with @p a
   */
-export function resolveWith<T>(a: Deferred<T>, b: Q.Promise<T>): Q.Promise<T> {
+export function resolveWith<T>(a: Deferred<T>, b: Promise<T>): Promise<T> {
 	b.then((result) => {
 		a.resolve(result);
 	})
@@ -20,7 +19,7 @@ export function resolveWith<T>(a: Deferred<T>, b: Q.Promise<T>): Q.Promise<T> {
   *
   * Returns the promise associated with @p a
   */
-export function resolveWithValue<T, U>(a: Deferred<T>, b: Q.Promise<U>, value: T): Q.Promise<T> {
+export function resolveWithValue<T, U>(a: Deferred<T>, b: Promise<U>, value: T): Promise<T> {
 	b.then(() => {
 		a.resolve(value);
 	})
@@ -35,7 +34,7 @@ export function resolveWithValue<T, U>(a: Deferred<T>, b: Q.Promise<U>, value: T
   * Note: This doesn't actually modify the passed promise at all,
   * it just exists as a helper for type checking.
   */
-export function eraseResult<T>(p: Q.Promise<T>): Q.Promise<void> {
+export function eraseResult<T>(p: Promise<T>): Promise<void> {
 	return <any>p;
 }
 
@@ -43,10 +42,10 @@ export function eraseResult<T>(p: Q.Promise<T>): Q.Promise<void> {
   *
   * Returns an array containing the results of each operation.
   */
-export function series(funcs: Array<() => Q.Promise<any>>, results?: any[]): Q.Promise<any[]> {
+export function series(funcs: Array<() => Promise<any>>, results?: any[]): Promise<any[]> {
 	results = results || [];
 	if (funcs.length == 0) {
-		return Q(results);
+		return Promise.resolve(results);
 	}
 	return funcs[0]().then((result) => {
 		results.push(result);
@@ -63,10 +62,10 @@ export function series(funcs: Array<() => Q.Promise<any>>, results?: any[]): Q.P
   * is resolved with true, the loop exits, otherwise the next iteration
   * begins by invoking func() again.
   */
-export function until(func: () => Q.Promise<boolean>): Q.Promise<boolean> {
+export function until(func: () => Promise<boolean>): Promise<boolean> {
 	return func().then((done) => {
 		if (done) {
-			return Q(true);
+			return Promise.resolve(true);
 		} else {
 			return until(func);
 		}
@@ -91,7 +90,7 @@ export interface Result<T, Error> {
   * of the promise in the same function whether it succeeded
   * or failed.
   */
-export function result<T, Error>(promise: Q.Promise<T>) {
+export function result<T, Error>(promise: Promise<T>) {
 	return promise.then((value) => {
 		return <Result<T, Error>>{ value: value };
 	}).catch((error) => {
@@ -107,11 +106,11 @@ export function result<T, Error>(promise: Q.Promise<T>) {
  * values argument to contain different types, the `Q.all` definition does not.
  * This is a workaround until uses of `Q.all` can be migrated to `Promise.all`.
  */
-export function all2<T1, T2>(values: [Q.Promise<T1>, Q.Promise<T2>]): Q.Promise<[T1, T2]> {
-	return (Q.all as any)(values);
+export function all2<T1, T2>(values: [Promise<T1>, Promise<T2>]): Promise<[T1, T2]> {
+	return (Promise.all as any)(values);
 }
 
 /** Same as `all2()` but for use when the argument to `Q.all` is a tuple of length 3. */
-export function all3<T1, T2, T3>(values: [Q.Promise<T1>, Q.Promise<T2>, Q.Promise<T3>]): Q.Promise<[T1, T2, T3]> {
-	return (Q.all as any)(values);
+export function all3<T1, T2, T3>(values: [Promise<T1>, Promise<T2>, Promise<T3>]): Promise<[T1, T2, T3]> {
+	return (Promise.all as any)(values);
 }

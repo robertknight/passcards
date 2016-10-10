@@ -1,6 +1,3 @@
-
-import Q = require('q');
-
 import item_builder = require('./item_builder');
 import item_repair = require('./item_repair');
 import item_store = require('./item_store');
@@ -25,7 +22,7 @@ testLib.addAsyncTest('fix location field', (assert) => {
 		reports.push(err);
 	}, () => {
 			// don't save repaired item
-			return Q(false);
+			return Promise.resolve(false);
 		});
 
 	return repaired.then(() => {

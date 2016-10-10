@@ -1,6 +1,5 @@
 
 import dropbox = require('dropbox');
-import Q = require('q');
 
 import assign = require('../base/assign');
 import err_util = require('../base/err_util');
@@ -59,7 +58,7 @@ export class DropboxVFS implements vfs.VFS {
 		return result.promise;
 	}
 
-	stat(path: string): Q.Promise<vfs.FileInfo> {
+	stat(path: string): Promise<vfs.FileInfo> {
 		var result = defer<vfs.FileInfo>();
 		this.client.stat(path, {}, (err, stat) => {
 			if (err) {
@@ -85,7 +84,7 @@ export class DropboxVFS implements vfs.VFS {
 		});
 	}
 
-	read(path: string): Q.Promise<string> {
+	read(path: string): Promise<string> {
 		var result = defer<string>();
 		this.client.readFile(path, {}, (error, content) => {
 			if (error) {
@@ -97,7 +96,7 @@ export class DropboxVFS implements vfs.VFS {
 		return result.promise;
 	}
 
-	write(path: string, content: string, options: vfs.WriteOptions = {}): Q.Promise<vfs.FileInfo> {
+	write(path: string, content: string, options: vfs.WriteOptions = {}): Promise<vfs.FileInfo> {
 		var result = defer<vfs.FileInfo>();
 		var dropboxWriteOpts: dropbox.WriteFileOptions = {};
 
@@ -117,7 +116,7 @@ export class DropboxVFS implements vfs.VFS {
 		return result.promise;
 	}
 
-	list(path: string): Q.Promise<vfs.FileInfo[]> {
+	list(path: string): Promise<vfs.FileInfo[]> {
 		var result = defer<vfs.FileInfo[]>();
 		this.client.readdir(path, {}, (error, names, folderInfo, files) => {
 			if (error) {
@@ -133,7 +132,7 @@ export class DropboxVFS implements vfs.VFS {
 		return result.promise;
 	}
 
-	rm(path: string): Q.Promise<void> {
+	rm(path: string): Promise<void> {
 		var result = defer<void>();
 		this.client.remove(path, (error) => {
 			if (error) {
@@ -156,7 +155,7 @@ export class DropboxVFS implements vfs.VFS {
 		this.client.setCredentials(dropboxCredentials);
 	}
 
-	mkpath(path: string): Q.Promise<void> {
+	mkpath(path: string): Promise<void> {
 		var result = defer<void>();
 		this.client.mkdir(path, (err, stat) => {
 			if (err) {

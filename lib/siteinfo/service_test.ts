@@ -1,7 +1,6 @@
 
 import fs = require('fs');
 import path = require('path');
-import Q = require('q');
 import underscore = require('underscore');
 import urlLib = require('url');
 
@@ -19,7 +18,7 @@ import testLib = require('../test');
 import { defer } from '../base/promise_util';
 
 var urlFetcher: site_info_service.UrlFetcher = {
-	fetch(url: string): Q.Promise<site_info_service.UrlResponse> {
+	fetch(url: string): Promise<site_info_service.UrlResponse> {
 		// the icon fetchers will fetch URLs with paths such as '/favicon.ico'
 		// http_vfs.Server serves files under '/files/<path>', so we modify the
 		// URL here before dispatching the request
@@ -207,7 +206,7 @@ interface ServeFetchResult {
 	provider: site_info.SiteInfoProvider;
 }
 
-function serveAndFetchIcons(port: number, siteRoot: string, queryPath: string): Q.Promise<ServeFetchResult> {
+function serveAndFetchIcons(port: number, siteRoot: string, queryPath: string): Promise<ServeFetchResult> {
 	var server = new http_vfs.Server(new node_vfs.FileVFS(siteRoot));
 	var provider = new site_info_service.SiteInfoService(urlFetcher);
 	var result: site_info.QueryResult;
@@ -218,7 +217,7 @@ function serveAndFetchIcons(port: number, siteRoot: string, queryPath: string): 
 			var next = defer<boolean>();
 			result = provider.lookup(queryUrl);
 			if (result.state == site_info.QueryState.Ready) {
-				return Q(true);
+				return Promise.resolve(true);
 			} else {
 				setTimeout(() => {
 					next.resolve(false);
@@ -287,7 +286,7 @@ testLib.addAsyncTest('forget site info', (assert) => {
 testLib.addAsyncTest('fetch site icon with DuckDuckGo', (assert) => {
 	var urlFetcher: site_info_service.UrlFetcher = {
 		fetch: (url: string) => {
-			return Q({
+			return Promise.resolve({
 				status: 200,
 				body: JSON.stringify({
 					Image: 'https://duckduckgo.com/i/img.png',

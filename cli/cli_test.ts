@@ -130,7 +130,7 @@ class PromptMatcher {
 
 var TEST_VAULT_PATH = 'lib/test-data/test.agilekeychain';
 
-function cloneVault(vaultPath: string): Q.Promise<string> {
+function cloneVault(vaultPath: string): Promise<string> {
 	var fs = new nodefs.FileVFS('/');
 	var tempPath = path.join(<string>(<any>os).tmpdir(), 'test-vault');
 	return vfs_util.rmrf(fs, tempPath).then(() => {
@@ -176,7 +176,7 @@ class CLITest {
 	/** Create a new writable vault for testing. Subsequent run() calls
 	  * will use this vault.
 	  */
-	newVault(): Q.Promise<string> {
+	newVault(): Promise<string> {
 		return cloneVault(TEST_VAULT_PATH).then((path) => {
 			this.vaultPath = path;
 			return path;
