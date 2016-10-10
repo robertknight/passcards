@@ -11,6 +11,7 @@ import key_agent = require('../lib/key_agent');
 import nodefs = require('../lib/vfs/node');
 import testLib = require('../lib/test')
 import vfs_util = require('../lib/vfs/util');
+import { delay } from '../lib/base/promise_util';
 
 interface PromptReply {
 	match: RegExp
@@ -74,7 +75,7 @@ class FakeIO implements consoleio.TermIO {
 class FakeKeyAgent extends key_agent.SimpleKeyAgent {
 
 	private delay(): Q.Promise<void> {
-		return Q.delay<void>(null, 0);
+		return delay<void>(null, 0);
 	}
 
 	addKey(id: string, key: string): Q.Promise<void> {

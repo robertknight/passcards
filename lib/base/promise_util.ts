@@ -31,3 +31,10 @@ export function nodeResolver<T>(d: Deferred<T>): (err: any, result: T) => void {
 	return (err, result) => err ? d.reject(err) : d.resolve(result);
 }
 
+/**
+  * Return a Promise which resolves with `value` after `ms` milliseconds.
+  */
+export function delay<T>(value: T, ms: number) {
+	return Q.Promise<T>(resolve => setTimeout(() => resolve(value), ms));
+}
+

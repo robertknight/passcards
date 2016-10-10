@@ -178,21 +178,14 @@ function addTests(fsName: string, createFs: () => Q.Promise<vfs.VFS>) {
 			// attempt two concurrent updates to the file, one
 			// should succeed, the other should fail
 			var writeOpts = { parentRevision: stat.revision };
-			var attemptA = fs.write('test-file-conflict', 'content-v2-a', writeOpts);
-			var attemptB = fs.write('test-file-conflict', 'content-v2-b-b', writeOpts);
-			return Q.allSettled([attemptA, attemptB]);
-		}).then((states) => {
-			states.sort((a, b) => {
-				if (a.state == b.state) {
-					return 0;
-				} else if (a.state < b.state) {
-					return -1;
-				} else {
-					return 1;
-				}
-			});
-			assert.equal(states[0].state, 'fulfilled');
-			assert.equal(states[1].state, 'rejected');
+			var attemptA = fs.write('test-file-conflict', 'content-v2-a', writeOpts)
+				.then(() => true).catch(() => false);
+			var attemptB = fs.write('test-file-conflict', 'content-v2-b-b', writeOpts)
+				.then(() => true).catch(() => false);
+			return Q.all([attemptA, attemptB]);
+		}).then((ok) => {
+			var successCount = ok.reduce((total, ok) => ok ? total + 1 : total, 0);
+			assert.equal(successCount, 1);
 			return fs.read('test-file-conflict');
 		}).then((content) => {
 			assert.ok(content == 'content-v2-a' || content == 'content-v2-b-b');

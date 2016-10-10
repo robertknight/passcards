@@ -5,6 +5,7 @@ import asyncutil = require('../base/asyncutil');
 import client = require('./client');
 import site_info = require('./site_info');
 import testLib = require('../test');
+import { delay } from '../base/promise_util';
 
 testLib.addAsyncTest('fetch google.com icons', (assert) => {
 	var passcardsClient = new client.PasscardsClient();
@@ -17,7 +18,7 @@ testLib.addAsyncTest('fetch google.com icons', (assert) => {
 		if (result.state == site_info.QueryState.Ready) {
 			return Q(true);
 		} else {
-			return Q.delay(false, 50);
+			return delay(false, 50);
 		}
 	}).then(() => {
 		assert.equal(result.info.url, 'http://google.com');
