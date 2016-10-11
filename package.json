@@ -42,6 +42,7 @@
     "tslint": "^3.2.1",
     "typescript": "^2.0.0",
     "typescript-formatter": "^0.2.2",
+    "web-ext": "^1.5.0",
     "xdiff": "^0.2.11"
   },
   "dependencies": {

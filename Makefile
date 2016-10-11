@@ -13,6 +13,9 @@ webui_icon_dir=$(webui_dist_dir)/icons
 nodemodule_marker=build/nodemodule_marker
 dropboxjs_lib=node_modules/dropbox/lib/dropbox.js
 
+firefox_extension_id=passcards@robertknight.github.io
+webext_common_args=-s addons/chrome -a pkg
+
 deps=$(nodemodule_marker) $(dropboxjs_lib)
 
 all: $(compiled_js_files) webui-build
@@ -123,6 +126,17 @@ clean:
 
 chrome-extension: webui-build
 	cd addons/chrome && make
+
+firefox-extension: webui-build
+	@$(NODE_BIN_DIR)/web-ext build $(webext_common_args)
+
+test-firefox-extension: webui-build
+	@$(NODE_BIN_DIR)/web-ext run $(webext_common_args)
+
+sign-firefox-extension: webui-build
+	@$(NODE_BIN_DIR)/web-ext sign $(webext_common_args) \
+		--id $(firefox_extension_id) \
+		--api-key $(FIREFOX_AMO_KEY) --api-secret $(FIREFOX_AMO_SECRET)
 
 publish-chrome-extension: chrome-extension
 	./utils/publish-chrome-extension.js pkg/passcards.zip
