@@ -26,16 +26,7 @@ See [the passcards site](http://robertknight.github.io/passcards/) for links to 
 
 ### Supported Browsers
 
-The initial stable release of Passcards will target current stable releases of
-the major desktop and mobile browsers:
-
- * Firefox stable + current ESR release
- * Chrome stable
- * Internet Explorer 11 and later
- * Mobile Safari from iOS 7 and later
- * Safari from OS X 10.9
-
-Support for older browsers may be possible in future.
+Passcards targets the current stable releases of the major desktop and mobile browsers.
 
 ## Development
 
@@ -70,11 +61,3 @@ API keys from the [Dropbox App Console]("https://www.dropbox.com/developers/apps
 you currently need to give it full Dropbox access permissions (though this requirement could easily be dropped
 if necessary) and enable the 'implicit' authorization flow.
 
-### Firefox Extension
-
-The Firefox extension is built using the [add-on SDK](https://developer.mozilla.org/en-US/Add-ons/SDK). A version of the SDK which produces
-addons compatible with Firefox 30 or later is included as a git submodule.
-
-### Chrome Extension
-
-The Chrome extension is tested against Chrome 36 or later, though earlier versions should work.
