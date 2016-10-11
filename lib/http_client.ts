@@ -111,12 +111,6 @@ export function request<T>(method: string, url: string, data?: T, opts?: Request
 		scheme: urlParts.protocol,
 		port: urlParts.port,
 		withCredentials: false,
-
-		// in the browser, where http.request is implemented by http-browserify,
-		// specify that the response type should be an ArrayBuffer.
-		//
-		// See comment about https://github.com/substack/http-browserify/issues/65
-		// below
 		responseType: 'arraybuffer',
 
 		headers: {}
@@ -154,15 +148,6 @@ export function request<T>(method: string, url: string, data?: T, opts?: Request
 			});
 		}).catch(err => response.reject(err));
 	});
-
-	if (env.isBrowser()) {
-		// work around http-browserify not setting failing to set
-		// xhr.responseType successfully due to Firefox not allowing
-		// xhr.responseType to be set until xhr.open() has been called.
-		// See https://github.com/substack/http-browserify/issues/65
-		let browserifyRequest: any = request;
-		browserifyRequest.xhr.responseType = 'arraybuffer';
-	}
 
 	if (data) {
 		switch (typeof data) {
