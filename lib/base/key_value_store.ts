@@ -76,7 +76,7 @@ export class IndexedDBDatabase implements Database {
 	}
 
 	private reset() {
-		this.database = Promise.reject<IDBDatabase>(new Error('Database not opened'));
+		this.database = null;
 		this.stores = new Map<string, IndexedDBStore>();
 	}
 
