@@ -18,6 +18,10 @@ $(XPI_PACKAGE): build/xpi_content
 	mkdir -p $(PKG_DIR)
 	$(CFX) xpi --update-link=$(XPI_UPDATE_LINK) --update-url=$(XPI_UPDATE_RDF_URL) --output-file=$@
 	zip $@ package.json
+	# Work around CFX not correctly setting the file type (S_IFREG) on the
+	# locales.json file that it generates in the archive
+	echo '{"locales": []}' > locales.json
+	zip $@ locales.json
 	mv passcards.update.rdf $(PKG_DIR)
 
 run: build/xpi_content
