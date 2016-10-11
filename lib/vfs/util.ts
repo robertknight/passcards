@@ -13,13 +13,21 @@ export function rmrf(fs: vfs.VFS, path: string): Promise<void> {
 	return fs.stat(path).then(() => {
 		return fs.list(path);
 	}).catch(err => {
-		// TODO - Throw error unless the `err` is that the file does not exist
-		return [];
+		if (err.type === vfs.ErrorType.FileNotFound) {
+			return [];
+		} else {
+			throw err;
+		}
 	}).then((files: vfs.FileInfo[]) => {
 		var filesRemoved = files.map(file =>
 			file.isDir ? rmrf(fs, file.path) : fs.rm(file.path));
 		return Promise.all(filesRemoved);
-	}).then(() => fs.rm(path));
+	}).then(() => fs.rm(path))
+	  .catch(err => {
+		if (err.type !== vfs.ErrorType.FileNotFound) {
+			throw err;
+		}
+	});
 }
 
 /** Recursively enumerate the contents of @p path */
