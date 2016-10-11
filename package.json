@@ -30,7 +30,7 @@
     "fs-extra": "^0.21.0",
     "glob": "^7.0.5",
     "jpm": "^1.0.4",
-    "jsdom": "^5.6.1",
+    "jsdom": "^9.6.0",
     "module-deps": "^3.5.6",
     "node-glob": "^1.2.0",
     "orchestrator": "^0.3.7",

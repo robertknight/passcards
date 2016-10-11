@@ -82,7 +82,7 @@ testLib.addAsyncTest('should find inputs in document', assert => {
 				name: 'username',
 				type: forms.FieldType.Text,
 				visible: false,
-				placeholder: undefined
+				placeholder: 'Email'
 			},
 			{
 				key: 1,
@@ -90,7 +90,7 @@ testLib.addAsyncTest('should find inputs in document', assert => {
 				name: '',
 				type: forms.FieldType.Password,
 				visible: false,
-				placeholder: undefined
+				placeholder: 'Password'
 			},
 			{
 				key: 2,
@@ -98,7 +98,7 @@ testLib.addAsyncTest('should find inputs in document', assert => {
 				name: '',
 				type: forms.FieldType.Button,
 				visible: false,
-				placeholder: undefined
+				placeholder: 'Sign in'
 			}
 		];
 		assert.deepEqual(fields[0].fields, EXPECTED_FIELDS);
