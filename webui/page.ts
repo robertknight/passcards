@@ -147,14 +147,7 @@ export function init(portRpc?: rpc.RpcHandler) {
 	let lastFields: HTMLInputElement[] = [];
 
 	if (!portRpc) {
-		if (env.isChromeExtension()) {
-			portRpc = new rpc.RpcHandler(new rpc.ChromeMessagePort());
-		} else if ('port' in self) {
-			// Firefox extension.
-			// See https://developer.mozilla.org/en-US/Add-ons/SDK/Guides/Content_Scripts/port
-			var selfWorker: ContentWorker = <any>self;
-			portRpc = new rpc.RpcHandler(selfWorker.port);
-		}
+		portRpc = new rpc.RpcHandler(new rpc.ChromeMessagePort());
 	}
 
 	portRpc.on('find-fields', () => {

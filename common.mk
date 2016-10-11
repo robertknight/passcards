@@ -14,18 +14,6 @@ TSC=$(NODE_BIN_DIR)/tsc
 TSD=$(NODE_BIN_DIR)/tsd
 TSLINT=$(NODE_BIN_DIR)/tslint
 
-# CFX tool for building and testing Firefox addons
-CFX=$(SRC_ROOT)/vendor/firefox-addon-sdk/bin/cfx
-
-# JPM (Node.js-based successor to CFX) for building
-# and testing Firefox addons.
-#
-# Requires Firefox >= 33
-JPM=$(NODE_BIN_DIR)/jpm
-
-# crx tool for creating Chrome add-on packages
-CRX=$(NODE_BIN_DIR)/crx
-
 # Utility script for updating the version in
 # a manifest file
 UPDATE_MANIFEST=$(SRC_ROOT)/utils/update-manifest-version.js

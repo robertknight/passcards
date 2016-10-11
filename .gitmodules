@@ -1,3 +1,0 @@
-[submodule "vendor/addon-sdk"]
-	path = vendor/firefox-addon-sdk
-	url = https://github.com/mozilla/addon-sdk.git

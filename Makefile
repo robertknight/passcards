@@ -9,14 +9,11 @@ webui_script_dir=$(webui_dist_dir)/scripts
 webui_css_dir=$(webui_dist_dir)/style
 webui_icon_dir=$(webui_dist_dir)/icons
 
-# marker files used to trigger npm / Git submodule
-# updates prior to build
-submodule_marker=build/submodule_marker
+# marker files used to trigger npm updates prior to build
 nodemodule_marker=build/nodemodule_marker
 dropboxjs_lib=node_modules/dropbox/lib/dropbox.js
-xpi_file=addons/firefox/passcards@robertknight.github.io.xpi
 
-deps=$(submodule_marker) $(nodemodule_marker) $(dropboxjs_lib)
+deps=$(nodemodule_marker) $(dropboxjs_lib)
 
 all: $(compiled_js_files) webui-build
 
@@ -100,10 +97,6 @@ build/lint_marker: $(all_srcs)
 	@mkdir -p $(dir $@)
 	@touch $@
 
-$(submodule_marker): .gitmodules
-	git submodule update --init
-	@mkdir -p build && touch $(submodule_marker)
-
 $(nodemodule_marker): package.json
 	@$(NODE_BIN_DIR)/check-dependencies
 	@mkdir -p build && touch $(nodemodule_marker)
@@ -126,14 +119,7 @@ format: $(all_srcs)
 clean:
 	@rm -rf build/*
 	@rm -rf webui/scripts/*
-	@cd addons/firefox && make clean
 	@cd addons/chrome && make clean
-
-firefox-addon: webui-build
-	cd addons/firefox && make
-
-sign-firefox-addon: webui-build
-	./utils/sign-firefox-addon.js
 
 chrome-extension: webui-build
 	cd addons/chrome && make
@@ -148,4 +134,3 @@ publish-passcards-cli: webui-build
 update-manifest-versions:
 	$(UPDATE_MANIFEST) package.json
 	$(UPDATE_MANIFEST) addons/chrome/manifest.json
-	$(UPDATE_MANIFEST) addons/firefox/package.json
