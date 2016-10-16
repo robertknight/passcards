@@ -232,7 +232,7 @@ export class ChromeBrowserAccess implements BrowserAccess, ClipboardAccess {
 				// if URL is non-empty, load page script for
 				// form discovery and autofill
 				chrome.tabs.executeScript(null, {
-					file: 'data/dist/scripts/page_bundle.js'
+					file: '/data/dist/scripts/page_bundle.js'
 				});
 			}
 
