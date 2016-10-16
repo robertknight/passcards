@@ -1,6 +1,6 @@
 [Makefile]
 indent_style = tab
 
-[**.ts]
+[*.{ts,js}]
 indent_style = tab
 indent_size = 4
