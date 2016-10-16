@@ -127,13 +127,13 @@ clean:
 chrome-extension: webui-build
 	cd addons/chrome && make
 
-firefox-extension: webui-build
+firefox-extension: chrome-extension
 	@$(NODE_BIN_DIR)/web-ext build $(webext_common_args)
 
-test-firefox-extension: webui-build
+test-firefox-extension: chrome-extension
 	@$(NODE_BIN_DIR)/web-ext run $(webext_common_args)
 
-sign-firefox-extension: webui-build
+sign-firefox-extension: chrome-extension
 	@$(NODE_BIN_DIR)/web-ext sign $(webext_common_args) \
 		--id $(firefox_extension_id) \
 		--api-key $(FIREFOX_AMO_KEY) --api-secret $(FIREFOX_AMO_SECRET)
