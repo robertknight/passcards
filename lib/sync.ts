@@ -338,6 +338,8 @@ export class CloudStoreSyncer implements Syncer {
 		// fetch content for local and remote items and the last-synced
 		// version of the item in order to perform a 3-way merge
 		let uuid = item.localItem ? item.localItem.uuid : item.remoteItem.uuid;
+		syncLog.info(`Beginning sync for item ${uuid}`);
+
 		let localItemContent: Promise<item_store.ItemAndContent>;
 		let remoteItemContent: Promise<item_store.ItemAndContent>;
 
@@ -357,8 +359,12 @@ export class CloudStoreSyncer implements Syncer {
 			}
 		}
 
+		syncLog.info(`Fetching local/remote items for ${uuid}`);
+
 		let contents = Promise.all([localItemContent, remoteItemContent]);
 		contents.then((contents: [item_store.ItemAndContent, item_store.ItemAndContent]) => {
+			syncLog.info(`Merging item changes for ${uuid}`);
+
 			// merge changes between local/remote store items and update the
 			// last-synced revision
 			let localItem = contents[0];
