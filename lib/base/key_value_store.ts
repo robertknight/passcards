@@ -176,28 +176,13 @@ export class IndexedDBDatabase implements Database {
 class IndexedDBStore implements ObjectStore {
 	private db: Promise<IDBDatabase>;
 
-	// the active transaction, if any.
-	// Transactions are started automatically when any
-	// operation occurs. This field is cleared when
-	// the transaction becomes closed for new requests,
-	// which happens when control returns to the event loop
-	private transaction: IDBTransaction;
-
 	constructor(database: Promise<IDBDatabase>, public storeName: string) {
 		this.db = database;
 	}
 
 	private getStore(db: IDBDatabase) {
-		if (!this.transaction) {
-			// start a new transaction. As per the IDB spec, this transaction
-			// remains active until control returns to the event loop, at which
-			// point it becomes closed for new requests
-			this.transaction = db.transaction(this.storeName, 'readwrite');
-			Promise.resolve(true).then(() => {
-				this.transaction = null;
-			});
-		}
-		return this.transaction.objectStore(this.storeName);
+		const tx = db.transaction(this.storeName, 'readwrite');
+		return tx.objectStore(this.storeName);
 	}
 
 	set<T>(key: string, value: T): Promise<void> {
