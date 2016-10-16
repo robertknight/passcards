@@ -79,7 +79,7 @@ export class PasscardsClient implements site_info.SiteInfoProvider {
 					}
 				}));
 			});
-			Promise.all(pendingIcons).catch(() => {}).then(() => {
+			Promise.all(pendingIcons).catch(() => { }).then(() => {
 				let entry = this.cache.get(domain);
 				entry.state = site_info.QueryState.Ready;
 				this.updated.publish(url);

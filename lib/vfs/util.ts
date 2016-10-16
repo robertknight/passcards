@@ -23,7 +23,7 @@ export function rmrf(fs: vfs.VFS, path: string): Promise<void> {
 			file.isDir ? rmrf(fs, file.path) : fs.rm(file.path));
 		return Promise.all(filesRemoved);
 	}).then(() => fs.rm(path))
-	  .catch(err => {
+	.catch(err => {
 		if (err.type !== vfs.ErrorType.FileNotFound) {
 			throw err;
 		}
@@ -35,7 +35,7 @@ export function listRecursive(fs: vfs.VFS, src: string): Promise<vfs.FileInfo[]>
 	return fs.list(src).then((files) => {
 		var subdirLists = files.map(file =>
 			file.isDir ? listRecursive(fs, file.path) : Promise.resolve([file])
-		);
+			);
 		return Promise.all(subdirLists);
 	}).then(subdirFiles => {
 		return subdirFiles.reduce((allFiles, f) => allFiles.concat(f), []);

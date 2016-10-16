@@ -177,9 +177,9 @@ function addTests(fsName: string, createFs: () => Promise<vfs.VFS>) {
 			// should succeed, the other should fail
 			var writeOpts = { parentRevision: stat.revision };
 			var attemptA = fs.write('test-file-conflict', 'content-v2-a', writeOpts)
-				.then(() => true).catch(() => false);
+			.then(() => true).catch(() => false);
 			var attemptB = fs.write('test-file-conflict', 'content-v2-b-b', writeOpts)
-				.then(() => true).catch(() => false);
+			.then(() => true).catch(() => false);
 			return Promise.all([attemptA, attemptB]);
 		}).then((ok) => {
 			var successCount = ok.reduce((total, ok) => ok ? total + 1 : total, 0);

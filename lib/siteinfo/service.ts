@@ -336,7 +336,7 @@ export class SiteInfoService implements site_info.SiteInfoProvider {
 					iconFetcher.addUrl(absoluteLinkUrl.toString());
 				}
 			});
-		}).catch(() => {}).then(() => {
+		}).catch(() => { }).then(() => {
 			++sourcesQueried;
 			updateQueryState();
 		});
