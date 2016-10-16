@@ -5,6 +5,7 @@ import assign = require('../lib/base/assign');
 import crypto = require('../lib/base/crypto');
 import env = require('../lib/base/env');
 import { defer } from '../lib/base/promise_util';
+import { parseHash } from '../lib/base/url_util';
 
 export interface Credentials {
 	/** The access token for making requests to the cloud service. */
@@ -36,6 +37,38 @@ export interface WindowSettings {
 
 function windowSettingsToString(settings: WindowSettings): string {
 	return Object.keys(settings).map(key => `${key}=${settings[key]}`).join(',');
+}
+
+interface TabChangeInfo {
+	url?: string;
+}
+
+const DUMMY_OAUTH_REDIRECT_URL = 'http://localhost:8000/webui/index.html';
+
+/**
+  * Wait for OAuth authentication to complete and redirect to a dummy URL from
+  * which we extract the hash.
+  */
+function interceptOAuthRedirect() {
+	const listener = (tabId: number, change: TabChangeInfo) => {
+		if (change.url &&
+			change.url.slice(0, DUMMY_OAUTH_REDIRECT_URL.length) === DUMMY_OAUTH_REDIRECT_URL) {
+			// extract OAuth token from location hash
+			const accessTokenMatch = change.url.match(/access_token=([^ &]+)/);
+			if (accessTokenMatch) {
+				const hashStart = change.url.indexOf('#');
+				const {access_token, state } = parseHash(change.url.slice(hashStart));
+				window.localStorage.setItem('PASSCARDS_OAUTH_TOKEN', JSON.stringify({
+					accessToken: access_token,
+					state,
+				}));
+				chrome.tabs.remove(tabId);
+				chrome.tabs.onUpdated.removeListener(listener);
+			}
+		}
+	};
+
+	chrome.tabs.onUpdated.addListener(listener);
 }
 
 interface OAuthFlowOptions {
@@ -100,14 +133,14 @@ export class OAuthFlow {
 
 	constructor(options: OAuthFlowOptions) {
 		let defaultRedirectURL: string = document.location.href.replace(/\/[a-z]+\.html|\/$|$/, '/auth.html');
-		if (env.isFirefoxAddon()) {
+		if (env.isChromeExtension()) {
 			// for Firefox the auth redirect URL must be an HTTP or HTTPS
-			// URL as HTTP(S) -> resource:// redirects are not permitted.
+			// URL as HTTP(S) -> moz-extension:// redirects are not permitted.
 			//
 			// The extension intercepts the redirect from the OAuth page
 			// to the dummy URL and redirects it back to the bundled auth.html
 			// page
-			defaultRedirectURL = 'http://localhost:8000/webui/index.html';
+			defaultRedirectURL = DUMMY_OAUTH_REDIRECT_URL;
 		}
 
 		this.options = assign<OAuthFlowOptions>({}, {
@@ -122,14 +155,6 @@ export class OAuthFlow {
 
 	authenticate(win: AuthWindowOpener) {
 		let credentials = defer<Credentials>();
-
-		// open a window which displays the auth UI
-		let authWindowSettings = windowSettingsToString(this.options.windowSettings);
-		let target = '_blank';
-		if ('target' in this.options.windowSettings) {
-			target = this.options.windowSettings.target;
-		}
-
 		let parsedAuthURL = url.parse(this.options.authServerURL, true /* parse query string */);
 		let state = crypto.randomBytes(16);
 		parsedAuthURL.query.redirect_uri = this.options.authRedirectURL;
@@ -144,7 +169,20 @@ export class OAuthFlow {
 		parsedAuthURL.search = undefined;
 
 		let authURL = url.format(parsedAuthURL);
-		let authWindow: AuthWindow = win.open(authURL, target, authWindowSettings);
+		let authWindow: AuthWindow
+
+		if (env.isChromeExtension()) {
+			chrome.tabs.create({ url: authURL });
+			interceptOAuthRedirect();
+		} else {
+			// open a window which displays the auth UI
+			let authWindowSettings = windowSettingsToString(this.options.windowSettings);
+			let target = '_blank';
+			if ('target' in this.options.windowSettings) {
+				target = this.options.windowSettings.target;
+			}
+			authWindow = window.open(authURL, target, authWindowSettings);
+		}
 
 		// poll, waiting for auth to complete.
 		// auth_receiver.ts stores the access token in local storage once
@@ -178,19 +216,17 @@ export class OAuthFlow {
 
 			// check for the window being closed before auth completes.
 			// see http://stackoverflow.com/a/17744260/434243
-			//
-			// In the Firefox addon this check is avoided because authWindow.closed
-			// returns true once the window has redirected to an external URL,
-			// even though the window is still open.
-			if (!env.isFirefoxAddon() && authWindow.closed) {
+			if (authWindow) {
 				credentials.reject(new Error('Window closed before auth completed'));
 			}
 		}, 200);
 
 		credentials.promise
-			.catch(() => {})
-			.then(() => {
-			authWindow.close();
+		.catch(() => { })
+		.then(() => {
+			if (authWindow) {
+				authWindow.close();
+			}
 			clearTimeout(pollTimeout);
 		});
 
