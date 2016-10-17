@@ -10,7 +10,6 @@ var browserify = require('browserify');
 var fs = require('fs');
 var module_deps = require('module-deps');
 var path = require('path');
-var Q = require('q');
 var through = require('through2');
 var sprintf = require('sprintf');
 var sort_stream = require('sort-stream');

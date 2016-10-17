@@ -2,14 +2,10 @@
 
 var fs = require('fs');
 var path = require('path');
-var Q = require('q');
 var typescript_formatter = require('typescript-formatter');
 
 var tsinputs = require('./tsinputs');
 var tsproject = require('./tsproject');
-
-// required by typescript-formatter
-global.Promise = Q.Promise;
 
 function fixupResult(source) {
 	// Fix up incorrect formatting of function call arguments

@@ -1,4 +1,3 @@
-var Q = require('q');
 var s3 = require('s3');
 
 function syncDir(localDir, bucket, remoteDir) {
@@ -29,7 +28,7 @@ function syncDir(localDir, bucket, remoteDir) {
     },
   });
   var uploader = client.uploadDir(params);
-  return new Q.Promise(function (resolve, reject) {
+  return new Promise(function (resolve, reject) {
     uploader.on('error', function (err) {
       reject(err);
     });

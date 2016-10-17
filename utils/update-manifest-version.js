@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 var fs = require('fs');
-var Q = require('q');
 
 var exec = require('./exec');
 
@@ -24,7 +23,7 @@ function convertToFullRepo() {
 	if (fs.existsSync('.git/shallow')) {
 		return exec('git', 'fetch', '--unshallow');
 	} else {
-		return Q();
+		return Promise.resolve();
 	}
 }
 
@@ -47,5 +46,7 @@ convertToFullRepo().then(function() {
 
 	manifest.version = newVersion;
 	fs.writeFileSync(manifestFile, JSON.stringify(manifest, null /* replacer */, 2) + '\n')
-}).done();
+}).catch(err => {
+	console.error(err);
+});
 

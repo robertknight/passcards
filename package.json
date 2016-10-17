@@ -34,7 +34,6 @@
     "node-glob": "^1.2.0",
     "orchestrator": "^0.3.7",
     "proxyquire": "^1.7.2",
-    "q": "^2.0.3",
     "qunitjs": "^1.19.0",
     "react-addons-test-utils": "^15.3.2",
     "s3": "^4.4.0",
