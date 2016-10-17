@@ -134,7 +134,7 @@ test-firefox-extension: chrome-extension
 	@$(NODE_BIN_DIR)/web-ext run $(webext_common_args)
 
 sign-firefox-extension: chrome-extension
-	@$(NODE_BIN_DIR)/web-ext sign $(webext_common_args) \
+	@./utils/web-ext.js sign $(webext_common_args) \
 		--id $(firefox_extension_id) \
 		--api-key $(FIREFOX_AMO_KEY) --api-secret $(FIREFOX_AMO_SECRET)
 

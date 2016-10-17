@@ -6,14 +6,16 @@ function exec() {
 	var result = Q.defer();
 	var proc = child_process.spawn(arguments[0], Array.prototype.slice.call(arguments,1));
 	var stdout = '';
+	var stderr = '';
 	proc.stdout.on('data', function(data) {
 		stdout += data.toString();
 	});
 	proc.stderr.on('data', function(data) {
+		stderr += data.toString();
 		console.log(data.toString());
 	});
 	proc.on('close', function(status) {
-		result.resolve([status, stdout]);
+		result.resolve([status, stdout, stderr]);
 	});
 	return result.promise;
 }
