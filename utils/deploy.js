@@ -34,7 +34,11 @@ orchestrator.add('web-upload', function () {
   return s3Upload.syncDir('webui/', S3_BUCKET, 'passcards/web/' + webVersionString + '/');
 });
 
-orchestrator.add('extension-upload', [], function () {
+orchestrator.add('sign-firefox-extension', function () {
+  return mustExec('make', 'sign-firefox-extension');
+});
+
+orchestrator.add('extension-upload', ['sign-firefox-extension'], function () {
   return s3Upload.syncDir('pkg/', S3_BUCKET, 'passcards/builds/' + webVersionString + '/');
 });
 
