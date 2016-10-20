@@ -1,5 +1,3 @@
-/// <reference path="../typings/argparse.d.ts" />
-
 import argparse = require('argparse');
 import mkdirp = require('mkdirp')
 import sprintf = require('sprintf');

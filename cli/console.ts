@@ -1,5 +1,3 @@
-/// <reference path="../typings/sprintf.d.ts" />
-
 import promptly = require('promptly');
 import sprintf = require('sprintf');
 
