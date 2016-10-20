@@ -12,8 +12,8 @@ export interface FileInfo {
 	/** The last modified timestamp for the file. */
 	lastModified: Date;
 
-	/** The size of the file in bytes. */
-	size: number;
+	/** If this is a file, the size in bytes. */
+	size?: number;
 }
 
 export interface AccountInfo {
