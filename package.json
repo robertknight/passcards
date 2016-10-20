@@ -49,7 +49,6 @@
     "argparse": "^0.1.16",
     "clone": "^0.1.19",
     "crypto-js": "^3.1.2",
-    "dropbox-v1": "https://github.com/robertknight/dropbox-js/archive/c4d72400d165490b9e54edc1b644380e5a749c98.tar.gz",
     "fastclick": "^1.0.6",
     "mkdirp": ">=0.4.0",
     "node-uuid": "^1.4.2",
