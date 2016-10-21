@@ -2,17 +2,18 @@ language: node_js
 # enable container-based builds
 # see (http://blog.travis-ci.com/2014-12-17-faster-builds-with-container-based-infrastructure/)
 sudo: false
-# Cache ruby gems used by S3 deployment
 cache:
   directories:
-  - node_modules
+  - $HOME/.yarn-cache
 node_js:
 - '6'
 before_script:
-- export PATH=$PWD/node_modules/.bin:$PATH
+- curl -L 'https://yarnpkg.com/latest.tar.gz' | tar -zx
+- mv dist yarnpkg
+- export PATH=$PWD/yarnpkg/bin:$PWD/node_modules/.bin:$PATH
 - make update-manifest-versions
 script:
-- npm test
+- yarn test
 - make chrome-extension
 - make firefox-extension
 - make test-package
