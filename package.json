@@ -49,6 +49,7 @@
     "argparse": "^0.1.16",
     "clone": "^0.1.19",
     "crypto-js": "^3.1.2",
+    "dropbox": "^2.3.0",
     "fastclick": "^1.0.6",
     "mkdirp": ">=0.4.0",
     "node-uuid": "^1.4.2",
@@ -69,9 +70,6 @@
     "urijs": "^1.14.2",
     "urlrouter": ">=0.5.4"
   },
-  "bundledDependencies": [
-    "dropbox"
-  ],
   "license": "BSD-3-Clause",
   "main": "build/cli.js",
   "scripts": {
