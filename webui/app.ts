@@ -157,7 +157,7 @@ export class App {
 						// access for the app, then prompt to sign in again
 						this.state.update({
 							isSigningIn: true,
-							authServerURL: fs.authURL(),
+							authServerURL: fs.authURL.bind(fs),
 							onReceiveCredentials: credentials => {
 								fs.setCredentials(credentials);
 								this.updateAccount(assign<settings.Account>({}, account, credentials));

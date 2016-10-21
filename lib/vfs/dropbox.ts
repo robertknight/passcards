@@ -64,10 +64,8 @@ export class DropboxVFS implements vfs.VFS {
 		this.client.setAccessToken(credentials.accessToken);
 	}
 
-	authURL(): string {
-		// FIXME: authURL() should accept the redirect URI and state as
-		// parameters which can then be passed to getAuthenticationUrl()
-		return this.client.getAuthenticationUrl('');
+	authURL(redirectUri: string, state?: string): string {
+		return this.client.getAuthenticationUrl(redirectUri, state);
 	}
 
 	stat(path: string): Promise<vfs.FileInfo> {

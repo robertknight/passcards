@@ -697,7 +697,7 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 		this.pushScreen(Screen.CloudStoreLogin, { temporary: true });
 
 		let authenticator = new auth.OAuthFlow({
-			authServerURL: fs.authURL()
+			authServerURL: fs.authURL.bind(fs),
 		});
 
 		let accessToken: string;

@@ -18,7 +18,7 @@ export interface State {
 	 * storage provider.
 	 */
 	isSigningIn?: boolean;
-	authServerURL?: string;
+	authServerURL?: (redirectUrl: string, state?: string) => string;
 	onReceiveCredentials?: (credentials: auth.Credentials) => void;
 
 	/** Items from the open password store */

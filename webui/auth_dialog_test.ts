@@ -34,7 +34,7 @@ let {AuthDialogF } = load<typeof auth_dialog>('./auth_dialog', {
 function testDialog(assert: Assert, clickSignIn: boolean) {
 	return runReactTest(element => {
 		let receivedCredentials = defer<any>();
-		let authServerURL = 'https://acmestorage.com/oauth2/authorize';
+		let authServerURL = () => 'https://acmestorage.com/oauth2/authorize';
 
 		// render the auth dialog
 		let dialog = render(AuthDialogF({

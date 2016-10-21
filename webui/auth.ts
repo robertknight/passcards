@@ -72,10 +72,10 @@ function interceptOAuthRedirect() {
 }
 
 interface OAuthFlowOptions {
-	/** The OAuth authorization endpoint, which will present
-	  * a screen asking for the user's consent to access their data.
+	/**
+	  * Function which returns the URL of the OAuth authentication endpoint.
 	  */
-    authServerURL: string;
+    authServerURL(redirectUri: string, state?: string): string;
 	/** The URL that the OAuth authorization endpoint will redirect
 	  * back to once authentication is complete.
 	  */
@@ -155,20 +155,14 @@ export class OAuthFlow {
 
 	authenticate(win: AuthWindowOpener) {
 		let credentials = defer<Credentials>();
-		let parsedAuthURL = url.parse(this.options.authServerURL, true /* parse query string */);
 		let state = crypto.randomBytes(16);
-		parsedAuthURL.query.redirect_uri = this.options.authRedirectURL;
-		parsedAuthURL.query.state = btoa(state);
+		let authURL = this.options.authServerURL(this.options.authRedirectURL, btoa(state));
 
 		// clear any existing tokens stored in local storage
 		// TODO - Encrypt this data with a random key so that it isn't usable
 		// if not removed by the call to removeItem() once auth completes
 		win.localStorage.removeItem(OAUTH_TOKEN_KEY);
 
-		// clear search property so that query is reconstructed from parsedAuthURL.query
-		parsedAuthURL.search = undefined;
-
-		let authURL = url.format(parsedAuthURL);
 		let authWindow: AuthWindow
 
 		if (env.isChromeExtension()) {

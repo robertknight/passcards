@@ -6,7 +6,7 @@ import dialog = require('./controls/dialog');
 import { TransitionContainerF } from './base/transition_container';
 
 export interface AuthDialogProps extends react.Props<Element> {
-	authServerURL: string;
+	authServerURL: (redirectUrl: string, state?: string) => string;
 
 	/** Callback triggered when the user either cancels
 	 * the dialog or completes authentication.

@@ -72,7 +72,7 @@ export interface VFS {
 	setCredentials(credentials: Credentials): void;
 
 	/** Returns the URL for the authorization endpoint for this file system, if any. */
-	authURL? (): string;
+	authURL?(redirectUri: string, state?: string): string;
 
 	/** Returns the metadata of the file at the given path */
 	stat(path: string): Promise<FileInfo>;

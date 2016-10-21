@@ -68,7 +68,8 @@ class FakeAuthWindowOpener implements auth.AuthWindowOpener {
 testLib.addAsyncTest('OAuth login', assert => {
 	let authRedirectURL = 'http://clientapp/receive-auth-token';
 	let authOpts = {
-		authServerURL: AUTH_SERVER_URL,
+		authServerURL: (uri: string, state : string) =>
+			`${AUTH_SERVER_URL}?redirect_uri=${uri}&state=${state}`,
 		authRedirectURL
 	};
 
