@@ -30,7 +30,7 @@ Passcards targets the current stable releases of the major desktop and mobile br
 
 ## Development
 
-Local development requires NodeJS 6.0 or later for compatibility with [jsdom](https://github.com/tmpvar/jsdom) and make. To build the CLI and web clients, clone the source and run `make`.
+Local development requires Node.js 6.0 or later. To build the CLI and web clients, clone the source and run `make`.
 
 ```
 git clone https://github.com/robertknight/passcards
