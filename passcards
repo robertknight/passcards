@@ -12,7 +12,10 @@ if (typeof Map === 'undefined') {
 	process.exit(1);
 }
 
-app.exec(commandArgs).then(function(status) {
+app.exec(commandArgs).then(status => {
 	process.exit(status);
-}).done();
+}).catch(err => {
+  console.error(err.message);
+  process.exit(1);
+});
 
