@@ -1,6 +1,5 @@
 import react = require('react');
 import style = require('ts-style');
-import typed_react = require('typed-react');
 import underscore = require('underscore');
 import urijs = require('urijs');
 
@@ -402,15 +401,14 @@ export interface IconControlProps extends react.Props<void> {
 	title?: string;
 }
 
-export class IconControl extends typed_react.Component<IconControlProps, {}> {
+export class IconControl extends react.Component<IconControlProps, {}> {
 	private iconUpdateListener: (url: string) => void;
 
 	private setupIconUpdateListener(iconProvider: IconProvider) {
 		if (!this.iconUpdateListener) {
 			this.iconUpdateListener = (url) => {
 				if (this.props.location &&
-					this.props.iconProvider.updateMatches(url, this.props.location) &&
-					this.isMounted()) {
+					this.props.iconProvider.updateMatches(url, this.props.location)) {
 					this.forceUpdate();
 				}
 			};
@@ -503,4 +501,4 @@ export class FakeIconProvider implements IconProvider {
 	}
 }
 
-export var IconControlF = reactutil.createFactory(IconControl);
+export var IconControlF = react.createFactory(IconControl);

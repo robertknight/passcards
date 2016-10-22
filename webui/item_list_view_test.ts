@@ -62,7 +62,7 @@ testLib.addTest('should display item details', (assert) => {
 		// should render icon with site's primary location
 		var itemComponent = renderItem() as any;
 		var iconComponent = test_utils.findRenderedComponentWithType(itemComponent as any,
-			item_icons.IconControlF.componentClass as any) as any;
+			item_icons.IconControl) as any;
 		assert.equal(iconComponent.props.location, testItems[0].primaryLocation());
 
 		// should invoke onSelected() handler when clicked

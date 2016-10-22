@@ -226,22 +226,26 @@ export interface ItemListProps extends react.Props<void> {
 	iconProvider: item_icons.IconProvider;
 }
 
-class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
+class ItemList extends react.Component<ItemListProps, ItemListState> {
+
+	private itemList: HTMLElement;
+
+	constructor(props: ItemListProps) {
+		super(props);
+
+		this.state = {
+			selectedItem: <item_store.Item>null,
+			focusedIndex: 0,
+			matchingItems: <item_store.Item[]>[],
+			itemHeight: 60
+		};
+	}
 
 	setSelectedItem(item: item_store.Item, rect: reactutil.Rect) {
 		var state = this.state;
 		state.selectedItem = item;
 		this.setState(state);
 		this.props.onSelectedItemChanged(item, rect);
-	}
-
-	getInitialState() {
-		return {
-			selectedItem: <item_store.Item>null,
-			focusedIndex: 0,
-			matchingItems: <item_store.Item[]>[],
-			itemHeight: 60
-		};
 	}
 
 	createListItem(item: item_store.Item, state: {
@@ -268,7 +272,7 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 			++this.state.focusedIndex;
 			this.setState(this.state);
 
-			if (this.isMounted()) {
+			if (this.itemList) {
 				this.ensureItemVisible(this.state.focusedIndex);
 			}
 		}
@@ -279,7 +283,7 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 			--this.state.focusedIndex;
 			this.setState(this.state);
 
-			if (this.isMounted()) {
+			if (this.itemList) {
 				this.ensureItemVisible(this.state.focusedIndex);
 			}
 		}
@@ -296,8 +300,7 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 	}
 
 	private scrollList(count: number) {
-		var itemList = <HTMLElement>react_dom.findDOMNode(this.refs['itemList']);
-		itemList.scrollTop += this.state.itemHeight * count;
+		this.itemList.scrollTop += this.state.itemHeight * count;
 	}
 
 	focusedItem() {
@@ -324,6 +327,10 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 
 	componentDidMount() {
 		this.updateMatchingItems(this.props);
+	}
+
+	componentWillUnmount() {
+		this.itemList = null;
 	}
 
 	componentWillReceiveProps(nextProps: ItemListProps) {
@@ -354,7 +361,7 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 
 		var listHeight = this.state.matchingItems.length * this.state.itemHeight;
 		return react.DOM.div(style.mixin(theme.list, {
-			ref: 'itemList',
+			ref: (el: HTMLElement) => this.itemList = el,
 			onScroll: () => {
 				// In iOS 8 multiple scroll events may be delivered
 				// in a single animation frame. Aside from avoiding unnecessary
@@ -386,7 +393,7 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 	}
 
 	private updateVisibleItems() {
-		var itemList = <HTMLElement>react_dom.findDOMNode(this.refs['itemList']);
+		var itemList = this.itemList;
 		if (this.state.matchingItems.length > 0) {
 			var topIndex: number = -1;
 			var bottomIndex: number = -1;
@@ -487,7 +494,7 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 	}
 }
 
-var ItemListF = reactutil.createFactory(ItemList);
+var ItemListF = react.createFactory(ItemList);
 
 export interface ToolbarClickEvent {
 	itemRect: reactutil.Rect;
