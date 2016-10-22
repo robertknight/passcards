@@ -307,25 +307,23 @@ export class Vault implements item_store.Store {
 		return this.keys;
 	}
 
-	private loadKeys(): Promise<agile_keychain_entries.EncryptionKeyEntry[]> {
-		var content = this.fs.read(Path.join(this.dataFolderPath(), 'encryptionKeys.js'));
-		return content.then((content: string) => {
-			var keyList: agile_keychain_entries.EncryptionKeyList = JSON.parse(content);
-			if (!keyList.list) {
-				throw new Error('Missing `list` entry in encryptionKeys.js file');
+	private async loadKeys(): Promise<agile_keychain_entries.EncryptionKeyEntry[]> {
+		const content = await this.fs.read(Path.join(this.dataFolderPath(), 'encryptionKeys.js'));
+		var keyList: agile_keychain_entries.EncryptionKeyList = JSON.parse(content);
+		if (!keyList.list) {
+			throw new Error('Missing `list` entry in encryptionKeys.js file');
+		}
+		var vaultKeys: agile_keychain_entries.EncryptionKeyEntry[] = [];
+		keyList.list.forEach((entry) => {
+			// Using 1Password v4, there are two entries in the
+			// encryptionKeys.js file, 'SL5' and 'SL3'.
+			// 'SL3' appears to be unused so speed up the unlock
+			// process by skipping it
+			if (entry.level != "SL3") {
+				vaultKeys.push(entry);
 			}
-			var vaultKeys: agile_keychain_entries.EncryptionKeyEntry[] = [];
-			keyList.list.forEach((entry) => {
-				// Using 1Password v4, there are two entries in the
-				// encryptionKeys.js file, 'SL5' and 'SL3'.
-				// 'SL3' appears to be unused so speed up the unlock
-				// process by skipping it
-				if (entry.level != "SL3") {
-					vaultKeys.push(entry);
-				}
-			});
-			return vaultKeys;
 		});
+		return vaultKeys;
 	}
 
 	private writeKeys(keyList: agile_keychain_entries.EncryptionKeyList, passHint: string): Promise<void> {
@@ -336,7 +334,7 @@ export class Vault implements item_store.Store {
 		var keyJSON = collectionutil.prettyJSON(keyList);
 		var keysSaved = this.fs.write(Path.join(this.dataFolderPath(), 'encryptionKeys.js'), keyJSON);
 		var hintSaved = this.fs.write(Path.join(this.dataFolderPath(), '.password.hint'), passHint);
-		return asyncutil.eraseResult(Promise.all([keysSaved, hintSaved]));
+		return Promise.all([keysSaved, hintSaved]);
 	}
 
 	listKeys(): Promise<key_agent.Key[]> {
@@ -528,24 +526,22 @@ export class Vault implements item_store.Store {
 		return Path.join(this.dataFolderPath(), 'contents.js');
 	}
 
-	private listDeletedItems() {
-		return vfs_util.readJSON<IndexEntry[]>(this.fs, this.contentsFilePath()).then(contents => {
-			return contents.filter(entry => entry[1] === item_store.ItemTypes.TOMBSTONE)
+	private async listDeletedItems() {
+		const contents = await vfs_util.readJSON<IndexEntry[]>(this.fs, this.contentsFilePath());
+		return contents.filter(entry => entry[1] === item_store.ItemTypes.TOMBSTONE)
 			.map(entry => ({ uuid: entry[0], deleted: true }));
-		});
 	}
 
-	private listCurrentItems() {
+	private async listCurrentItems() {
 		const ID_REGEX = /^([0-9a-fA-F]+)\.1password$/
-		return this.fs.list(this.dataFolderPath()).then(entries => {
-			return entries
-			.filter(entry => entry.name.match(ID_REGEX) != null)
-			.map(entry => ({
-				uuid: entry.name.match(ID_REGEX)[1],
-				revision: entry.revision,
-				deleted: false
-			}));
-		});
+		const entries = await this.fs.list(this.dataFolderPath());
+		return entries
+		.filter(entry => entry.name.match(ID_REGEX) != null)
+		.map(entry => ({
+			uuid: entry.name.match(ID_REGEX)[1],
+			revision: entry.revision,
+			deleted: false
+		}));
 	}
 
 	listItemStates(): Promise<item_store.ItemState[]> {
@@ -573,70 +569,66 @@ export class Vault implements item_store.Store {
 	/** Returns a list of overview data for all items in the vault,
 	  * and tombstone markers for deleted items.
 	  */
-	listItems(opts: item_store.ListItemsOptions = {}): Promise<item_store.Item[]> {
-		return this.listItemStates().then(itemStates => {
-			let loadedItems: Promise<item_store.ItemAndContent>[] = [];
-			for (let state of itemStates) {
-				if (state.deleted) {
-					if (opts.includeTombstones) {
-						let item = new item_store.Item(this, state.uuid);
-						item.typeName = item_store.ItemTypes.TOMBSTONE;
-						loadedItems.push(Promise.resolve({
-							item: item,
-							content: null
-						}));
-					}
-				} else {
-					loadedItems.push(this.loadItem(state.uuid));
+	async listItems(opts: item_store.ListItemsOptions = {}): Promise<item_store.Item[]> {
+		const itemStates = await this.listItemStates();
+		let loadedItems: Promise<item_store.ItemAndContent>[] = [];
+		for (let state of itemStates) {
+			if (state.deleted) {
+				if (opts.includeTombstones) {
+					let item = new item_store.Item(this, state.uuid);
+					item.typeName = item_store.ItemTypes.TOMBSTONE;
+					loadedItems.push(Promise.resolve({
+						item: item,
+						content: null
+					}));
 				}
+			} else {
+				loadedItems.push(this.loadItem(state.uuid));
 			}
-			return Promise.all(loadedItems);
-		}).then((items: item_store.ItemAndContent[]) => {
-			// Early versions of Passcards would update .1password
-			// files when items were removed rather than deleting them.
-			// When listing vault items, filter out any such tombstones
-			return items.map(item => item.item).filter(item => {
-				return !item.isTombstone() || opts.includeTombstones;
-			});
+		}
+		const items = await Promise.all(loadedItems);
+		// Early versions of Passcards would update .1password
+		// files when items were removed rather than deleting them.
+		// When listing vault items, filter out any such tombstones
+		return items.map(item => item.item).filter(item => {
+			return !item.isTombstone() || opts.includeTombstones;
 		});
 	}
 
 	// items may identify their encryption key via either the 'keyID' or
 	// 'level' fields
-	decryptItemData(keyID: string, level: string, data: string): Promise<string> {
-		return this.getKeys().then((keys) => {
-			var result: Promise<string>;
-			for (let key of keys) {
-				if (key.identifier === keyID || key.level === level) {
-					var cryptoParams = new key_agent.CryptoParams(key_agent.CryptoAlgorithm.AES128_OpenSSLKey);
-					result = this.keyAgent.decrypt(key.identifier, data, cryptoParams);
-					break;
-				}
+	async decryptItemData(keyID: string, level: string, data: string): Promise<string> {
+		const keys = await this.getKeys();
+		var result: Promise<string>;
+		for (let key of keys) {
+			if (key.identifier === keyID || key.level === level) {
+				var cryptoParams = new key_agent.CryptoParams(key_agent.CryptoAlgorithm.AES128_OpenSSLKey);
+				result = this.keyAgent.decrypt(key.identifier, data, cryptoParams);
+				break;
 			}
-			if (result) {
-				return result;
-			} else {
-				return Promise.reject<string>('No key ' + level + ' found');
-			}
-		});
+		}
+		if (result) {
+			return result;
+		} else {
+			throw new Error('No key ' + level + ' found');
+		}
 	}
 
-	encryptItemData(level: string, data: string): Promise<string> {
-		return this.getKeys().then((keys) => {
-			var result: Promise<string>;
-			keys.forEach((key) => {
-				if (key.level === level) {
-					var cryptoParams = new key_agent.CryptoParams(key_agent.CryptoAlgorithm.AES128_OpenSSLKey);
-					result = this.keyAgent.encrypt(key.identifier, data, cryptoParams);
-					return;
-				}
-			});
-			if (result) {
-				return result;
-			} else {
-				return Promise.reject<string>('No key ' + level + ' found');
+	async encryptItemData(level: string, data: string): Promise<string> {
+		const keys = await this.getKeys();
+		var result: Promise<string>;
+		keys.forEach((key) => {
+			if (key.level === level) {
+				var cryptoParams = new key_agent.CryptoParams(key_agent.CryptoAlgorithm.AES128_OpenSSLKey);
+				result = this.keyAgent.encrypt(key.identifier, data, cryptoParams);
+				return;
 			}
 		});
+		if (result) {
+			return result;
+		} else {
+			throw new Error('No key ' + level + ' found');
+		}
 	}
 
 	/** Change the master password for the vault.
@@ -650,64 +642,55 @@ export class Vault implements item_store.Store {
 	  *  to use when generating an encryption key from @p newPass. If not specified,
 	  *  use the same number of iterations as the existing key.
 	  */
-	changePassword(oldPass: string, newPass: string, newPassHint: string, iterations?: number): Promise<void> {
-		return this.isLocked().then((locked) => {
-			if (locked) {
-				return Promise.reject<agile_keychain_entries.EncryptionKeyEntry[]>(
-					new Error('Vault must be unlocked before changing the password')
-					);
-			}
-			return this.getKeys();
-		}).then(keys => {
-			let newKeys: Promise<agile_keychain_entries.EncryptionKeyEntry>[] = [];
-			for (let key of keys) {
-				newKeys.push(this.reencryptKey(key, oldPass, newPass, iterations));
-			}
-			return Promise.all(newKeys);
-		}).then(newKeys => {
-			let keyList = <agile_keychain_entries.EncryptionKeyList>{
-				list: newKeys
-			};
-			for (let key of newKeys) {
-				keyList[key.level] = key.identifier;
-			}
+	async changePassword(oldPass: string, newPass: string, newPassHint: string, iterations?: number): Promise<void> {
+		const locked = await this.isLocked();
+		if (locked) {
+			throw new Error('Vault must be unlocked before changing the password');
+		}
+		const keys = await this.getKeys();
+		let reencryptedKeys: Promise<agile_keychain_entries.EncryptionKeyEntry>[] = [];
+		for (let key of keys) {
+			reencryptedKeys.push(this.reencryptKey(key, oldPass, newPass, iterations));
+		}
 
-			this.keys = null;
-			return this.writeKeys(keyList, newPassHint);
-		});
+		const newKeys = await Promise.all(reencryptedKeys);
+		let keyList = <agile_keychain_entries.EncryptionKeyList>{
+			list: newKeys
+		};
+		for (let key of newKeys) {
+			keyList[key.level] = key.identifier;
+		}
+
+		this.keys = null;
+		return this.writeKeys(keyList, newPassHint);
 	}
 
-	private reencryptKey(key: agile_keychain_entries.EncryptionKeyEntry,
+	private async reencryptKey(key: agile_keychain_entries.EncryptionKeyEntry,
 		oldPass: string,
 		newPass: string,
 		iterations?: number) {
 		let oldSaltCipher = agile_keychain_crypto.extractSaltAndCipherText(atob(key.data));
 		let newSalt = crypto.randomBytes(8);
-		let derivedKey = key_agent.keyFromPassword(oldPass, oldSaltCipher.salt, key.iterations);
 		let newKeyIterations = iterations || key.iterations;
-
-		return derivedKey.then(derivedKey => {
-			return key_agent.decryptKey(derivedKey, oldSaltCipher.cipherText,
-				atob(key.validation));
-		}).then(oldKey => {
-			let newDerivedKey = key_agent.keyFromPasswordSync(newPass, newSalt, newKeyIterations);
-			return key_agent.encryptKey(newDerivedKey, oldKey);
-		}).then(newKey => {
-			let newKeyEntry = {
-				data: btoa('Salted__' + newSalt + newKey.key),
-				identifier: key.identifier,
-				iterations: newKeyIterations,
-				level: key.level,
-				validation: btoa(newKey.validation)
-			};
-			return newKeyEntry;
-		});
+		const derivedKey = await key_agent.keyFromPassword(oldPass, oldSaltCipher.salt, key.iterations);
+		const oldKey = await key_agent.decryptKey(derivedKey, oldSaltCipher.cipherText,
+			atob(key.validation));
+		let newDerivedKey = key_agent.keyFromPasswordSync(newPass, newSalt, newKeyIterations);
+		const newKey = await key_agent.encryptKey(newDerivedKey, oldKey);
+		let newKeyEntry = {
+			data: btoa('Salted__' + newSalt + newKey.key),
+			identifier: key.identifier,
+			iterations: newKeyIterations,
+			level: key.level,
+			validation: btoa(newKey.validation)
+		};
+		return newKeyEntry;
 	}
 
 	/** Initialize a new empty vault in @p path with
 	  * a given master @p password.
 	  */
-	static createVault(fs: vfs.VFS, path: string, password: string, hint: string,
+	static async createVault(fs: vfs.VFS, path: string, password: string, hint: string,
 		passIterations: number = DEFAULT_VAULT_PASS_ITERATIONS,
 		keyAgent?: key_agent.KeyAgent): Promise<Vault> {
 
@@ -723,15 +706,15 @@ export class Vault implements item_store.Store {
 		//    specifying the vault path, add one
 		// 4. Generate new random key and encrypt with master password
 
-		return fs.mkpath(vault.dataFolderPath()).then(() => {
-			return agile_keychain_crypto.generateMasterKey(password, passIterations);
-		}).then(keyList => {
-			let keysSaved = vault.writeKeys(keyList, hint);
-			let contentsSaved = fs.write(vault.contentsFilePath(), '[]');
-			return asyncutil.all2([keysSaved, contentsSaved]);
-		}).then(() => {
-			return vault;
-		});
+		await fs.mkpath(vault.dataFolderPath());
+
+		const keyList = await agile_keychain_crypto.generateMasterKey(password, passIterations);
+		let keysSaved = vault.writeKeys(keyList, hint);
+		let contentsSaved = fs.write(vault.contentsFilePath(), '[]');
+
+		await Promise.all([keysSaved, contentsSaved]);
+
+		return vault;
 	}
 
 	passwordHint(): Promise<string> {
@@ -742,19 +725,16 @@ export class Vault implements item_store.Store {
 		return this.path;
 	}
 
-	getRawDecryptedData(item: item_store.Item): Promise<string> {
-		var encryptedContent = this.fs.read(this.itemPath(item.uuid));
-		return encryptedContent.then((content) => {
-			var keychainItem = <agile_keychain_entries.Item>JSON.parse(content);
-			return this.decryptItemData(keychainItem.keyID, keychainItem.securityLevel, atob(keychainItem.encrypted));
-		});
+	async getRawDecryptedData(item: item_store.Item): Promise<string> {
+		const content = await this.fs.read(this.itemPath(item.uuid));
+		const keychainItem = <agile_keychain_entries.Item>JSON.parse(content);
+		return this.decryptItemData(keychainItem.keyID, keychainItem.securityLevel, atob(keychainItem.encrypted));
 	}
 
-	getContent(item: item_store.Item): Promise<item_store.ItemContent> {
-		return this.getRawDecryptedData(item).then((data: string) => {
-			var content = <agile_keychain_entries.ItemContent>(JSON.parse(data));
-			return fromAgileKeychainContent(content);
-		});
+	async getContent(item: item_store.Item): Promise<item_store.ItemContent> {
+		const data = await this.getRawDecryptedData(item);
+		const content = <agile_keychain_entries.ItemContent>(JSON.parse(data));
+		return fromAgileKeychainContent(content);
 	}
 
 	clear() {
