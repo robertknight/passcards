@@ -15,7 +15,8 @@
         "noLib": false,
         "preserveConstEnums": true,
         "suppressImplicitAnyIndexErrors": true,
-        "outDir": "build"
+        "outDir": "build",
+        "sourceMap": true
     },
     "include": [
         "./**/*.ts",
