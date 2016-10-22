@@ -1,6 +1,5 @@
 import react = require('react');
 import react_dom = require('react-dom');
-import typed_react = require('typed-react');
 import * as TransitionGroup from 'react-addons-transition-group';
 import * as CSSTransitionGroup from 'react-addons-css-transition-group';
 
@@ -50,13 +49,6 @@ export function mergeProps<P, C>(parentProps: P, childProps: C): C {
 	}
 
 	return childProps;
-}
-
-export function createFactory<P, S>(component: { new (): typed_react.Component<P, S> }, ...mixins: react.Mixin<any, any>[]) {
-	var componentClass = typed_react.createClass(component, mixins);
-	var factory: Factory<P> = react.createFactory(componentClass);
-	factory.componentClass = componentClass;
-	return factory;
 }
 
 /** Performs a shallow comparison of the properties of two objects and returns

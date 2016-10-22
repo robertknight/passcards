@@ -65,7 +65,6 @@
     "shallow-equals": "0.0.0",
     "sprintf": "^0.1.5",
     "ts-style": "^0.7.1",
-    "typed-react": "^3.4.1",
     "underscore": "^1.8.2",
     "urijs": "^1.14.2",
     "urlrouter": ">=0.5.4"

@@ -1,12 +1,12 @@
 
 import react = require('react');
-import typed_react = require('typed-react');
 import style = require('ts-style');
 
 import reactutil = require('../base/reactutil');
 import controls_theme = require('./theme');
 import style_util = require('../base/style_util');
-import transition_mixin = require('../base/transition_mixin');
+
+const FADE_DURATION = .3;
 
 var theme = style.create({
 	toaster: {
@@ -28,7 +28,7 @@ var theme = style.create({
 		transform: 'translate(-50%)',
 
 		transition: style_util.transitionOn({
-			opacity: .3
+			opacity: FADE_DURATION,
 		}),
 
 		progressBar: {
@@ -57,17 +57,27 @@ export interface ToasterProps extends react.Props<void> {
 	progressMax?: number;
 }
 
-interface ToasterState extends transition_mixin.CSSTransitionMixinState {
+interface ToasterState {
+	opacity: number;
 }
 
 /** Control for displaying a temporary notification,
   * with an optional progress indicator.
   */
-export class Toaster extends typed_react.Component<ToasterProps, ToasterState> {
-	getInitialState() {
-		return {
-			transitionProperty: 'opacity'
-		};
+export class Toaster extends react.Component<ToasterProps, ToasterState> {
+	constructor(props: ToasterProps) {
+		super(props);
+
+		this.state = { opacity: 0.01 };
+	}
+
+	componentDidEnter() {
+		this.setState({ opacity: 1.0 });
+	}
+
+	componentWillLeave(callback: () => void) {
+		this.setState({ opacity: 0.01 });
+		setTimeout(callback, FADE_DURATION * 1000);
 	}
 
 	render() {
@@ -85,8 +95,9 @@ export class Toaster extends typed_react.Component<ToasterProps, ToasterState> {
 				);
 		}
 
-		var transitionStyle = transition_mixin.fadeIn(this.state.transition);
-		return react.DOM.div(style.mixin([theme.toaster, transitionStyle], {}),
+		const containerStyle = { opacity: this.state.opacity };
+
+		return react.DOM.div(style.mixin([theme.toaster, containerStyle], {}),
 			react.DOM.div({},
 				this.props.message
 				),
@@ -95,4 +106,4 @@ export class Toaster extends typed_react.Component<ToasterProps, ToasterState> {
 	}
 }
 
-export var ToasterF = reactutil.createFactory(Toaster, transition_mixin.CSSTransitionMixinM);
+export var ToasterF = react.createFactory(Toaster);
