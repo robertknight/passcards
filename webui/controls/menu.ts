@@ -1,7 +1,6 @@
 
 import react = require('react');
 import react_dom = require('react-dom');
-import typed_react = require('typed-react');
 import style = require('ts-style');
 
 import colors = require('./colors');
@@ -148,15 +147,18 @@ function measureText(document: Document, text: string, font: string) {
   * This component must be rendered inside a react.TransitionGroup component
   * for it to be displayed.
   */
-export class Menu extends typed_react.Component<MenuProps, MenuState> {
+export class Menu extends react.Component<MenuProps, MenuState> {
+	private menu: HTMLElement;
 	private transitionListener: reactutil.TransitionEndListener;
 
-	getInitialState() {
-		return <MenuState>{
+	constructor(props: MenuProps) {
+		super(props);
+
+		this.state = {
 			document: null,
 			showTime: new Date,
-			transition: reactutil.TransitionState.WillEnter
-		}
+			transition: reactutil.TransitionState.WillEnter,
+		};
 	}
 
 	private transitionProperty() {
@@ -169,7 +171,7 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 			this.setState({ transition: reactutil.TransitionState.Entered });
 		}, 10);
 
-		this.transitionListener = new reactutil.TransitionEndListener(this.refs['menu'], this.transitionProperty(), () => {
+		this.transitionListener = new reactutil.TransitionEndListener(this.menu, this.transitionProperty(), () => {
 			callback();
 		});
 	}
@@ -180,7 +182,7 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 
 	componentWillLeave(callback: () => void) {
 		this.setState({ transition: reactutil.TransitionState.Leaving });
-		this.transitionListener = new reactutil.TransitionEndListener(this.refs['menu'], this.transitionProperty(), () => {
+		this.transitionListener = new reactutil.TransitionEndListener(this.menu, this.transitionProperty(), () => {
 			callback();
 		});
 	}
@@ -357,7 +359,7 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 				}
 			})),
 			react.DOM.div(style.mixin(theme.menu, {
-				ref: 'menu',
+				ref: (el: HTMLElement) => this.menu = el,
 				style: reactutil.prefix({
 					top: menuRect.top,
 					left: menuRect.left,
@@ -371,4 +373,4 @@ export class Menu extends typed_react.Component<MenuProps, MenuState> {
 	}
 }
 
-export var MenuF = reactutil.createFactory(Menu);
+export var MenuF = react.createFactory(Menu);

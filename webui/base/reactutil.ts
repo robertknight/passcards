@@ -180,8 +180,12 @@ export class TransitionEndListener {
 	  *
 	  * Use remove() to remove the listener when no longer required.
 	  */
-	constructor(component: react.Component<any, any>, property: string, callback: () => void) {
-		this.node = <HTMLElement>react_dom.findDOMNode(component);
+	constructor(component: react.Component<any, any> | HTMLElement, property: string, callback: () => void) {
+		if (component instanceof Element) {
+			this.node = component;
+		} else {
+			this.node = react_dom.findDOMNode(component) as HTMLElement;
+		}
 		this.listener = (e) => {
 			if (e.target === this.node && e.propertyName == property) {
 				callback();
