@@ -54,7 +54,7 @@ export interface BrowserAccess {
 	  * for OAuth authentication requests.
 	  *
 	  * In the Firefox add-on this must be set as redirects
-	  * from external websites back to resource:// URLs are
+	  * from external websites back to moz-resource:// URLs are
 	  * disallowed, so a redirect back to a dummy http://
 	  * URL is used, which is intercepted by the add-on.
 	  */

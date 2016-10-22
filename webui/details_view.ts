@@ -802,7 +802,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		}
 
 		var autofillButton: react.ReactElement<{}>;
-		var autofillSupported = env.isFirefoxAddon() || env.isChromeExtension();
+		var autofillSupported = env.isChromeExtension();
 		if (!this.state.isEditing && autofillSupported) {
 			autofillButton = react.DOM.div(style.mixin({
 				position: 'absolute',

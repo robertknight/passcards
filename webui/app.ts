@@ -251,11 +251,7 @@ export class App {
 		var pageAccess: browser_access.BrowserAccess;
 		var clipboard: browser_access.ClipboardAccess;
 
-		if (typeof firefoxAddOn != 'undefined') {
-			var extensionPageAccess = new browser_access.ExtensionBrowserAccess(firefoxAddOn);
-			pageAccess = extensionPageAccess;
-			clipboard = extensionPageAccess;
-		} else if (env.isChromeExtension()) {
+		if (env.isChromeExtension()) {
 			var chromePageAccess = new browser_access.ChromeBrowserAccess();
 			pageAccess = chromePageAccess;
 			clipboard = chromePageAccess;

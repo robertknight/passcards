@@ -5,8 +5,8 @@
 // This page extracts the auth credentials from the URL's hash
 // and saves them in local storage for the main app to pick up.
 //
-// The Firefox extension does not use this script but handles
-// capturing and forwarding the auth details in the Firefox addon code.
+// The browser extensions do not use this script but handles
+// capturing and forwarding the auth details elsewhere.
 
 interface ParamsDict {
 	[key: string]: string;
@@ -38,11 +38,6 @@ function parseHash(hash: string): ParamsDict {
 }
 
 // store the access token in local storage for the main UI to pick up.
-//
-// Local storage is used instead of window.postMessage() for compatibility
-// with different environments - eg. Firefox 42 Nightlies do not appear
-// to support postMessage() between a window opened with window.open()
-// and a popup panel.
 
 // suppress incorrect unused variable warning
 /* tslint:disable no-unused-variable */
@@ -54,9 +49,4 @@ window.localStorage.setItem('PASSCARDS_OAUTH_TOKEN', JSON.stringify({
 	state: state
 }));
 
-// auth.ts tries to close the popup window itself. In the case of the
-// Chrome extension this doesn't work, so the window closes itself.
-//
-// For the Firefox extension, the extension UI handles closing the window.
-//
 window.close();
