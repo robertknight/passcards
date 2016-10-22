@@ -116,7 +116,7 @@ export class FakeExtensionConnector implements ExtensionConnector {
   * priviledged extension code via an ExtensionConnector
   * which has access to browser tabs etc.
   */
-export class ExtensionBrowserAccess implements BrowserAccess, ClipboardAccess {
+export class ExtensionBrowserAccess implements BrowserAccess {
 	private rpc: rpc.RpcHandler;
 	private connector: ExtensionConnector;
 	private siteInfoService: site_info_service.SiteInfoService;
@@ -170,16 +170,6 @@ export class ExtensionBrowserAccess implements BrowserAccess, ClipboardAccess {
 			/* no-op */
 		});
 	}
-
-	copy(mimeType: string, data: string) {
-		this.rpc.call('copy', [mimeType, data], () => {
-			/* no-op */
-		});
-	}
-
-	clipboardAvailable() {
-		return true;
-	}
 };
 
 /** Methods added to the `window` object for notifications
@@ -191,7 +181,7 @@ interface ChromeExtBackgroundWindow extends Window {
 
 /** Implements BrowserAccess for the Chrome extension.
   */
-export class ChromeBrowserAccess implements BrowserAccess, ClipboardAccess {
+export class ChromeBrowserAccess implements BrowserAccess {
 	private siteInfoService: site_info_service.SiteInfoService;
 	private tabPorts: {
 		[index: number]: rpc.RpcHandler;
@@ -273,19 +263,6 @@ export class ChromeBrowserAccess implements BrowserAccess, ClipboardAccess {
 			var appWindow = <any>window;
 			appWindow.hidePanel();
 		});
-	}
-
-	copy(mimeType: string, data: string) {
-		var tempTextElement = document.createElement('textarea');
-		document.body.appendChild(tempTextElement);
-		tempTextElement.value = data;
-		tempTextElement.setSelectionRange(0, data.length);
-		document.execCommand('copy');
-		document.body.removeChild(tempTextElement);
-	}
-
-	clipboardAvailable() {
-		return true;
 	}
 
 	private connectToCurrentTab(): Promise<rpc.RpcHandler> {

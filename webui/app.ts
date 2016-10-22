@@ -20,6 +20,7 @@ import siteinfo_client = require('../lib/siteinfo/client');
 import sync = require('../lib/sync');
 import app_state = require('./stores/app');
 import vfs = require('../lib/vfs/vfs');
+import * as clipboard from './base/clipboard';
 
 declare var firefoxAddOn: browser_access.ExtensionConnector;
 
@@ -245,30 +246,26 @@ export class App {
 			siteInfoProvider, ICON_SIZE);
 	}
 
-	// setup access to the system clipboard and
-	// browser tabs via browser extension APIs
-	private setupBrowserExtension() {
-		var pageAccess: browser_access.BrowserAccess;
-		var clipboard: browser_access.ClipboardAccess;
+	// setup access to the system clipboard and browser tabs via browser
+	// extension APIs
+	private setupBrowserExtension(): BrowserExtension {
+		let pageAccess: browser_access.BrowserAccess;
+		const clipboardAccess = {
+			copy: clipboard.copy,
+			clipboardAvailable() {
+				return true;
+			},
+		};
 
 		if (env.isChromeExtension()) {
-			var chromePageAccess = new browser_access.ChromeBrowserAccess();
-			pageAccess = chromePageAccess;
-			clipboard = chromePageAccess;
+			pageAccess = new browser_access.ChromeBrowserAccess();
 		} else {
 			pageAccess = new browser_access.ExtensionBrowserAccess(new browser_access.FakeExtensionConnector());
-			clipboard = {
-				copy: (mimeType: string, data: string) => {
-					/* no-op */
-				},
-				clipboardAvailable: () => {
-					return false;
-				}
-			};
 		}
-		return <BrowserExtension>{
-			pageAccess: pageAccess,
-			clipboard: clipboard
+
+		return {
+			pageAccess,
+			clipboard: clipboardAccess,
 		};
 	}
 }

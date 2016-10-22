@@ -7,7 +7,6 @@
 
   "permissions": [
     "activeTab",
-    "clipboardWrite",
     "storage",
     "tabs",
     "https://*.dropbox.com/",
