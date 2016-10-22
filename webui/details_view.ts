@@ -232,6 +232,7 @@ interface DetailsViewState {
 export class DetailsView extends typed_react.Component<DetailsViewProps, DetailsViewState> {
 	private shortcuts: shortcut.Shortcut[];
 	private transitionHandler: reactutil.TransitionEndListener;
+	private mounted: boolean;
 
 	getInitialState() {
 		var isEditing = this.props.editMode === ItemEditMode.AddItem;
@@ -275,6 +276,8 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 	}
 
 	componentDidMount() {
+		this.mounted = true;
+
 		let root = <HTMLElement>react_dom.findDOMNode(this);
 		this.shortcuts = [
 			new shortcut.Shortcut(root, keycodes.Backspace, () => {
@@ -299,6 +302,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 	}
 
 	componentWillUnmount() {
+		this.mounted = false;
 		this.shortcuts.forEach((shortcut) => {
 			shortcut.remove();
 		});
@@ -308,7 +312,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 
 	private fetchContent(item: item_store.Item) {
 		item.getContent().then((content) => {
-			if (!this.isMounted()) {
+			if (!this.mounted) {
 				return;
 			}
 			this.setState({ itemContent: content });
