@@ -5,7 +5,6 @@
 import react = require('react');
 import react_dom = require('react-dom');
 import style = require('ts-style');
-import typed_react = require('typed-react');
 
 import reactutil = require('../base/reactutil');
 
@@ -69,25 +68,32 @@ function easeOut(max: number, value: number) {
   * To use an InkRipple, add it as the child of the element which should display
   * the effect when touched. The ripple will expand to fill its positioned parent.
   */
-export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleState> {
+export class InkRipple extends react.Component<InkRippleProps, InkRippleState> {
 	private anim: {
 		context: CanvasRenderingContext2D;
+		timer: number;
 	};
 
-	getDefaultProps() {
-		return {
-			color: '#000',
-			radius: 240
-		};
-	}
+	private canvas: HTMLCanvasElement;
+	private container: HTMLElement;
 
-	getInitialState() {
-		return {
+	static defaultProps = {
+		color: '#000',
+		radius: 240,
+	};
+
+	constructor(props?: InkRippleProps) {
+		super(props);
+
+		this.state = {
 			startX: 0,
 			startY: 0,
 			active: false,
 			phase: Phase.Idle
 		};
+
+		this.onTouchStart = this.onTouchStart.bind(this);
+		this.onTouchEnd = this.onTouchEnd.bind(this);
 	}
 
 	componentDidUpdate(prevProps: InkRippleProps, prevState: InkRippleState) {
@@ -133,7 +139,7 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 	}
 
 	private onTouchStart(e: MouseEvent) {
-		var canvas = <HTMLCanvasElement>(react_dom.findDOMNode(this.refs['canvas']));
+		var canvas = this.canvas;
 
 		if (this.state.phase !== Phase.Idle) {
 			return;
@@ -160,7 +166,8 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 		this.updateCanvasSize();
 
 		this.anim = {
-			context: <CanvasRenderingContext2D>canvas.getContext('2d')
+			context: <CanvasRenderingContext2D>canvas.getContext('2d'),
+			timer: null,
 		};
 		this.setState({
 			active: true,
@@ -171,30 +178,30 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 	}
 
 	private onTouchEnd(e: MouseEvent) {
-		if (this.state.phase === Phase.Touch) {
+		if (this.state && this.state.phase === Phase.Touch) {
 			this.setState({ phase: Phase.Release });
 		}
 	}
 
 	render() {
-		return react.DOM.div(style.mixin(theme.inkRipple, { ref: 'container' }),
+		return react.DOM.div(style.mixin(theme.inkRipple, { ref: (el: HTMLElement) => this.container = el }),
 			react.DOM.canvas({
 				className: style.classes(theme.inkRipple),
-				ref: 'canvas'
+				ref: el => this.canvas = el,
 			}),
 			react.DOM.div(style.mixin(theme.inkRipple.container), this.props.children)
 			)
 	}
 
 	private updateCanvasSize() {
-		var canvas = <HTMLCanvasElement>(react_dom.findDOMNode(this.refs['canvas']));
-		var container = <HTMLElement>(react_dom.findDOMNode(this.refs['container']));
+		var canvas = this.canvas;
+		var container = this.container;
 		canvas.width = container.clientWidth;
 		canvas.height = container.clientHeight;
 	}
 
 	private stepAnimation() {
-		if (!this.isMounted() || this.state.phase === Phase.Idle) {
+		if (!this.anim || this.state.phase === Phase.Idle) {
 			// component was unmounted or lost focus during
 			// animation
 			return;
@@ -231,7 +238,7 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 			backgroundAlpha *= 1 - (phaseElapsed / RELEASE_PHASE_DURATION);
 		}
 
-		var elem = <HTMLCanvasElement>(react_dom.findDOMNode(this.refs['container']));
+		var elem = this.container;
 		var ctx = this.anim.context;
 		ctx.clearRect(0, 0, elem.offsetWidth, elem.offsetHeight);
 		ctx.fillStyle = this.props.color;
@@ -249,7 +256,7 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 
 		var phaseDuration = this.state.phase === Phase.Touch ? TOUCH_PHASE_DURATION : RELEASE_PHASE_DURATION;
 		if (phaseElapsed < phaseDuration) {
-			reactutil.requestAnimationFrame(() => {
+			this.anim.timer = reactutil.requestAnimationFrame(() => {
 				this.stepAnimation();
 			});
 		} else if (this.state.phase === Phase.Release) {
@@ -258,4 +265,5 @@ export class InkRipple extends typed_react.Component<InkRippleProps, InkRippleSt
 		}
 	}
 }
-export var InkRippleF = reactutil.createFactory(InkRipple);
+
+export var InkRippleF = react.createFactory(InkRipple);

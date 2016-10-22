@@ -133,14 +133,14 @@ export function requestAnimationFrame(callback: () => void) {
 		for (let view of views) {
 			// look for a view which is a) not hidden according to the Page Visiblity API
 			// and b) not the background page
-			if(!view.document.hidden && view !== chrome.extension.getBackgroundPage()) {
-			view.requestAnimationFrame(callback);
-			break;
+			if (!view.document.hidden && view !== chrome.extension.getBackgroundPage()) {
+				return view.requestAnimationFrame(callback);
+			}
 		}
+		return null;
+	} else {
+		return window.requestAnimationFrame(callback);
 	}
-} else {
-	window.requestAnimationFrame(callback);
-}
 }
 
 export interface Rect {
