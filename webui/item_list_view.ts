@@ -152,9 +152,11 @@ export interface ItemProps extends react.Props<void> {
 	offsetTop: number;
 }
 
-export class Item extends typed_react.Component<ItemProps, {}> {
-	getInitialState() {
-		return {};
+export class Item extends react.Component<ItemProps, {}> {
+	constructor(props?: ItemProps) {
+		super(props);
+
+		this.state = {};
 	}
 
 	shouldComponentUpdate(nextProps: ItemProps, nextState: {}) {
@@ -199,7 +201,7 @@ export class Item extends typed_react.Component<ItemProps, {}> {
 	}
 }
 
-export var ItemF = reactutil.createFactory(Item);
+export var ItemF = react.createFactory(Item);
 
 interface ItemListState {
 	// TODO - Remove selected item here

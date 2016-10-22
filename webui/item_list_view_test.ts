@@ -35,7 +35,7 @@ testLib.addTest('should display store items', (assert) => {
 		}), element);
 
 		var renderedItems = test_utils.scryRenderedComponentsWithType(itemList as any,
-			item_list_view.ItemF.componentClass as any);
+			item_list_view.Item);
 		assert.equal(renderedItems.length, testItems.length);
 	});
 });

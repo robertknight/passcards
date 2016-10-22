@@ -5,7 +5,7 @@ import { scryRenderedComponentsWithType } from 'react-addons-test-utils';
 import { render } from 'react-dom';
 
 import { addTest, Assert } from '../lib/test';
-import { ButtonF } from './controls/button';
+import { Button, ButtonF } from './controls/button';
 import { runReactTest } from './test_utils';
 import { defer } from '../lib/base/promise_util';
 
@@ -44,7 +44,7 @@ function testDialog(assert: Assert, clickSignIn: boolean) {
 
 		// click on the 'Sign In' button and verify
 		// that the auth dialog begins and the dialog text changes
-		let buttons = scryRenderedComponentsWithType(dialog, ButtonF.componentClass as any) as any;
+		let buttons = scryRenderedComponentsWithType(dialog, Button) as any;
 		if (clickSignIn) {
 			buttons[1].props.onClick(null);
 		} else {

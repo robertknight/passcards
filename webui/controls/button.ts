@@ -1,11 +1,9 @@
 import react = require('react');
 import style = require('ts-style');
-import typed_react = require('typed-react');
 
 import controls_theme = require('./theme');
 import colors = require('./colors');
 import fonts = require('./fonts');
-import reactutil = require('../base/reactutil');
 import ripple = require('./ripple');
 import svg_icon = require('./svg_icon');
 import style_util = require('../base/style_util');
@@ -150,7 +148,7 @@ export enum Style {
 	Icon
 }
 
-export interface ButtonProps extends react.Props<void> {
+export interface ButtonProps {
 	onClick: (e: react.MouseEvent<Element>) => void;
 
 	/** Label for the button */
@@ -179,7 +177,7 @@ export interface ButtonProps extends react.Props<void> {
 	disabled?: boolean;
 }
 
-export class Button extends typed_react.Component<ButtonProps, {}> {
+export class Button extends react.Component<ButtonProps, {}> {
 	render() {
 		var rippleRadius = 100;
 
@@ -277,4 +275,4 @@ export class Button extends typed_react.Component<ButtonProps, {}> {
 	}
 }
 
-export var ButtonF = reactutil.createFactory(Button);
+export var ButtonF = react.createFactory(Button);
