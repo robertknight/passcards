@@ -378,7 +378,7 @@ class ItemList extends typed_react.Component<ItemListProps, ItemListState> {
 			// that the scrollbar has a suitable range to allow the user
 			// to scroll the whole list
 			react.DOM.div(style.mixin([theme.list.footer, {
-				top: listHeight.toString()
+				top: listHeight,
 			}]), 'placeholder')
 			);
 	}
