@@ -1,7 +1,6 @@
 import assert = require('assert');
 import react = require('react');
 import style = require('ts-style');
-import typed_react = require('typed-react');
 import url = require('url');
 
 import app_theme = require('./theme');
@@ -62,14 +61,17 @@ export interface AppViewProps extends react.Props<void> {
 }
 
 /** The main top-level app view. */
-class AppView extends typed_react.Component<AppViewProps, AppViewState> {
-	getInitialState() {
-		return {
-			viewportRect: this.props.viewportRect
-		};
+class AppView extends react.Component<AppViewProps, AppViewState> {
+	private mounted: boolean;
+
+	constructor(props: AppViewProps) {
+		super(props);
+
+		this.state = {viewportRect: this.props.viewportRect};
 	}
 
 	componentWillMount() {
+		this.mounted = true;
 		this.props.appState.stateChanged.listen(state => {
 			this.forceUpdate();
 		}, this);
@@ -290,7 +292,7 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 				// make the details view expand from the entry
 				// in the item list, but only if we switch to it
 				// after the app is initially shown
-				animateEntry: this.isMounted(),
+				animateEntry: this.mounted,
 
 				entryRect: {
 					left: appRect.left,
@@ -397,4 +399,4 @@ class AppView extends typed_react.Component<AppViewProps, AppViewState> {
 	}
 }
 
-export var AppViewF = reactutil.createFactory(AppView);
+export var AppViewF = react.createFactory(AppView);

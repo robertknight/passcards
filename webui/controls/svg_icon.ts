@@ -1,5 +1,4 @@
 import react = require('react');
-import typed_react = require('typed-react');
 import underscore = require('underscore');
 
 import reactutil = require('../base/reactutil');
@@ -21,21 +20,19 @@ export interface SvgIconProps extends react.HTMLAttributes<Element> {
 	height: number;
 }
 
-export class SvgIcon extends typed_react.Component<SvgIconProps, {}> {
-	render() {
-		var fillAttr = underscore.escape(this.props.fill);
-		var hrefAttr = underscore.escape(this.props.href);
-		var viewBox = this.props.viewBox;
+export function SvgIcon(props: SvgIconProps) {
+	var fillAttr = underscore.escape(props.fill);
+	var hrefAttr = underscore.escape(props.href);
+	var viewBox = props.viewBox;
 
-		return react.DOM.svg(reactutil.mergeProps(this.props, {
-			dangerouslySetInnerHTML: {
-				__html: `<use x="0" y="0" fill="${fillAttr}" xlink:href="${hrefAttr}"></use>`,
-			},
-			viewBox: `${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`,
-			width: this.props.width,
-			height: this.props.height
-		}));
-	}
+	return react.DOM.svg(reactutil.mergeProps(props, {
+		dangerouslySetInnerHTML: {
+			__html: `<use x="0" y="0" fill="${fillAttr}" xlink:href="${hrefAttr}"></use>`,
+		},
+		viewBox: `${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`,
+		width: props.width,
+		height: props.height
+	}));
 }
 
-export var SvgIconF = reactutil.createFactory(SvgIcon);
+export var SvgIconF = react.createFactory(SvgIcon);

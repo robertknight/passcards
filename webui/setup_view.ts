@@ -1,6 +1,5 @@
 import react = require('react');
 import style = require('ts-style');
-import typed_react = require('typed-react');
 
 import agile_keychain = require('../lib/agile_keychain');
 import auth = require('./auth');
@@ -167,7 +166,7 @@ interface NavButtonProps extends react.Props<void> {
 /** Button displayed at the bottom of the setup view
   * to go to the previous/next steps.
   */
-class NavButton extends typed_react.Component<NavButtonProps, {}> {
+class NavButton extends react.Component<NavButtonProps, {}> {
 	render() {
 		return button.ButtonF({
 			style: button.Style.RaisedRectangular,
@@ -179,7 +178,7 @@ class NavButton extends typed_react.Component<NavButtonProps, {}> {
 		});
 	}
 }
-var NavButtonF = reactutil.createFactory(NavButton);
+var NavButtonF = react.createFactory(NavButton);
 
 interface CloudStoreListProps extends react.Props<void> {
 	vfs: vfs.VFS;
@@ -196,9 +195,11 @@ interface CloudStoreListState {
 }
 
 /** Displays a list of available password stores in a cloud file system */
-class CloudStoreList extends typed_react.Component<CloudStoreListProps, CloudStoreListState> {
-	getInitialState() {
-		return {};
+class CloudStoreList extends react.Component<CloudStoreListProps, CloudStoreListState> {
+	constructor(props: CloudStoreListProps) {
+		super(props);
+
+		this.state = {};
 	}
 
 	private startSearch() {
@@ -264,7 +265,7 @@ class CloudStoreList extends typed_react.Component<CloudStoreListProps, CloudSto
 	}
 }
 
-var CloudStoreListF = reactutil.createFactory(CloudStoreList);
+var CloudStoreListF = react.createFactory(CloudStoreList);
 
 interface StoreListProps extends react.Props<void> {
 	stores: settings.AccountMap;
@@ -275,7 +276,7 @@ interface StoreListProps extends react.Props<void> {
 /** Displays a list of password stores which have been synced to the
   * current app.
   */
-class StoreList extends typed_react.Component<StoreListProps, {}> {
+class StoreList extends react.Component<StoreListProps, {}> {
 	render() {
 		var stores: react.ReactElement<any>[] = [];
 		Object.keys(this.props.stores).forEach((id) => {
@@ -315,7 +316,7 @@ class StoreList extends typed_react.Component<StoreListProps, {}> {
 	}
 }
 
-var StoreListF = reactutil.createFactory(StoreList);
+var StoreListF = react.createFactory(StoreList);
 
 export interface SetupViewProps extends react.Props<void> {
 	settings: settings.Store;
@@ -344,7 +345,7 @@ interface SlideProps extends react.Props<void> {
 	opacity: number;
 }
 
-class Slide extends typed_react.Component<SlideProps, {}> {
+class Slide extends react.Component<SlideProps, {}> {
 	render() {
 		var screenStyles: any[] = [
 			theme.screen,
@@ -360,7 +361,7 @@ class Slide extends typed_react.Component<SlideProps, {}> {
 	}
 }
 
-var SlideF = reactutil.createFactory(Slide);
+var SlideF = react.createFactory(Slide);
 
 interface NewStoreFormProps extends react.Props<void> {
 	onGoBack: () => void;
@@ -373,9 +374,11 @@ interface NewStoreFormState {
 	creatingStore?: boolean;
 }
 
-class NewStoreForm extends typed_react.Component<NewStoreFormProps, NewStoreFormState> {
-	getInitialState() {
-		return {
+class NewStoreForm extends react.Component<NewStoreFormProps, NewStoreFormState> {
+	constructor(props: NewStoreFormProps) {
+		super(props);
+
+		this.state = {
 			options: {
 				path: 'Passcards/Passcards.agilekeychain',
 				password: '',
@@ -489,7 +492,7 @@ class NewStoreForm extends typed_react.Component<NewStoreFormProps, NewStoreForm
 	}
 }
 
-var NewStoreFormF = reactutil.createFactory(NewStoreForm);
+var NewStoreFormF = react.createFactory(NewStoreForm);
 
 interface ScreenOptions {
 	temporary?: boolean;
@@ -529,8 +532,11 @@ function cloudServiceName(cloudService: settings.CloudService) {
 
 /** App setup and onboarding screen.
   */
-export class SetupView extends typed_react.Component<SetupViewProps, SetupViewState> {
-	getInitialState(): SetupViewState {
+export class SetupView extends react.Component<SetupViewProps, SetupViewState> {
+
+	constructor(props: SetupViewProps) {
+		super(props);
+
 		var screenStack = [{
 			id: Screen.StoreList,
 			options: {}
@@ -542,7 +548,7 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 			});
 		}
 
-		return {
+		this.state = {
 			screenStack: screenStack,
 			currentScreen: 0
 		};
@@ -829,4 +835,4 @@ export class SetupView extends typed_react.Component<SetupViewProps, SetupViewSt
 	}
 }
 
-export var SetupViewF = reactutil.createFactory(SetupView);
+export var SetupViewF = react.createFactory(SetupView);

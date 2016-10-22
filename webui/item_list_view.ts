@@ -503,7 +503,7 @@ export interface ItemListToolbarProps extends react.Props<void> {
 	onMenuClicked: (e: ToolbarClickEvent) => void;
 }
 
-class ItemListToolbar extends typed_react.Component<ItemListToolbarProps, {}> {
+class ItemListToolbar extends react.Component<ItemListToolbarProps, {}> {
 	focus() {
 		this.fieldInput().focus();
 	}
@@ -594,7 +594,7 @@ class ItemListToolbar extends typed_react.Component<ItemListToolbarProps, {}> {
 	}
 }
 
-var ItemListToolbarF = reactutil.createFactory(ItemListToolbar);
+var ItemListToolbarF = react.createFactory(ItemListToolbar);
 
 interface ItemListViewState {
 	filter?: string;

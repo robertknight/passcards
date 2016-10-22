@@ -1,7 +1,6 @@
 
 import react = require('react');
 import react_dom = require('react-dom');
-import typed_react = require('typed-react');
 import style = require('ts-style');
 
 import button = require('./button');
@@ -68,9 +67,11 @@ function componentSection(name: string, ...children: react.ReactElement<any>[]) 
 		);
 }
 
-class ControlDemoApp extends typed_react.Component<ControlDemoAppProps, ControlDemoAppState> {
-	getInitialState() {
-		return {
+class ControlDemoApp extends react.Component<ControlDemoAppProps, ControlDemoAppState> {
+	constructor(props: ControlDemoAppProps) {
+		super(props);
+
+		this.state = {
 			showDialog: false
 		};
 	}
@@ -229,7 +230,7 @@ class ControlDemoApp extends typed_react.Component<ControlDemoAppProps, ControlD
 			);
 	}
 }
-var ControlDemoAppF = reactutil.createFactory(ControlDemoApp);
+var ControlDemoAppF = react.createFactory(ControlDemoApp);
 
 function main() {
 	var elt = document.getElementById('app');

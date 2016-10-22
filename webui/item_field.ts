@@ -1,7 +1,6 @@
 import react = require('react');
 import react_dom = require('react-dom');
 import style = require('ts-style');
-import typed_react = require('typed-react');
 
 import button = require('./controls/button');
 import colors = require('./controls/colors');
@@ -55,11 +54,13 @@ let theme = style.create({
 	},
 }, __filename);
 
-export class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldState> {
+export class ItemField extends react.Component<ItemFieldProps, ItemFieldState> {
 	private focusListener: EventListener;
 
-	getInitialState() {
-		return {
+	constructor(props: ItemFieldProps) {
+		super(props);
+
+		this.state = {
 			selected: false,
 			revealed: false,
 			value: this.props.value
@@ -205,4 +206,4 @@ export class ItemField extends typed_react.Component<ItemFieldProps, ItemFieldSt
 	}
 }
 
-export let ItemFieldF = reactutil.createFactory(ItemField);
+export let ItemFieldF = react.createFactory(ItemField);
