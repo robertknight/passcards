@@ -3,13 +3,11 @@ import react = require('react');
 import react_dom = require('react-dom');
 import shallow_equals = require('shallow-equals');
 import style = require('ts-style');
-import typed_react = require('typed-react');
 import underscore = require('underscore');
 
 import app_theme = require('./theme');
 import colors = require('./controls/colors');
 import env = require('../lib/base/env');
-import focus_mixin = require('./base/focus_mixin');
 import fonts = require('./controls/fonts');
 import keycodes = require('./base/keycodes');
 import item_icons = require('./item_icons');
@@ -621,9 +619,12 @@ export interface ItemListViewProps extends react.Props<void> {
 	onMenuClicked: (e: ToolbarClickEvent) => void;
 }
 
-export class ItemListView extends typed_react.Component<ItemListViewProps, ItemListViewState> {
-	getInitialState(): ItemListViewState {
-		return { filter: null };
+export class ItemListView extends react.Component<ItemListViewProps, ItemListViewState> {
+
+	constructor(props: ItemListViewProps) {
+		super(props);
+
+		this.state = { filter: null };
 	}
 
 	componentDidMount() {
@@ -709,4 +710,4 @@ export class ItemListView extends typed_react.Component<ItemListViewProps, ItemL
 	}
 }
 
-export var ItemListViewF = reactutil.createFactory(ItemListView, focus_mixin.FocusMixinM);
+export var ItemListViewF = react.createFactory(ItemListView);

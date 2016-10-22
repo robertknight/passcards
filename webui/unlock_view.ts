@@ -3,12 +3,10 @@
 import react = require('react');
 import react_dom = require('react-dom');
 import style = require('ts-style');
-import typed_react = require('typed-react');
 
 import button = require('./controls/button');
 import colors = require('./controls/colors');
 import event_stream = require('../lib/base/event_stream');
-import focus_mixin = require('./base/focus_mixin');
 import fonts = require('./controls/fonts');
 import reactutil = require('./base/reactutil');
 import app_theme = require('./theme');
@@ -124,16 +122,15 @@ export interface UnlockViewProps extends react.Props<void> {
 	focus: boolean;
 }
 
-export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockViewState> {
+export class UnlockView extends react.Component<UnlockViewProps, UnlockViewState> {
 	pipes: Pipe[];
+	passwordInput: HTMLInputElement;
 
-	constructor() {
-		super();
+	constructor(props: UnlockViewProps) {
+		super(props);
+
 		this.pipes = [];
-	}
-
-	getInitialState() {
-		return {
+		this.state = {
 			haveKeys: false,
 			unlockState: UnlockState.Locked,
 			failedUnlockCount: 0
@@ -151,15 +148,24 @@ export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockVie
 		.catch(err => console.error(err));
 	}
 
+	componentDidMount() {
+		this.setFocus();
+	}
+
 	componentWillUnmount() {
 		this.props.store.onKeysUpdated.ignoreContext(this);
 		this.pipes.forEach(pipe => pipe.cancel());
 	}
 
+	componentDidUpdate(prevProps: UnlockViewProps) {
+		if (!prevProps.focus && this.props.focus) {
+			this.setFocus();
+		}
+	}
+
 	setFocus() {
 		if (this.props.isLocked) {
-			var masterPassField = <HTMLElement>react_dom.findDOMNode(this.refs['masterPassField']);
-			masterPassField.focus();
+			this.passwordInput.focus();
 		}
 	}
 
@@ -186,11 +192,10 @@ export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockVie
 						ref: 'unlockPaneForm',
 						onSubmit: (e) => {
 							e.preventDefault();
-							var passwordInputField = <HTMLInputElement>react_dom.findDOMNode(this.refs['masterPassField']);
-							var masterPass = passwordInputField.value;
+							var masterPass = this.passwordInput.value;
 							this.tryUnlock(masterPass).then(() => {
 								// clear input field after attempt completes
-								passwordInputField.value = '';
+								this.passwordInput.value = '';
 							});
 						}
 					},
@@ -198,7 +203,7 @@ export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockVie
 							react.DOM.input(style.mixin(theme.masterPasswordField, {
 								type: 'password',
 								placeholder: 'Master Password...',
-								ref: 'masterPassField',
+								ref: (el: HTMLInputElement) => this.passwordInput = el,
 								autoFocus: true,
 								disabled: !this.state.haveKeys,
 							})),
@@ -273,4 +278,4 @@ export class UnlockView extends typed_react.Component<UnlockViewProps, UnlockVie
 	}
 }
 
-export var UnlockViewF = reactutil.createFactory(UnlockView, focus_mixin.FocusMixinM);
+export var UnlockViewF = react.createFactory(UnlockView);

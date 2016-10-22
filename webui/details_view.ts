@@ -2,13 +2,11 @@
 import react = require('react');
 import react_dom = require('react-dom');
 import style = require('ts-style');
-import typed_react = require('typed-react');
 
 import agile_keychain_crypto = require('../lib/agile_keychain_crypto');
 import button = require('./controls/button');
 import colors = require('./controls/colors');
 import env = require('../lib/base/env');
-import focus_mixin = require('./base/focus_mixin');
 import fonts = require('./controls/fonts');
 import item_builder = require('../lib/item_builder');
 import item_icons = require('./item_icons');
@@ -229,12 +227,14 @@ interface DetailsViewState {
 	editingFieldLabel?: item_store.ItemField;
 }
 
-export class DetailsView extends typed_react.Component<DetailsViewProps, DetailsViewState> {
+export class DetailsView extends react.Component<DetailsViewProps, DetailsViewState> {
 	private shortcuts: shortcut.Shortcut[];
 	private transitionHandler: reactutil.TransitionEndListener;
 	private mounted: boolean;
 
-	getInitialState() {
+	constructor(props: DetailsViewProps) {
+		super(props);
+
 		var isEditing = this.props.editMode === ItemEditMode.AddItem;
 		var transitionState: reactutil.TransitionState;
 		if (this.props.animateEntry) {
@@ -243,7 +243,7 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 			transitionState = reactutil.TransitionState.Entered;
 		}
 
-		return {
+		this.state = {
 			isEditing: isEditing,
 			didEditItem: isEditing,
 			transition: transitionState
@@ -275,10 +275,20 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 		this.fetchContent(this.props.item);
 	}
 
+	componentDidUpdate(prevProps: DetailsViewProps) {
+		if (!prevProps.focus && this.props.focus) {
+			const el = react_dom.findDOMNode(this) as HTMLElement;
+			el.focus();
+		}
+	}
+
 	componentDidMount() {
 		this.mounted = true;
 
 		let root = <HTMLElement>react_dom.findDOMNode(this);
+
+		root.focus();
+
 		this.shortcuts = [
 			new shortcut.Shortcut(root, keycodes.Backspace, () => {
 				this.exit();
@@ -868,4 +878,4 @@ export class DetailsView extends typed_react.Component<DetailsViewProps, Details
 	}
 }
 
-export var DetailsViewF = reactutil.createFactory(DetailsView, focus_mixin.FocusMixinM);
+export var DetailsViewF = react.createFactory(DetailsView);
