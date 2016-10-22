@@ -25,7 +25,6 @@
 
 import react = require('react');
 import react_dom = require('react-dom');
-import typed_react = require('typed-react');
 import style = require('ts-style');
 
 import colors = require('./colors');
@@ -226,18 +225,27 @@ interface TextFieldState {
 var div = react.DOM.div;
 var input = react.DOM.input;
 
-export class TextField extends typed_react.Component<TextFieldProps, TextFieldState> {
-	getDefaultProps() {
-		return {
-			showUnderline: true
-		};
-	}
+export class TextField extends react.Component<TextFieldProps, TextFieldState> {
 
-	getInitialState() {
-		return {
+	private textField: HTMLInputElement;
+
+	static defaultProps = {
+		showUnderline: true,
+	};
+
+	constructor(props?: TextFieldProps) {
+		super(props);
+
+		this.state = {
 			focus: false,
 			focusing: true
 		};
+
+		this.onMouseDown = this.onMouseDown.bind(this);
+		this.onTouchStart = this.onTouchStart.bind(this);
+		this.onChange = this.onChange.bind(this);
+		this.onBlur = this.onBlur.bind(this);
+		this.onFocus = this.onFocus.bind(this);
 	}
 
 	componentDidMount() {
@@ -325,7 +333,7 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 				onMouseDown: this.onMouseDown,
 				onTouchStart: this.onTouchStart,
 				type: this.props.type || 'text',
-				ref: 'textField',
+				ref: (el: HTMLInputElement) => this.textField = el,
 				defaultValue: this.props.defaultValue,
 				value: this.props.value,
 				readOnly: this.props.readOnly
@@ -406,12 +414,12 @@ export class TextField extends typed_react.Component<TextFieldProps, TextFieldSt
 			return this.props.value;
 		} else if (this.props.defaultValue) {
 			return this.props.defaultValue;
-		} else if (this.isMounted()) {
-			return (<HTMLInputElement>react_dom.findDOMNode(this.refs['textField'])).value;
+		} else if (this.textField) {
+			return this.textField.value;
 		} else {
 			return '';
 		}
 	}
 }
 
-export var TextFieldF = reactutil.createFactory(TextField);
+export var TextFieldF = react.createFactory(TextField);
