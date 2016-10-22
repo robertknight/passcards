@@ -1,7 +1,9 @@
 import app = require('./app');
 import env = require('../lib/base/env');
+import { setClipboardDocument } from './base/clipboard';
 
 interface AppWindow extends Window {
+	setClipboardDocument(doc: Document): void;
 	renderApp(element: HTMLElement): void;
 }
 
@@ -22,6 +24,10 @@ document.addEventListener('DOMContentLoaded', () => {
 	var appWindow = <AppWindow>window;
 	appWindow.renderApp = (element) => {
 		theApp.renderInto(element);
+	};
+
+	appWindow.setClipboardDocument = (doc: Document) => {
+		setClipboardDocument(doc);
 	};
 });
 

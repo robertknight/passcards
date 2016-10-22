@@ -1,3 +1,21 @@
+let clipboardDocument = document;
+
+/**
+  * Set the Document used for clipboard access.
+  *
+  * Defaults to the initial document into which the application is loaded.
+  *
+  * In the context of Firefox WebExtensions the clipboard APIs cannot
+  * be used from background pages directly, but must be invoked from
+  * the popup window's document.
+  *
+  * See https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Interact_with_the_clipboard
+  * and https://bugzilla.mozilla.org/show_bug.cgi?id=1272869
+  */
+export function setClipboardDocument(doc: Document) {
+	clipboardDocument = doc;
+}
+
 /**
   * Copy data to the system clipboard.
   *
@@ -14,9 +32,9 @@ export function copy(mimeType: string, data: string) {
 		e.clipboardData.setData(mimeType, data);
 		e.preventDefault();
 	};
-	document.addEventListener('copy', listener);
-	const ok = document.execCommand('copy');
-	document.removeEventListener('copy', listener);
+	clipboardDocument.addEventListener('copy', listener);
+	const ok = clipboardDocument.execCommand('copy');
+	clipboardDocument.removeEventListener('copy', listener);
 	if (!ok) {
 		throw new Error('Clipboard copy disallowed');
 	}

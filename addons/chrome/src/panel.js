@@ -76,6 +76,7 @@ window.addEventListener('unload', function() {
 });
 
 document.body.appendChild(appView);
+backgroundPage.setClipboardDocument(document);
 backgroundPage.renderApp(appView);
 
 // notify the extension which page we
