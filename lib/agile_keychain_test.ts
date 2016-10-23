@@ -427,26 +427,20 @@ testLib.addTest('Generate Passwords', (assert) => {
 	}
 });
 
-testLib.addAsyncTest('Encrypt/decrypt key (sync)', (assert) => {
+testLib.addAsyncTest('Encrypt/decrypt key (sync)', async (assert) => {
 	let password = 'test-pass'
 	let iterations = 100;
 	let salt = crypto.randomBytes(8);
 	let masterKey = crypto.randomBytes(1024);
 
-	let derivedKey = key_agent.keyFromPasswordSync(password, salt, iterations);
-	let encryptedKey: key_agent.EncryptedKey;
+	const derivedKey = await key_agent.keyFromPassword(password, salt, iterations);
 
-	return key_agent.encryptKey(derivedKey, masterKey)
-	.then(encryptedKey_ => {
-		encryptedKey = encryptedKey_;
-		return key_agent.decryptKey(derivedKey, encryptedKey.key, encryptedKey.validation);
-	}).then(decryptedKey => {
-		assert.equal(decryptedKey, masterKey);
-		let derivedKey2 = key_agent.keyFromPasswordSync('wrong-pass', salt, iterations);
-		return asyncutil.result(key_agent.decryptKey(derivedKey2, encryptedKey.key, encryptedKey.validation));
-	}).then(result => {
-		assert.ok(result.error != null);
-	});
+	const encryptedKey = await key_agent.encryptKey(derivedKey, masterKey);
+	const decryptedKey = await key_agent.decryptKey(derivedKey, encryptedKey.key, encryptedKey.validation);
+	assert.equal(decryptedKey, masterKey);
+	const derivedKey2 = await key_agent.keyFromPassword('wrong-pass', salt, iterations);
+	const result = await asyncutil.result(key_agent.decryptKey(derivedKey2, encryptedKey.key, encryptedKey.validation));
+	assert.ok(result.error != null);
 });
 
 testLib.addAsyncTest('Encrypt/decrypt key (async)', (assert) => {

@@ -675,7 +675,7 @@ export class Vault implements item_store.Store {
 		const derivedKey = await key_agent.keyFromPassword(oldPass, oldSaltCipher.salt, key.iterations);
 		const oldKey = await key_agent.decryptKey(derivedKey, oldSaltCipher.cipherText,
 			atob(key.validation));
-		let newDerivedKey = key_agent.keyFromPasswordSync(newPass, newSalt, newKeyIterations);
+		const newDerivedKey = await key_agent.keyFromPassword(newPass, newSalt, newKeyIterations);
 		const newKey = await key_agent.encryptKey(newDerivedKey, oldKey);
 		let newKeyEntry = {
 			data: btoa('Salted__' + newSalt + newKey.key),

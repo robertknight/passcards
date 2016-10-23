@@ -251,32 +251,26 @@ export class SimpleKeyAgent implements KeyAgent {
   * @param validation Validation data used to verify whether decryption was successful.
   *  This is a copy of the decrypted version of @p encryptedKey, encrypted with itself.
   */
-export function decryptKey(derivedKey: string, encryptedKey: string, validation: string): Promise<string> {
+export async function decryptKey(derivedKey: string, encryptedKey: string, validation: string): Promise<string> {
 	let aesKey = derivedKey.substring(0, 16);
 	let iv = derivedKey.substring(16, 32);
-	let keyDecrypted = agile_keychain_crypto.defaultCrypto.aesCbcDecrypt(aesKey, encryptedKey, iv);
-	let decryptedKey: string;
-	return keyDecrypted.then(decryptedKey_ => {
-		decryptedKey = decryptedKey_;
-		let validationSaltCipher = agile_keychain_crypto.extractSaltAndCipherText(validation);
-
-		let keyParams = agile_keychain_crypto.openSSLKey(agile_keychain_crypto.defaultCrypto,
-			decryptedKey, validationSaltCipher.salt);
-		return agile_keychain_crypto.defaultCrypto.aesCbcDecrypt(keyParams.key, validationSaltCipher.cipherText, keyParams.iv);
-	}).then(decryptedValidation => {
-		if (decryptedValidation !== decryptedKey) {
-			throw new DecryptionError('Incorrect password');
-		}
-		return decryptedKey;
-	});
+	let decryptedKey = await agile_keychain_crypto.defaultCrypto.aesCbcDecrypt(aesKey, encryptedKey, iv);
+	let validationSaltCipher = agile_keychain_crypto.extractSaltAndCipherText(validation);
+	let keyParams = await agile_keychain_crypto.openSSLKey(agile_keychain_crypto.defaultCrypto,
+		decryptedKey, validationSaltCipher.salt);
+	let decryptedValidation = await agile_keychain_crypto.defaultCrypto.aesCbcDecrypt(keyParams.key, validationSaltCipher.cipherText, keyParams.iv);
+	if (decryptedValidation !== decryptedKey) {
+		throw new DecryptionError('Incorrect password');
+	}
+	return decryptedKey;
 }
 
 /** Derive an encryption key from a password for use with decryptKey().
   * This version is synchronous and will block the UI if @p iterCount
   * is high.
   */
-export function keyFromPasswordSync(pass: string, salt: string, iterCount: number): string {
-	return agile_keychain_crypto.defaultCrypto.pbkdf2Sync(pass, salt, iterCount, AES_128_KEY_LEN);
+export async function keyFromPasswordSync(pass: string, salt: string, iterCount: number) {
+	return agile_keychain_crypto.defaultCrypto.pbkdf2(pass, salt, iterCount, AES_128_KEY_LEN);
 }
 
 /** Derive an encryption key from a password for use with decryptKey()
@@ -290,13 +284,13 @@ export function keyFromPassword(pass: string, salt: string, iterCount: number): 
   * @param derivedKey An encryption key for the master key, derived from a password using keyFromPassword()
   * @param decryptedKey The master key for the vault to be encrypted.
   */
-export function encryptKey(derivedKey: string, decryptedKey: string): Promise<EncryptedKey> {
+export async function encryptKey(derivedKey: string, decryptedKey: string): Promise<EncryptedKey> {
 	let aesKey = derivedKey.substring(0, 16);
 	let iv = derivedKey.substring(16, 32);
 	let encryptedKey = agile_keychain_crypto.defaultCrypto.aesCbcEncrypt(aesKey, decryptedKey, iv);
 
 	let validationSalt = crypto.randomBytes(8);
-	let keyParams = agile_keychain_crypto.openSSLKey(agile_keychain_crypto.defaultCrypto,
+	let keyParams = await agile_keychain_crypto.openSSLKey(agile_keychain_crypto.defaultCrypto,
 		decryptedKey, validationSalt);
 
 	let validation = agile_keychain_crypto.defaultCrypto.aesCbcEncrypt(keyParams.key, decryptedKey, keyParams.iv);

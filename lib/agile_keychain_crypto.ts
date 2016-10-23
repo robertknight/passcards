@@ -65,26 +65,26 @@ export function extractSaltAndCipherText(input: string): SaltedCipherText {
 /** Derives an AES-128 key and initialization vector from a key of arbitrary length and salt
   * using.
   */
-export function openSSLKey(cryptoImpl: Crypto, password: string, salt: string): AESKeyParams {
+export async function openSSLKey(cryptoImpl: Crypto, password: string, salt: string): Promise<AESKeyParams> {
 	var data = password + salt;
-	var key = cryptoImpl.md5Digest(data);
-	var iv = cryptoImpl.md5Digest(key + data);
+	var key = await cryptoImpl.md5Digest(data);
+	var iv = await cryptoImpl.md5Digest(key + data);
 	return new AESKeyParams(key, iv);
 }
 
 /** Encrypt the JSON data for an item for storage in the Agile Keychain format. */
-export function encryptAgileKeychainItemData(cryptoImpl: Crypto, key: string, plainText: string) {
+export async function encryptAgileKeychainItemData(cryptoImpl: Crypto, key: string, plainText: string) {
 	var salt = crypto.randomBytes(8);
-	var keyParams = openSSLKey(cryptoImpl, key, salt);
+	var keyParams = await openSSLKey(cryptoImpl, key, salt);
 	return cryptoImpl.aesCbcEncrypt(keyParams.key, plainText, keyParams.iv).then(encrypted => {
 		return 'Salted__' + salt + encrypted;
 	});
 }
 
 /** Decrypt the encrypted contents of an item stored in the Agile Keychain format. */
-export function decryptAgileKeychainItemData(cryptoImpl: Crypto, key: string, cipherText: string) {
+export async function decryptAgileKeychainItemData(cryptoImpl: Crypto, key: string, cipherText: string) {
 	var saltCipher = extractSaltAndCipherText(cipherText);
-	var keyParams = openSSLKey(cryptoImpl, key, saltCipher.salt);
+	var keyParams = await openSSLKey(cryptoImpl, key, saltCipher.salt);
 	return cryptoImpl.aesCbcDecrypt(keyParams.key, saltCipher.cipherText, keyParams.iv);
 }
 
@@ -111,9 +111,7 @@ export interface Crypto {
 	  */
 	pbkdf2(masterPwd: string, salt: string, iterCount: number, keyLen: number): Promise<string>;
 
-	pbkdf2Sync(masterPwd: string, salt: string, iterCount: number, keyLen: number): string;
-
-	md5Digest(input: string): string;
+	md5Digest(input: string): Promise<string>;
 }
 
 // crypto implementation using Node.js' crypto lib
@@ -157,7 +155,7 @@ export class NodeCrypto implements Crypto {
 		return key.promise;
 	}
 
-	md5Digest(input: string): string {
+	async md5Digest(input: string): Promise<string> {
 		var md5er = node_crypto.createHash('md5');
 		md5er.update(input);
 		return md5er.digest('binary');
@@ -279,9 +277,9 @@ export class CryptoJsCrypto implements Crypto {
 		}
 	}
 
-	md5Digest(input: string): string {
+	async md5Digest(input: string): Promise<string> {
 		return cryptoJS.MD5(this.encoding.parse(input)).toString(this.encoding);
 	}
 }
 
-export var defaultCrypto = new CryptoJsCrypto();
+export var defaultCrypto: Crypto = new CryptoJsCrypto();
