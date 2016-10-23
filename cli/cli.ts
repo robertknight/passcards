@@ -166,8 +166,7 @@ export class CLI {
 		setPassCommand.addArgument(['--iterations'], {
 			action: 'store',
 			dest: 'iterations',
-			nargs: 1,
-			type: 'string'
+			type: 'int'
 		});
 
 		var removeCommand = subcommands.addParser('remove', {
@@ -184,8 +183,7 @@ export class CLI {
 		newVaultCommand.addArgument(['--iterations'], {
 			action: 'store',
 			dest: 'iterations',
-			nargs: 1,
-			type: 'string'
+			type: 'int'
 		});
 
 		subcommands.addParser('repair', {
