@@ -6,13 +6,13 @@ import uuid = require('node-uuid');
 
 import { btoa } from './base/stringutil';
 import agile_keychain_entries = require('./agile_keychain_entries');
-import collectionutil = require('./base/collectionutil');
 import crypto = require('./base/crypto');
 import crypto_worker = require('./crypto_worker');
 import key_agent = require('./key_agent');
 import pbkdf2Lib = require('./crypto/pbkdf2');
 import rpc = require('./net/rpc');
 import { defer, Deferred, nodeResolver } from '../lib/base/promise_util';
+import { bufferFromString, stringFromBuffer } from './base/collectionutil';
 
 export class AESKeyParams {
 	constructor(public key: string, public iv: string) {
@@ -241,10 +241,10 @@ export class CryptoJsCrypto implements Crypto {
 		// Hence we use a custom implementation of PBKDF2 based on Rusha
 
 		var pbkdf2Impl = new pbkdf2Lib.PBKDF2();
-		var passBuf = collectionutil.bufferFromString(pass);
-		var saltBuf = collectionutil.bufferFromString(salt);
+		var passBuf = bufferFromString(pass);
+		var saltBuf = bufferFromString(salt);
 		var key = pbkdf2Impl.key(passBuf, saltBuf, iterCount, keyLen);
-		return collectionutil.stringFromBuffer(key);
+		return stringFromBuffer(key);
 	}
 
 	/** Derive a key from a password using PBKDF2. If initWorkers() has been called,
@@ -282,4 +282,72 @@ export class CryptoJsCrypto implements Crypto {
 	}
 }
 
-export var defaultCrypto: Crypto = new CryptoJsCrypto();
+declare global {
+	interface Crypto {
+		// Prefixed implementation of SubtleCrypto in Safari
+		// See https://blog.engelke.com/2015/03/02/apples-safari-browser-and-web-cryptography/
+		webkitSubtle: SubtleCrypto;
+	}
+}
+
+let subtleCrypto: SubtleCrypto;
+
+if (typeof window !== 'undefined' && window.crypto) {
+	subtleCrypto = window.crypto.subtle || window.crypto.webkitSubtle;
+}
+
+/**
+  * Implements the Crypto interface using the Web Cryptography API
+  * See https://www.w3.org/TR/WebCryptoAPI/
+  */
+class WebCrypto implements Crypto {
+	private crypto: SubtleCrypto;
+
+	constructor() {
+		this.crypto = subtleCrypto;
+	}
+
+	async aesCbcDecrypt(key: string, cipherText: string, iv: string) {
+		const cryptoKey = await this.crypto.importKey('raw', bufferFromString(key),
+			'AES-CBC', false, ['decrypt']);
+		const decrypted = await this.crypto.decrypt({name: 'AES-CBC', iv: bufferFromString(iv)},
+			cryptoKey, bufferFromString(cipherText));
+		return stringFromBuffer(new Uint8Array(decrypted));
+	}
+
+	async aesCbcEncrypt(key: string, plainText: string, iv: string) {
+		const cryptoKey = await this.crypto.importKey('raw', bufferFromString(key),
+			'AES-CBC', false, ['encrypt']);
+		const encrypted = await this.crypto.encrypt({name: 'AES-CBC', iv: bufferFromString(iv)},
+			cryptoKey, bufferFromString(plainText));
+		return stringFromBuffer(new Uint8Array(encrypted));
+	}
+
+	async pbkdf2(masterPwd: string, salt: string, iterCount: number, keyLen: number) {
+		const masterKey = await this.crypto.importKey('raw', bufferFromString(masterPwd),
+			'PBKDF2', false, ['deriveKey']);
+		const derived = await this.crypto.deriveKey({
+			name: 'PBKDF2',
+			salt: bufferFromString(salt),
+			iterations: iterCount,
+			hash: 'SHA-1',
+		}, masterKey, {name: 'AES-CBC', length: 256}, true /* extractable */, ['encrypt', 'decrypt']);
+		const extracted = await this.crypto.exportKey('raw', derived);
+		return stringFromBuffer(new Uint8Array(extracted));
+	}
+
+	async md5Digest(input: string) {
+		// WebCrypto does not support MD5 :(
+		const encoding = cryptoJS.enc.Latin1;
+		return cryptoJS.MD5(encoding.parse(input)).toString(encoding);
+	}
+}
+
+export var defaultCrypto: Crypto;
+
+if (subtleCrypto) {
+	defaultCrypto = new WebCrypto;
+} else {
+	defaultCrypto = new CryptoJsCrypto;
+}
+
