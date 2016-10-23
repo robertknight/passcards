@@ -25,7 +25,6 @@ $(compiled_js_files): $(all_srcs) $(deps)
 webui-build: $(webui_script_dir)/platform_bundle.js \
              $(webui_script_dir)/webui_bundle.js \
              $(webui_script_dir)/page_bundle.js \
-             $(webui_script_dir)/crypto_worker.js \
              $(webui_script_dir)/auth_receiver.js \
              $(webui_css_dir)/app.css \
              webui-icons
@@ -47,11 +46,6 @@ $(webui_script_dir)/page_bundle.js: $(compiled_js_files)
 	@echo "Building page autofill bundle"
 	@mkdir -p $(webui_script_dir)
 	@$(BROWSERIFY) build/webui/page.js --outfile $@
-
-$(webui_script_dir)/crypto_worker.js: $(compiled_js_files)
-	@echo "Building crypto bundle"
-	@mkdir -p $(webui_script_dir)
-	@$(BROWSERIFY) --entry build/lib/crypto_worker.js --outfile $@
 
 build/webui/theme.css: $(compiled_js_files)
 	@echo "Generating theme CSS"
@@ -80,13 +74,7 @@ webui-icons:
 	@mkdir -p ${webui_icon_dir}
 	@cp -R icons/* ${webui_icon_dir}
 
-# pbkdf2_bundle.js is a require()-able bundle
-# of the PBKDF2 implementation for use in Web Workers
-# in the browser
-build/lib/crypto/pbkdf2_bundle.js: $(compiled_js_files)
-	$(BROWSERIFY) --require ./build/lib/crypto/pbkdf2.js:pbkdf2 --outfile $@
-
-test: cli webui build/lib/crypto/pbkdf2_bundle.js
+test: cli webui
 	@$(NODE) ./utils/run-tests.js
 
 lint_files=$(addprefix build/,$(subst .ts,.ts.lint, $(all_srcs)))

@@ -1,15 +1,14 @@
 
 import assert = require('assert');
-var cryptoJS = require('crypto-js');
+var md5 = require('crypto-js/md5');
+var encLatin1 = require('crypto-js/enc-latin1');
 import node_crypto = require('crypto');
 import uuid = require('node-uuid');
 
 import { btoa } from './base/stringutil';
 import agile_keychain_entries = require('./agile_keychain_entries');
 import crypto = require('./base/crypto');
-import crypto_worker = require('./crypto_worker');
 import key_agent = require('./key_agent');
-import pbkdf2Lib = require('./crypto/pbkdf2');
 import rpc = require('./net/rpc');
 import { defer, Deferred, nodeResolver } from '../lib/base/promise_util';
 import { bufferFromString, stringFromBuffer } from './base/collectionutil';
@@ -136,11 +135,6 @@ export class NodeCrypto implements Crypto {
 		return Promise.resolve(result);
 	}
 
-	pbkdf2Sync(masterPwd: string, salt: string, iterCount: number, keyLen: number): string {
-		var derivedKey = node_crypto.pbkdf2Sync(masterPwd, salt, iterCount, keyLen);
-		return derivedKey.toString('binary');
-	}
-
 	pbkdf2(masterPwd: string, salt: string, iterCount: number, keyLen: number): Promise<string> {
 		var key = defer<string>();
 		// FIXME - Type definition for crypto.pbkdf2() is wrong, result
@@ -165,121 +159,6 @@ export class NodeCrypto implements Crypto {
 interface WorkerAndRpc {
 	worker: Worker;
 	rpc: rpc.RpcHandler;
-}
-
-// crypto implementation using CryptoJS plus the
-// crypto functions in lib/crypto
-export class CryptoJsCrypto implements Crypto {
-	static workers: WorkerAndRpc[];
-	encoding: any
-
-	/** Setup workers for async encryption tasks
-	  */
-	static initWorkers() {
-		if (typeof Worker != 'undefined') {
-			var script = crypto_worker.SCRIPT_PATH;
-
-			CryptoJsCrypto.workers = [];
-			for (var i = 0; i < 2; i++) {
-				var worker = new Worker(script);
-				var rpcHandler = new rpc.RpcHandler(new rpc.WorkerMessagePort(worker, 'crypto-worker', 'passcards'));
-				CryptoJsCrypto.workers.push({
-					worker: worker,
-					rpc: rpcHandler
-				});
-			}
-		}
-	}
-
-	constructor() {
-		this.encoding = cryptoJS.enc.Latin1;
-	}
-
-	aesCbcEncrypt(key: string, plainText: string, iv: string): Promise<string> {
-		assert.equal(key.length, 16);
-		assert.equal(iv.length, 16);
-
-		var keyArray = this.encoding.parse(key);
-		var ivArray = this.encoding.parse(iv);
-		var plainArray = this.encoding.parse(plainText);
-		var encrypted = cryptoJS.AES.encrypt(plainArray, keyArray, {
-			mode: cryptoJS.mode.CBC,
-			padding: cryptoJS.pad.Pkcs7,
-			iv: ivArray
-		});
-		return Promise.resolve(encrypted.ciphertext.toString(this.encoding));
-	}
-
-	aesCbcDecrypt(key: string, cipherText: string, iv: string) {
-		assert.equal(key.length, 16);
-		assert.equal(iv.length, 16);
-
-		var keyArray = this.encoding.parse(key);
-		var ivArray = this.encoding.parse(iv);
-		var cipherArray = this.encoding.parse(cipherText);
-		var cipherParams = cryptoJS.lib.CipherParams.create({
-			ciphertext: cipherArray
-		});
-		let result = cryptoJS.AES.decrypt(cipherParams, keyArray, {
-			mode: cryptoJS.mode.CBC,
-			padding: cryptoJS.pad.Pkcs7,
-			iv: ivArray
-		}).toString(this.encoding);
-		return Promise.resolve(result);
-	}
-
-	/** Derive a key from a password using PBKDF2. Depending on the number of iterations,
-	  * this process can be expensive and can block the UI in the browser.
-	  */
-	pbkdf2Sync(pass: string, salt: string, iterCount: number, keyLen: number): string {
-		// CryptoJS' own implementation of PKBDF2 scales poorly as the number
-		// of iterations increases (see https://github.com/dominictarr/crypto-bench/blob/master/results.md)
-		//
-		// Current versions of 1Password use 80K iterations of PBKDF2 so this needs
-		// to be fast to be usable, especially on mobile devices.
-		//
-		// Hence we use a custom implementation of PBKDF2 based on Rusha
-
-		var pbkdf2Impl = new pbkdf2Lib.PBKDF2();
-		var passBuf = bufferFromString(pass);
-		var saltBuf = bufferFromString(salt);
-		var key = pbkdf2Impl.key(passBuf, saltBuf, iterCount, keyLen);
-		return stringFromBuffer(key);
-	}
-
-	/** Derive a key from a password using PBKDF2. If initWorkers() has been called,
-	  * this will run asynchronously and in parallel in a worker, otherwise it will fall back to
-	  * pbkdf2Sync()
-	  */
-	pbkdf2(pass: string, salt: string, iterCount: number, keyLen: number): Promise<string> {
-		if (CryptoJsCrypto.workers) {
-			var keyBlocks: Promise<string>[] = [];
-			var PBKDF2_BLOCK_SIZE = 20;
-			var blockCount = Math.round(keyLen / PBKDF2_BLOCK_SIZE);
-
-			var processBlock = (blockIndex: number, keyBlock: Deferred<string>) => {
-				var rpc = CryptoJsCrypto.workers[blockIndex % CryptoJsCrypto.workers.length].rpc;
-				rpc.call('pbkdf2Block', [pass, salt, iterCount, blockIndex], nodeResolver(keyBlock));
-			};
-
-			for (var blockIndex = 0; blockIndex < blockCount; blockIndex++) {
-				var keyBlock = defer<string>();
-				processBlock(blockIndex, keyBlock);
-				keyBlocks.push(keyBlock.promise);
-			}
-
-			return Promise.all(keyBlocks).then((blocks) => {
-				return blocks.join('').slice(0, keyLen);
-			});
-		} else {
-			// fall back to sync calculation
-			return Promise.resolve(this.pbkdf2Sync(pass, salt, iterCount, keyLen));
-		}
-	}
-
-	async md5Digest(input: string): Promise<string> {
-		return cryptoJS.MD5(this.encoding.parse(input)).toString(this.encoding);
-	}
 }
 
 declare global {
@@ -338,8 +217,7 @@ class WebCrypto implements Crypto {
 
 	async md5Digest(input: string) {
 		// WebCrypto does not support MD5 :(
-		const encoding = cryptoJS.enc.Latin1;
-		return cryptoJS.MD5(encoding.parse(input)).toString(encoding);
+		return md5(encLatin1.parse(input)).toString(encLatin1);
 	}
 }
 

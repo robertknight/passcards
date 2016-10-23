@@ -34,7 +34,6 @@
     "node-glob": "^1.2.0",
     "orchestrator": "^0.3.7",
     "request": "^2.53.0",
-    "paralleljs": ">=0.2.1",
     "proxyquire": "^1.7.2",
     "qunitjs": "^1.19.0",
     "react-addons-test-utils": "^15.3.2",

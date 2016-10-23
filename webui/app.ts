@@ -61,8 +61,6 @@ export class App {
 
 		this.state = new app_state.Store();
 
-		agile_keychain_crypto.CryptoJsCrypto.initWorkers();
-
 		browserExt.pageAccess.events.listen(event => {
 			switch (event.type) {
 				case browser_access.MessageType.ExtensionUIShown:
