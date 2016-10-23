@@ -222,26 +222,16 @@ interface PendingRpcCall {
 
 	// ID of timeout timer to verify that RPC calls are replied
 	// to.
-	//
-	// Note: Type here is set to 'any' to avoid need to import
-	// Node.js typings when compiling Firefox addon SDK
-
-	replyTimerId?: any; /* NodeJS.Timer | number */
+	replyTimerId?: NodeJS.Timer | number;
 }
 
 /** Interface for object providing timer APIs, which may
-  * either be 'window' (in a browser context), 'global' (in Node)
-  * or something else (eg. in a Firefox addon)
+  * either be 'window' (in a browser context) or 'global' (in Node).
   */
 interface Timers {
 	setTimeout(callback: () => void, ms: number): any;
 	clearTimeout(id: any): void;
 }
-
-// 'global' var for use in NodeJS. This file does
-// not reference NodeJS' typings directly to avoid
-// conflicts with require() in Firefox addon typings
-declare var global: Timers;
 
 /** Simple RPC implementation. RpcHandler implements both the
   * client and server-sides of an RPC handler.
@@ -260,10 +250,6 @@ export class RpcHandler implements Client, Server {
 	/** A handler responsible for performing any special copying
 	  * of method arguments or replies needed before the data
 	  * is sent to the message port.
-	  *
-	  * For example in the Firefox extension objects being passed
-	  * from priviledged add-on code to pages needs to be copied
-	  * using cloneInto().
 	  */
 	clone: (data: any) => any;
 
