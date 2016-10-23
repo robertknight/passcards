@@ -34,7 +34,7 @@ testLib.addAsyncTest('decrypt data', (assert) => {
 	let itemPass = 'the \xFFmaster\x00 key';
 	let encrypted: string;
 
-	return agile_keychain_crypto.encryptAgileKeychainItemData(new agile_keychain_crypto.CryptoJsCrypto,
+	return agile_keychain_crypto.encryptAgileKeychainItemData(new agile_keychain_crypto.NodeCrypto,
 		itemPass, itemData)
 	.then(encrypted_ => {
 		encrypted = encrypted_;

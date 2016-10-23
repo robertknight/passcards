@@ -60,7 +60,7 @@ class Server {
 	private keyTimeout: NodeJS.Timer;
 
 	constructor() {
-		this.crypto = new agile_keychain_crypto.CryptoJsCrypto();
+		this.crypto = new agile_keychain_crypto.NodeCrypto();
 		this.keys = {};
 
 		var self = this;

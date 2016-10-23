@@ -113,14 +113,13 @@ export interface Crypto {
 	md5Digest(input: string): Promise<string>;
 }
 
-// crypto implementation using Node.js' crypto lib
+/** Crypto implementation using Node.js' crypto library. */
 export class NodeCrypto implements Crypto {
 	aesCbcDecrypt(key: string, cipherText: string, iv: string) {
 		var keyBuf = new Buffer(key, 'binary');
 		var ivBuf = new Buffer(iv, 'binary');
 		var decipher = node_crypto.createDecipheriv('AES-128-CBC', keyBuf, ivBuf);
-		let result = '';
-		result += decipher.update(cipherText, 'binary', 'binary');
+		let result = decipher.update(cipherText, 'binary', 'binary');
 		result += decipher.final('binary');
 		return Promise.resolve<string>(result);
 	}
@@ -136,22 +135,21 @@ export class NodeCrypto implements Crypto {
 	}
 
 	pbkdf2(masterPwd: string, salt: string, iterCount: number, keyLen: number): Promise<string> {
-		var key = defer<string>();
-		// FIXME - Type definition for crypto.pbkdf2() is wrong, result
-		// is a Buffer, not a string.
-		node_crypto.pbkdf2(masterPwd, salt, iterCount, keyLen, (err, derivedKey) => {
-			if (err) {
-				key.reject(err);
-				return;
-			}
-			key.resolve((<any>derivedKey).toString('binary'));
+		return new Promise((resolve, reject) => {
+			const saltBuf = new Buffer(salt, 'binary');
+			node_crypto.pbkdf2(masterPwd, saltBuf, iterCount, keyLen, 'sha1', (err, derivedKey) => {
+				if (err) {
+					reject(err);
+					return;
+				}
+				resolve(derivedKey.toString('binary'));
+			});
 		});
-		return key.promise;
 	}
 
 	async md5Digest(input: string): Promise<string> {
 		var md5er = node_crypto.createHash('md5');
-		md5er.update(input);
+		md5er.update(bufferFromString(input));
 		return md5er.digest('binary');
 	}
 }
@@ -226,6 +224,6 @@ export var defaultCrypto: Crypto;
 if (subtleCrypto) {
 	defaultCrypto = new WebCrypto;
 } else {
-	defaultCrypto = new CryptoJsCrypto;
+	defaultCrypto = new NodeCrypto;
 }
 

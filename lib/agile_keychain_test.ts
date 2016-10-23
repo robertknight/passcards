@@ -197,12 +197,7 @@ testLib.addAsyncTest('Compare vaults against .1pif files', (assert) => {
 });
 
 function createCryptos(): agile_keychain_crypto.Crypto[] {
-	var cryptoImpls: agile_keychain_crypto.Crypto[] = [];
-	cryptoImpls.push(new agile_keychain_crypto.CryptoJsCrypto);
-	if (env.isNodeJS()) {
-		cryptoImpls.push(new agile_keychain_crypto.NodeCrypto);
-	}
-	return cryptoImpls;
+	return [new agile_keychain_crypto.NodeCrypto];
 }
 
 testLib.addAsyncTest('AES encrypt/decrypt', (assert) => {
