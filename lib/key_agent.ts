@@ -252,17 +252,22 @@ export class SimpleKeyAgent implements KeyAgent {
   *  This is a copy of the decrypted version of @p encryptedKey, encrypted with itself.
   */
 export async function decryptKey(derivedKey: string, encryptedKey: string, validation: string): Promise<string> {
-	let aesKey = derivedKey.substring(0, 16);
-	let iv = derivedKey.substring(16, 32);
-	let decryptedKey = await agile_keychain_crypto.defaultCrypto.aesCbcDecrypt(aesKey, encryptedKey, iv);
-	let validationSaltCipher = agile_keychain_crypto.extractSaltAndCipherText(validation);
-	let keyParams = await agile_keychain_crypto.openSSLKey(agile_keychain_crypto.defaultCrypto,
-		decryptedKey, validationSaltCipher.salt);
-	let decryptedValidation = await agile_keychain_crypto.defaultCrypto.aesCbcDecrypt(keyParams.key, validationSaltCipher.cipherText, keyParams.iv);
-	if (decryptedValidation !== decryptedKey) {
+	try {
+		let aesKey = derivedKey.substring(0, 16);
+		let iv = derivedKey.substring(16, 32);
+		let decryptedKey = await agile_keychain_crypto.defaultCrypto.aesCbcDecrypt(aesKey, encryptedKey, iv);
+		let validationSaltCipher = agile_keychain_crypto.extractSaltAndCipherText(validation);
+		let keyParams = await agile_keychain_crypto.openSSLKey(agile_keychain_crypto.defaultCrypto,
+			decryptedKey, validationSaltCipher.salt);
+
+		let decryptedValidation = await agile_keychain_crypto.defaultCrypto.aesCbcDecrypt(keyParams.key, validationSaltCipher.cipherText, keyParams.iv);
+		if (decryptedValidation !== decryptedKey) {
+			throw new DecryptionError('Incorrect password');
+		}
+		return decryptedKey;
+	} catch (err) {
 		throw new DecryptionError('Incorrect password');
 	}
-	return decryptedKey;
 }
 
 /** Derive an encryption key from a password for use with decryptKey().

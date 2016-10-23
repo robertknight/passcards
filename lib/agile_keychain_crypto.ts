@@ -96,16 +96,29 @@ export function newUUID(): string {
 	return uuid.v4().toUpperCase().replace(/-/g, '');
 }
 
-/** Crypto is an interface to common crypto algorithms required
-  * to decrypt Agile Keychain vaults.
+/**
+  * Crypto is an interface to common crypto algorithms required to decrypt
+  * Agile Keychain vaults.
+  *
+  * All string parameters and return values are binary strings.
   */
 export interface Crypto {
-	/** Decrypt @p cipherText using AES-128 with the given key and initialization vector.
+	/**
+	  * Decrypt @p cipherText using AES-CBC-128 with the given key and initialization vector.
+	  *
+	  * This *may* throw an exception if the key or initialization vector are incorrect.
 	  */
 	aesCbcDecrypt(key: string, cipherText: string, iv: string): Promise<string>;
+
+	/**
+	  * Encrypt `plainText` using AES-CBC-128 with the given key and initialization vector.
+	  *
+	  * This *may* throw an exception if the key or initialization vector are invalid.
+	  */
 	aesCbcEncrypt(key: string, plainText: string, iv: string): Promise<string>;
 
-	/** Derive a key of length @p keyLen from a password using @p iterCount iterations
+	/**
+	  * Derive a key of length @p keyLen from a password using @p iterCount iterations
 	  * of PBKDF2
 	  */
 	pbkdf2(masterPwd: string, salt: string, iterCount: number, keyLen: number): Promise<string>;
