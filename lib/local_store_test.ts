@@ -64,7 +64,7 @@ function setupStoreAndUnlock() {
 	})
 }
 
-testLib.addAsyncTest('save and load keys and hint', (assert) => {
+testLib.addTest('save and load keys and hint', (assert) => {
 	var env = setupEnv();
 
 	var store = new local_store.Store(env.database, env.databaseName, env.keyAgent);
@@ -112,7 +112,7 @@ function makeItem() {
 	.item();
 }
 
-testLib.addAsyncTest('save and load items', (assert) => {
+testLib.addTest('save and load items', (assert) => {
 	var env = setupEnv();
 	var store = new local_store.Store(env.database, env.databaseName, env.keyAgent);
 	var item = makeItem();
@@ -143,7 +143,7 @@ testLib.addAsyncTest('save and load items', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('save and load item revisions', (assert) => {
+testLib.addTest('save and load item revisions', (assert) => {
 	var env = setupEnv();
 	var store = new local_store.Store(env.database, env.databaseName, env.keyAgent);
 	var item = makeItem();
@@ -192,7 +192,7 @@ testLib.addAsyncTest('save and load item revisions', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('clear store', (assert) => {
+testLib.addTest('clear store', (assert) => {
 	var env = setupEnv();
 	var store = new local_store.Store(env.database, env.databaseName, env.keyAgent);
 	var item = makeItem();
@@ -213,7 +213,7 @@ testLib.addAsyncTest('clear store', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('unlock store with no keys', (assert) => {
+testLib.addTest('unlock store with no keys', (assert) => {
 	var env = setupEnv();
 	var store = new local_store.Store(env.database, env.databaseName, env.keyAgent);
 
@@ -226,7 +226,7 @@ testLib.addAsyncTest('unlock store with no keys', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('get/set last sync data', assert => {
+testLib.addTest('get/set last sync data', assert => {
 	let store: local_store.Store;
 	let item = makeItem();
 
@@ -260,7 +260,7 @@ testLib.addAsyncTest('get/set last sync data', assert => {
 	});
 });
 
-testLib.addAsyncTest('item revision updates on save', (assert) => {
+testLib.addTest('item revision updates on save', (assert) => {
 	var env = setupEnv();
 	var store = new local_store.Store(env.database, env.databaseName, env.keyAgent);
 	var item = makeItem();
@@ -290,7 +290,7 @@ testLib.addAsyncTest('item revision updates on save', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('updating keys replaces existing keys', (assert) => {
+testLib.addTest('updating keys replaces existing keys', (assert) => {
 	var env = setupEnv();
 	var store = new local_store.Store(env.database, env.databaseName, env.keyAgent);
 
@@ -328,7 +328,7 @@ function createStoreWithItem() {
 	}));
 }
 
-testLib.addAsyncTest('list item states', assert => {
+testLib.addTest('list item states', assert => {
 	var storeAndItem: StoreWithItem;
 	return createStoreWithItem().then(storeAndItem_ => {
 		storeAndItem = storeAndItem_;

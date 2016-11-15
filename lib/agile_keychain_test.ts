@@ -79,7 +79,7 @@ function createTestVault() {
 	});
 }
 
-testLib.addAsyncTest('Import item from .1pif file', (assert) => {
+testLib.addTest('Import item from .1pif file', (assert) => {
 	var importer = new exportLib.PIFImporter();
 	var actualItems = importer.importItems(fs, 'test.1pif');
 	return actualItems.then((items) => {
@@ -137,7 +137,7 @@ testLib.addAsyncTest('Import item from .1pif file', (assert) => {
 // set of tests which open a vault, unlock it,
 // fetch all items and compare to an expected set
 // of items in .1pif format
-testLib.addAsyncTest('Compare vaults against .1pif files', (assert) => {
+testLib.addTest('Compare vaults against .1pif files', (assert) => {
 	var importer = new exportLib.PIFImporter();
 
 	var done = TEST_VAULTS.map((tst) => {
@@ -200,7 +200,7 @@ function createCryptos(): agile_keychain_crypto.Crypto[] {
 	return [new agile_keychain_crypto.NodeCrypto];
 }
 
-testLib.addAsyncTest('AES encrypt/decrypt', (assert) => {
+testLib.addTest('AES encrypt/decrypt', (assert) => {
 	let done: Promise<void>[] = [];
 	let impls = createCryptos();
 	for (var impl of impls) {
@@ -218,7 +218,7 @@ testLib.addAsyncTest('AES encrypt/decrypt', (assert) => {
 	return Promise.all(done);
 });
 
-testLib.addAsyncTest('Encrypt/decrypt item data', (assert) => {
+testLib.addTest('Encrypt/decrypt item data', (assert) => {
 	let impls = createCryptos();
 	let done: Promise<void>[] = [];
 	for (let impl of impls) {
@@ -240,7 +240,7 @@ testLib.addTest('New item UUID', (assert) => {
 	assert.ok(item.uuid.match(/[0-9A-F]{32}/) != null);
 });
 
-testLib.addAsyncTest('Save item', (assert) => {
+testLib.addTest('Save item', (assert) => {
 	return createTestVault().then((vault) => {
 		let item = new item_store.Item(vault);
 		item.title = 'New Test Item';
@@ -275,7 +275,7 @@ testLib.addAsyncTest('Save item', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('Update item', (assert) => {
+testLib.addTest('Update item', (assert) => {
 	return createTestVault().then((vault) => {
 		var item = new item_store.Item(vault);
 		item.title = 'Original item title';
@@ -350,7 +350,7 @@ testLib.addAsyncTest('Update item', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('Remove item', (assert) => {
+testLib.addTest('Remove item', (assert) => {
 	let item: item_store.Item;
 	let vault: agile_keychain.Vault;
 
@@ -422,7 +422,7 @@ testLib.addTest('Generate Passwords', (assert) => {
 	}
 });
 
-testLib.addAsyncTest('Encrypt/decrypt key (sync)', async (assert) => {
+testLib.addTest('Encrypt/decrypt key (sync)', async (assert) => {
 	let password = 'test-pass'
 	let iterations = 100;
 	let salt = crypto.randomBytes(8);
@@ -438,7 +438,7 @@ testLib.addAsyncTest('Encrypt/decrypt key (sync)', async (assert) => {
 	assert.ok(result.error != null);
 });
 
-testLib.addAsyncTest('Encrypt/decrypt key (async)', (assert) => {
+testLib.addTest('Encrypt/decrypt key (async)', (assert) => {
 	var password = ' test-pass-2';
 	var iterations = 100;
 	var salt = crypto.randomBytes(8);
@@ -456,7 +456,7 @@ testLib.addAsyncTest('Encrypt/decrypt key (async)', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('Create new vault', (assert) => {
+testLib.addTest('Create new vault', (assert) => {
 	let fs = new nodefs.FileVFS(testLib.tempDir());
 	let pass = 'test-new-vault-pass';
 	let hint = 'the-password-hint';
@@ -499,7 +499,7 @@ testLib.addAsyncTest('Create new vault', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('Change vault password', (assert) => {
+testLib.addTest('Change vault password', (assert) => {
 	var vault: agile_keychain.Vault;
 	return createTestVault().then((vault_) => {
 		vault = vault_;
@@ -517,7 +517,7 @@ testLib.addAsyncTest('Change vault password', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('Save existing item to new vault', (assert) => {
+testLib.addTest('Save existing item to new vault', (assert) => {
 	var vault: agile_keychain.Vault;
 	var item: item_store.Item;
 
@@ -584,7 +584,7 @@ testLib.addTest('Default item properties', (assert) => {
 	assert.notEqual(item.uuid, item2.uuid);
 });
 
-testLib.addAsyncTest('createVault() fails if directory exists', (assert) => {
+testLib.addTest('createVault() fails if directory exists', (assert) => {
 	var fs = new nodefs.FileVFS(testLib.tempDir());
 	var pass = 'pass-1';
 	var hint = 'test-new-vault-hint';
@@ -638,7 +638,7 @@ function createTestVaultWithNItems(n: number): Promise<TestVault> {
 	}));
 }
 
-testLib.addAsyncTest('listItemStates() matches listItems() output', assert => {
+testLib.addTest('listItemStates() matches listItems() output', assert => {
 	let vault: agile_keychain.Vault;
 	let items: item_store.Item[];
 	return createTestVaultWithNItems(3).then(result => {
@@ -661,7 +661,7 @@ testLib.addAsyncTest('listItemStates() matches listItems() output', assert => {
 
 // if the contents.js files and .1password files get out of sync, the .1password
 // file is the source of truth
-testLib.addAsyncTest('listItemStates(), listItems() should not list item if .1password file is not present', assert => {
+testLib.addTest('listItemStates(), listItems() should not list item if .1password file is not present', assert => {
 	let testVault: TestVault;
 	return createTestVaultWithNItems(3).then(testVault_ => {
 		testVault = testVault_;
@@ -680,7 +680,7 @@ testLib.addAsyncTest('listItemStates(), listItems() should not list item if .1pa
 	});
 });
 
-testLib.addAsyncTest('Removing item succeeds if file is already removed', assert => {
+testLib.addTest('Removing item succeeds if file is already removed', assert => {
 	let testVault: TestVault;
 	return createTestVaultWithNItems(1).then(testVault_ => {
 		testVault = testVault_;
@@ -697,7 +697,7 @@ testLib.addAsyncTest('Removing item succeeds if file is already removed', assert
 // but no 'securityLevel' field.
 // Verify that these items are successfully listed.
 // issue #57
-testLib.addAsyncTest('Should list items with no securityLevel field', assert => {
+testLib.addTest('Should list items with no securityLevel field', assert => {
 	// create a test vault with an item
 	let testVault: TestVault;
 	let keys: key_agent.Key[];

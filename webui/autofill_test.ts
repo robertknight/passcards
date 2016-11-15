@@ -58,7 +58,7 @@ function itemWithUsernameAndPassword(user: string, password: string): item_store
 	.item();
 }
 
-testLib.addAsyncTest('simple user/password autofill', (assert) => {
+testLib.addTest('simple user/password autofill', (assert) => {
 	var item = itemWithUsernameAndPassword('testuser@gmail.com', 'testpass');
 	var fakePage = new FakeBrowserAccess();
 
@@ -94,7 +94,7 @@ testLib.addAsyncTest('simple user/password autofill', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('ignore hidden fields', (assert) => {
+testLib.addTest('ignore hidden fields', (assert) => {
 	var item = itemWithUsernameAndPassword('testuser@gmail.com', 'testpass');
 	var fakePage = new FakeBrowserAccess();
 
@@ -120,7 +120,7 @@ testLib.addAsyncTest('ignore hidden fields', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('find unlabeled username fields', (assert) => {
+testLib.addTest('find unlabeled username fields', (assert) => {
 	var item = itemWithUsernameAndPassword('testuser@gmail.com', 'testpass');
 	var fakePage = new FakeBrowserAccess();
 

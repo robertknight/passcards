@@ -3,7 +3,7 @@ import fs = require('fs');
 import streamutil = require('./streamutil');
 import testLib = require('../test');
 
-testLib.addAsyncTest('read binary stream', (assert) => {
+testLib.addTest('read binary stream', (assert) => {
 	const PNG_MAGIC = [0x89, 0x50, 0x4e, 0x47];
 	const TEST_PATH = `${testLib.tempDir() }/test.png`;
 

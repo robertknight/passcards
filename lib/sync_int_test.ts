@@ -14,7 +14,7 @@ import vfs_util = require('./vfs/util');
 (global as any).indexedDB = require('fake-indexeddb');
 (global as any).IDBKeyRange = require('fake-indexeddb/lib/FDBKeyRange');
 
-testLib.addAsyncTest('saves and syncs items', assert => {
+testLib.addTest('saves and syncs items', assert => {
 	let db = new key_value_store.IndexedDBDatabase();
 	let fs = new vfs_node.FileVFS(`${testLib.tempDir() }/sync-integration-test`);
 	let keyAgent = new key_agent.SimpleKeyAgent();

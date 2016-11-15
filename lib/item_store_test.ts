@@ -9,7 +9,7 @@ testLib.addTest('default item properties', (assert) => {
 	assert.equal(item.primaryLocation(), '');
 });
 
-testLib.addAsyncTest('default item content', (assert) => {
+testLib.addTest('default item content', (assert) => {
 	var item = new item_store.Item();
 	return item.getContent().then((content) => {
 		assert.equal(content.urls.length, 0);

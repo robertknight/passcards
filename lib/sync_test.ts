@@ -79,7 +79,7 @@ function setupWithItem(): Promise<{ env: Env; item: item_store.Item }> {
 	});
 }
 
-testLib.addAsyncTest('sync keys and password hint from cloud to local', (assert) => {
+testLib.addTest('sync keys and password hint from cloud to local', (assert) => {
 	let env: Env;
 
 	return setup().then(_env => {
@@ -96,7 +96,7 @@ testLib.addAsyncTest('sync keys and password hint from cloud to local', (assert)
 	});
 });
 
-testLib.addAsyncTest('sync keys without hint', assert => {
+testLib.addTest('sync keys without hint', assert => {
 	let env: Env;
 	return setup().then(_env => {
 		env = _env;
@@ -116,7 +116,7 @@ testLib.addAsyncTest('sync keys without hint', assert => {
 	});
 });
 
-testLib.addAsyncTest('sync items from cloud to local', (assert) => {
+testLib.addTest('sync items from cloud to local', (assert) => {
 	var env: Env;
 
 	// 1. save a new item to the cloudStore
@@ -171,7 +171,7 @@ testLib.addAsyncTest('sync items from cloud to local', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('sync items from local to cloud', (assert) => {
+testLib.addTest('sync items from local to cloud', (assert) => {
 	var env: Env;
 
 	// 1. Save a new item to the store
@@ -221,7 +221,7 @@ testLib.addAsyncTest('sync items from local to cloud', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('merge local and cloud item updates', (assert) => {
+testLib.addTest('merge local and cloud item updates', (assert) => {
 	var env: Env;
 	var item = new item_builder.Builder(item_store.ItemTypes.LOGIN)
 	.setTitle('acme.org')
@@ -258,7 +258,7 @@ testLib.addAsyncTest('merge local and cloud item updates', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('report sync progress', (assert) => {
+testLib.addTest('report sync progress', (assert) => {
 	var env: Env;
 
 	var item = new item_builder.Builder(item_store.ItemTypes.LOGIN)
@@ -339,7 +339,7 @@ testLib.addAsyncTest('report sync progress', (assert) => {
 
 const CLOUD_STORE_ID = 'cloud';
 
-testLib.addAsyncTest('sync item deletion from cloud to local', (assert) => {
+testLib.addTest('sync item deletion from cloud to local', (assert) => {
 	let env: Env;
 	let item: item_store.Item;
 
@@ -373,7 +373,7 @@ testLib.addAsyncTest('sync item deletion from cloud to local', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('sync item deletion from local to cloud', assert => {
+testLib.addTest('sync item deletion from local to cloud', assert => {
 	let env: Env;
 	return setupWithItem().then(_env => {
 		env = _env.env;
@@ -395,7 +395,7 @@ testLib.addAsyncTest('sync item deletion from local to cloud', assert => {
 	});
 });
 
-testLib.addAsyncTest('item deleted in cloud and locally', assert => {
+testLib.addTest('item deleted in cloud and locally', assert => {
 	let env: Env;
 	let uuid: string;
 	return setupWithItem().then(_env => {
@@ -424,7 +424,7 @@ testLib.addAsyncTest('item deleted in cloud and locally', assert => {
 	});
 });
 
-testLib.addAsyncTest('syncing locked store should fail', (assert) => {
+testLib.addTest('syncing locked store should fail', (assert) => {
 	var env: Env;
 	var item: item_store.Item;
 
@@ -443,7 +443,7 @@ testLib.addAsyncTest('syncing locked store should fail', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('repeat sync', (assert) => {
+testLib.addTest('repeat sync', (assert) => {
 	return setupWithItem().then((env) => {
 		// syncing whilst a sync is already in progress should return
 		// the same promise
@@ -454,7 +454,7 @@ testLib.addAsyncTest('repeat sync', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('sync many items', (assert) => {
+testLib.addTest('sync many items', (assert) => {
 	var ITEM_COUNT = 100;
 	var env: Env;
 
@@ -481,7 +481,7 @@ testLib.addAsyncTest('sync many items', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('sync should complete if errors occur', assert => {
+testLib.addTest('sync should complete if errors occur', assert => {
 	let env: Env;
 	let item: item_store.Item;
 

@@ -55,7 +55,7 @@ class FakeWindow implements rpc.WindowMessageInterface {
 	}
 };
 
-testLib.addAsyncTest('simple rpc call and reply', (assert) => {
+testLib.addTest('simple rpc call and reply', (assert) => {
 	var clientPort = new FakePort();
 	var serverPort = new FakePort(clientPort);
 
@@ -79,7 +79,7 @@ testLib.addAsyncTest('simple rpc call and reply', (assert) => {
 	return done.promise;
 });
 
-testLib.addAsyncTest('rpc error', (assert) => {
+testLib.addTest('rpc error', (assert) => {
 	var clientPort = new FakePort();
 	var serverPort = new FakePort(clientPort);
 
@@ -102,7 +102,7 @@ testLib.addAsyncTest('rpc error', (assert) => {
 	return done.promise;
 });
 
-testLib.addAsyncTest('rpc async call and reply', (assert) => {
+testLib.addTest('rpc async call and reply', (assert) => {
 	var clientPort = new FakePort();
 	var serverPort = new FakePort(clientPort);
 
@@ -121,7 +121,7 @@ testLib.addAsyncTest('rpc async call and reply', (assert) => {
 	return done.promise;
 });
 
-testLib.addAsyncTest('rpc async error', (assert) => {
+testLib.addTest('rpc async error', (assert) => {
 	var clientPort = new FakePort();
 	var serverPort = new FakePort(clientPort);
 
@@ -160,7 +160,7 @@ testLib.addAsyncTest('rpc async error', (assert) => {
 	return done.promise;
 });
 
-testLib.addAsyncTest('window.postMessage() rpc call and reply', (assert) => {
+testLib.addTest('window.postMessage() rpc call and reply', (assert) => {
 	var fakeWindowA = new FakeWindow();
 	var fakeWindowB = new FakeWindow(fakeWindowA);
 
@@ -199,7 +199,7 @@ testLib.addAsyncTest('window.postMessage() rpc call and reply', (assert) => {
 	return done.promise;
 });
 
-testLib.addAsyncTest('rpc-promise bridge', (assert) => {
+testLib.addTest('rpc-promise bridge', (assert) => {
 	var clientPort = new FakePort();
 	var serverPort = new FakePort(clientPort);
 
@@ -218,7 +218,7 @@ testLib.addAsyncTest('rpc-promise bridge', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('reports an error if RPC handler fails to reply within a timeout', (assert) => {
+testLib.addTest('reports an error if RPC handler fails to reply within a timeout', (assert) => {
 	var clientPort = new FakePort();
 	var serverPort = new FakePort(clientPort);
 

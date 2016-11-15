@@ -26,7 +26,7 @@ var createNodeFs = () => {
 }
 
 function addTests(fsName: string, createFs: () => Promise<vfs.VFS>) {
-	testLib.addAsyncTest(fsName + ': Read and write file', (assert) => {
+	testLib.addTest(fsName + ': Read and write file', (assert) => {
 		var fs: vfs.VFS;
 		return createFs().then((_fs) => {
 			fs = _fs;
@@ -38,7 +38,7 @@ function addTests(fsName: string, createFs: () => Promise<vfs.VFS>) {
 		});
 	});
 
-	testLib.addAsyncTest(fsName + ': Stat file', (assert) => {
+	testLib.addTest(fsName + ': Stat file', (assert) => {
 		var fs: vfs.VFS;
 		return createFs().then((_fs) => {
 			fs = _fs;
@@ -54,7 +54,7 @@ function addTests(fsName: string, createFs: () => Promise<vfs.VFS>) {
 		});
 	});
 
-	testLib.addAsyncTest(fsName + ': Create dir', (assert) => {
+	testLib.addTest(fsName + ': Create dir', (assert) => {
 		var fs: vfs.VFS;
 		return createFs().then((_fs) => {
 			fs = _fs;
@@ -70,7 +70,7 @@ function addTests(fsName: string, createFs: () => Promise<vfs.VFS>) {
 		});
 	});
 
-	testLib.addAsyncTest(fsName + ': List folder', (assert) => {
+	testLib.addTest(fsName + ': List folder', (assert) => {
 		var fs: vfs.VFS;
 		return createFs().then((_fs) => {
 			fs = _fs;
@@ -95,7 +95,7 @@ function addTests(fsName: string, createFs: () => Promise<vfs.VFS>) {
 		});
 	});
 
-	testLib.addAsyncTest(fsName + ': Search folder', (assert) => {
+	testLib.addTest(fsName + ': Search folder', (assert) => {
 		var fs = createFs();
 		return fs.then((fs) => {
 			var fileWritten = fs.write('test-search-folder', 'test-content');
@@ -114,7 +114,7 @@ function addTests(fsName: string, createFs: () => Promise<vfs.VFS>) {
 		});
 	});
 
-	testLib.addAsyncTest(fsName + ': Copy dir', (assert) => {
+	testLib.addTest(fsName + ': Copy dir', (assert) => {
 		var fs: vfs.VFS;
 		var destFiles: vfs.FileInfo[];
 
@@ -157,7 +157,7 @@ function addTests(fsName: string, createFs: () => Promise<vfs.VFS>) {
 		});
 	});
 
-	testLib.addAsyncTest(fsName + ': ignore paths above root', (assert) => {
+	testLib.addTest(fsName + ': ignore paths above root', (assert) => {
 		return createFs().then((fs) => {
 			return fs.list('../../');
 		}).then((files) => {
@@ -165,7 +165,7 @@ function addTests(fsName: string, createFs: () => Promise<vfs.VFS>) {
 		});
 	});
 
-	testLib.addAsyncTest(fsName + ': write conflict detection', (assert) => {
+	testLib.addTest(fsName + ': write conflict detection', (assert) => {
 		var fs: vfs.VFS;
 		return createFs().then((_fs) => {
 			fs = _fs;
@@ -190,7 +190,7 @@ function addTests(fsName: string, createFs: () => Promise<vfs.VFS>) {
 		});
 	});
 
-	testLib.addAsyncTest(fsName + ': mkpath', (assert) => {
+	testLib.addTest(fsName + ': mkpath', (assert) => {
 		var fs: vfs.VFS;
 		return createFs().then((_fs) => {
 			fs = _fs;

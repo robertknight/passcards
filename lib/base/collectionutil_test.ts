@@ -34,7 +34,7 @@ testLib.addTest('convert list to map', (assert) => {
 
 type KeyValueMap = { [index: string]: number };
 
-testLib.addAsyncTest('batched updates', (assert) => {
+testLib.addTest('batched updates', (assert) => {
 	var savedItems: KeyValueMap = {};
 
 	var queue = new collectionutil.BatchedUpdateQueue<KeyValue>((updates: KeyValue[]) => {

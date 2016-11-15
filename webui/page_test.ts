@@ -62,7 +62,7 @@ function setupTestPage() {
 	global_.document.getElementById('app').innerHTML = SAMPLE_INPUT_FORM;
 }
 
-testLib.addAsyncTest('should find inputs in document', assert => {
+testLib.addTest('should find inputs in document', assert => {
 	setupTestPage();
 
 	let[clientPort, serverPort] = createClientServerPortPair();
@@ -107,7 +107,7 @@ testLib.addAsyncTest('should find inputs in document', assert => {
 	return done.promise;
 });
 
-testLib.addAsyncTest('should autofill inputs in document', assert => {
+testLib.addTest('should autofill inputs in document', assert => {
 	setupTestPage();
 
 	let[clientPort, serverPort] = createClientServerPortPair();

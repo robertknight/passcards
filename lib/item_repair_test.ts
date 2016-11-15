@@ -3,7 +3,7 @@ import item_repair = require('./item_repair');
 import item_store = require('./item_store');
 import testLib = require('./test');
 
-testLib.addAsyncTest('fix location field', (assert) => {
+testLib.addTest('fix location field', (assert) => {
 	var builder = new item_builder.Builder(item_store.ItemTypes.LOGIN);
 	builder
 	.setTitle('test-item')

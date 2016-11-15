@@ -1,7 +1,7 @@
 import testLib = require('../test');
 import asyncutil = require('./asyncutil');
 
-testLib.addAsyncTest('test run sequence', (assert) => {
+testLib.addTest('test run sequence', (assert) => {
 	var values = [1, 1, 2, 3, 5, 8, 13];
 	var runOrder: number[] = [];
 
@@ -19,7 +19,7 @@ testLib.addAsyncTest('test run sequence', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('async while loop', (assert) => {
+testLib.addTest('async while loop', (assert) => {
 	var counter = 0;
 
 	return asyncutil.until(() => {
@@ -35,7 +35,7 @@ testLib.addAsyncTest('async while loop', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('promise to result', (assert) => {
+testLib.addTest('promise to result', (assert) => {
 	var resolvedPromise = Promise.resolve('hello');
 	var rejectedPromise = Promise.reject<string>(new Error('failed'));
 

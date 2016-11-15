@@ -1,7 +1,7 @@
 import cached = require('./cached');
 import testLib = require('../test');
 
-testLib.addAsyncTest('read / write cached value', (assert) => {
+testLib.addTest('read / write cached value', (assert) => {
 	var value = 5;
 	var cachedValue = new cached.Cached<number>(
 		() => { return Promise.resolve(value); },
@@ -26,7 +26,7 @@ testLib.addAsyncTest('read / write cached value', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('clear cached value', (assert) => {
+testLib.addTest('clear cached value', (assert) => {
 	var value = 7;
 	var cachedValue = new cached.Cached<number>(
 		() => { return Promise.resolve(value); },

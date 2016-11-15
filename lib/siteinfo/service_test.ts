@@ -241,7 +241,7 @@ function allocatePort(): number {
 	return port;
 }
 
-testLib.addAsyncTest('fail to fetch icons', (assert) => {
+testLib.addTest('fail to fetch icons', (assert) => {
 	var sitePath = path.join(TEST_SITE_PATH, 'wikipedia/no-icons');
 	return serveAndFetchIcons(allocatePort(), sitePath, '').then((result) => {
 		assert.equal(result.queryResult.state, site_info.QueryState.Ready);
@@ -250,7 +250,7 @@ testLib.addAsyncTest('fail to fetch icons', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('fetch static links', (assert) => {
+testLib.addTest('fetch static links', (assert) => {
 	var sitePath = path.join(TEST_SITE_PATH, 'wikipedia/standard-icons');
 	return serveAndFetchIcons(allocatePort(), sitePath, '/').then((result) => {
 		assert.equal(result.queryResult.state, site_info.QueryState.Ready);
@@ -259,7 +259,7 @@ testLib.addAsyncTest('fetch static links', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('fetch page links', (assert) => {
+testLib.addTest('fetch page links', (assert) => {
 	var sitePath = path.join(TEST_SITE_PATH, 'wikipedia/linked-icons');
 	return serveAndFetchIcons(allocatePort(), sitePath, '/index.html').then((result) => {
 		assert.equal(result.queryResult.state, site_info.QueryState.Ready);
@@ -268,7 +268,7 @@ testLib.addAsyncTest('fetch page links', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('forget site info', (assert) => {
+testLib.addTest('forget site info', (assert) => {
 	var sitePath = path.join(TEST_SITE_PATH, 'wikipedia/linked-icons');
 	return serveAndFetchIcons(allocatePort(), sitePath, '/index.html').then((result) => {
 		var queryUrl = result.queryResult.info.url;
@@ -283,7 +283,7 @@ testLib.addAsyncTest('forget site info', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('fetch site icon with DuckDuckGo', (assert) => {
+testLib.addTest('fetch site icon with DuckDuckGo', (assert) => {
 	var urlFetcher: site_info_service.UrlFetcher = {
 		fetch: (url: string) => {
 			return Promise.resolve({

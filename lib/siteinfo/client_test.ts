@@ -4,7 +4,7 @@ import site_info = require('./site_info');
 import testLib = require('../test');
 import { delay } from '../base/promise_util';
 
-testLib.addAsyncTest('fetch google.com icons', (assert) => {
+testLib.addTest('fetch google.com icons', (assert) => {
 	var passcardsClient = new client.PasscardsClient();
 
 	var TEST_DOMAIN = 'http://google.com';

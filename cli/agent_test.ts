@@ -4,7 +4,7 @@ import agile_keychain_crypto = require('../lib/agile_keychain_crypto');
 import key_agent = require('../lib/key_agent');
 import testLib = require('../lib/test');
 
-testLib.addAsyncTest('store keys', (assert) => {
+testLib.addTest('store keys', (assert) => {
 	var httpAgent = new agent.HttpKeyAgent();
 	return httpAgent.forgetKeys().then(() => {
 		return httpAgent.addKey('key1', 'mykey')
@@ -23,7 +23,7 @@ testLib.addAsyncTest('store keys', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('decrypt data', (assert) => {
+testLib.addTest('decrypt data', (assert) => {
 	let httpAgent = new agent.HttpKeyAgent();
 
 	let itemData = JSON.stringify({ secret: 'secret-data' });
@@ -48,7 +48,7 @@ testLib.addAsyncTest('decrypt data', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('encrypt data', (assert) => {
+testLib.addTest('encrypt data', (assert) => {
 	var httpAgent = new agent.HttpKeyAgent();
 
 	var itemData = JSON.stringify({ secret: 'secret-data' });

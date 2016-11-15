@@ -134,11 +134,6 @@ export function addTest(name: string, testFunc: (assert: Assert) => void) {
 	scheduleAutoStart();
 }
 
-/** Alias for addTest() */
-export function addAsyncTest(name: string, testFunc: (assert: Assert) => any) {
-	addTest(name, testFunc);
-}
-
 export interface TestStartParams {
 	name: string;
 	module: string;
@@ -191,7 +186,7 @@ function requireNodeVersion(version: string) {
 }
 
 /** Start the test suite. The default mode is to run tests added with
-  * addTest() and addAsyncTest().
+  * addTest().
   *
   * The test runner has a command-line parser which provides options
   * to list available tests, filter which tests are run and adjust
@@ -370,7 +365,7 @@ export function assertEqual(assert: Assert, a: any, b: any, properties?: string[
 
 /** Cancel any pending auto-start of the test suite.
   * This will prevent tests auto-starting after being
-  * added with addTest() or addAsyncTest()
+  * added with addTest() or addTest()
   */
 export function cancelAutoStart() {
 	if (testStartTimer) {

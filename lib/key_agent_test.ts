@@ -2,7 +2,7 @@ import key_agent = require('./key_agent');
 import testLib = require('./test');
 import { defer } from './base/promise_util';
 
-testLib.addAsyncTest('auto-lock', (assert) => {
+testLib.addTest('auto-lock', (assert) => {
 	let agent = new key_agent.SimpleKeyAgent();
 	let lockEvents = 0;
 	agent.onLock().listen(() => {

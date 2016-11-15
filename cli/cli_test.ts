@@ -210,7 +210,7 @@ class CLITest {
 	}
 }
 
-testLib.addAsyncTest('list vault', (assert) => {
+testLib.addTest('list vault', (assert) => {
 	var env = new CLITest(assert);
 	return env.run('list')
 	.then(() => {
@@ -218,7 +218,7 @@ testLib.addAsyncTest('list vault', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('list vault with pattern', (assert) => {
+testLib.addTest('list vault with pattern', (assert) => {
 	var env = new CLITest(assert);
 	return env.run('list', '-p', 'nomatch')
 	.then(() => {
@@ -231,7 +231,7 @@ testLib.addAsyncTest('list vault with pattern', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('wrong password', (assert) => {
+testLib.addTest('wrong password', (assert) => {
 	var env = new CLITest(assert);
 	env.fakeTerm.password = 'wrong-password';
 	return env.runExpectingStatus(2, 'list')
@@ -240,7 +240,7 @@ testLib.addAsyncTest('wrong password', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('show item', (assert) => {
+testLib.addTest('show item', (assert) => {
 	var env = new CLITest(assert);
 	return env.run('show', 'facebook')
 	.then(() => {
@@ -249,7 +249,7 @@ testLib.addAsyncTest('show item', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('show overview', (assert) => {
+testLib.addTest('show overview', (assert) => {
 	var env = new CLITest(assert);
 	return env.run('show', '--format=overview', 'facebook')
 	.then(() => {
@@ -258,7 +258,7 @@ testLib.addAsyncTest('show overview', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('show JSON', (assert) => {
+testLib.addTest('show JSON', (assert) => {
 	var env = new CLITest(assert);
 	return env.run('show', '--format=json', 'facebook')
 	.then(() => {
@@ -267,7 +267,7 @@ testLib.addAsyncTest('show JSON', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('lock', (assert) => {
+testLib.addTest('lock', (assert) => {
 	var env = new CLITest(assert);
 	env.fakeTerm.passRequestCount = 0;
 
@@ -288,7 +288,7 @@ testLib.addAsyncTest('lock', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('copy', (assert) => {
+testLib.addTest('copy', (assert) => {
 	var env = new CLITest(assert);
 	return env.run('copy', 'facebook')
 	.then(() => {
@@ -305,7 +305,7 @@ testLib.addAsyncTest('copy', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('select matching item', (assert) => {
+testLib.addTest('select matching item', (assert) => {
 	var env = new CLITest(assert);
 	env.replyTo(/Website/).with('facebook.com');
 	env.replyTo(/Username/).with('jane.smith@gmail.com');
@@ -326,7 +326,7 @@ testLib.addAsyncTest('select matching item', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('add login', (assert) => {
+testLib.addTest('add login', (assert) => {
 	var env = new CLITest(assert);
 	env.replyTo(/Website/).with('mydomain.com');
 	env.replyTo(/Username/).with('jim.smith@gmail.com');
@@ -345,7 +345,7 @@ testLib.addAsyncTest('add login', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('add credit card', (assert) => {
+testLib.addTest('add credit card', (assert) => {
 	var env = new CLITest(assert);
 	return env.newVault().then(() => {
 		return env.run('add', 'card', 'MasterCard');
@@ -356,7 +356,7 @@ testLib.addAsyncTest('add credit card', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('trash/restore item', (assert) => {
+testLib.addTest('trash/restore item', (assert) => {
 	var env = new CLITest(assert);
 	return env.newVault().then(() => {
 		return env.run('trash', 'facebook');
@@ -373,7 +373,7 @@ testLib.addAsyncTest('trash/restore item', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('change password', (assert) => {
+testLib.addTest('change password', (assert) => {
 	var env = new CLITest(assert);
 	env.replyTo(/Re-enter existing/).with('logMEin');
 	env.replyTo(/New password/).with('newpass');
@@ -390,7 +390,7 @@ testLib.addAsyncTest('change password', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('item pattern formats', (assert) => {
+testLib.addTest('item pattern formats', (assert) => {
 	var env = new CLITest(assert);
 	var patterns = ['facebook', 'FACEB', 'ca20', 'CA20'];
 	var tests: Array<() => Promise<any>> = [];
@@ -408,7 +408,7 @@ testLib.addAsyncTest('item pattern formats', (assert) => {
 	return asyncutil.series(tests);
 });
 
-testLib.addAsyncTest('remove items', (assert) => {
+testLib.addTest('remove items', (assert) => {
 	var env = new CLITest(assert);
 	env.replyTo(/Do you really want to remove these 1 item\(s\)/).with('y');
 
@@ -421,14 +421,14 @@ testLib.addAsyncTest('remove items', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('generate password', (assert) => {
+testLib.addTest('generate password', (assert) => {
 	var env = new CLITest(assert);
 	return env.run('gen-password').then((status) => {
 		assert.ok(env.fakeTerm.didPrint(/[A-Za-z0-9]{3}-[A-Za-z0-9]{3}-[A-Za-z0-9]{4}/));
 	});
 });
 
-testLib.addAsyncTest('edit item - set field', (assert) => {
+testLib.addTest('edit item - set field', (assert) => {
 	var env = new CLITest(assert);
 
 	env.replyTo(/New value for "username"/).with('newuser');
@@ -447,7 +447,7 @@ testLib.addAsyncTest('edit item - set field', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('edit item - add section and field', (assert) => {
+testLib.addTest('edit item - add section and field', (assert) => {
 	var env = new CLITest(assert);
 
 	return env.newVault().then(() => {
@@ -462,7 +462,7 @@ testLib.addAsyncTest('edit item - add section and field', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('edit item - remove field', (assert) => {
+testLib.addTest('edit item - remove field', (assert) => {
 	var env = new CLITest(assert);
 	return env.newVault().then(() => {
 		return env.run('edit', 'faceb', 'add-section', 'NewSection');
@@ -477,7 +477,7 @@ testLib.addAsyncTest('edit item - remove field', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('create new vault', (assert) => {
+testLib.addTest('create new vault', (assert) => {
 	var env = new CLITest(assert);
 	env.replyTo(/New password/).with('vaultpass');
 	env.replyTo(/Re-enter new/).with('vaultpass');
@@ -510,7 +510,7 @@ testLib.addAsyncTest('create new vault', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('create new vault with relative path', (assert) => {
+testLib.addTest('create new vault with relative path', (assert) => {
 	var env = new CLITest(assert);
 	env.replyTo(/New password/).with('vaultpass');
 	env.replyTo(/Re-enter new/).with('vaultpass');
@@ -525,7 +525,7 @@ testLib.addAsyncTest('create new vault with relative path', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('repair items', (assert) => {
+testLib.addTest('repair items', (assert) => {
 	// This runs the 'repair' command in a vault where all
 	// items are valid. We should also check that it behaves
 	// as expected when there are items that do need to be
@@ -539,7 +539,7 @@ testLib.addAsyncTest('repair items', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('edit item - rename', (assert) => {
+testLib.addTest('edit item - rename', (assert) => {
 	var env = new CLITest(assert);
 
 	return env.newVault().then(() => {
@@ -551,7 +551,7 @@ testLib.addAsyncTest('edit item - rename', (assert) => {
 	});
 });
 
-testLib.addAsyncTest('edit item - rename with empty title', (assert) => {
+testLib.addTest('edit item - rename with empty title', (assert) => {
 	var env = new CLITest(assert);
 
 	return env.newVault().then(() => {
