@@ -13,7 +13,7 @@ webui_icon_dir=$(webui_dist_dir)/icons
 nodemodule_marker=build/nodemodule_marker
 
 firefox_extension_id=passcards@robertknight.github.io
-webext_common_args=-s addons/chrome -a pkg
+webext_common_args=-s build/addons/firefox -a pkg
 
 deps=$(nodemodule_marker)
 

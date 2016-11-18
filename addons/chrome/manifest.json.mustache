@@ -5,6 +5,15 @@
   "version": "0.3",
   "homepage_url": "https://robertknight.github.io/passcards",
 
+  {{#firefox}}
+  "applications": {
+    "gecko": {
+      "id": "passcards@robertknight.github.io",
+      "update_url": "https://s3.amazonaws.com/io.github.robertknight/passcards/builds/latest/passcards.update.json"
+    }
+  },
+  {{/firefox}}
+
   "permissions": [
     "activeTab",
     "storage",

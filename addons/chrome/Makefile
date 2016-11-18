@@ -1,33 +1,42 @@
 include ../../common.mk
 
-ZIP_PACKAGE=$(PKG_DIR)/passcards.zip
+ADDON_BUILD_DIR=../../build/addons
+CHROME_ZIP_PACKAGE=$(PKG_DIR)/passcards.zip
 
-all: $(ZIP_PACKAGE)
+all: $(CHROME_ZIP_PACKAGE) build-firefox-extension
 
-zip: $(ZIP_PACKAGE)
-
-$(ZIP_PACKAGE): data/auth.html data/dist scripts
+$(CHROME_ZIP_PACKAGE): build-chrome-extension
 	@mkdir -p $(PKG_DIR)
-	@rm -f $(ZIP_PACKAGE)
-	@zip --quiet --exclude '.*' -r $(ZIP_PACKAGE) .
+	@rm -f $(CHROME_ZIP_PACKAGE)
+	@zip --quiet --exclude $(ADDON_BUILD_DIR)/chrome -r $(CHROME_ZIP_PACKAGE) .
 
 webui_src_dir=$(PWD)/../../webui
 webui_build_dir=$(webui_src_dir)/dist
 webui_app_srcs=$(shell find $(webui_build_dir))
 
-data/auth.html: $(webui_src_dir)/auth.html
-	mkdir -p data
-	cp $(webui_src_dir)/auth.html $@
+.PHONY: build-shared
+build-shared:
+	@mkdir -p $(ADDON_BUILD_DIR)/shared/data
 
-data/dist: $(webui_app_srcs)
-	mkdir -p data
-	rm -rf $@
-	cp -R $(webui_build_dir) $@
+	@cp $(webui_src_dir)/auth.html $(ADDON_BUILD_DIR)/shared/data/auth.html
+	@cp -R $(webui_build_dir) $(ADDON_BUILD_DIR)/shared/data
+	@mkdir -p $(ADDON_BUILD_DIR)/shared/data/scripts
+	@cp src/*.js $(ADDON_BUILD_DIR)/shared/data/scripts
+	@cp data/*.html $(ADDON_BUILD_DIR)/shared/data 
 
-scripts: src/*.js
-	@mkdir -p data/scripts
-	@cp src/*.js data/scripts
+.PHONY: build-chrome-extension
+build-chrome-extension: build-shared
+	@echo "Building Chrome extension"
+	
+	@cp -R $(ADDON_BUILD_DIR)/shared $(ADDON_BUILD_DIR)/chrome
+	@./utils/generate-manifest.js chrome manifest.json.mustache $(ADDON_BUILD_DIR)/chrome/manifest.json
+
+.PHONY: build-firefox-extension
+build-firefox-extension: build-shared
+	@echo "Building Firefox extension"
+
+	@cp -R $(ADDON_BUILD_DIR)/shared $(ADDON_BUILD_DIR)/firefox
+	@./utils/generate-manifest.js firefox manifest.json.mustache $(ADDON_BUILD_DIR)/firefox/manifest.json
 
 clean:
-	@rm -rf data/dist
-	@rm -rf data/scripts
+	@rm -rf $(ADDON_BUILD_DIR)/*
