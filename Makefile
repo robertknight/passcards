@@ -12,7 +12,6 @@ webui_icon_dir=$(webui_dist_dir)/icons
 # marker files used to trigger npm updates prior to build
 nodemodule_marker=build/nodemodule_marker
 
-firefox_extension_id=passcards@robertknight.github.io
 webext_common_args=-s build/addons/firefox -a pkg
 
 deps=$(nodemodule_marker)
@@ -115,8 +114,7 @@ test-firefox-extension: chrome-extension
 	@$(NODE_BIN_DIR)/web-ext run $(webext_common_args)
 
 sign-firefox-extension: chrome-extension
-	@./utils/web-ext.js sign $(webext_common_args) \
-		--id $(firefox_extension_id) \
+	@$(NODE_BIN_DIR)/web-ext sign $(webext_common_args) \
 		--api-key $(FIREFOX_AMO_KEY) --api-secret $(FIREFOX_AMO_SECRET)
 
 publish-chrome-extension: chrome-extension
