@@ -29,7 +29,6 @@ import style = require('ts-style');
 
 import colors = require('./colors');
 import fonts = require('./fonts');
-import reactutil = require('../base/reactutil');
 
 // Color of floating label and underline when focused
 var FOCUS_COLOR = colors.MATERIAL_COLOR_PRIMARY;

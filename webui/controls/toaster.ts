@@ -2,7 +2,6 @@
 import react = require('react');
 import style = require('ts-style');
 
-import reactutil = require('../base/reactutil');
 import controls_theme = require('./theme');
 import style_util = require('../base/style_util');
 

@@ -3,7 +3,6 @@ import fastclick = require('fastclick');
 import react_dom = require('react-dom');
 
 import agile_keychain = require('../lib/agile_keychain');
-import agile_keychain_crypto = require('../lib/agile_keychain_crypto');
 import app_view = require('./app_view');
 import assign = require('../lib/base/assign');
 import autofill = require('./autofill');

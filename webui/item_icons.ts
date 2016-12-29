@@ -7,7 +7,6 @@ import err_util = require('../lib/base/err_util');
 import event_stream = require('../lib/base/event_stream');
 import image = require('../lib/siteinfo/image');
 import key_value_store = require('../lib/base/key_value_store');
-import reactutil = require('./base/reactutil');
 import site_info = require('../lib/siteinfo/site_info');
 import url_util = require('../lib/base/url_util');
 

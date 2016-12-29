@@ -6,7 +6,6 @@ import button = require('./controls/button');
 import colors = require('./controls/colors');
 import browser_access = require('./browser_access');
 import password_gen = require('../lib/password_gen');
-import reactutil = require('./base/reactutil');
 import text_field = require('./controls/text_field');
 
 export enum FieldType {

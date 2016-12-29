@@ -1,8 +1,5 @@
 import Path = require('path');
-
-import asyncutil = require('../base/asyncutil');
 import vfs = require('./vfs');
-import { defer } from '../base/promise_util';
 
 /** Utility functions for virtual file system operations,
   * built on top of the main vfs.VFS interface methods.

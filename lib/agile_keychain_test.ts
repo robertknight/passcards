@@ -5,7 +5,6 @@ import agile_keychain = require('./agile_keychain');
 import agile_keychain_crypto = require('./agile_keychain_crypto');
 import asyncutil = require('./base/asyncutil');
 import crypto = require('./base/crypto');
-import env = require('./base/env');
 import exportLib = require('./export');
 import item_builder = require('./item_builder');
 import item_store = require('./item_store');
@@ -15,7 +14,6 @@ import password_gen = require('./password_gen');
 import testLib = require('./test');
 import vfs = require('./vfs/vfs');
 import vfs_util = require('./vfs/util');
-import { defer } from '../lib/base/promise_util';
 
 class TestCase {
 	/** Relative path to the vault within the test data dir */

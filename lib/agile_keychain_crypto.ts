@@ -1,5 +1,4 @@
 
-import assert = require('assert');
 var md5 = require('crypto-js/md5');
 var encLatin1 = require('crypto-js/enc-latin1');
 import node_crypto = require('crypto');
@@ -10,7 +9,6 @@ import agile_keychain_entries = require('./agile_keychain_entries');
 import crypto = require('./base/crypto');
 import key_agent = require('./key_agent');
 import rpc = require('./net/rpc');
-import { defer, Deferred, nodeResolver } from '../lib/base/promise_util';
 import { bufferFromString, stringFromBuffer } from './base/collectionutil';
 
 export class AESKeyParams {

@@ -5,7 +5,7 @@ import { scryRenderedComponentsWithType } from 'react-addons-test-utils';
 import { render } from 'react-dom';
 
 import { addTest, Assert } from '../lib/test';
-import { Button, ButtonF } from './controls/button';
+import { Button } from './controls/button';
 import { runReactTest } from './test_utils';
 import { defer } from '../lib/base/promise_util';
 

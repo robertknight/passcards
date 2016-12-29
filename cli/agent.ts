@@ -1,5 +1,4 @@
 import { atob, btoa } from '../lib/base/stringutil';
-import { defer } from '../lib/base/promise_util';
 import agent_server = require('./agent_server');
 import http_client = require('../lib/http_client');
 import key_agent = require('../lib/key_agent');

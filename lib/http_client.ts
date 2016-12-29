@@ -5,7 +5,6 @@ import urlLib = require('url');
 
 import assign = require('./base/assign');
 import asyncutil = require('./base/asyncutil');
-import env = require('./base/env');
 import err_util = require('./base/err_util');
 import streamutil = require('./base/streamutil');
 import { defer } from './base/promise_util';
