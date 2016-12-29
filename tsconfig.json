@@ -19,8 +19,10 @@
         "sourceMap": true
     },
     "include": [
-        "./**/*.ts",
-        "!./node_modules/**/*.ts"
+        "cli/**/*.ts",
+        "lib/**/*.ts",
+        "typings/**/*.ts",
+        "webui/**/*.ts"
     ],
     "atom": {
         "rewriteTsconfig": false
