@@ -42,9 +42,9 @@
     "semver": "^4.3.6",
     "sort-stream": "^1.0.1",
     "through2": "^0.6.3",
-    "tslint": "^3.2.1",
-    "typescript": "^2.0.0",
-    "typescript-formatter": "^0.2.2",
+    "tslint": "^4.2.0",
+    "typescript": "^2.1.4",
+    "typescript-formatter": "^4.0.1",
     "web-ext": "^1.6.0",
     "xdiff": "^0.2.11"
   },
