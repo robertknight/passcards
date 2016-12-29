@@ -13,4 +13,3 @@ testLib.addTest('read binary stream', (assert) => {
 		assert.equal(content, '\x89PNG');
 	});
 });
-

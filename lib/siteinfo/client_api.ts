@@ -14,4 +14,3 @@ export interface LookupResponse {
 	status: string;
 	submitted: number;
 }
-

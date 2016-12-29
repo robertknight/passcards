@@ -43,4 +43,3 @@ testLib.addTest('event listener contexts', (assert) => {
 	stream.publish('hello world');
 	assert.equal(receivedStrings.length, 3);
 });
-

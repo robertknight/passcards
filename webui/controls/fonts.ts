@@ -76,4 +76,3 @@ var fonts = {
 };
 
 export = fonts;
-

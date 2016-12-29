@@ -74,4 +74,3 @@ export function hasCause(err: Error, message: string): boolean {
 		return false;
 	}
 }
-

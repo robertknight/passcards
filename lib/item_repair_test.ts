@@ -30,4 +30,3 @@ testLib.addTest('fix location field', (assert) => {
 		assert.ok(reports.length > 0);
 	});
 });
-

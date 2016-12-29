@@ -20,4 +20,3 @@ export function transitionOn(props: { [prop: string]: number }) {
 		return cssPropName(prop) + ' ' + delay.toString() + 's ease-out';
 	}).join(', ');
 }
-

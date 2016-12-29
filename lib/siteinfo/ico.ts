@@ -166,4 +166,3 @@ export function read(data: DataView): Icon[] {
 
 	return icons;
 }
-

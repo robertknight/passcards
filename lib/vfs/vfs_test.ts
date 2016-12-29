@@ -211,4 +211,3 @@ function addTests(fsName: string, createFs: () => Promise<vfs.VFS>) {
 }
 
 addTests('Node FS', createNodeFs);
-

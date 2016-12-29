@@ -47,4 +47,3 @@ export class BasicLogger {
 		console.log.apply(console, args);
 	}
 }
-

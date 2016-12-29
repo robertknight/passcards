@@ -82,4 +82,3 @@ export class EventStream<T> {
 		return this.listeners.length;
 	}
 }
-

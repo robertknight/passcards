@@ -55,4 +55,3 @@ export class Cached<T> {
 		this.cached = null;
 	}
 }
-

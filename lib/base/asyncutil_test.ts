@@ -48,4 +48,3 @@ testLib.addTest('promise to result', (assert) => {
 		assert.ok(result.error instanceof Error);
 	});
 });
-

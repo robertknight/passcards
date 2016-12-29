@@ -117,4 +117,3 @@ testLib.addTest('merge diffs', (assert) => {
 		assert.deepEqual(patched, test.merged, i.toString());
 	});
 });
-

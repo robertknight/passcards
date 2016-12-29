@@ -186,4 +186,3 @@ export function merge(a: item_store.ItemAndContent,
 
 	return merged;
 }
-

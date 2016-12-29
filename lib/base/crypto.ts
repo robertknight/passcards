@@ -25,4 +25,3 @@ export function randomBytes(length: number): string {
 	// PRNG are not going to be supported.
 	throw new Error('No secure pseudo-random number generator available');
 }
-

@@ -249,4 +249,3 @@ export class SHA1 implements Hash {
 		}
 	}
 }
-

@@ -106,4 +106,3 @@ testLib.addTest('item type patterns', (assert) => {
 	types = item_search.matchType('login');
 	assert.deepEqual(types, [item_store.ItemTypes.LOGIN]);
 });
-

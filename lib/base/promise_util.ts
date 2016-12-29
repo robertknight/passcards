@@ -35,4 +35,3 @@ export function nodeResolver<T>(d: Deferred<T>): (err: any, result: T) => void {
 export function delay<T>(value: T, ms: number) {
 	return new Promise<T>(resolve => setTimeout(() => resolve(value), ms));
 }
-

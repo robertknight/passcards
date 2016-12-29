@@ -9,4 +9,3 @@
 export function unsafeCast<T1, T2>(v1: T1): T2 {
 	return <T2><any>v1;
 }
-

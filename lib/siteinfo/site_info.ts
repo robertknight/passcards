@@ -53,4 +53,3 @@ export interface SiteInfoProvider {
 	  */
 	forget(url: string): void;
 }
-

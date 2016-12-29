@@ -52,4 +52,3 @@ testLib.addTest('list keys', assert => {
 		assert.deepEqual(keys, ['a', 'b', 'c']);
 	});
 });
-

@@ -14,4 +14,3 @@ testLib.addTest('adding URL updates locations', (assert) => {
 	var item = builder.addUrl('http://acme.org').itemAndContent();
 	assert.equal(item.item.primaryLocation(), 'http://acme.org');
 });
-

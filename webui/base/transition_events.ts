@@ -106,4 +106,3 @@ export function removeEndEventListener<E extends Event>(node: HTMLElement, event
 		node.removeEventListener(endEvent, eventListener);
 	});
 }
-

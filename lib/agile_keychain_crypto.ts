@@ -237,4 +237,3 @@ if (subtleCrypto) {
 } else {
 	defaultCrypto = new NodeCrypto;
 }
-

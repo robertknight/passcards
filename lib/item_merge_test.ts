@@ -197,4 +197,3 @@ testLib.addTest('merge sections', (assert) => {
 	assert.deepEqual(testLib.compareObjects(mergedItem.content.sections[1],
 		expectedSectionB), []);
 });
-

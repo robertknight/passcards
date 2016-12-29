@@ -522,4 +522,3 @@ testLib.addTest('sync should complete if errors occur', assert => {
 		assert.equal(result.total, 1);
 	});
 });
-

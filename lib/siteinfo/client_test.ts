@@ -33,4 +33,3 @@ testLib.addTest('fetch google.com icons', (assert) => {
 // set a longer timeout for this test as it involves
 // remote calls
 testLib.setTimeout(15000);
-

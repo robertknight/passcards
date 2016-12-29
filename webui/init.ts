@@ -30,4 +30,3 @@ document.addEventListener('DOMContentLoaded', () => {
 		setClipboardDocument(doc);
 	};
 });
-

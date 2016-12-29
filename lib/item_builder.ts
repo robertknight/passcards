@@ -134,4 +134,3 @@ export function createItem(opts: LoginItemOptions) {
 	}
 	return builder.item();
 }
-

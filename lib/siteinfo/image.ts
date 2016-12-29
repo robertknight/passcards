@@ -171,4 +171,3 @@ export function mimeType(type: ImageType): string {
 			return 'application/octet-stream';
 	}
 }
-
