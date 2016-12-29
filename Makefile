@@ -76,15 +76,9 @@ webui-icons:
 test: cli webui
 	@$(NODE) ./utils/run-tests.js
 
-lint_files=$(addprefix build/,$(subst .ts,.ts.lint, $(all_srcs)))
-lint: $(lint_files)
-
-$(lint_files): build/lint_marker
-
-build/lint_marker: $(all_srcs)
-	$(TSLINT) $?
-	@mkdir -p $(dir $@)
-	@touch $@
+.PHONY: lint
+lint:
+	@$(NODE_BIN_DIR)/tslint --project tsconfig.json
 
 $(nodemodule_marker): package.json
 	@$(NODE_BIN_DIR)/check-dependencies
