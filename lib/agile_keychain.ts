@@ -326,7 +326,7 @@ export class Vault implements item_store.Store {
 		return vaultKeys;
 	}
 
-	private writeKeys(keyList: agile_keychain_entries.EncryptionKeyList, passHint: string): Promise<void> {
+	private writeKeys(keyList: agile_keychain_entries.EncryptionKeyList, passHint: string): Promise<{}> {
 		// FIXME - Improve handling of concurrent attempts to update encryptionKeys.js.
 		// If the file in the VFS has been modified since the original read, the operation
 		// should fail.
@@ -642,7 +642,7 @@ export class Vault implements item_store.Store {
 	  *  to use when generating an encryption key from @p newPass. If not specified,
 	  *  use the same number of iterations as the existing key.
 	  */
-	async changePassword(oldPass: string, newPass: string, newPassHint: string, iterations?: number): Promise<void> {
+	async changePassword(oldPass: string, newPass: string, newPassHint: string, iterations?: number): Promise<{}> {
 		const locked = await this.isLocked();
 		if (locked) {
 			throw new Error('Vault must be unlocked before changing the password');

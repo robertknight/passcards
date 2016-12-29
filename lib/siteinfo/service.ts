@@ -589,7 +589,7 @@ export class DuckDuckGoClient {
 				if (result.status == 200) {
 					var queryResult = JSON.parse(result.body);
 					if (queryResult.Image && queryResult.ImageIsLogo) {
-						return Promise.resolve(queryResult.Image);
+						return Promise.resolve<string>(queryResult.Image);
 					} else {
 						return Promise.reject<string>(new err_util.ApiError(url, result.status, 'DDG query did not return an icon'));
 					}

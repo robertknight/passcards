@@ -48,7 +48,7 @@ export function cp(fs: vfs.VFS, src: vfs.FileInfo, dest: string): Promise<{}> {
 		return fs.mkpath(dest).then(() => {
 			return fs.list(src.path);
 		})
-		.then((srcFiles) => {
+		.then((srcFiles: vfs.FileInfo[]) => {
 			var copyOps: Promise<{}>[] = [];
 			srcFiles.forEach((srcFile) => {
 				var destPath = dest + '/' + srcFile.name;
@@ -85,7 +85,7 @@ export function searchIn(fs: vfs.VFS, path: string, namePattern: string,
 	}).catch(err => cb(err, null));
 }
 
-export function mktemp(fs: vfs.VFS, path: string, template = 'tmp.XXX') {
+export function mktemp(fs: vfs.VFS, path: string, template = 'tmp.XXX'): Promise<string> {
 	var baseName = template.replace(/X{3,}/, (match) => {
 		var randomized = '';
 		for (var i = 0; i < match.length; i++) {

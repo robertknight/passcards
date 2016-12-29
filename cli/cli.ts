@@ -568,7 +568,7 @@ export class CLI {
 		});
 	}
 
-	private repairCommand(vault: agile_keychain.Vault): Promise<void[]> {
+	private repairCommand(vault: agile_keychain.Vault): Promise<{}> {
 		return vault.listItems().then((items) => {
 			var sortedItems = underscore.sortBy(items, (item) => {
 				return item.title.toLowerCase();

@@ -97,7 +97,7 @@ export class DropboxVFS implements vfs.VFS {
 
 	read(path: string): Promise<string> {
 		return this.client.filesDownload({path}).then(metadata => {
-			return new Promise(resolve => {
+			return new Promise<string>(resolve => {
 				let reader = new FileReader();
 				reader.onloadend = () => resolve(reader.result);
 				const content = (metadata as FileContent).fileBlob;

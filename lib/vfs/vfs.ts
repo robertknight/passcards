@@ -85,11 +85,11 @@ export interface VFS {
 	/** List the contents of a directory */
 	list(path: string): Promise<FileInfo[]>;
 	/** Remove a file or directory */
-	rm(path: string): Promise<void>;
+	rm(path: string): Promise<void|{}>;
 	/** Create the directory @p path, creating any parent directories
 	  * that do not already exist if necessary.
 	  *
 	  * Fails with an error if @p path already exists.
 	  */
-	mkpath(path: string): Promise<void>;
+	mkpath(path: string): Promise<void|{}>;
 }

@@ -16,7 +16,7 @@ testLib.addTest('mktemp', (assert) => {
 
 	return asyncutil.until(() => {
 		++count;
-		return vfs_util.mktemp(fs, '/', 'tmp.XXX').then(path => {
+		return vfs_util.mktemp(fs, '/', 'tmp.XXX').then((path: string) => {
 			assert.ok(path.match(/\/tmp.[a-z]{3}/) !== null);
 		}).then(() => count > ITER_COUNT);
 	});
