@@ -12,6 +12,7 @@ before_script:
 - export PATH=$PWD/node_modules/.bin:$PATH
 - make update-manifest-versions
 script:
+- make lint
 - npm test
 - make chrome-extension
 - make firefox-extension
