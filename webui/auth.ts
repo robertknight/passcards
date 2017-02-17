@@ -208,7 +208,7 @@ export class OAuthFlow {
 
 			// check for the window being closed before auth completes.
 			// see http://stackoverflow.com/a/17744260/434243
-			if (authWindow) {
+			if (!authWindow || authWindow.closed) {
 				credentials.reject(new Error('Window closed before auth completed'));
 			}
 		}, 200);
