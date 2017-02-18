@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+This file enables pre-WebExtensions versions of the Passcards Firefox extension
+to update to the latest version.
+
+It needs to be served at
+https://s3.amazonaws.com/io.github.robertknight/passcards/builds/latest/passcards.update.rdf
+
+The advertised version number must be higher than 0.3.956 (the last
+pre-WebExtensions extension) but does not need to actually match the latest
+version.
+!-->
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+  <Description about="urn:mozilla:extension:passcards@robertknight.github.io">
+    <em:updates><Seq><li><Description><em:version>0.4.0</em:version><em:targetApplication><Description><em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id><em:minVersion>21.0</em:minVersion><em:maxVersion>29.0a1</em:maxVersion><em:updateLink>https://s3.amazonaws.com/io.github.robertknight/passcards/builds/latest/passcards@robertknight.github.io.xpi</em:updateLink></Description></em:targetApplication></Description></li></Seq>
+    </em:updates>
+</Description>
+</RDF>
