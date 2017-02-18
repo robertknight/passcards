@@ -47,19 +47,21 @@ if (!manifestPath) {
 console.info(`Generating WebExtension update manifest '${manifestPath}' from '${pkgDir}'`);
 
 findExtensions(pkgDir).then((paths) => {
-	let manifest = {};
+	let manifest = {
+		addons: {},
+	};
 	for (let path of paths) {
 		const filename = basename(path);
 
 		const [_, name, version] = filename.match(/([^-]+)-([^-]+)/);
 		const id = `${name}@robertknight.github.io`;
 
-		if (!manifest[id]) {
-			manifest[id] = {
+		if (!manifest.addons[id]) {
+			manifest.addons[id] = {
 				updates: [],
 			};
 		}
-		manifest[id].updates.push({
+		manifest.addons[id].updates.push({
 			version,
 			update_hash: `sha256:${sha256(path)}`,
 			update_link: `${PKG_URL}/${encodeURIComponent(filename)}`,
