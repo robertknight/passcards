@@ -12,7 +12,7 @@ const s3Upload = require('./s3-upload');
 // wrapper around exec() which rejects the promise
 // if the task exits with a non-zero status
 function mustExec(...args) {
-  return exec.apply(null, args).then(([status, stdout]) => {
+  return exec(args).then(([status, stdout]) => {
     if (status !== 0) {
       throw new Error(args.join(' ') + ' exited with status '
           + status + ': ' + stdout);
@@ -63,7 +63,7 @@ orchestrator.on('task_stop', (e) => {
 
 orchestrator.start('deploy', (err) => {
   if (err) {
-    console.log('Deployment failed');
+    console.error('Deployment failed');
     process.exit(1);
   } else {
     console.log('Deployment successful');

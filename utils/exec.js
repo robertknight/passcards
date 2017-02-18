@@ -1,17 +1,29 @@
-var child_process = require('child_process');
-var fs = require('fs');
+'use strict';
 
-function exec() {
-	return new Promise(resolve => {
-		var proc = child_process.spawn(arguments[0], Array.prototype.slice.call(arguments,1));
-		var stdout = '';
-		var stderr = '';
+const { spawn } = require('child_process');
+
+const DEFAULT_OPTS = {
+	/** If true, echo stdout from the child process to the parent's stdout. */
+	logStdout: true,
+};
+
+/**
+ * Execute a command and return an [exitCode, stdout, stderr] tuple.
+ */
+function exec(args, opts = DEFAULT_OPTS) {
+	return new Promise((resolve) => {
+		const proc = spawn(args[0], args.slice(1));
+		let stdout = '';
+		let stderr = '';
 		proc.stdout.on('data', function(data) {
 			stdout += data.toString();
+			if (opts.logStdout) {
+				console.log(data.toString());
+			}
 		});
 		proc.stderr.on('data', function(data) {
 			stderr += data.toString();
-			console.log(data.toString());
+			console.error(data.toString());
 		});
 		proc.on('close', function(status) {
 			resolve([status, stdout, stderr]);

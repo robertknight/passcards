@@ -11,7 +11,7 @@ const exec = require('./exec');
  */
 function convertToFullRepo() {
 	if (fs.existsSync('.git/shallow')) {
-		return exec('git', 'fetch', '--unshallow');
+		return exec(['git', 'fetch', '--unshallow']);
 	} else {
 		return Promise.resolve();
 	}
@@ -29,7 +29,7 @@ function convertToFullRepo() {
  */
 function repoVersion() {
 	return convertToFullRepo().then(function() {
-		return exec('git', 'log', '--format="%h"')
+		return exec(['git', 'log', '--format="%h"'])
 	}).then(function([status, commitList]) {
 		const commits = commitList.trim().split('\n');
 		const patchVersion = commits.length;
