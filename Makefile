@@ -111,6 +111,9 @@ sign-firefox-extension: chrome-extension
 	@$(NODE_BIN_DIR)/web-ext sign $(webext_common_args) \
 		--api-key $(FIREFOX_AMO_KEY) --api-secret $(FIREFOX_AMO_SECRET)
 	@./addons/chrome/utils/generate-webext-update-manifest.js pkg/ pkg/passcards.update.json
+	# Copy extension to a fixed, version-independent path.  Note that this needs
+	# to be done _after_ the update manifest is generated.
+	cp pkg/*.xpi pkg/passcards@robertknight.github.io.xpi
 
 publish-chrome-extension: chrome-extension
 	@$(NODE_BIN_DIR)/webstore upload --source pkg/passcards.zip --auto-publish \
