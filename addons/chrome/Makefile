@@ -8,7 +8,7 @@ all: $(CHROME_ZIP_PACKAGE) build-firefox-extension
 $(CHROME_ZIP_PACKAGE): build-chrome-extension
 	@mkdir -p $(PKG_DIR)
 	@rm -f $(CHROME_ZIP_PACKAGE)
-	@zip --quiet --exclude $(ADDON_BUILD_DIR)/chrome -r $(CHROME_ZIP_PACKAGE) .
+	@cd $(ADDON_BUILD_DIR)/chrome && zip --quiet -r $(CHROME_ZIP_PACKAGE) .
 
 webui_src_dir=$(PWD)/../../webui
 webui_build_dir=$(webui_src_dir)/dist
