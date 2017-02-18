@@ -89,5 +89,3 @@ export class HMAC implements MAC {
 		this.hash.hash(this.outerKey, hmac);
 	}
 }
-
-

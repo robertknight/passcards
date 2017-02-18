@@ -23,5 +23,3 @@ addTest('SHA-1', (assert) => {
 		assert.equal(actual, tst.digest, 'check SHA-1 digests match');
 	});
 });
-
-

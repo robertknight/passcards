@@ -71,4 +71,3 @@ export default class PBKDF2 {
 		return result;
 	}
 }
-

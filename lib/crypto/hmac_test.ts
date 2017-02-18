@@ -34,4 +34,3 @@ addTest('HMAC-SHA1', (assert) => {
 		assert.equal(actual, tst.hmac, 'check HMACs match');
 	});
 });
-
