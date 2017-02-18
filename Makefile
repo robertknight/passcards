@@ -112,7 +112,11 @@ sign-firefox-extension: chrome-extension
 		--api-key $(FIREFOX_AMO_KEY) --api-secret $(FIREFOX_AMO_SECRET)
 
 publish-chrome-extension: chrome-extension
-	./utils/publish-chrome-extension.js pkg/passcards.zip
+	@$(NODE_BIN_DIR)/webstore upload --source pkg/passcards.zip --auto-publish \
+		--extension-id $(CHROME_EXT_APP_ID) \
+		--client-id $(CHROME_EXT_CLIENT_ID) \
+		--client-secret $(CHROME_EXT_CLIENT_SECRET) \
+		--refresh-token $(CHROME_EXT_REFRESH_TOKEN)
 
 publish-passcards-cli: webui-build
 	echo '//registry.npmjs.org/:_authToken=$${NPM_AUTH_TOKEN}' > .npmrc
