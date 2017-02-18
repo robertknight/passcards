@@ -108,7 +108,7 @@ test-firefox-extension: chrome-extension
 	@$(NODE_BIN_DIR)/web-ext run $(webext_common_args)
 
 sign-firefox-extension: chrome-extension
-	@$(NODE_BIN_DIR)/web-ext sign $(webext_common_args) \
+	@$(NODE_BIN_DIR)/web-ext --verbose sign $(webext_common_args) \
 		--api-key $(FIREFOX_AMO_KEY) --api-secret $(FIREFOX_AMO_SECRET)
 
 publish-chrome-extension: chrome-extension
