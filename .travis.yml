@@ -31,7 +31,7 @@ env:
   - CHROME_EXT_CLIENT_ID=663008561130-bgbo9tvbnr7j1ufrfuf52r4k3g8t9j9n.apps.googleusercontent.com
   - CHROME_EXT_APP_ID=olcdnhbhbfgncnocdfojpdjbododkimk
   # CHROME_EXT_REFRESH_TOKEN
-  - secure: "t1PYGA1ZXouCDrTqK+Sz/nW+oua55kRT5pIH0YzfBK2zoxKAQJJlSKyBVAI/zjMBIyhJ+V7ToQbY0NwlirYIcI2ZqmoTVxJMiYnmrjXs0vQg9m2XNAuORWnv9tsTbS326mWef6b+yL58QG/OLFXnrG+HlFF+QaanLQ2yD9wIbwA="
+  - secure: "XtPKZiXhH10NAVfDy1VWkxO0vptXEXLGQo/mmO1zI7HtMgfwwFqzW2AjZk5Ttto0gPzzMgYjUO5NqvUevUjSWJYjPxgB48uLR/UDAXbqzO3G/f/Xgu3+sgj971Pq3n5a3djeId6uGzYryowM7yFOek12VvZT4bYXRPVaP/1ovSw="
   # CHROME_EXT_CLIENT_SECRET
   - secure: NyDSq2y6xkHzFTTnoZuLrLfIdEmSzNTEQX9vQQCNyGfCWDbN4AYQd2whYAYV0IUaKdOh5/p+ixYvIaodjVol5ixRZ0p1R3IiqRfwV7YPum10goPiAb9e8D+tNgryz0SUMBNtJBT07yc3NsrTZAAsZfEb0ME4Emdp7O9C8q4d9pk=
   # NPM_AUTH_TOKEN
