@@ -10,7 +10,7 @@ node_js:
 - '6'
 before_script:
 - export PATH=$PWD/node_modules/.bin:$PATH
-- make update-manifest-versions
+- make update-package-version
 script:
 - make lint
 - npm test

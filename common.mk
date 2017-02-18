@@ -14,6 +14,3 @@ TSC=$(NODE_BIN_DIR)/tsc
 TSD=$(NODE_BIN_DIR)/tsd
 TSLINT=$(NODE_BIN_DIR)/tslint
 
-# Utility script for updating the version in
-# a manifest file
-UPDATE_MANIFEST=$(SRC_ROOT)/utils/update-manifest-version.js
