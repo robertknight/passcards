@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/robertknight/passcards.png?branch=master)](https://travis-ci.org/robertknight/passcards) [![Join the chat at https://gitter.im/robertknight/passcards](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/robertknight/passcards?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-*Passcards* is an open source app that aims to make logging in to websites and apps from all your devices easier.
+*Passcards* is a 1Password-compatible password manager for browsers and the command line.
 
 It saves logins and other credentials in an encrypted store in Dropbox and enables you to access them from a supported browser (currently Chrome, Firefox or Safari) on any device via a web app or browser extension. The browser extension (currently available for Chrome and Firefox) can auto-fill login forms using saved credentials and quickly add or update logins.
 
