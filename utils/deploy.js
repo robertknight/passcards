@@ -27,7 +27,7 @@ const webVersionString = 'latest';
 const orchestrator = new Orchestrator();
 
 orchestrator.add('web-upload', () => {
-  //return s3Upload.syncDir('webui/', S3_BUCKET, 'passcards/web/' + webVersionString + '/');
+  return s3Upload.syncDir('webui/', S3_BUCKET, 'passcards/web/' + webVersionString + '/');
 });
 
 orchestrator.add('sign-firefox-extension', () => {
@@ -35,7 +35,7 @@ orchestrator.add('sign-firefox-extension', () => {
 });
 
 orchestrator.add('extension-upload', ['sign-firefox-extension'], () => {
-  //return s3Upload.syncDir('pkg/', S3_BUCKET, 'passcards/builds/' + webVersionString + '/');
+  return s3Upload.syncDir('pkg/', S3_BUCKET, 'passcards/builds/' + webVersionString + '/');
 });
 
 orchestrator.add('publish-chrome-extension', () => {
