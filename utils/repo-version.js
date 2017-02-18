@@ -29,7 +29,7 @@ function convertToFullRepo() {
  */
 function repoVersion() {
 	return convertToFullRepo().then(function() {
-		return exec(['git', 'log', '--format="%h"'])
+		return exec(['git', 'log', '--format="%h"'], {logToStdout: false})
 	}).then(function([status, commitList]) {
 		const commits = commitList.trim().split('\n');
 		const patchVersion = commits.length;
