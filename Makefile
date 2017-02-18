@@ -110,6 +110,7 @@ test-firefox-extension: chrome-extension
 sign-firefox-extension: chrome-extension
 	@$(NODE_BIN_DIR)/web-ext sign $(webext_common_args) \
 		--api-key $(FIREFOX_AMO_KEY) --api-secret $(FIREFOX_AMO_SECRET)
+	@./addons/chrome/utils/generate-webext-update-manifest.js pkg/ pkg/passcards.update.json
 
 publish-chrome-extension: chrome-extension
 	@$(NODE_BIN_DIR)/webstore upload --source pkg/passcards.zip --auto-publish \
