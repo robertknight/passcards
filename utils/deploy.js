@@ -39,7 +39,7 @@ orchestrator.add('extension-upload', ['sign-firefox-extension'], () => {
 });
 
 orchestrator.add('publish-chrome-extension', () => {
-  return mustExec('./utils/publish-chrome-extension.js', 'pkg/passcards.zip');
+  return mustExec('make', 'publish-chrome-extension')
 });
 
 orchestrator.add('publish-passcards-cli', () => {
