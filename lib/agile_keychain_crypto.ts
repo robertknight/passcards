@@ -10,6 +10,7 @@ import crypto = require('./base/crypto');
 import key_agent = require('./key_agent');
 import rpc = require('./net/rpc');
 import { bufferFromString, stringFromBuffer } from './base/collectionutil';
+import PBKDF2 from './crypto/pbkdf2';
 
 export class AESKeyParams {
 	constructor(public key: string, public iv: string) {
@@ -212,16 +213,26 @@ class WebCrypto implements Crypto {
 	}
 
 	async pbkdf2(masterPwd: string, salt: string, iterCount: number, keyLen: number) {
-		const masterKey = await this.crypto.importKey('raw', bufferFromString(masterPwd),
-			'PBKDF2', false, ['deriveKey']);
-		const derived = await this.crypto.deriveKey({
-			name: 'PBKDF2',
-			salt: bufferFromString(salt),
-			iterations: iterCount,
-			hash: 'SHA-1',
-		}, masterKey, {name: 'AES-CBC', length: 256}, true /* extractable */, ['encrypt', 'decrypt']);
-		const extracted = await this.crypto.exportKey('raw', derived);
-		return stringFromBuffer(new Uint8Array(extracted));
+		try {
+			// Try to derive the key using WebCrypto APIs
+			const masterKey = await this.crypto.importKey('raw', bufferFromString(masterPwd),
+				'PBKDF2', false, ['deriveKey']);
+			const derived = await this.crypto.deriveKey({
+				name: 'PBKDF2',
+				salt: bufferFromString(salt),
+				iterations: iterCount,
+				hash: 'SHA-1',
+			}, masterKey, {name: 'AES-CBC', length: 256}, true /* extractable */, ['encrypt', 'decrypt']);
+			const extracted = await this.crypto.exportKey('raw', derived);
+			return stringFromBuffer(new Uint8Array(extracted));
+		} catch (err) {
+			// If the WebCrypto implementation does not support PBKDF2 (eg.
+			// Safari <= 10), fall back to our JS implementation.
+			const pbkdf2 = new PBKDF2;
+			const passwordBuf = bufferFromString(masterPwd);
+			const saltBuf = bufferFromString(salt);
+			return stringFromBuffer(pbkdf2.key(passwordBuf, saltBuf, iterCount, keyLen));
+		}
 	}
 
 	async md5Digest(input: string) {
