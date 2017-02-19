@@ -73,6 +73,7 @@ if (backgroundPage.savedAppView) {
 window.addEventListener('unload', function() {
 	backgroundPage.document.adoptNode(appView);
 	backgroundPage.savedAppView = appView;
+	fixOwnerDocument(appView, backgroundPage.document);
 });
 
 document.body.appendChild(appView);
