@@ -55,3 +55,25 @@ testLib.addTest('batched updates', (assert) => {
 		});
 	});
 });
+
+const hexlifyCases = [
+	['abc', '616263'],
+	['$@!', '244021'],
+	[String.fromCharCode(0), '00'],
+	[String.fromCharCode(255), 'ff'],
+];
+
+testLib.addTest('hexlify produces expected hex string', (assert) => {
+	hexlifyCases.forEach(([binStr, hexStr]) => {
+		const actualHexStr = collectionutil.hexlify(collectionutil.bufferFromString(binStr));
+		assert.equal(actualHexStr, hexStr);
+	});
+});
+
+testLib.addTest('unhexlify produces expected buffer', (assert) => {
+	hexlifyCases.forEach(([binStr, hexStr]) => {
+		const actualBinStr = collectionutil.stringFromBuffer(collectionutil.unhexlify(hexStr));
+		assert.equal(actualBinStr, binStr);
+	});
+});
+

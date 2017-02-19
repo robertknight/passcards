@@ -81,6 +81,18 @@ export function hexlify(buf: ArrayBufferView, len?: number): string {
 	return hex;
 };
 
+/** Convert a hex string to a byte array */
+export function unhexlify(str: string): Uint8Array {
+	if (str.length % 2 !== 0) {
+		throw new Error('String must contain an even number of bytes');
+	}
+	var buf = new Uint8Array(str.length/2);
+	for (var i=0; i < str.length; i+=2) {
+		buf[i >> 1] = parseInt(str.slice(i,i+2), 16);
+	}
+	return buf;
+}
+
 /** Convert a string containing binary data into a typed array */
 export function bufferFromString(str: string): Uint8Array {
 	var destBuf = new Uint8Array(str.length);
