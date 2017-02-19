@@ -25,6 +25,7 @@ deploy:
     branch: master
 env:
   global:
+  - NODE_ENV=production
   - AWS_ACCESS_KEY_ID=AKIAJLAC2I2QPV6E33GA
   # AWS_SECRET_KEY
   - secure: "jQ3cFyDDk97Kh1fDwpSTCKTGIHljmTBTmV+4LWLliMNk8LpGuOGjbZRPNNHc+12kqz0i0wd4HaX6Uy8le5RMAQkunIE3r44k9z+9ciCSB4Nznq+AigpEVqgAjT/+MkIHEjCVXPmIeutxKoLY2iZHpHZRfsQbUI7376hIZw2CGQE="

@@ -36,7 +36,7 @@ $(webui_script_dir)/platform_bundle.js: package.json utils/create-external-modul
 $(webui_script_dir)/webui_bundle.js: $(compiled_js_files)
 	@echo "Building web app bundle"
 	@mkdir -p $(webui_script_dir)
-	@$(BROWSERIFY) --debug --no-builtins --no-bundle-external --entry build/webui/init.js --outfile $@
+	@$(BROWSERIFY) -t envify --debug --no-builtins --no-bundle-external --entry build/webui/init.js --outfile $@
 
 $(webui_script_dir)/auth_receiver.js: $(compiled_js_files)
 	cp build/webui/auth_receiver.js $@

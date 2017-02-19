@@ -7,6 +7,7 @@
 //
 
 var browserify = require('browserify');
+var envify = require('envify');
 var fs = require('fs');
 var module_deps = require('module-deps');
 var path = require('path');
@@ -29,6 +30,8 @@ var depStream = module_deps({
 });
 
 var bundle = browserify();
+
+bundle.transform(envify());
 
 var uniqueDeps = [];
 depStream.pipe(through.obj(function(row, enc, next) {

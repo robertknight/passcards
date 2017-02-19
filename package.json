@@ -26,6 +26,7 @@
     "chrome-webstore-upload-cli": "^1.1.1",
     "colors": "^1.1.2",
     "commander": "^2.8.1",
+    "envify": "^4.0.0",
     "fake-indexeddb": "^1.0.3",
     "findit": "^2.0.0",
     "fs-extra": "^0.21.0",
