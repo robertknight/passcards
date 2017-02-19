@@ -43,6 +43,7 @@ function setupDOM(): Promise<Window> {
 let testModules = [
 	'./base/transition_container_test',
 	'./auth_dialog_test',
+	'./auth_test',
 	'./item_field_test',
 	'./item_icons_test',
 	'./item_list_view_test',

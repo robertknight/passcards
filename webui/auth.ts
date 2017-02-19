@@ -1,5 +1,5 @@
-import { atob, btoa } from '../lib/base/stringutil';
 import assign = require('../lib/base/assign');
+import { bufferFromString, hexlify } from '../lib/base/collectionutil';
 import crypto = require('../lib/base/crypto');
 import env = require('../lib/base/env');
 import { defer } from '../lib/base/promise_util';
@@ -153,8 +153,8 @@ export class OAuthFlow {
 
 	authenticate(win: AuthWindowOpener) {
 		let credentials = defer<Credentials>();
-		let state = crypto.randomBytes(16);
-		let authURL = this.options.authServerURL(this.options.authRedirectURL, btoa(state));
+		let state = hexlify(bufferFromString(crypto.randomBytes(16)));
+		let authURL = this.options.authServerURL(this.options.authRedirectURL, state);
 
 		// clear any existing tokens stored in local storage
 		// TODO - Encrypt this data with a random key so that it isn't usable
@@ -193,7 +193,7 @@ export class OAuthFlow {
 						}
 					}
 
-					let decodedState = atob(tokenData.state);
+					let decodedState = tokenData.state;
 					if (decodedState === state) {
 						credentials.resolve({
 							accessToken: tokenData.accessToken
