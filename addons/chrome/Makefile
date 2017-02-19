@@ -28,6 +28,7 @@ build-shared:
 build-chrome-extension: build-shared
 	@echo "Building Chrome extension"
 	
+	@rm -rf $(ADDON_BUILD_DIR)/chrome
 	@cp -R $(ADDON_BUILD_DIR)/shared $(ADDON_BUILD_DIR)/chrome
 	@./utils/generate-manifest.js chrome manifest.json.mustache $(ADDON_BUILD_DIR)/chrome/manifest.json
 
@@ -35,6 +36,7 @@ build-chrome-extension: build-shared
 build-firefox-extension: build-shared
 	@echo "Building Firefox extension"
 
+	@rm -rf $(ADDON_BUILD_DIR)/firefox
 	@cp -R $(ADDON_BUILD_DIR)/shared $(ADDON_BUILD_DIR)/firefox
 	@./utils/generate-manifest.js firefox manifest.json.mustache $(ADDON_BUILD_DIR)/firefox/manifest.json
 
