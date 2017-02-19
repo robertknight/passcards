@@ -87,8 +87,6 @@ function testAuthOpts() {
 	};
 
 	let accessToken = 'dummytoken';
-	let authWindowOpener = new FakeAuthWindowOpener(authRedirectURL, accessToken);
-	let authHandler = new auth.OAuthFlow(authOpts);
 
 	return { authRedirectURL, accessToken, authOpts };
 }

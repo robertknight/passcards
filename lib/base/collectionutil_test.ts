@@ -76,4 +76,3 @@ testLib.addTest('unhexlify produces expected buffer', (assert) => {
 		assert.equal(actualBinStr, binStr);
 	});
 });
-
