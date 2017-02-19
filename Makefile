@@ -31,12 +31,13 @@ webui-build: $(webui_script_dir)/platform_bundle.js \
 $(webui_script_dir)/platform_bundle.js: package.json utils/create-external-modules-bundle.js
 	@echo "Building external modules bundle"
 	@mkdir -p $(webui_script_dir)
-	@./utils/create-external-modules-bundle.js build/webui/app.js > $@
+	@./utils/create-external-modules-bundle.js build/webui/app.js | ./utils/minify > $@
 
 $(webui_script_dir)/webui_bundle.js: $(compiled_js_files)
 	@echo "Building web app bundle"
 	@mkdir -p $(webui_script_dir)
-	@$(BROWSERIFY) -t envify --debug --no-builtins --no-bundle-external --entry build/webui/init.js --outfile $@
+	@$(BROWSERIFY) -t envify --debug --no-builtins --no-bundle-external \
+		--entry build/webui/init.js | ./utils/minify > $@
 
 $(webui_script_dir)/auth_receiver.js: $(compiled_js_files)
 	cp build/webui/auth_receiver.js $@

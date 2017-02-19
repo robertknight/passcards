@@ -1,0 +1,8 @@
+#!/bin/sh
+
+if [ "$NODE_ENV" = "production" ]; then
+  cat - | ./node_modules/.bin/babili
+else
+  cat -
+fi
+
