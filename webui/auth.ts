@@ -109,7 +109,7 @@ export interface AuthWindow {
  * an authentication window.
  */
 export interface AuthWindowOpener {
-	open(url: string, target: string, options: string): AuthWindow;
+	open(url: string, target: string, options: string): AuthWindow|null;
 	localStorage: {
 		key? (index: number): string;
 		length?: number;
@@ -161,19 +161,24 @@ export class OAuthFlow {
 		// if not removed by the call to removeItem() once auth completes
 		win.localStorage.removeItem(OAUTH_TOKEN_KEY);
 
-		let authWindow: AuthWindow
+		// The popup window displaying the auth URL.
+		let authWindow: AuthWindow|null;
 
 		if (env.isChromeExtension()) {
 			chrome.tabs.create({ url: authURL });
 			interceptOAuthRedirect();
 		} else {
-			// open a window which displays the auth UI
+			// Open a window which displays the auth UI
 			let authWindowSettings = windowSettingsToString(this.options.windowSettings);
 			let target = '_blank';
 			if ('target' in this.options.windowSettings) {
 				target = this.options.windowSettings.target;
 			}
-			authWindow = window.open(authURL, target, authWindowSettings);
+
+			// Note: In Firefox `window.open` returns `null` if `authURL` is on
+			// a different origin, which it almost certainly will be. Other
+			// browsers return a `Window` object with limited access.
+			authWindow = win.open(authURL, target, authWindowSettings);
 		}
 
 		// poll, waiting for auth to complete.
@@ -206,10 +211,12 @@ export class OAuthFlow {
 				}
 			}
 
-			// check for the window being closed before auth completes.
-			// see http://stackoverflow.com/a/17744260/434243
-			if (!authWindow || authWindow.closed) {
-				credentials.reject(new Error('Window closed before auth completed'));
+			// Check for the window being closed before auth completes.  see
+			// http://stackoverflow.com/a/17744260/434243 . In the case of
+			// Firefox the reference to the popup window will be `null` so this
+			// check is ignored.
+			if (authWindow && authWindow.closed) {
+				credentials.reject(new Error('Login canceled'));
 			}
 		}, 200);
 

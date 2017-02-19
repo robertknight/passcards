@@ -6,6 +6,10 @@ import testLib = require('../lib/test');
 
 const AUTH_SERVER_URL = 'http://acmecloud.com/oauth2/authorize';
 
+interface FakeAuthWindowOpenerConfig {
+	crossOriginWindowOpenReturnsNull: boolean;
+}
+
 // fake implementation of the subset of the Window
 // interface used by OAuthFlow to open the cloud storage
 // provider's authentication page
@@ -13,6 +17,7 @@ class FakeAuthWindowOpener implements auth.AuthWindowOpener {
 	expectedRedirectURI: string;
 
 	private accessToken: string;
+	private config: FakeAuthWindowOpenerConfig;
 	private storage: Map<string, string>;
 
 	localStorage: {
@@ -20,10 +25,14 @@ class FakeAuthWindowOpener implements auth.AuthWindowOpener {
 		removeItem(key: string): void;
 	};
 
-	constructor(expectedRedirectURI: string, accessToken: string) {
+	constructor(expectedRedirectURI: string, accessToken: string,
+				config?: FakeAuthWindowOpenerConfig) {
 		this.expectedRedirectURI = expectedRedirectURI;
 		this.storage = new Map<string, string>();
 		this.accessToken = accessToken;
+		this.config = config || {
+			crossOriginWindowOpenReturnsNull: false,
+		};
 
 		let opener = this;
 
@@ -56,6 +65,10 @@ class FakeAuthWindowOpener implements auth.AuthWindowOpener {
 			}));
 		}, 10);
 
+		if (this.config.crossOriginWindowOpenReturnsNull) {
+			return null;
+		}
+
 		return {
 			closed: false,
 			close() {
@@ -65,7 +78,7 @@ class FakeAuthWindowOpener implements auth.AuthWindowOpener {
 	}
 }
 
-testLib.addTest('OAuth login', assert => {
+function testAuthOpts() {
 	let authRedirectURL = 'http://clientapp/receive-auth-token';
 	let authOpts = {
 		authServerURL: (uri: string, state : string) =>
@@ -76,9 +89,29 @@ testLib.addTest('OAuth login', assert => {
 	let accessToken = 'dummytoken';
 	let authWindowOpener = new FakeAuthWindowOpener(authRedirectURL, accessToken);
 	let authHandler = new auth.OAuthFlow(authOpts);
+
+	return { authRedirectURL, accessToken, authOpts };
+}
+
+testLib.addTest('OAuth login succeeds', assert => {
+	const { authRedirectURL, accessToken, authOpts } = testAuthOpts();
+	let authWindowOpener = new FakeAuthWindowOpener(authRedirectURL, accessToken);
+	let authHandler = new auth.OAuthFlow(authOpts);
 	return authHandler.authenticate(authWindowOpener).then(credentials => {
 		assert.equal(credentials.accessToken, accessToken);
 	});
+});
+
+testLib.addTest('OAuth login succeeds if window.open returns null', (assert) => {
+	const { authRedirectURL, accessToken, authOpts } = testAuthOpts();
+	const authWindowOpener = new FakeAuthWindowOpener(authRedirectURL, accessToken, {
+		crossOriginWindowOpenReturnsNull: true,
+	});
+	const authHandler = new auth.OAuthFlow(authOpts);
+	return authHandler.authenticate(authWindowOpener).then(credentials => {
+		assert.equal(credentials.accessToken, accessToken);
+	});
+
 });
 
 // test for the redirect page which receives the OAuth access token
