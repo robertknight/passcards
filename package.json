@@ -46,7 +46,7 @@
     "sort-stream": "^1.0.1",
     "through2": "^0.6.3",
     "tslint": "^4.2.0",
-    "typescript": "^2.1.4",
+    "typescript": "^2.3.4",
     "typescript-formatter": "^4.0.1",
     "web-ext": "^1.6.0",
     "xdiff": "^0.2.11"

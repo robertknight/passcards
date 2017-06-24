@@ -154,7 +154,6 @@ export function request<T>(method: string, url: string, data?: T, opts?: Request
 				request.write(data);
 				break;
 			case 'object':
-			case 'array':
 				request.write(JSON.stringify(data));
 				break;
 			case undefined:
