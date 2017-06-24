@@ -28,7 +28,7 @@ export function copy(mimeType: string, data: string) {
 	//
 	// Clearing the selection before attempting to `execCommand("copy")`
 	// resolves the issue.
-	document.getSelection().removeAllRanges();
+	clipboardDocument.getSelection().removeAllRanges();
 
 	// Use the Document#execCommand('copy') API which is available in recent versions
 	// of Firefox, Chrome and iOS >= 10
