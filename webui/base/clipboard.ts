@@ -22,6 +22,14 @@ export function setClipboardDocument(doc: Document) {
   * This may only be called within the context of a user gesture.
   */
 export function copy(mimeType: string, data: string) {
+	// Work around an issue in Chrome where clicking on an unrevealed password
+	// input field and then clicking on a "Copy" button fails to generate a
+	// 'copy' event.
+	//
+	// Clearing the selection before attempting to `execCommand("copy")`
+	// resolves the issue.
+	document.getSelection().removeAllRanges();
+
 	// Use the Document#execCommand('copy') API which is available in recent versions
 	// of Firefox, Chrome and iOS >= 10
 	//
