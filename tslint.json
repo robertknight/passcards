@@ -8,7 +8,6 @@
 		"no-inferrable-types": true,
 		"no-eval" : true,
 		"no-unused-expression" : true,
-		"no-unused-variable" : true,
 		"no-use-before-declare": true
 	}
 }
