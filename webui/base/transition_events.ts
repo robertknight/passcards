@@ -13,8 +13,6 @@
  * @providesModule ReactTransitionEvents
  */
 
-('use strict');
-
 import env = require('../../lib/base/env');
 
 interface EventNameMap {

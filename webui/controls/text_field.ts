@@ -1,5 +1,3 @@
-('use strict');
-
 // adapted from the 'TextField' component from react-material
 // See https://github.com/SanderSpies/react-material
 
