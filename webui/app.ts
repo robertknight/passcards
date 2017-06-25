@@ -1,5 +1,4 @@
 
-import fastclick = require('fastclick');
 import react_dom = require('react-dom');
 
 import agile_keychain = require('../lib/agile_keychain');
@@ -188,9 +187,6 @@ export class App {
 	 */
 	renderInto(element: HTMLElement) {
 		var rootInputElement = element.ownerDocument.body;
-
-		// setup touch input
-		fastclick.FastClick.attach(rootInputElement);
 
 		// setup auto-lock
 		rootInputElement.addEventListener('keydown', (e) => {

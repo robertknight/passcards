@@ -57,7 +57,6 @@
     "clone": "^0.1.19",
     "crypto-js": "^3.1.2",
     "dropbox": "^2.3.0",
-    "fastclick": "^1.0.6",
     "mkdirp": ">=0.4.0",
     "node-uuid": "^1.4.2",
     "promptly": "^0.2.1",
