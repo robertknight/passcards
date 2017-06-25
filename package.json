@@ -37,6 +37,7 @@
     "mustache": "^2.3.0",
     "node-glob": "^1.2.0",
     "orchestrator": "^0.3.7",
+    "prettier": "^1.4.4",
     "proxyquire": "^1.7.2",
     "qunitjs": "^1.19.0",
     "react-addons-test-utils": "^15.3.2",
@@ -47,7 +48,6 @@
     "through2": "^0.6.3",
     "tslint": "^4.2.0",
     "typescript": "^2.3.4",
-    "typescript-formatter": "^4.0.1",
     "web-ext": "^1.6.0",
     "xdiff": "^0.2.11"
   },

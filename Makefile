@@ -90,9 +90,9 @@ test-package: all
 	&& npm install $(ROOT_DIR) \
 	&& ./node_modules/passcards/passcards --help $(SILENCE_STDOUT) \
 	&& echo npm package OK
-	
+
 format: $(all_srcs)
-	./utils/format-source.js
+	./utils/format.sh
 
 clean:
 	@rm -rf build/*
