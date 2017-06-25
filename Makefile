@@ -12,7 +12,7 @@ webui_icon_dir=$(webui_dist_dir)/icons
 # marker files used to trigger npm updates prior to build
 nodemodule_marker=build/nodemodule_marker
 
-webext_common_args=-s build/addons/firefox -a pkg
+webext_common_args=-s build/extensions/firefox -a pkg
 
 deps=$(nodemodule_marker)
 
@@ -97,10 +97,10 @@ format: $(all_srcs)
 clean:
 	@rm -rf build/*
 	@rm -rf webui/scripts/*
-	@cd addons/chrome && make clean
+	@cd extensions/chrome && make clean
 
 chrome-extension: webui-build
-	cd addons/chrome && make
+	cd extensions/chrome && make
 
 firefox-extension: chrome-extension
 	@$(NODE_BIN_DIR)/web-ext build $(webext_common_args)
@@ -111,7 +111,7 @@ test-firefox-extension: chrome-extension
 sign-firefox-extension: chrome-extension
 	@$(NODE_BIN_DIR)/web-ext sign $(webext_common_args) \
 		--api-key $(FIREFOX_AMO_KEY) --api-secret $(FIREFOX_AMO_SECRET)
-	@./addons/chrome/utils/generate-webext-update-manifest.js pkg/ pkg/passcards.update.json
+	@./extensions/chrome/utils/generate-webext-update-manifest.js pkg/ pkg/passcards.update.json
 	# Copy extension to a fixed, version-independent path.  Note that this needs
 	# to be done _after_ the update manifest is generated.
 	cp pkg/*.xpi pkg/passcards@robertknight.github.io.xpi

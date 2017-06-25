@@ -9,7 +9,7 @@ var vm = require('vm');
 function findTestFiles(dir) {
 	// find all of the tests for the core libraries and CLI
 	return find(dir, {
-		ignoredDirs: ['.git', 'node_modules', 'typings', 'addons', 'webui'],
+		ignoredDirs: ['.git', 'node_modules', 'typings', 'extensions', 'webui'],
 		filter: function(file, stat) {
 			return file.match(/_test.js$/);
 		}
