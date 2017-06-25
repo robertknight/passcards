@@ -4,11 +4,6 @@ import testLib = require('../test');
 import vfs = require('./vfs');
 import vfs_util = require('./util');
 
-class StorageEntry {
-	key: string;
-	value: any;
-}
-
 var createNodeFs = () => {
 	let TEST_DIR = `${testLib.tempDir() }/vfs-test`;
 	let fs = new nodefs.FileVFS(TEST_DIR);

@@ -60,7 +60,7 @@ class FakeObjectStore implements key_value_store.ObjectStore {
 	}
 
 	get<T>(key: string) {
-		return Promise.resolve(this.map.get(key));
+		return Promise.resolve<T>(this.map.get(key));
 	}
 
 	remove(key: string) {

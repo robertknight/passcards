@@ -10,22 +10,6 @@ export interface Credentials {
 	accessToken: string;
 }
 
-/** Interface for handling the auth flow for a
- * cloud service.
- */
-interface AuthFlow {
-	/** Start the authentication process and return a promise
-	 * for a set of credentials which is resolved once the login
-	 * completes.
-	 */
-	authenticate(): Promise<Credentials>;
-}
-
-interface AuthMessage {
-	type: string; // 'auth-complete'
-	credentials: Credentials;
-}
-
 /** Window features available for use with window.open() */
 export interface WindowSettings {
 	width?: number;

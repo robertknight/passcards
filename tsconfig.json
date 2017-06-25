@@ -11,6 +11,7 @@
         "noImplicitAny": true,
         "noImplicitReturns": true,
         "noFallthroughCasesInSwitch": true,
+        "noUnusedLocals": true,
         "removeComments": true,
         "noLib": false,
         "preserveConstEnums": true,

@@ -20,8 +20,6 @@ import app_state = require('./stores/app');
 import vfs = require('../lib/vfs/vfs');
 import * as clipboard from './base/clipboard';
 
-declare var firefoxAddOn: browser_access.ExtensionConnector;
-
 interface BrowserExtension {
 	pageAccess: browser_access.BrowserAccess;
 	clipboard: browser_access.ClipboardAccess;

@@ -8,7 +8,6 @@ import { btoa } from './base/stringutil';
 import agile_keychain_entries = require('./agile_keychain_entries');
 import crypto = require('./base/crypto');
 import key_agent = require('./key_agent');
-import rpc = require('./net/rpc');
 import { bufferFromString, stringFromBuffer } from './base/collectionutil';
 import PBKDF2 from './crypto/pbkdf2';
 
@@ -164,11 +163,6 @@ export class NodeCrypto implements Crypto {
 		md5er.update(bufferFromString(input));
 		return md5er.digest('binary');
 	}
-}
-
-interface WorkerAndRpc {
-	worker: Worker;
-	rpc: rpc.RpcHandler;
 }
 
 declare global {
