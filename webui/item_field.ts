@@ -4,6 +4,7 @@ import style = require('ts-style');
 
 import button = require('./controls/button');
 import colors = require('./controls/colors');
+import { div } from './base/dom_factory';
 import browser_access = require('./browser_access');
 import password_gen = require('../lib/password_gen');
 import text_field = require('./controls/text_field');
@@ -201,7 +202,7 @@ export class ItemField extends react.Component<ItemFieldProps, ItemFieldState> {
             focusField = false;
         }
 
-        return react.DOM.div(
+        return div(
             style.mixin(theme.field, { ref: 'itemField' }),
             labelEditor,
             text_field.TextFieldF({
@@ -220,7 +221,7 @@ export class ItemField extends react.Component<ItemFieldProps, ItemFieldState> {
                 focus: focusField,
                 ref: 'textField',
             }),
-            react.DOM.div(style.mixin(theme.field.actions), actions)
+            div(style.mixin(theme.field.actions), actions)
         );
     }
 }

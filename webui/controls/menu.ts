@@ -3,6 +3,7 @@ import react_dom = require('react-dom');
 import style = require('ts-style');
 
 import colors = require('./colors');
+import { div } from '../base/dom_factory';
 import fonts = require('./fonts');
 import reactutil = require('../base/reactutil');
 import ripple = require('./ripple');
@@ -338,7 +339,7 @@ export class Menu extends react.Component<MenuProps, MenuState> {
 
     render() {
         var menuItems = this.props.items.map(item => {
-            return react.DOM.div(
+            return div(
                 style.mixin(theme.menu.item, {
                     key: item.label,
                     onClick: () => {
@@ -359,7 +360,7 @@ export class Menu extends react.Component<MenuProps, MenuState> {
                     },
                 }),
                 ripple.InkRippleF({ radius: 100 }),
-                react.DOM.div(style.mixin(theme.menu.item.label), item.label)
+                div(style.mixin(theme.menu.item.label), item.label)
             );
         });
 
@@ -385,21 +386,21 @@ export class Menu extends react.Component<MenuProps, MenuState> {
             }
         }
 
-        return react.DOM.div(
+        return div(
             style.mixin([
                 theme.menu.container,
                 {
                     zIndex: this.props.zIndex,
                 },
             ]),
-            react.DOM.div(
+            div(
                 style.mixin(overlayStyles, {
                     onClick: (e: react.MouseEvent<Element>) => {
                         this.props.onDismiss();
                     },
                 })
             ),
-            react.DOM.div(
+            div(
                 style.mixin(theme.menu, {
                     ref: (el: HTMLElement) => (this.menu = el),
                     style: reactutil.prefix({

@@ -6,6 +6,7 @@ import underscore = require('underscore');
 
 import app_theme = require('./theme');
 import colors = require('./controls/colors');
+import { div, input } from './base/dom_factory';
 import env = require('../lib/base/env');
 import fonts = require('./controls/fonts');
 import keycodes = require('./base/keycodes');
@@ -171,7 +172,7 @@ export class Item extends react.Component<ItemProps, {}> {
     render() {
         var focusIndicator: react.ReactElement<any>;
         if (this.props.isFocused) {
-            focusIndicator = react.DOM.div(
+            focusIndicator = div(
                 style.mixin(theme.item.focusIndicator),
                 '>'
             );
@@ -186,7 +187,7 @@ export class Item extends react.Component<ItemProps, {}> {
         var offset = this.props.offsetTop.toString() + 'px';
         var translation = 'translate3d(0px,' + offset + ',0px)';
 
-        return react.DOM.div(
+        return div(
             style.mixin(theme.item, {
                 ref: 'itemOverview',
                 onClick: () => this.props.onSelected(),
@@ -198,13 +199,13 @@ export class Item extends react.Component<ItemProps, {}> {
                 iconProvider: this.props.iconProvider,
                 isFocused: this.props.isFocused,
             }),
-            react.DOM.div(
+            div(
                 style.mixin(theme.item.details),
-                react.DOM.div(
+                div(
                     style.mixin(theme.item.details.title),
                     this.props.item.title
                 ),
-                react.DOM.div(
+                div(
                     style.mixin(theme.item.details.account),
                     this.props.item.account
                 )
@@ -386,7 +387,7 @@ class ItemList extends react.Component<ItemListProps, ItemListState> {
 
         var listHeight =
             this.state.matchingItems.length * this.state.itemHeight;
-        return react.DOM.div(
+        return div(
             style.mixin(theme.list, {
                 ref: (el: HTMLElement) => (this.itemList = el),
                 onScroll: () => {
@@ -412,7 +413,7 @@ class ItemList extends react.Component<ItemListProps, ItemListState> {
             // add placeholder item at the bottom of the list to ensure
             // that the scrollbar has a suitable range to allow the user
             // to scroll the whole list
-            react.DOM.div(
+            div(
                 style.mixin([
                     theme.list.footer,
                     {
@@ -590,7 +591,7 @@ class ItemListToolbar extends react.Component<ItemListToolbarProps, {}> {
             searchPlaceholder = 'Search items...';
         }
 
-        return react.DOM.div(
+        return div(
             style.mixin(theme.toolbar),
             svg_icon.SvgIconF({
                 className: style.classes(theme.toolbar.searchIcon),
@@ -600,7 +601,7 @@ class ItemListToolbar extends react.Component<ItemListToolbarProps, {}> {
                 viewBox: iconViewBox,
                 fill: 'white',
             }),
-            react.DOM.input({
+            input({
                 className: style.classes(theme.toolbar.searchField),
                 type: 'text',
                 placeholder: searchPlaceholder,
@@ -612,7 +613,7 @@ class ItemListToolbar extends react.Component<ItemListToolbarProps, {}> {
                     updateQuery();
                 },
             }),
-            react.DOM.div(
+            div(
                 style.mixin(theme.toolbar.iconGroup),
                 toolbar.createButton({
                     iconUrl: 'dist/icons/icons.svg#lock-outline',
@@ -718,7 +719,7 @@ export class ItemListView extends react.Component<
             filterUrl = this.props.currentUrl;
         }
 
-        return react.DOM.div(
+        return div(
             style.mixin(theme.container, {
                 tabIndex: 0,
                 onFocus: () => {

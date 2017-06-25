@@ -5,6 +5,7 @@ import style = require('ts-style');
 import agile_keychain_crypto = require('../lib/agile_keychain_crypto');
 import button = require('./controls/button');
 import colors = require('./controls/colors');
+import { div } from './base/dom_factory';
 import env = require('../lib/base/env');
 import fonts = require('./controls/fonts');
 import item_builder = require('../lib/item_builder');
@@ -396,7 +397,7 @@ export class DetailsView extends react.Component<
             });
             if (sectionIndex > 0) {
                 sections.push(
-                    react.DOM.div(style.mixin(theme.section.divider))
+                    div(style.mixin(theme.section.divider))
                 );
             }
             if (section.title || editing) {
@@ -425,7 +426,7 @@ export class DetailsView extends react.Component<
                     );
                 } else {
                     sections.push(
-                        react.DOM.div(
+                        div(
                             style.mixin(theme.section.title),
                             section.title
                         )
@@ -433,7 +434,7 @@ export class DetailsView extends react.Component<
                 }
             }
 
-            sections.push(react.DOM.div({}, fields));
+            sections.push(div({}, fields));
 
             if (editing) {
                 var addButtonRef = sectionIndex + '.addField';
@@ -693,7 +694,7 @@ export class DetailsView extends react.Component<
                 })
             );
         }
-        toolbarControls.push(react.DOM.div(style.mixin(theme.toolbarSpacer)));
+        toolbarControls.push(div(style.mixin(theme.toolbarSpacer)));
 
         var editOrSave: react.ReactElement<button.ButtonProps>;
         if (this.state.isEditing) {
@@ -729,7 +730,7 @@ export class DetailsView extends react.Component<
             });
         }
         toolbarControls.push(
-            react.DOM.div(
+            div(
                 style.mixin([
                     item_list.theme.toolbar.iconGroup,
                     {
@@ -742,7 +743,7 @@ export class DetailsView extends react.Component<
             )
         );
 
-        return react.DOM.div(
+        return div(
             style.mixin(theme.header.toolbar),
             toolbarControls
         );
@@ -804,7 +805,7 @@ export class DetailsView extends react.Component<
 
             var sectionDivider: react.ReactElement<{}>;
             if (websites.length > 0 && sections.length > 0) {
-                sectionDivider = react.DOM.div(style.mixin(theme.divider));
+                sectionDivider = div(style.mixin(theme.divider));
             }
 
             var itemActionDivider: react.ReactElement<{}>;
@@ -829,18 +830,18 @@ export class DetailsView extends react.Component<
             }
 
             if (itemActions.length > 0) {
-                itemActionDivider = react.DOM.div(style.mixin(theme.divider));
+                itemActionDivider = div(style.mixin(theme.divider));
             }
 
-            detailsContent = react.DOM.div(
+            detailsContent = div(
                 style.mixin(theme.content, { key: contentKey }),
                 titleField,
-                react.DOM.div(style.mixin(theme.coreFields), coreFields),
-                react.DOM.div({}, websites),
+                div(style.mixin(theme.coreFields), coreFields),
+                div({}, websites),
                 sectionDivider,
-                react.DOM.div({}, sections),
+                div({}, sections),
                 itemActionDivider,
-                react.DOM.div({}, itemActions)
+                div({}, itemActions)
             );
         }
 
@@ -925,7 +926,7 @@ export class DetailsView extends react.Component<
         var autofillButton: react.ReactElement<{}>;
         var autofillSupported = env.isChromeExtension();
         if (!this.state.isEditing && autofillSupported) {
-            autofillButton = react.DOM.div(
+            autofillButton = div(
                 style.mixin({
                     position: 'absolute',
                     right: 16,
@@ -950,13 +951,13 @@ export class DetailsView extends react.Component<
             updatedItem = this.props.item;
         }
 
-        return react.DOM.div(
+        return div(
             style.mixin(viewStyles, { tabIndex: 0 }),
-            react.DOM.div(
+            div(
                 style.mixin(headerStyles),
                 this.renderToolbar(),
                 this.renderMenus(),
-                react.DOM.div(
+                div(
                     style.mixin(headerTheme.iconAndDetails),
                     item_icons.IconControlF({
                         location: updatedItem.primaryLocation(),
@@ -971,16 +972,16 @@ export class DetailsView extends react.Component<
                         },
                         title: `Open ${updatedItem.primaryLocation()} in a new tab`,
                     }),
-                    react.DOM.div(
+                    div(
                         style.mixin(headerTheme.iconAndDetails.details),
                         // item title and account at start of entry transition
-                        react.DOM.div(
+                        div(
                             style.mixin(itemListDetailsStyle),
-                            react.DOM.div(
+                            div(
                                 style.mixin(item_list.theme.item.details.title),
                                 updatedItem.title
                             ),
-                            react.DOM.div(
+                            div(
                                 style.mixin(
                                     item_list.theme.item.details.account
                                 ),
@@ -988,13 +989,13 @@ export class DetailsView extends react.Component<
                             )
                         ),
                         // item title and account at end of entry transition
-                        react.DOM.div(
+                        div(
                             style.mixin(detailsViewDetailsStyle),
-                            react.DOM.div(
+                            div(
                                 style.mixin(theme.header.title),
                                 updatedItem.title
                             ),
-                            react.DOM.div(
+                            div(
                                 style.mixin(theme.header.account),
                                 updatedItem.account
                             )
@@ -1002,7 +1003,7 @@ export class DetailsView extends react.Component<
                     )
                 )
             ),
-            react.DOM.div(
+            div(
                 style.mixin(contentStyles),
                 autofillButton,
                 this.renderFields(this.state.isEditing)

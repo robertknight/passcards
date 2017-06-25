@@ -4,6 +4,7 @@ import style = require('ts-style');
 import controls_theme = require('./theme');
 import button = require('./button');
 import colors = require('./colors');
+import { div } from '../base/dom_factory';
 import reactutil = require('../base/reactutil');
 import style_util = require('../base/style_util');
 import { TransitionChildProps } from '../base/transition_container';
@@ -126,7 +127,7 @@ function hasEntered(state: reactutil.TransitionState) {
  */
 export class Dialog extends react.Component<DialogProps, {}> {
     render() {
-        return react.DOM.div(
+        return div(
             style.mixin([theme.container, this.props.containerStyle]),
             this.renderOverlay(),
             this.renderDialog()
@@ -149,10 +150,10 @@ export class Dialog extends react.Component<DialogProps, {}> {
         let acceptButton = buttonForAction(this.props.acceptAction, 'accept');
         let rejectButton = buttonForAction(this.props.rejectAction, 'reject');
 
-        return react.DOM.div(
+        return div(
             style.mixin(dialogStyles),
-            react.DOM.div(style.mixin(theme.contentArea), this.props.children),
-            react.DOM.div(
+            div(style.mixin(theme.contentArea), this.props.children),
+            div(
                 style.mixin(theme.actionsArea),
                 rejectButton,
                 acceptButton
@@ -173,7 +174,7 @@ export class Dialog extends react.Component<DialogProps, {}> {
             clickHandler = this.props.acceptAction.onSelect;
         }
 
-        return react.DOM.div(
+        return div(
             style.mixin(overlayStyles, {
                 onClick: clickHandler,
             })

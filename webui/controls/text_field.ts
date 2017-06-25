@@ -25,6 +25,7 @@ import react = require('react');
 import react_dom = require('react-dom');
 import style = require('ts-style');
 
+import { div, input } from '../base/dom_factory';
 import colors = require('./colors');
 import fonts = require('./fonts');
 
@@ -227,9 +228,6 @@ interface TextFieldState {
     // caused the field to gain focus
     focusX?: number;
 }
-
-var div = react.DOM.div;
-var input = react.DOM.input;
 
 export class TextField extends react.Component<TextFieldProps, TextFieldState> {
     private textField: HTMLInputElement;

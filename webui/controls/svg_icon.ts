@@ -2,6 +2,7 @@ import react = require('react');
 import underscore = require('underscore');
 
 import reactutil = require('../base/reactutil');
+import { svg } from '../base/dom_factory';
 
 export interface SvgIconProps extends react.HTMLAttributes<Element> {
     // redeclare 'ref' here to resolve conflict between
@@ -25,7 +26,7 @@ export function SvgIcon(props: SvgIconProps) {
     var hrefAttr = underscore.escape(props.href);
     var viewBox = props.viewBox;
 
-    return react.DOM.svg(
+    return svg(
         reactutil.mergeProps(props, {
             dangerouslySetInnerHTML: {
                 __html: `<use x="0" y="0" fill="${fillAttr}" xlink:href="${hrefAttr}"></use>`,

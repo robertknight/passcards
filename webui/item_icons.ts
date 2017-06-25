@@ -3,6 +3,7 @@ import style = require('ts-style');
 import underscore = require('underscore');
 import urijs = require('urijs');
 
+import { div, img } from './base/dom_factory';
 import err_util = require('../lib/base/err_util');
 import event_stream = require('../lib/base/event_stream');
 import image = require('../lib/siteinfo/image');
@@ -483,12 +484,12 @@ export class IconControl extends react.Component<IconControlProps, {}> {
             containerStyles.push(theme.action);
         }
 
-        return react.DOM.div(
+        return div(
             style.mixin(containerStyles, {
                 onClick: this.props.onClick,
                 title: this.props.title,
             }),
-            react.DOM.img(
+            img(
                 style.mixin(imgStyles, { ref: 'img', src: icon.iconUrl })
             )
         );

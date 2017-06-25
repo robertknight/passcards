@@ -2,6 +2,7 @@ import react = require('react');
 import style = require('ts-style');
 
 import controls_theme = require('./theme');
+import { div } from '../base/dom_factory';
 import style_util = require('../base/style_util');
 
 const FADE_DURATION = 0.3;
@@ -88,14 +89,14 @@ export class Toaster extends react.Component<ToasterProps, ToasterState> {
 
         var progressBar: react.ReactElement<any>;
         if (this.props.progressMax) {
-            progressBar = react.DOM.div(
+            progressBar = div(
                 style.mixin([
                     theme.toaster.progressBar.outline,
                     {
                         width: PROGRESS_WIDTH + 'px',
                     },
                 ]),
-                react.DOM.div(
+                div(
                     style.mixin([
                         theme.toaster.progressBar.meter,
                         {
@@ -108,9 +109,9 @@ export class Toaster extends react.Component<ToasterProps, ToasterState> {
 
         const containerStyle = { opacity: this.state.opacity };
 
-        return react.DOM.div(
+        return div(
             style.mixin([theme.toaster, containerStyle], {}),
-            react.DOM.div({}, this.props.message),
+            div({}, this.props.message),
             progressBar
         );
     }

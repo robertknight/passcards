@@ -6,6 +6,7 @@ import style = require('ts-style');
 
 import button = require('./controls/button');
 import colors = require('./controls/colors');
+import { div, form, input } from './base/dom_factory';
 import event_stream = require('../lib/base/event_stream');
 import fonts = require('./controls/fonts');
 import reactutil = require('./base/reactutil');
@@ -194,11 +195,11 @@ export class UnlockView extends react.Component<
         var unlockPaneLower: react.ReactElement<any>;
 
         if (this.props.isLocked) {
-            unlockPaneUpper = react.DOM.div(
+            unlockPaneUpper = div(
                 style.mixin(theme.upper),
-                react.DOM.div(
+                div(
                     style.mixin(theme.form),
-                    react.DOM.form(
+                    form(
                         {
                             className: style.classes(theme.inputPane),
                             ref: 'unlockPaneForm',
@@ -211,9 +212,9 @@ export class UnlockView extends react.Component<
                                 });
                             },
                         },
-                        react.DOM.div(
+                        div(
                             style.mixin(theme.passwordRow),
-                            react.DOM.input(
+                            input(
                                 style.mixin(theme.masterPasswordField, {
                                     type: 'password',
                                     placeholder: 'Master Password...',
@@ -239,17 +240,17 @@ export class UnlockView extends react.Component<
                                 },
                             })
                         ),
-                        react.DOM.div(
+                        div(
                             style.mixin(theme.unlockLabel),
                             unlockMessage
                         )
                     )
                 )
             );
-            unlockPaneLower = react.DOM.div(style.mixin(theme.lower));
+            unlockPaneLower = div(style.mixin(theme.lower));
         }
 
-        return react.DOM.div(
+        return div(
             {},
             reactutil.CSSTransitionGroupF(
                 {

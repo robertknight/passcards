@@ -26,6 +26,7 @@ import unlock_view = require('./unlock_view');
 import url_util = require('../lib/base/url_util');
 import app_state = require('./stores/app');
 import { delay } from '../lib/base/promise_util';
+import { div } from './base/dom_factory';
 
 var theme = style.create(
     {
@@ -196,7 +197,7 @@ class AppView extends react.Component<AppViewProps, AppViewState> {
         );
         children.push(menu);
 
-        return react.DOM.div(
+        return div(
             style.mixin(theme.appView, { ref: 'app' }),
             children
         );

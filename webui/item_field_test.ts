@@ -3,6 +3,7 @@ import react_dom = require('react-dom');
 import { scryRenderedComponentsWithType } from 'react-addons-test-utils';
 
 import button = require('./controls/button');
+import { div } from './base/dom_factory';
 import item_field = require('./item_field');
 import browser_access = require('./browser_access');
 import testLib = require('../lib/test');
@@ -20,7 +21,7 @@ let fakeClipboard: browser_access.ClipboardAccess = {
 
 class AccountFields extends react.Component<{}, {}> {
     render() {
-        return react.DOM.div(
+        return div(
             {},
             item_field.ItemFieldF({
                 ref: 'usernameField',

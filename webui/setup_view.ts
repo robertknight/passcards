@@ -6,6 +6,7 @@ import auth = require('./auth');
 import assign = require('../lib/base/assign');
 import button = require('./controls/button');
 import colors = require('./controls/colors');
+import { div } from './base/dom_factory';
 import dropbox_vfs = require('../lib/vfs/dropbox');
 import fonts = require('./controls/fonts');
 import http_vfs = require('../lib/vfs/http');
@@ -233,11 +234,11 @@ class CloudStoreList extends react.Component<
     render() {
         if (!this.state.stores) {
             if (this.state.error) {
-                return react.DOM.div(
+                return div(
                     style.mixin(theme.cloudStoreList),
                     `Unable to search for existing stores: ${this.state.error
                         .message}`,
-                    react.DOM.div(
+                    div(
                         style.mixin(theme.screenButtons),
                         button.ButtonF({
                             style: button.Style.Rectangular,
@@ -251,23 +252,23 @@ class CloudStoreList extends react.Component<
                     )
                 );
             } else {
-                return react.DOM.div(
+                return div(
                     style.mixin(theme.cloudStoreList),
-                    react.DOM.div(
+                    div(
                         style.mixin(theme.cloudStoreList.item),
                         'Searching for existing stores...'
                     )
                 );
             }
         } else {
-            return react.DOM.div(
+            return div(
                 style.mixin(theme.cloudStoreList),
                 this.state.stores.map(store => {
                     var displayPath = store.path;
                     if (stringutil.startsWith(displayPath, '/')) {
                         displayPath = displayPath.slice(1);
                     }
-                    return react.DOM.div(
+                    return div(
                         style.mixin(theme.cloudStoreList.item, {
                             key: store.path,
                             onClick: () => {
@@ -310,16 +311,16 @@ class StoreList extends react.Component<StoreListProps, {}> {
             var cloudService = settings.CloudService[account.cloudService];
 
             stores.push(
-                react.DOM.div(
+                div(
                     style.mixin(theme.storeList.item, {
                         key: `${cloudService}.${account.id}.${displayPath}`,
                         onClick: () => this.props.onSelectStore(account),
                     }),
-                    react.DOM.div(
+                    div(
                         style.mixin(theme.storeList.item.path),
                         displayPath
                     ),
-                    react.DOM.div(
+                    div(
                         style.mixin(theme.storeList.item.store),
                         `in ${account.name}'s ${cloudService}`
                     ),
@@ -329,12 +330,12 @@ class StoreList extends react.Component<StoreListProps, {}> {
         });
 
         stores.push(
-            react.DOM.div(
+            div(
                 style.mixin(theme.storeList.item, {
                     onClick: () => this.props.onAddStore(),
                     key: 'add-store',
                 }),
-                react.DOM.div(
+                div(
                     style.mixin(theme.storeList.item.addStore),
                     'Add Store'
                 ),
@@ -342,7 +343,7 @@ class StoreList extends react.Component<StoreListProps, {}> {
             )
         );
 
-        return react.DOM.div(style.mixin(theme.storeList), stores);
+        return div(style.mixin(theme.storeList), stores);
     }
 }
 
@@ -385,7 +386,7 @@ class Slide extends react.Component<SlideProps, {}> {
             },
         ];
 
-        return react.DOM.div(style.mixin(screenStyles), this.props.children);
+        return div(style.mixin(screenStyles), this.props.children);
     }
 }
 
@@ -428,7 +429,7 @@ class NewStoreForm extends react.Component<
         ) {
             confirmPasswordError = 'Passwords do not match';
         }
-        return react.DOM.div(
+        return div(
             style.mixin(theme.newStore),
             text_field.TextFieldF({
                 type: 'text',
@@ -495,9 +496,9 @@ class NewStoreForm extends react.Component<
 
         var form: react.ReactElement<any>;
         if (this.state.creatingStore) {
-            form = react.DOM.div(
+            form = div(
                 style.mixin(theme.newStore),
-                react.DOM.div(
+                div(
                     style.mixin(theme.creatingStore.label),
                     'Creating store...'
                 )
@@ -506,11 +507,11 @@ class NewStoreForm extends react.Component<
             form = this.renderForm();
         }
 
-        return react.DOM.div(
+        return div(
             {},
-            react.DOM.div(style.mixin(theme.header), 'Setup new store'),
+            div(style.mixin(theme.header), 'Setup new store'),
             form,
-            react.DOM.div(
+            div(
                 style.mixin(theme.screenButtons),
                 NavButtonF({
                     label: 'Back',
@@ -688,9 +689,9 @@ export class SetupView extends react.Component<SetupViewProps, SetupViewState> {
             });
         }
 
-        return react.DOM.div(
+        return div(
             style.mixin(theme.setupView),
-            react.DOM.div(
+            div(
                 style.mixin(theme.setupView.inner),
                 screens,
                 reactutil.TransitionGroupF({}, message)
@@ -707,10 +708,10 @@ export class SetupView extends react.Component<SetupViewProps, SetupViewState> {
     }
 
     private renderWelcomeScreen() {
-        return react.DOM.div(
+        return div(
             {},
-            react.DOM.div(style.mixin(theme.header), 'Passcards'),
-            react.DOM.div(
+            div(style.mixin(theme.header), 'Passcards'),
+            div(
                 style.mixin(theme.screenButtons),
                 NavButtonF({
                     label: 'Continue',
@@ -723,9 +724,9 @@ export class SetupView extends react.Component<SetupViewProps, SetupViewState> {
     }
 
     private renderCloudServiceList() {
-        return react.DOM.div(
+        return div(
             {},
-            react.DOM.div(
+            div(
                 style.mixin(theme.screenButtons),
                 NavButtonF({
                     label: 'Back',
@@ -802,9 +803,9 @@ export class SetupView extends react.Component<SetupViewProps, SetupViewState> {
             (<settings.AccountMap>this.props.settings.get(
                 settings.Setting.Accounts
             )) || {};
-        return react.DOM.div(
+        return div(
             {},
-            react.DOM.div(style.mixin(theme.header), 'Select Store'),
+            div(style.mixin(theme.header), 'Select Store'),
             StoreListF({
                 stores: stores,
                 onSelectStore: account => {
@@ -867,7 +868,7 @@ export class SetupView extends react.Component<SetupViewProps, SetupViewState> {
     }
 
     private renderProgressSlide(text: string) {
-        return react.DOM.div(style.mixin(theme.header), text);
+        return div(style.mixin(theme.header), text);
     }
 
     private cloudServiceType() {
@@ -883,9 +884,9 @@ export class SetupView extends react.Component<SetupViewProps, SetupViewState> {
             accountName = `${this.state.accountInfo.name}'s`;
         }
 
-        return react.DOM.div(
+        return div(
             {},
-            react.DOM.div(
+            div(
                 style.mixin(theme.header),
                 `Select store in ${accountName} ${this.cloudServiceType()}`
             ),
@@ -895,7 +896,7 @@ export class SetupView extends react.Component<SetupViewProps, SetupViewState> {
                     this.onSelectStore(path);
                 },
             }),
-            react.DOM.div(
+            div(
                 style.mixin(theme.screenButtons),
                 NavButtonF({
                     label: 'Back',
@@ -909,7 +910,7 @@ export class SetupView extends react.Component<SetupViewProps, SetupViewState> {
                         this.pushScreen(Screen.NewStore);
                     },
                 }),
-                react.DOM.div(style.mixin(theme.screenButtons.spacer)),
+                div(style.mixin(theme.screenButtons.spacer)),
                 NavButtonF({
                     label: 'Sign Out',
                     onClick: () => {

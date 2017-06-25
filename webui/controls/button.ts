@@ -3,6 +3,7 @@ import style = require('ts-style');
 
 import controls_theme = require('./theme');
 import colors = require('./colors');
+import { button, div } from '../base/dom_factory';
 import fonts = require('./fonts');
 import ripple = require('./ripple');
 import svg_icon = require('./svg_icon');
@@ -244,7 +245,7 @@ export class Button extends react.Component<ButtonProps, {}> {
             // centered.
             //
             // Tested in Firefox 37.
-            buttonIcon = react.DOM.div(
+            buttonIcon = div(
                 {},
                 svg_icon.SvgIconF(
                     style.mixin(theme.button.icon, {
@@ -265,13 +266,13 @@ export class Button extends react.Component<ButtonProps, {}> {
 
         var label: react.ReactElement<any>;
         if (this.props.value && isRectangular) {
-            label = react.DOM.div(
+            label = div(
                 style.mixin(labelStyles, {}),
                 this.props.value
             );
         }
 
-        return react.DOM.button(
+        return button(
             style.mixin(containerStyles, {
                 tabIndex: 0,
                 onClick: (e: react.MouseEvent<Element>) =>

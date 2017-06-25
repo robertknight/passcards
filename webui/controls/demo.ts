@@ -4,6 +4,7 @@ import style = require('ts-style');
 
 import button = require('./button');
 import dialog = require('./dialog');
+import { div } from '../base/dom_factory';
 import env = require('../../lib/base/env');
 import fonts = require('./fonts');
 import menu = require('./menu');
@@ -66,10 +67,10 @@ function componentSection(
     name: string,
     ...children: react.ReactElement<any>[]
 ) {
-    return react.DOM.div(
+    return div(
         style.mixin(theme.section, {}),
-        react.DOM.div(style.mixin(theme.section.header), name),
-        react.DOM.div(style.mixin(theme.section.content), children)
+        div(style.mixin(theme.section.header), name),
+        div(style.mixin(theme.section.content), children)
     );
 }
 
@@ -237,11 +238,11 @@ class ControlDemoApp extends react.Component<
     }
 
     render() {
-        return react.DOM.div(
+        return div(
             style.mixin(theme.app, {}),
             componentSection(
                 'Ripple Effects',
-                react.DOM.div(
+                div(
                     style.mixin(theme.rippleContainer, {}),
                     ripple.InkRippleF(
                         { color: '#808080' },

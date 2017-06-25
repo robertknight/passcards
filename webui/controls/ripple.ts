@@ -5,6 +5,7 @@ import react = require('react');
 import react_dom = require('react-dom');
 import style = require('ts-style');
 
+import { div, canvas } from '../base/dom_factory';
 import reactutil = require('../base/reactutil');
 
 var theme = style.create(
@@ -192,15 +193,15 @@ export class InkRipple extends react.Component<InkRippleProps, InkRippleState> {
     }
 
     render() {
-        return react.DOM.div(
+        return div(
             style.mixin(theme.inkRipple, {
                 ref: (el: HTMLElement) => (this.container = el),
             }),
-            react.DOM.canvas({
+            canvas({
                 className: style.classes(theme.inkRipple),
                 ref: el => (this.canvas = el),
             }),
-            react.DOM.div(
+            div(
                 style.mixin(theme.inkRipple.container),
                 this.props.children
             )
