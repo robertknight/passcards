@@ -13,17 +13,17 @@
  *                   // is never called.
  */
 export interface Pipe {
-	(...args: any[]): void;
-	cancel(): void;
+    (...args: any[]): void;
+    cancel(): void;
 }
 
 export default function pipe(fn: Function) {
-	let pipeFn: Pipe | Function = (...args: any[]) => {
-		fn(...args);
-	};
-	let pipe = pipeFn as Pipe;
-	pipe.cancel = () => {
-		fn = () => { };
-	};
-	return pipe;
+    let pipeFn: Pipe | Function = (...args: any[]) => {
+        fn(...args);
+    };
+    let pipe = pipeFn as Pipe;
+    pipe.cancel = () => {
+        fn = () => {};
+    };
+    return pipe;
 }

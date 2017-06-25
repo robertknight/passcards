@@ -1,4 +1,3 @@
-
 import assert = require('assert');
 
 import asyncutil = require('./base/asyncutil');
@@ -13,9 +12,9 @@ import logging = require('./base/logging');
 import { defer, Deferred } from './base/promise_util';
 
 export class SyncError extends err_util.BaseError {
-	constructor(message: string, sourceErr?: Error) {
-		super(message, sourceErr);
-	}
+    constructor(message: string, sourceErr?: Error) {
+        super(message, sourceErr);
+    }
 }
 
 let syncLog = new logging.BasicLogger('sync');
@@ -33,448 +32,580 @@ const REMOTE_STORE = 'cloud';
   * millisecond-resolution timestamps.
   */
 export function itemUpdateTimesEqual(a: Date, b: Date) {
-	return dateutil.unixTimestampFromDate(a) ==
-	       dateutil.unixTimestampFromDate(b);
+    return (
+        dateutil.unixTimestampFromDate(a) == dateutil.unixTimestampFromDate(b)
+    );
 }
 
 export enum SyncState {
-	/** Sync is not currently in progress */
-	Idle,
+    /** Sync is not currently in progress */
+    Idle,
 
-	/** Sync is enumerating changed items */
-	ListingItems,
+    /** Sync is enumerating changed items */
+    ListingItems,
 
-	/** Sync is fetching and updating changed items */
-	SyncingItems
+    /** Sync is fetching and updating changed items */
+    SyncingItems,
 }
 
 export interface SyncProgress {
-	state: SyncState;
+    state: SyncState;
 
-	/** Count of items that have been synced. */
-	updated: number;
+    /** Count of items that have been synced. */
+    updated: number;
 
-	/** Count of items that failed to sync. */
-	failed: number;
+    /** Count of items that failed to sync. */
+    failed: number;
 
-	/** Total number of changed items to sync. */
-	total: number;
+    /** Total number of changed items to sync. */
+    total: number;
 
-	/** Number of items actively being synced. */
-	active: number;
+    /** Number of items actively being synced. */
+    active: number;
 }
 
 enum ItemSyncState {
-	Unchanged,
-	Updated,
-	Deleted
+    Unchanged,
+    Updated,
+    Deleted,
 }
 
 interface SyncItem {
-	localItem: item_store.ItemState;
-	localState: ItemSyncState;
-	remoteItem: item_store.ItemState;
-	remoteState: ItemSyncState;
+    localItem: item_store.ItemState;
+    localState: ItemSyncState;
+    remoteItem: item_store.ItemState;
+    remoteState: ItemSyncState;
 }
 
 /** Interface for syncing encryption keys and items between
   * a cloud-based store and a local cache.
   */
 export interface Syncer {
-	onProgress: event_stream.EventStream<SyncProgress>;
+    onProgress: event_stream.EventStream<SyncProgress>;
 
-	/** Sync encryption keys from the remote store to the local one.
+    /** Sync encryption keys from the remote store to the local one.
 	  * This does not require the remote store to be unlocked.
 	  */
-	syncKeys(): Promise<void>;
+    syncKeys(): Promise<void>;
 
-	/** Sync items between the local and remote stores.
+    /** Sync items between the local and remote stores.
 	  * Returns a promise which is resolved when the current sync completes.
 	  *
 	  * Syncing items requires both local and remote stores
 	  * to be unlocked first.
 	  */
-	syncItems(): Promise<SyncProgress>;
+    syncItems(): Promise<SyncProgress>;
 }
 
 /** Syncer implementation which syncs changes between an item_store.Store
   * representing a remote store and a local store.
   */
 export class CloudStoreSyncer implements Syncer {
-	private localStore: item_store.SyncableStore;
-	private cloudStore: item_store.Store;
+    private localStore: item_store.SyncableStore;
+    private cloudStore: item_store.Store;
 
-	// queue of items left to sync
-	private syncQueue: SyncItem[];
-	// progress of the current sync
-	private syncProgress: SyncProgress;
-	// promise for the result of the
-	// current sync task or null if no sync
-	// is in progress
-	private currentSync: Deferred<SyncProgress>;
+    // queue of items left to sync
+    private syncQueue: SyncItem[];
+    // progress of the current sync
+    private syncProgress: SyncProgress;
+    // promise for the result of the
+    // current sync task or null if no sync
+    // is in progress
+    private currentSync: Deferred<SyncProgress>;
 
-	onProgress: event_stream.EventStream<SyncProgress>;
+    onProgress: event_stream.EventStream<SyncProgress>;
 
-	constructor(localStore: item_store.SyncableStore, cloudStore: item_store.Store) {
-		this.localStore = localStore;
-		this.cloudStore = cloudStore;
-		this.onProgress = new event_stream.EventStream<SyncProgress>();
-		this.syncQueue = [];
-	}
+    constructor(
+        localStore: item_store.SyncableStore,
+        cloudStore: item_store.Store
+    ) {
+        this.localStore = localStore;
+        this.cloudStore = cloudStore;
+        this.onProgress = new event_stream.EventStream<SyncProgress>();
+        this.syncQueue = [];
+    }
 
-	syncKeys(): Promise<void> {
-		let keys = this.cloudStore.listKeys();
+    syncKeys(): Promise<void> {
+        let keys = this.cloudStore.listKeys();
 
-		// sync the password hint on a best-effort basis.
-		// If no hint is available, display a placeholder instead.
-		let hint = this.cloudStore.passwordHint().then(hint => {
-			return hint;
-		}).catch(err => {
-			return '';
-		});
+        // sync the password hint on a best-effort basis.
+        // If no hint is available, display a placeholder instead.
+        let hint = this.cloudStore
+            .passwordHint()
+            .then(hint => {
+                return hint;
+            })
+            .catch(err => {
+                return '';
+            });
 
-		return asyncutil.all2([keys, hint]).then((keysAndHint) => {
-			var keys = <key_agent.Key[]>keysAndHint[0];
-			var hint = <string>keysAndHint[1];
-			return this.localStore.saveKeys(keys, hint);
-		});
-	}
+        return asyncutil.all2([keys, hint]).then(keysAndHint => {
+            var keys = <key_agent.Key[]>keysAndHint[0];
+            var hint = <string>keysAndHint[1];
+            return this.localStore.saveKeys(keys, hint);
+        });
+    }
 
-	syncItems(): Promise<SyncProgress> {
-		if (this.currentSync) {
-			// if a sync is already in progress, complete the current sync first.
-			// This should queue up a new sync to complete once the current one finishes.
-			return this.currentSync.promise;
-		}
-		syncLog.info('Starting sync');
+    syncItems(): Promise<SyncProgress> {
+        if (this.currentSync) {
+            // if a sync is already in progress, complete the current sync first.
+            // This should queue up a new sync to complete once the current one finishes.
+            return this.currentSync.promise;
+        }
+        syncLog.info('Starting sync');
 
-		var result = defer<SyncProgress>();
-		this.currentSync = result;
-		this.currentSync.promise.then(() => {
-			syncLog.info('Sync completed');
-			this.currentSync = null;
-		}).catch(err => {
-			syncLog.error('Sync failed', err.toString());
-			this.currentSync = null;
-		});
+        var result = defer<SyncProgress>();
+        this.currentSync = result;
+        this.currentSync.promise
+            .then(() => {
+                syncLog.info('Sync completed');
+                this.currentSync = null;
+            })
+            .catch(err => {
+                syncLog.error('Sync failed', err.toString());
+                this.currentSync = null;
+            });
 
-		this.syncProgress = {
-			state: SyncState.ListingItems,
-			active: 0,
-			updated: 0,
-			failed: 0,
-			total: 0
-		};
+        this.syncProgress = {
+            state: SyncState.ListingItems,
+            active: 0,
+            updated: 0,
+            failed: 0,
+            total: 0,
+        };
 
-		this.onProgress.listen(() => {
-			if (this.syncProgress.state == SyncState.SyncingItems) {
-				var processed = this.syncProgress.updated + this.syncProgress.failed;
-				syncLog.info({
-					updated: this.syncProgress.updated,
-					failed: this.syncProgress.failed,
-					total: this.syncProgress.total
-				});
+        this.onProgress.listen(() => {
+            if (this.syncProgress.state == SyncState.SyncingItems) {
+                var processed =
+                    this.syncProgress.updated + this.syncProgress.failed;
+                syncLog.info({
+                    updated: this.syncProgress.updated,
+                    failed: this.syncProgress.failed,
+                    total: this.syncProgress.total,
+                });
 
-				if (processed == this.syncProgress.total) {
-					this.syncProgress.state = SyncState.Idle;
-					this.notifyProgress();
-					result.resolve(this.syncProgress);
-				} else {
-					this.syncNextBatch();
-				}
-			}
-		}, 'sync-progress');
-		this.notifyProgress();
+                if (processed == this.syncProgress.total) {
+                    this.syncProgress.state = SyncState.Idle;
+                    this.notifyProgress();
+                    result.resolve(this.syncProgress);
+                } else {
+                    this.syncNextBatch();
+                }
+            }
+        }, 'sync-progress');
+        this.notifyProgress();
 
-		let localItems = this.localStore.listItemStates();
-		let remoteItems = this.cloudStore.listItemStates();
-		let lastSyncRevisions = this.localStore.lastSyncRevisions(REMOTE_STORE);
+        let localItems = this.localStore.listItemStates();
+        let remoteItems = this.cloudStore.listItemStates();
+        let lastSyncRevisions = this.localStore.lastSyncRevisions(REMOTE_STORE);
 
-		asyncutil.all3([localItems, remoteItems, lastSyncRevisions]).then(itemLists => {
-			let localItems = <item_store.ItemState[]>itemLists[0];
-			let remoteItems = <item_store.ItemState[]>itemLists[1];
-			let lastSyncedRevisions = <Map<string, item_store.RevisionPair>>itemLists[2];
+        asyncutil
+            .all3([localItems, remoteItems, lastSyncRevisions])
+            .then(itemLists => {
+                let localItems = <item_store.ItemState[]>itemLists[0];
+                let remoteItems = <item_store.ItemState[]>itemLists[1];
+                let lastSyncedRevisions = <Map<
+                    string,
+                    item_store.RevisionPair
+                >>itemLists[2];
 
-			syncLog.info('%d items in local store, %d in remote store', localItems.length, remoteItems.length);
+                syncLog.info(
+                    '%d items in local store, %d in remote store',
+                    localItems.length,
+                    remoteItems.length
+                );
 
-			let allItems: { [index: string]: boolean } = {};
+                let allItems: { [index: string]: boolean } = {};
 
-			let localItemMap = collectionutil.listToMap(localItems, item => {
-				allItems[item.uuid] = true;
-				return item.uuid;
-			});
-			let remoteItemMap = collectionutil.listToMap(remoteItems, item => {
-				allItems[item.uuid] = true;
-				return item.uuid;
-			});
+                let localItemMap = collectionutil.listToMap(
+                    localItems,
+                    item => {
+                        allItems[item.uuid] = true;
+                        return item.uuid;
+                    }
+                );
+                let remoteItemMap = collectionutil.listToMap(
+                    remoteItems,
+                    item => {
+                        allItems[item.uuid] = true;
+                        return item.uuid;
+                    }
+                );
 
-			Object.keys(allItems).forEach(uuid => {
-				let remoteItem = remoteItemMap.get(uuid);
-				let localItem = localItemMap.get(uuid);
-				let lastSyncedRevision = lastSyncedRevisions.get(uuid);
+                Object.keys(allItems).forEach(uuid => {
+                    let remoteItem = remoteItemMap.get(uuid);
+                    let localItem = localItemMap.get(uuid);
+                    let lastSyncedRevision = lastSyncedRevisions.get(uuid);
 
-				this.enqueueItemForSyncIfChanged(localItem, remoteItem, lastSyncedRevision);
-			});
+                    this.enqueueItemForSyncIfChanged(
+                        localItem,
+                        remoteItem,
+                        lastSyncedRevision
+                    );
+                });
 
-			syncLog.info('found %d items to sync', this.syncQueue.length);
-			this.syncProgress.state = SyncState.SyncingItems;
-			this.notifyProgress();
-		}).catch(err => {
-			syncLog.error('Failed to list items in local or remote stores', err.stack);
-			result.reject(err);
+                syncLog.info('found %d items to sync', this.syncQueue.length);
+                this.syncProgress.state = SyncState.SyncingItems;
+                this.notifyProgress();
+            })
+            .catch(err => {
+                syncLog.error(
+                    'Failed to list items in local or remote stores',
+                    err.stack
+                );
+                result.reject(err);
 
-			this.syncProgress.state = SyncState.Idle;
-			this.notifyProgress();
-		});
+                this.syncProgress.state = SyncState.Idle;
+                this.notifyProgress();
+            });
 
-		this.syncNextBatch();
+        this.syncNextBatch();
 
-		return this.currentSync.promise;
-	}
+        return this.currentSync.promise;
+    }
 
-	private enqueueItemForSyncIfChanged(localItem: item_store.ItemState,
-		remoteItem: item_store.ItemState,
-		lastSyncedRevision?: item_store.RevisionPair) {
+    private enqueueItemForSyncIfChanged(
+        localItem: item_store.ItemState,
+        remoteItem: item_store.ItemState,
+        lastSyncedRevision?: item_store.RevisionPair
+    ) {
+        let uuid = localItem ? localItem.uuid : remoteItem.uuid;
+        let remoteState = ItemSyncState.Unchanged;
+        let localState = ItemSyncState.Unchanged;
 
-		let uuid = localItem ? localItem.uuid : remoteItem.uuid;
-		let remoteState = ItemSyncState.Unchanged;
-		let localState = ItemSyncState.Unchanged;
+        if (localItem) {
+            if (localItem.deleted) {
+                if (lastSyncedRevision) {
+                    localState = ItemSyncState.Deleted;
+                    syncLog.info('item %s deleted locally', uuid);
+                }
+            } else if (lastSyncedRevision) {
+                if (localItem.revision !== lastSyncedRevision.local) {
+                    localState = ItemSyncState.Updated;
+                    syncLog.info('item %s updated locally', uuid);
+                }
+            } else {
+                localState = ItemSyncState.Updated;
+                syncLog.info('item %s added locally');
+            }
+        }
 
-		if (localItem) {
-			if (localItem.deleted) {
-				if (lastSyncedRevision) {
-					localState = ItemSyncState.Deleted;
-					syncLog.info('item %s deleted locally', uuid);
-				}
-			} else if (lastSyncedRevision) {
-				if (localItem.revision !== lastSyncedRevision.local) {
-					localState = ItemSyncState.Updated;
-					syncLog.info('item %s updated locally', uuid);
-				}
-			} else {
-				localState = ItemSyncState.Updated;
-				syncLog.info('item %s added locally');
-			}
-		}
+        if (remoteItem) {
+            if (remoteItem.deleted) {
+                if (lastSyncedRevision) {
+                    remoteState = ItemSyncState.Deleted;
+                    syncLog.info('item %s deleted in cloud', uuid);
+                }
+            } else if (lastSyncedRevision) {
+                if (remoteItem.revision !== lastSyncedRevision.external) {
+                    remoteState = ItemSyncState.Updated;
+                    syncLog.info('item %s updated in cloud', uuid);
+                }
+            } else {
+                remoteState = ItemSyncState.Updated;
+                syncLog.info('item %s added in cloud', uuid);
+            }
+        }
 
-		if (remoteItem) {
-			if (remoteItem.deleted) {
-				if (lastSyncedRevision) {
-					remoteState = ItemSyncState.Deleted;
-					syncLog.info('item %s deleted in cloud', uuid);
-				}
-			} else if (lastSyncedRevision) {
-				if (remoteItem.revision !== lastSyncedRevision.external) {
-					remoteState = ItemSyncState.Updated;
-					syncLog.info('item %s updated in cloud', uuid);
-				}
-			} else {
-				remoteState = ItemSyncState.Updated;
-				syncLog.info('item %s added in cloud', uuid);
-			}
-		}
+        if (
+            localState !== ItemSyncState.Unchanged ||
+            remoteState !== ItemSyncState.Unchanged
+        ) {
+            this.syncQueue.push({
+                localItem: localItem,
+                localState: localState,
+                remoteItem: remoteItem,
+                remoteState: remoteState,
+            });
+            ++this.syncProgress.total;
+        }
+    }
 
-		if (localState !== ItemSyncState.Unchanged ||
-			remoteState !== ItemSyncState.Unchanged) {
-			this.syncQueue.push({
-				localItem: localItem,
-				localState: localState,
-				remoteItem: remoteItem,
-				remoteState: remoteState
-			});
-			++this.syncProgress.total;
-		}
-	}
+    // sync the next batch of items. This adds items
+    // to the queue to sync until the limit of concurrent items
+    // being updated at once reaches a limit.
+    //
+    // When syncing with a store using the Agile Keychain format
+    // and Dropbox, there is one file to fetch per-item so this
+    // batching nicely maps to network requests that we'll need
+    // to make. If we switch to the Cloud Keychain format (or another
+    // format) in future which stores multiple items per file,
+    // the concept of syncing batches of items may no longer
+    // be needed or may need to work differently.
+    private syncNextBatch() {
+        var SYNC_MAX_ACTIVE_ITEMS = 10;
+        while (
+            this.syncProgress.active < SYNC_MAX_ACTIVE_ITEMS &&
+            this.syncQueue.length > 0
+        ) {
+            var next = this.syncQueue.shift();
+            this.syncItem(next);
+        }
+    }
 
-	// sync the next batch of items. This adds items
-	// to the queue to sync until the limit of concurrent items
-	// being updated at once reaches a limit.
-	//
-	// When syncing with a store using the Agile Keychain format
-	// and Dropbox, there is one file to fetch per-item so this
-	// batching nicely maps to network requests that we'll need
-	// to make. If we switch to the Cloud Keychain format (or another
-	// format) in future which stores multiple items per file,
-	// the concept of syncing batches of items may no longer
-	// be needed or may need to work differently.
-	private syncNextBatch() {
-		var SYNC_MAX_ACTIVE_ITEMS = 10;
-		while (this.syncProgress.active < SYNC_MAX_ACTIVE_ITEMS &&
-			this.syncQueue.length > 0) {
-			var next = this.syncQueue.shift();
-			this.syncItem(next);
-		}
-	}
+    private notifyProgress() {
+        this.onProgress.publish(this.syncProgress);
+    }
 
-	private notifyProgress() {
-		this.onProgress.publish(this.syncProgress);
-	}
+    // create a tombstone item to represent an item
+    // which has been deleted locally or in the cloud during sync
+    private createTombstone(
+        store: item_store.Store,
+        uuid: string
+    ): item_store.ItemAndContent {
+        let item = new item_store.Item(store, uuid);
+        item.typeName = item_store.ItemTypes.TOMBSTONE;
+        item.updatedAt = new Date();
+        return {
+            item: item,
+            content: null,
+        };
+    }
 
-	// create a tombstone item to represent an item
-	// which has been deleted locally or in the cloud during sync
-	private createTombstone(store: item_store.Store, uuid: string): item_store.ItemAndContent {
-		let item = new item_store.Item(store, uuid);
-		item.typeName = item_store.ItemTypes.TOMBSTONE;
-		item.updatedAt = new Date();
-		return {
-			item: item,
-			content: null
-		};
-	}
+    private syncItem(item: SyncItem) {
+        ++this.syncProgress.active;
 
-	private syncItem(item: SyncItem) {
-		++this.syncProgress.active;
+        var itemDone = (err?: Error) => {
+            --this.syncProgress.active;
+            if (err) {
+                ++this.syncProgress.failed;
+            } else {
+                ++this.syncProgress.updated;
+            }
+            this.notifyProgress();
+        };
 
-		var itemDone = (err?: Error) => {
-			--this.syncProgress.active;
-			if (err) {
-				++this.syncProgress.failed;
-			} else {
-				++this.syncProgress.updated;
-			}
-			this.notifyProgress();
-		};
+        // fetch content for local and remote items and the last-synced
+        // version of the item in order to perform a 3-way merge
+        let uuid = item.localItem ? item.localItem.uuid : item.remoteItem.uuid;
+        syncLog.info(`Beginning sync for item ${uuid}`);
 
-		// fetch content for local and remote items and the last-synced
-		// version of the item in order to perform a 3-way merge
-		let uuid = item.localItem ? item.localItem.uuid : item.remoteItem.uuid;
-		syncLog.info(`Beginning sync for item ${uuid}`);
+        let localItemContent: Promise<item_store.ItemAndContent>;
+        let remoteItemContent: Promise<item_store.ItemAndContent>;
 
-		let localItemContent: Promise<item_store.ItemAndContent>;
-		let remoteItemContent: Promise<item_store.ItemAndContent>;
+        if (item.localItem) {
+            if (item.localItem.deleted) {
+                localItemContent = Promise.resolve(
+                    this.createTombstone(this.localStore, uuid)
+                );
+            } else {
+                localItemContent = this.localStore.loadItem(uuid);
+            }
+        }
 
-		if (item.localItem) {
-			if (item.localItem.deleted) {
-				localItemContent = Promise.resolve(this.createTombstone(this.localStore, uuid));
-			} else {
-				localItemContent = this.localStore.loadItem(uuid);
-			}
-		}
+        if (item.remoteItem) {
+            if (item.remoteItem.deleted) {
+                remoteItemContent = Promise.resolve(
+                    this.createTombstone(this.cloudStore, uuid)
+                );
+            } else {
+                remoteItemContent = this.cloudStore.loadItem(uuid);
+            }
+        }
 
-		if (item.remoteItem) {
-			if (item.remoteItem.deleted) {
-				remoteItemContent = Promise.resolve(this.createTombstone(this.cloudStore, uuid));
-			} else {
-				remoteItemContent = this.cloudStore.loadItem(uuid);
-			}
-		}
+        syncLog.info(`Fetching local/remote items for ${uuid}`);
 
-		syncLog.info(`Fetching local/remote items for ${uuid}`);
+        let contents = Promise.all([localItemContent, remoteItemContent]);
+        contents
+            .then(
+                (
+                    contents: [
+                        item_store.ItemAndContent,
+                        item_store.ItemAndContent
+                    ]
+                ) => {
+                    syncLog.info(`Merging item changes for ${uuid}`);
 
-		let contents = Promise.all([localItemContent, remoteItemContent]);
-		contents.then((contents: [item_store.ItemAndContent, item_store.ItemAndContent]) => {
-			syncLog.info(`Merging item changes for ${uuid}`);
+                    // merge changes between local/remote store items and update the
+                    // last-synced revision
+                    let localItem = contents[0];
+                    let remoteItem = contents[1];
+                    this.mergeAndSyncItem(
+                        localItem,
+                        item.localState,
+                        remoteItem,
+                        item.remoteState
+                    )
+                        .then(() => {
+                            syncLog.info('Synced changes for item %s', uuid);
+                            itemDone();
+                        })
+                        .catch((err: Error) => {
+                            syncLog.error('Syncing item %s failed:', uuid, err);
+                            var itemErr = new SyncError(
+                                `Failed to save updates for item ${uuid}`,
+                                err
+                            );
+                            itemDone(itemErr);
+                        });
+                }
+            )
+            .catch(err => {
+                syncLog.error('Retrieving updates for %s failed:', uuid, err);
+                var itemErr = new SyncError(
+                    `Failed to retrieve updated item ${uuid}`,
+                    err
+                );
+                itemDone(itemErr);
+            });
+    }
 
-			// merge changes between local/remote store items and update the
-			// last-synced revision
-			let localItem = contents[0];
-			let remoteItem = contents[1];
-			this.mergeAndSyncItem(localItem, item.localState, remoteItem, item.remoteState)
-			.then(() => {
-				syncLog.info('Synced changes for item %s', uuid);
-				itemDone();
-			}).catch((err: Error) => {
-				syncLog.error('Syncing item %s failed:', uuid, err);
-				var itemErr = new SyncError(`Failed to save updates for item ${uuid}`, err);
-				itemDone(itemErr);
-			});
-		}).catch(err => {
-			syncLog.error('Retrieving updates for %s failed:', uuid, err);
-			var itemErr = new SyncError(`Failed to retrieve updated item ${uuid}`, err);
-			itemDone(itemErr);
-		});
-	}
+    // returns the item and content for the last-synced version of an item,
+    // or null if the item has not been synced before
+    private getLastSyncedItemRevision(
+        uuid: string
+    ): Promise<item_store.ItemAndContent> {
+        return this.localStore
+            .getLastSyncedRevision(uuid, REMOTE_STORE)
+            .then(revision => {
+                if (revision) {
+                    return this.localStore.loadItem(uuid, revision.local);
+                } else {
+                    return null;
+                }
+            });
+    }
 
-	// returns the item and content for the last-synced version of an item,
-	// or null if the item has not been synced before
-	private getLastSyncedItemRevision(uuid: string): Promise<item_store.ItemAndContent> {
-		return this.localStore.getLastSyncedRevision(uuid, REMOTE_STORE).then(revision => {
-			if (revision) {
-				return this.localStore.loadItem(uuid, revision.local);
-			} else {
-				return null;
-			}
-		});
-	}
+    // given an item from the local and remote stores, one or both of which have changed
+    // since the last sync, and the last-synced version of the item, merge
+    // changes and save the result to the local/remote store as necessary
+    //
+    // When the save completes, the last-synced revision is updated in
+    // the local store
+    private mergeAndSyncItem(
+        localItem: item_store.ItemAndContent,
+        localState: ItemSyncState,
+        remoteItem: item_store.ItemAndContent,
+        remoteState: ItemSyncState
+    ) {
+        assert(
+            localItem || remoteItem,
+            'neither local nor remote item specified'
+        );
 
-	// given an item from the local and remote stores, one or both of which have changed
-	// since the last sync, and the last-synced version of the item, merge
-	// changes and save the result to the local/remote store as necessary
-	//
-	// When the save completes, the last-synced revision is updated in
-	// the local store
-	private mergeAndSyncItem(localItem: item_store.ItemAndContent,
-		localState: ItemSyncState,
-		remoteItem: item_store.ItemAndContent,
-		remoteState: ItemSyncState) {
-		assert(localItem || remoteItem, 'neither local nor remote item specified');
+        let remoteRevision: string;
+        if (remoteItem && !remoteItem.item.isTombstone()) {
+            remoteRevision = remoteItem.item.revision;
+            assert(remoteRevision, 'item does not have a remote revision');
+        }
 
-		let remoteRevision: string;
-		if (remoteItem && !remoteItem.item.isTombstone()) {
-			remoteRevision = remoteItem.item.revision;
-			assert(remoteRevision, 'item does not have a remote revision');
-		}
+        let updatedStoreItem: item_store.Item;
+        let saved: Promise<void>;
 
-		let updatedStoreItem: item_store.Item;
-		let saved: Promise<void>;
+        // revision of the item which was saved
+        let newLocalRevision: string;
 
-		// revision of the item which was saved
-		let newLocalRevision: string;
+        if (
+            localState === ItemSyncState.Updated &&
+            remoteState === ItemSyncState.Updated
+        ) {
+            // item updated both locally and in the cloud, merge changes
+            assert(localItem);
+            assert(remoteItem);
+            syncLog.info(
+                'merging local and remote changes for item %s',
+                localItem.item.uuid
+            );
 
-		if (localState === ItemSyncState.Updated && remoteState === ItemSyncState.Updated) {
-			// item updated both locally and in the cloud, merge changes
-			assert(localItem);
-			assert(remoteItem);
-			syncLog.info('merging local and remote changes for item %s', localItem.item.uuid);
+            let mergedStoreItem: item_store.ItemAndContent;
+            saved = this.getLastSyncedItemRevision(localItem.item.uuid)
+                .then(lastSynced => {
+                    mergedStoreItem = item_merge.merge(
+                        localItem,
+                        remoteItem,
+                        lastSynced
+                    );
+                    mergedStoreItem.item.updateTimestamps();
 
-			let mergedStoreItem: item_store.ItemAndContent;
-			saved = this.getLastSyncedItemRevision(localItem.item.uuid).then(lastSynced => {
-				mergedStoreItem = item_merge.merge(localItem, remoteItem, lastSynced);
-				mergedStoreItem.item.updateTimestamps();
+                    let mergedRemoteItem = item_store.cloneItem(
+                        mergedStoreItem,
+                        mergedStoreItem.item.uuid
+                    );
 
-				let mergedRemoteItem = item_store.cloneItem(mergedStoreItem, mergedStoreItem.item.uuid);
+                    return Promise.all([
+                        this.localStore.saveItem(
+                            mergedStoreItem.item,
+                            item_store.ChangeSource.Sync
+                        ),
+                        this.cloudStore.saveItem(
+                            mergedRemoteItem.item,
+                            item_store.ChangeSource.Sync
+                        ),
+                    ]);
+                })
+                .then(() => {
+                    assert(
+                        mergedStoreItem.item.revision,
+                        'merged local item does not have a revision'
+                    );
+                    assert.notEqual(
+                        mergedStoreItem.item.revision,
+                        localItem.item.revision
+                    );
 
-				return Promise.all([
-					this.localStore.saveItem(mergedStoreItem.item, item_store.ChangeSource.Sync),
-					this.cloudStore.saveItem(mergedRemoteItem.item, item_store.ChangeSource.Sync)
-				]);
-			}).then(() => {
-				assert(mergedStoreItem.item.revision, 'merged local item does not have a revision');
-				assert.notEqual(mergedStoreItem.item.revision, localItem.item.revision);
+                    newLocalRevision = mergedStoreItem.item.revision;
+                    updatedStoreItem = mergedStoreItem.item;
+                });
+        } else if (localState !== ItemSyncState.Unchanged) {
+            // item added/updated/removed locally
+            syncLog.info(
+                'syncing item %s from local -> cloud',
+                localItem.item.uuid
+            );
+            let clonedItem = item_store.cloneItem(
+                localItem,
+                localItem.item.uuid
+            ).item;
+            newLocalRevision = localItem.item.revision;
+            updatedStoreItem = localItem.item;
+            saved = this.cloudStore
+                .saveItem(clonedItem, item_store.ChangeSource.Sync)
+                .then(() => {
+                    remoteRevision = clonedItem.revision;
+                });
+        } else if (remoteState !== ItemSyncState.Unchanged) {
+            // item added/updated/removed in cloud
+            syncLog.info(
+                'syncing item %s from cloud -> local',
+                remoteItem.item.uuid
+            );
+            let clonedItem = item_store.cloneItem(
+                remoteItem,
+                remoteItem.item.uuid
+            ).item;
+            saved = this.localStore
+                .saveItem(clonedItem, item_store.ChangeSource.Sync)
+                .then(() => {
+                    assert(
+                        clonedItem.revision,
+                        'item cloned from remote store does not have a revision'
+                    );
+                    newLocalRevision = clonedItem.revision;
+                    updatedStoreItem = clonedItem;
+                });
+        }
 
-				newLocalRevision = mergedStoreItem.item.revision;
-				updatedStoreItem = mergedStoreItem.item;
-			});
+        return saved.then(() => {
+            syncLog.info(
+                'setting last synced revisions for %s to %s, %s',
+                updatedStoreItem.uuid,
+                newLocalRevision,
+                remoteRevision
+            );
 
-		} else if (localState !== ItemSyncState.Unchanged) {
-			// item added/updated/removed locally
-			syncLog.info('syncing item %s from local -> cloud', localItem.item.uuid);
-			let clonedItem = item_store.cloneItem(localItem, localItem.item.uuid).item;
-			newLocalRevision = localItem.item.revision;
-			updatedStoreItem = localItem.item;
-			saved = this.cloudStore.saveItem(clonedItem, item_store.ChangeSource.Sync).then(() => {
-				remoteRevision = clonedItem.revision;
-			});
-		} else if (remoteState !== ItemSyncState.Unchanged) {
-			// item added/updated/removed in cloud
-			syncLog.info('syncing item %s from cloud -> local', remoteItem.item.uuid);
-			let clonedItem = item_store.cloneItem(remoteItem, remoteItem.item.uuid).item;
-			saved = this.localStore.saveItem(clonedItem, item_store.ChangeSource.Sync).then(() => {
-				assert(clonedItem.revision, 'item cloned from remote store does not have a revision');
-				newLocalRevision = clonedItem.revision;
-				updatedStoreItem = clonedItem;
-			});
-		}
-
-		return saved.then(() => {
-			syncLog.info('setting last synced revisions for %s to %s, %s', updatedStoreItem.uuid, newLocalRevision, remoteRevision);
-
-			let revisions: item_store.RevisionPair;
-			if (!updatedStoreItem.isTombstone()) {
-				assert(newLocalRevision, 'saved item does not have a revision');
-				revisions = { local: newLocalRevision, external: remoteRevision };
-			}
-			return this.localStore.setLastSyncedRevision(updatedStoreItem, REMOTE_STORE, revisions);
-		});
-	}
+            let revisions: item_store.RevisionPair;
+            if (!updatedStoreItem.isTombstone()) {
+                assert(newLocalRevision, 'saved item does not have a revision');
+                revisions = {
+                    local: newLocalRevision,
+                    external: remoteRevision,
+                };
+            }
+            return this.localStore.setLastSyncedRevision(
+                updatedStoreItem,
+                REMOTE_STORE,
+                revisions
+            );
+        });
+    }
 }

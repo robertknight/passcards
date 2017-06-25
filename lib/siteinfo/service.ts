@@ -1,4 +1,3 @@
-
 // This module implements a website icon/info provider which fetches
 // icons directly from the source sites.
 //
@@ -61,43 +60,43 @@ import url_util = require('../base/url_util');
 //
 
 export enum MetaTagType {
-	Meta,
-	Link
+    Meta,
+    Link,
 }
 
 var ICON_LINK_TYPES: PageLink[] = [
-	// Favicons
-	{ type: MetaTagType.Link, rel: 'icon' },
-	{ type: MetaTagType.Link, rel: 'shortcut icon' },
-	{ type: MetaTagType.Link, rel: 'image_src' },
+    // Favicons
+    { type: MetaTagType.Link, rel: 'icon' },
+    { type: MetaTagType.Link, rel: 'shortcut icon' },
+    { type: MetaTagType.Link, rel: 'image_src' },
 
-	// iOS hi-DPI site icons
-	{ type: MetaTagType.Link, rel: 'apple-touch-icon' },
-	{ type: MetaTagType.Link, rel: 'apple-touch-icon-precomposed' },
+    // iOS hi-DPI site icons
+    { type: MetaTagType.Link, rel: 'apple-touch-icon' },
+    { type: MetaTagType.Link, rel: 'apple-touch-icon-precomposed' },
 
-	// Facebook OpenGraph (http://developers.facebook.com/docs/opengraphprotocol/)
-	{ type: MetaTagType.Meta, rel: 'og:image' },
+    // Facebook OpenGraph (http://developers.facebook.com/docs/opengraphprotocol/)
+    { type: MetaTagType.Meta, rel: 'og:image' },
 
-	// Twitter Cards (https://dev.twitter.com/docs/cards)
-	{ type: MetaTagType.Meta, rel: 'twitter:image' },
-	{ type: MetaTagType.Meta, rel: 'twitter:image:src' },
+    // Twitter Cards (https://dev.twitter.com/docs/cards)
+    { type: MetaTagType.Meta, rel: 'twitter:image' },
+    { type: MetaTagType.Meta, rel: 'twitter:image:src' },
 
-	// Schema.org
-	{ type: MetaTagType.Meta, rel: 'image' },
+    // Schema.org
+    { type: MetaTagType.Meta, rel: 'image' },
 
-	// Other
-	{ type: MetaTagType.Meta, rel: 'msapplication-TileImage' }
+    // Other
+    { type: MetaTagType.Meta, rel: 'msapplication-TileImage' },
 ];
 
 export interface UrlResponse {
-	status: number;
-	body: string;
+    status: number;
+    body: string;
 }
 
 /** Interface used by SiteInfoService service for fetching arbitrary URLs.
   */
 export interface UrlFetcher {
-	fetch(url: string): Promise<UrlResponse>;
+    fetch(url: string): Promise<UrlResponse>;
 }
 
 /** Determines the type and width/height of an icon fetched from
@@ -108,41 +107,50 @@ export interface UrlFetcher {
   * will be in .bmp format.
   */
 export function iconFromData(url: string, buffer: Uint8Array): site_info.Icon {
-	var data = new Uint8Array(<any>buffer);
-	if (ico.isIco(data)) {
-		var maxIcon = underscore.max(ico.read(new DataView(data.buffer)), (icon: ico.Icon) => {
-			return icon.width;
-		});
+    var data = new Uint8Array(<any>buffer);
+    if (ico.isIco(data)) {
+        var maxIcon = underscore.max(
+            ico.read(new DataView(data.buffer)),
+            (icon: ico.Icon) => {
+                return icon.width;
+            }
+        );
 
-		return {
-			url: url,
-			width: maxIcon.width,
-			height: maxIcon.height,
-			data: maxIcon.data
-		};
-	} else {
-		var imageInfo = image.getInfo(buffer);
-		if (!imageInfo) {
-			var start = collection_util.hexlify(buffer.subarray(0, 50));
-			console.log('Unable to determine image type of %s', url, 'from data of length', buffer.length, start,
-				collection_util.stringFromBuffer(buffer.subarray(0, 50)));
-			return null;
-		}
+        return {
+            url: url,
+            width: maxIcon.width,
+            height: maxIcon.height,
+            data: maxIcon.data,
+        };
+    } else {
+        var imageInfo = image.getInfo(buffer);
+        if (!imageInfo) {
+            var start = collection_util.hexlify(buffer.subarray(0, 50));
+            console.log(
+                'Unable to determine image type of %s',
+                url,
+                'from data of length',
+                buffer.length,
+                start,
+                collection_util.stringFromBuffer(buffer.subarray(0, 50))
+            );
+            return null;
+        }
 
-		return {
-			url: url,
-			width: imageInfo.width,
-			height: imageInfo.height,
-			data: data
-		};
-	}
+        return {
+            url: url,
+            width: imageInfo.width,
+            height: imageInfo.height,
+            data: data,
+        };
+    }
 }
 
 interface IconFetchState {
-	url: string;
-	reply: Promise<UrlResponse>;
-	icon: site_info.Icon;
-	status: number;
+    url: string;
+    reply: Promise<UrlResponse>;
+    icon: site_info.Icon;
+    status: number;
 }
 
 /** IconFetcher fetches and decodes icons from specified URLs.
@@ -155,450 +163,496 @@ interface IconFetchState {
   * or for which requests are in-flight.
   */
 class IconFetcher {
-	private fetcher: UrlFetcher;
-	private queue: IconFetchState[];
+    private fetcher: UrlFetcher;
+    private queue: IconFetchState[];
 
-	// map of URL -> (null|status) for URLs that have
-	// already been fetched or are enqueued for fetching
-	private fetchedUrls: Map<string, number>;
+    // map of URL -> (null|status) for URLs that have
+    // already been fetched or are enqueued for fetching
+    private fetchedUrls: Map<string, number>;
 
-	/** Stream of URL fetch completion events. */
-	done: event_stream.EventStream<IconFetchState>;
+    /** Stream of URL fetch completion events. */
+    done: event_stream.EventStream<IconFetchState>;
 
-	constructor(fetcher: UrlFetcher) {
-		this.fetcher = fetcher;
-		this.done = new event_stream.EventStream<IconFetchState>();
-		this.queue = [];
-		this.fetchedUrls = new Map<string, number>();
-	}
+    constructor(fetcher: UrlFetcher) {
+        this.fetcher = fetcher;
+        this.done = new event_stream.EventStream<IconFetchState>();
+        this.queue = [];
+        this.fetchedUrls = new Map<string, number>();
+    }
 
-	/** Returns the number of outstanding URL fetch requests which
+    /** Returns the number of outstanding URL fetch requests which
 	  * have not yet completed.
 	  */
-	remaining(): number {
-		return this.queue.length;
-	}
+    remaining(): number {
+        return this.queue.length;
+    }
 
-	/** Fetch and decode an icon URL. A 'done' event is emitted
+    /** Fetch and decode an icon URL. A 'done' event is emitted
 	  * when the fetch completes.
 	  */
-	addUrl(url: string) {
-		if (this.fetchedUrls.has(url)) {
-			// URL has already been fetched or request
-			// is in-flight
-			return;
-		}
-		this.fetchedUrls.set(url, null);
+    addUrl(url: string) {
+        if (this.fetchedUrls.has(url)) {
+            // URL has already been fetched or request
+            // is in-flight
+            return;
+        }
+        this.fetchedUrls.set(url, null);
 
-		var queueItem: IconFetchState = {
-			url: url,
-			icon: null,
-			reply: this.fetcher.fetch(url),
-			status: null
-		};
+        var queueItem: IconFetchState = {
+            url: url,
+            icon: null,
+            reply: this.fetcher.fetch(url),
+            status: null,
+        };
 
-		this.queue.push(queueItem);
+        this.queue.push(queueItem);
 
-		queueItem.reply.then((reply) => {
-			queueItem.status = reply.status;
-			this.fetchedUrls.set(url, reply.status);
-			if (reply.status == 200) {
-				var buffer = collection_util.bufferFromString(reply.body);
-				try {
-					queueItem.icon = iconFromData(url, buffer);
-				} catch (ex) {
-					var start = collection_util.hexlify(buffer.subarray(0, 50));
-					console.log('Failed to decode icon', url, 'from data of length', buffer.length, start, ex.message);
-				}
-			} else {
-				let error = '';
-				try {
-					let response = JSON.parse(reply.body);
-					if (typeof response === 'object' && response.error) {
-						error = response.error;
-					}
-				} catch (ex) {
-					error = reply.body;
-				}
-				console.warn(`Icon lookup for ${url} failed with status ${reply.status}: ${error}`);
-			}
-		}).catch((e) => {
-			queueItem.status = 0;
-			this.fetchedUrls.set(url, 0);
-		}).then(() => {
-			this.queue.splice(this.queue.indexOf(queueItem), 1);
-			this.done.publish(queueItem);
-		});
-	}
+        queueItem.reply
+            .then(reply => {
+                queueItem.status = reply.status;
+                this.fetchedUrls.set(url, reply.status);
+                if (reply.status == 200) {
+                    var buffer = collection_util.bufferFromString(reply.body);
+                    try {
+                        queueItem.icon = iconFromData(url, buffer);
+                    } catch (ex) {
+                        var start = collection_util.hexlify(
+                            buffer.subarray(0, 50)
+                        );
+                        console.log(
+                            'Failed to decode icon',
+                            url,
+                            'from data of length',
+                            buffer.length,
+                            start,
+                            ex.message
+                        );
+                    }
+                } else {
+                    let error = '';
+                    try {
+                        let response = JSON.parse(reply.body);
+                        if (typeof response === 'object' && response.error) {
+                            error = response.error;
+                        }
+                    } catch (ex) {
+                        error = reply.body;
+                    }
+                    console.warn(
+                        `Icon lookup for ${url} failed with status ${reply.status}: ${error}`
+                    );
+                }
+            })
+            .catch(e => {
+                queueItem.status = 0;
+                this.fetchedUrls.set(url, 0);
+            })
+            .then(() => {
+                this.queue.splice(this.queue.indexOf(queueItem), 1);
+                this.done.publish(queueItem);
+            });
+    }
 }
 
 /** Returns true if a <meta> or <link> element on a page
   * links to an icon or image for the page or parent domain.
   */
 export function isIconLink(link: PageLink): boolean {
-	var isIcon = false;
-	ICON_LINK_TYPES.forEach((linkType) => {
-		if (linkType.type === link.type &&
-			stringutil.equalIgnoreCase(linkType.rel, link.rel)) {
-			isIcon = true;
-		}
-	});
-	return isIcon;
+    var isIcon = false;
+    ICON_LINK_TYPES.forEach(linkType => {
+        if (
+            linkType.type === link.type &&
+            stringutil.equalIgnoreCase(linkType.rel, link.rel)
+        ) {
+            isIcon = true;
+        }
+    });
+    return isIcon;
 }
 
 export class SiteInfoService implements site_info.SiteInfoProvider {
-	private cache: collection_util.OMap<site_info.QueryResult>;
+    private cache: collection_util.OMap<site_info.QueryResult>;
 
-	updated: event_stream.EventStream<string>;
+    updated: event_stream.EventStream<string>;
 
-	constructor(public fetcher: UrlFetcher) {
-		this.cache = {};
-		this.updated = new event_stream.EventStream<string>();
-	}
+    constructor(public fetcher: UrlFetcher) {
+        this.cache = {};
+        this.updated = new event_stream.EventStream<string>();
+    }
 
-	forget(url: string) {
-		url = url_util.normalize(url);
-		delete this.cache[url];
-	}
+    forget(url: string) {
+        url = url_util.normalize(url);
+        delete this.cache[url];
+    }
 
-	lookup(url: string): site_info.QueryResult {
-		url = url_util.normalize(url);
+    lookup(url: string): site_info.QueryResult {
+        url = url_util.normalize(url);
 
-		if (this.cache[url]) {
-			return this.cache[url];
-		}
+        if (this.cache[url]) {
+            return this.cache[url];
+        }
 
-		var result: site_info.QueryResult = {
-			info: {
-				url: url,
-				icons: []
-			},
-			state: site_info.QueryState.Updating
-		};
+        var result: site_info.QueryResult = {
+            info: {
+                url: url,
+                icons: [],
+            },
+            state: site_info.QueryState.Updating,
+        };
 
-		this.cache[url] = result;
-		this.update(url);
+        this.cache[url] = result;
+        this.update(url);
 
-		return this.status(url);
-	}
+        return this.status(url);
+    }
 
-	status(url: string): site_info.QueryResult {
-		url = url_util.normalize(url);
-		return this.cache[url];
-	}
+    status(url: string): site_info.QueryResult {
+        url = url_util.normalize(url);
+        return this.cache[url];
+    }
 
-	private update(url: string) {
-		url = url_util.normalize(url);
+    private update(url: string) {
+        url = url_util.normalize(url);
 
-		var SOURCE_COUNT = 2;
-		var sourcesQueried = 0;
+        var SOURCE_COUNT = 2;
+        var sourcesQueried = 0;
 
-		var iconFetcher = new IconFetcher(this.fetcher);
-		var updateQueryState = () => {
-			if (iconFetcher.remaining() == 0 && sourcesQueried == SOURCE_COUNT) {
-				this.cache[url].state = site_info.QueryState.Ready;
-				this.updated.publish(url);
-			}
-		};
+        var iconFetcher = new IconFetcher(this.fetcher);
+        var updateQueryState = () => {
+            if (
+                iconFetcher.remaining() == 0 &&
+                sourcesQueried == SOURCE_COUNT
+            ) {
+                this.cache[url].state = site_info.QueryState.Ready;
+                this.updated.publish(url);
+            }
+        };
 
-		iconFetcher.done.listen((result) => {
-			if (result.status == 200) {
-				if (result.icon) {
-					this.cache[url].info.icons.push(result.icon);
-				}
-				this.updated.publish(url);
-			}
-			updateQueryState();
-		});
+        iconFetcher.done.listen(result => {
+            if (result.status == 200) {
+                if (result.icon) {
+                    this.cache[url].info.icons.push(result.icon);
+                }
+                this.updated.publish(url);
+            }
+            updateQueryState();
+        });
 
-		// check standard icon paths for host
-		var STANDARD_PATHS: string[] = ['/favicon.ico',
-			'/apple-touch-icon.png',
-			'/apple-touch-icon-precomposed.png'
-		];
+        // check standard icon paths for host
+        var STANDARD_PATHS: string[] = [
+            '/favicon.ico',
+            '/apple-touch-icon.png',
+            '/apple-touch-icon-precomposed.png',
+        ];
 
-		STANDARD_PATHS.forEach((path) => {
-			var urlParts = urijs.parse(url);
-			urlParts.path = path;
-			iconFetcher.addUrl(urijs.build(urlParts));
-		});
-		++sourcesQueried;
+        STANDARD_PATHS.forEach(path => {
+            var urlParts = urijs.parse(url);
+            urlParts.path = path;
+            iconFetcher.addUrl(urijs.build(urlParts));
+        });
+        ++sourcesQueried;
 
-		// fetch URL and look for links to icons in the HTML content
-		var pageLinkFetcher = new PageLinkFetcher(this.fetcher);
-		pageLinkFetcher.fetch(url).then((links) => {
-			var rootUrl = url;
-			var iconLinks = 0;
-			links.forEach((link) => {
-				if (isIconLink(link)) {
-					++iconLinks;
-					var absoluteLinkUrl = urijs(link.url).absoluteTo(rootUrl);
-					iconFetcher.addUrl(absoluteLinkUrl.toString());
-				}
-			});
-		}).catch(() => { }).then(() => {
-			++sourcesQueried;
-			updateQueryState();
-		});
-	}
+        // fetch URL and look for links to icons in the HTML content
+        var pageLinkFetcher = new PageLinkFetcher(this.fetcher);
+        pageLinkFetcher
+            .fetch(url)
+            .then(links => {
+                var rootUrl = url;
+                var iconLinks = 0;
+                links.forEach(link => {
+                    if (isIconLink(link)) {
+                        ++iconLinks;
+                        var absoluteLinkUrl = urijs(link.url).absoluteTo(
+                            rootUrl
+                        );
+                        iconFetcher.addUrl(absoluteLinkUrl.toString());
+                    }
+                });
+            })
+            .catch(() => {})
+            .then(() => {
+                ++sourcesQueried;
+                updateQueryState();
+            });
+    }
 }
 
 /** Represents a link to a related resource listed in
   * an HTML page, eg. via a <meta> or <link> tag.
   */
 export interface PageLink {
-	type: MetaTagType;
+    type: MetaTagType;
 
-	/** The relation of this resource to the page, specified
+    /** The relation of this resource to the page, specified
 	  * via the 'rel' attribute of <link> tags or 'property',
 	  * 'name', 'itemprop' etc. attributes of <meta> tags.
 	  */
-	rel: string;
+    rel: string;
 
-	/** The URL of the linked resource, specified via the
+    /** The URL of the linked resource, specified via the
 	  * 'href' attribute of <link> tags or the 'content'
 	  * attribute of <meta> tags.
 	  */
-	url?: string;
+    url?: string;
 }
 
 interface Token {
-	start: number;
-	length: number;
+    start: number;
+    length: number;
 }
 
 // holds the tag name and text of
 // a parsed HTML tag
 interface ParsedTag {
-	type: string;
-	attrs: collection_util.OMap<string>;
-	text: string;
+    type: string;
+    attrs: collection_util.OMap<string>;
+    text: string;
 }
 
 function isSpace(ch: string) {
-	// taken from http://stackoverflow.com/questions/1496826
-	return ch.length === 1 && /\s/.test(ch);
+    // taken from http://stackoverflow.com/questions/1496826
+    return ch.length === 1 && /\s/.test(ch);
 }
 
 /** PageLinkFetcher retrieves an HTML page and
   * extracts links to related resources from <meta> and <link> tags
   */
 export class PageLinkFetcher {
-	constructor(public fetcher: UrlFetcher) {
-	}
+    constructor(public fetcher: UrlFetcher) {}
 
-	extractLinks(content: string): PageLink[] {
-		var linkStart = /\<(link|meta)/i;
-		var links: PageLink[] = [];
+    extractLinks(content: string): PageLink[] {
+        var linkStart = /\<(link|meta)/i;
+        var links: PageLink[] = [];
 
-		while (true) {
-			var match = content.match(linkStart);
-			if (!match) {
-				break;
-			}
+        while (true) {
+            var match = content.match(linkStart);
+            if (!match) {
+                break;
+            }
 
-			var linkType: MetaTagType;
-			var linkRel = '';
-			var linkUrl = '';
+            var linkType: MetaTagType;
+            var linkRel = '';
+            var linkUrl = '';
 
-			var tagStart = (<any>match).index;
-			var tag = this.parseTag(content.substr(tagStart));
-			content = content.substr(tagStart + tag.text.length);
+            var tagStart = (<any>match).index;
+            var tag = this.parseTag(content.substr(tagStart));
+            content = content.substr(tagStart + tag.text.length);
 
-			var propAttrs = ['rel', 'property', 'name', 'itemprop'];
-			var urlAttrs = ['href', 'content'];
+            var propAttrs = ['rel', 'property', 'name', 'itemprop'];
+            var urlAttrs = ['href', 'content'];
 
-			if (tag.type == 'link') {
-				linkType = MetaTagType.Link;
-			} else {
-				linkType = MetaTagType.Meta;
-			}
+            if (tag.type == 'link') {
+                linkType = MetaTagType.Link;
+            } else {
+                linkType = MetaTagType.Meta;
+            }
 
-			for (var i = 0; i < propAttrs.length && !linkRel; i++) {
-				var propName = propAttrs[i];
-				if (tag.attrs[propName]) {
-					for (var k = 0; k < urlAttrs.length && !linkUrl; k++) {
-						if (tag.attrs[urlAttrs[k]]) {
-							linkRel = tag.attrs[propName];
-							linkUrl = tag.attrs[urlAttrs[k]];
-						}
-					}
-				}
-			}
+            for (var i = 0; i < propAttrs.length && !linkRel; i++) {
+                var propName = propAttrs[i];
+                if (tag.attrs[propName]) {
+                    for (var k = 0; k < urlAttrs.length && !linkUrl; k++) {
+                        if (tag.attrs[urlAttrs[k]]) {
+                            linkRel = tag.attrs[propName];
+                            linkUrl = tag.attrs[urlAttrs[k]];
+                        }
+                    }
+                }
+            }
 
-			if (linkType !== null && linkRel && linkUrl) {
-				links.push({
-					type: linkType,
-					rel: linkRel.toLowerCase(),
-					url: linkUrl
-				});
-			}
-		}
+            if (linkType !== null && linkRel && linkUrl) {
+                links.push({
+                    type: linkType,
+                    rel: linkRel.toLowerCase(),
+                    url: linkUrl,
+                });
+            }
+        }
 
-		return links;
-	}
+        return links;
+    }
 
-	fetch(url: string): Promise<PageLink[]> {
-		return this.fetcher.fetch(url).then((response) => {
-			return this.extractLinks(response.body);
-		});
-	}
+    fetch(url: string): Promise<PageLink[]> {
+        return this.fetcher.fetch(url).then(response => {
+            return this.extractLinks(response.body);
+        });
+    }
 
-	private parseTag(content: string): ParsedTag {
-		var attrs: collection_util.OMap<string> = {};
-		var tokens = this.tokenizeTag(content);
-		var inVal = false;
-		var attrName = '';
-		var tagType = '';
+    private parseTag(content: string): ParsedTag {
+        var attrs: collection_util.OMap<string> = {};
+        var tokens = this.tokenizeTag(content);
+        var inVal = false;
+        var attrName = '';
+        var tagType = '';
 
-		tokens.forEach((token) => {
-			var text = this.unquote(content.substr(token.start, token.length));
-			if (text == '<' || text == '>') {
-				return;
-			}
-			if (!tagType) {
-				tagType = text.toLowerCase();
-				return;
-			}
+        tokens.forEach(token => {
+            var text = this.unquote(content.substr(token.start, token.length));
+            if (text == '<' || text == '>') {
+                return;
+            }
+            if (!tagType) {
+                tagType = text.toLowerCase();
+                return;
+            }
 
-			if (text == '=') {
-				inVal = true;
-			} else if (inVal) {
-				attrs[attrName] = text;
-				inVal = false;
-			} else {
-				attrName = text.toLowerCase();
-			}
-		});
+            if (text == '=') {
+                inVal = true;
+            } else if (inVal) {
+                attrs[attrName] = text;
+                inVal = false;
+            } else {
+                attrName = text.toLowerCase();
+            }
+        });
 
-		var last = tokens[tokens.length - 1];
-		var parsed = {
-			type: tagType,
-			attrs: attrs,
-			text: content.substr(tokens[0].start, last.start + last.length)
-		};
+        var last = tokens[tokens.length - 1];
+        var parsed = {
+            type: tagType,
+            attrs: attrs,
+            text: content.substr(tokens[0].start, last.start + last.length),
+        };
 
-		return parsed;
-	}
+        return parsed;
+    }
 
-	// removes surrounding quotes and unescapes any quotes
-	// within a string.
-	//
-	// unquote('foo') => 'foo'
-	// unquote('"foo\"bar"') => 'foo"bar'
-	private unquote(text: string): string {
-		var quoteCh = text[0];
-		if (quoteCh != '"' && quoteCh != '\'') {
-			return text;
-		}
+    // removes surrounding quotes and unescapes any quotes
+    // within a string.
+    //
+    // unquote('foo') => 'foo'
+    // unquote('"foo\"bar"') => 'foo"bar'
+    private unquote(text: string): string {
+        var quoteCh = text[0];
+        if (quoteCh != '"' && quoteCh != "'") {
+            return text;
+        }
 
-		var unquoted = '';
-		for (var i = 1; i < text.length; i++) {
-			if (text[i] == '\\') {
-				unquoted += text[i + 1];
-				i += 2;
-			} else if (text[i] == quoteCh) {
-				break;
-			} else {
-				unquoted += text[i];
-			}
-		}
+        var unquoted = '';
+        for (var i = 1; i < text.length; i++) {
+            if (text[i] == '\\') {
+                unquoted += text[i + 1];
+                i += 2;
+            } else if (text[i] == quoteCh) {
+                break;
+            } else {
+                unquoted += text[i];
+            }
+        }
 
-		return unquoted;
-	}
+        return unquoted;
+    }
 
-	// split an HTML tag into tokens, eg.
-	//   tokenizeTag('<link rel="foo" href="bar">') =>
-	//     ['<','link','rel','=','foo','href','bar','>']
-	private tokenizeTag(content: string): Token[] {
-		var tagDepth = 0;
-		var quoteChar: string = null;
-		var prevCh: string = null;
+    // split an HTML tag into tokens, eg.
+    //   tokenizeTag('<link rel="foo" href="bar">') =>
+    //     ['<','link','rel','=','foo','href','bar','>']
+    private tokenizeTag(content: string): Token[] {
+        var tagDepth = 0;
+        var quoteChar: string = null;
+        var prevCh: string = null;
 
-		var tokens: Token[] = [];
-		var tokenStart = 0;
-		var next = (i: number) => {
-			var length = i - tokenStart;
-			var text = content.substr(tokenStart, length);
+        var tokens: Token[] = [];
+        var tokenStart = 0;
+        var next = (i: number) => {
+            var length = i - tokenStart;
+            var text = content.substr(tokenStart, length);
 
-			if (!text.match(/^\s*$/)) {
-				tokens.push({
-					start: tokenStart,
-					length: length
-				});
-			}
+            if (!text.match(/^\s*$/)) {
+                tokens.push({
+                    start: tokenStart,
+                    length: length,
+                });
+            }
 
-			tokenStart = i;
-		};
+            tokenStart = i;
+        };
 
-		var i = 0;
-		for (; i < content.length; i++) {
-			var ch = content[i];
-			if (quoteChar === null) {
-				if (ch === '<') {
-					++tagDepth;
-					next(i);
-				} else if (ch === '>') {
-					--tagDepth;
-					next(i);
+        var i = 0;
+        for (; i < content.length; i++) {
+            var ch = content[i];
+            if (quoteChar === null) {
+                if (ch === '<') {
+                    ++tagDepth;
+                    next(i);
+                } else if (ch === '>') {
+                    --tagDepth;
+                    next(i);
 
-					if (tagDepth == 0) {
-						next(i + 1);
-						break;
-					}
-				} else if (ch === '"' || ch === '\'') {
-					quoteChar = ch;
-					next(i);
-				} else if (ch === '=') {
-					next(i);
-				} else if (isSpace(ch)) {
-					if (!isSpace(prevCh)) {
-						next(i);
-					}
-				} else if (isSpace(prevCh) || prevCh === '<' || prevCh === '=') {
-					next(i);
-				}
-			} else if (ch === quoteChar) {
-				if (prevCh !== '\\') {
-					quoteChar = null;
-					next(i + 1);
-				}
-			}
-			prevCh = ch;
-		}
+                    if (tagDepth == 0) {
+                        next(i + 1);
+                        break;
+                    }
+                } else if (ch === '"' || ch === "'") {
+                    quoteChar = ch;
+                    next(i);
+                } else if (ch === '=') {
+                    next(i);
+                } else if (isSpace(ch)) {
+                    if (!isSpace(prevCh)) {
+                        next(i);
+                    }
+                } else if (
+                    isSpace(prevCh) ||
+                    prevCh === '<' ||
+                    prevCh === '='
+                ) {
+                    next(i);
+                }
+            } else if (ch === quoteChar) {
+                if (prevCh !== '\\') {
+                    quoteChar = null;
+                    next(i + 1);
+                }
+            }
+            prevCh = ch;
+        }
 
-		return tokens;
-	}
+        return tokens;
+    }
 }
 
 /** DuckDuckGo fetches an icon associated with a URL using
   * the DDG instant answer API
   */
 export class DuckDuckGoClient {
-	constructor(private fetcher: UrlFetcher) {
-	}
+    constructor(private fetcher: UrlFetcher) {}
 
-	/** Fetch the URL for the icon associated with a given URL's
+    /** Fetch the URL for the icon associated with a given URL's
 	  * domain.
 	  */
-	fetchIconUrl(url: string): Promise<string> {
-		var itemDomain = urijs(url).domain();
-		if (itemDomain.length > 0) {
-			var ddgQuery = this.fetcher.fetch('https://api.duckduckgo.com/?q=' + itemDomain + '&format=json');
-			return ddgQuery.then((result) => {
-				if (result.status == 200) {
-					var queryResult = JSON.parse(result.body);
-					if (queryResult.Image && queryResult.ImageIsLogo) {
-						return Promise.resolve<string>(queryResult.Image);
-					} else {
-						return Promise.reject<string>(new err_util.ApiError(url, result.status, 'DDG query did not return an icon'));
-					}
-				} else {
-					return Promise.reject<string>(new err_util.ApiError(url, result.status, 'DDG query failed'));
-				}
-			});
-		} else {
-			return Promise.reject<string>(new err_util.BaseError('Could not extract domain for URL: ' + url));
-		}
-	}
+    fetchIconUrl(url: string): Promise<string> {
+        var itemDomain = urijs(url).domain();
+        if (itemDomain.length > 0) {
+            var ddgQuery = this.fetcher.fetch(
+                'https://api.duckduckgo.com/?q=' + itemDomain + '&format=json'
+            );
+            return ddgQuery.then(result => {
+                if (result.status == 200) {
+                    var queryResult = JSON.parse(result.body);
+                    if (queryResult.Image && queryResult.ImageIsLogo) {
+                        return Promise.resolve<string>(queryResult.Image);
+                    } else {
+                        return Promise.reject<string>(
+                            new err_util.ApiError(
+                                url,
+                                result.status,
+                                'DDG query did not return an icon'
+                            )
+                        );
+                    }
+                } else {
+                    return Promise.reject<string>(
+                        new err_util.ApiError(
+                            url,
+                            result.status,
+                            'DDG query failed'
+                        )
+                    );
+                }
+            });
+        } else {
+            return Promise.reject<string>(
+                new err_util.BaseError(
+                    'Could not extract domain for URL: ' + url
+                )
+            );
+        }
+    }
 }

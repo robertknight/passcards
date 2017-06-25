@@ -7,29 +7,29 @@
 // JS environments.
 
 export enum FieldType {
-	Text,
-	Password,
-	Email,
-	Button,
-	Other
+    Text,
+    Password,
+    Email,
+    Button,
+    Other,
 }
 
 export interface FieldGroup {
-	fields: InputField[]
+    fields: InputField[];
 }
 
 export interface InputField {
-	key: any;
-	type: FieldType;
-	visible: boolean;
+    key: any;
+    type: FieldType;
+    visible: boolean;
 
-	id?: string;
-	name?: string;
-	ariaLabel?: string;
-	placeholder?: string;
+    id?: string;
+    name?: string;
+    ariaLabel?: string;
+    placeholder?: string;
 }
 
 export interface AutoFillEntry {
-	key: any;
-	value: string;
+    key: any;
+    value: string;
 }

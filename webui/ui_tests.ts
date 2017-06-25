@@ -14,54 +14,54 @@ import { defer } from '../lib/base/promise_util';
 // This function must be called _before_ React
 // is required
 function setupDOM(): Promise<Window> {
-	if (typeof window !== 'undefined') {
-		return Promise.resolve(window);
-	}
+    if (typeof window !== 'undefined') {
+        return Promise.resolve(window);
+    }
 
-	var fakeWindow = defer<Window>();
-	jsdom.env({
-		url: 'https://robertknight.github.io/passcards',
-		html: '<div id="app"></div>',
-		done: (errors, window) => {
-			if (errors) {
-				console.log('errors', errors);
-			}
+    var fakeWindow = defer<Window>();
+    jsdom.env({
+        url: 'https://robertknight.github.io/passcards',
+        html: '<div id="app"></div>',
+        done: (errors, window) => {
+            if (errors) {
+                console.log('errors', errors);
+            }
 
-			// expose document and window on app globals
-			// for use by tests
-			var global_: any = global;
-			global_.window = window;
-			global_.document = window.document;
-			global_.navigator = window.navigator;
+            // expose document and window on app globals
+            // for use by tests
+            var global_: any = global;
+            global_.window = window;
+            global_.document = window.document;
+            global_.navigator = window.navigator;
 
-			fakeWindow.resolve(window);
-		}
-	});
-	return fakeWindow.promise;
+            fakeWindow.resolve(window);
+        },
+    });
+    return fakeWindow.promise;
 }
 
 let testModules = [
-	'./base/transition_container_test',
-	'./auth_dialog_test',
-	'./auth_test',
-	'./item_field_test',
-	'./item_icons_test',
-	'./item_list_view_test',
-	'./page_test',
-	'./unlock_view_test',
+    './base/transition_container_test',
+    './auth_dialog_test',
+    './auth_test',
+    './item_field_test',
+    './item_icons_test',
+    './item_list_view_test',
+    './page_test',
+    './unlock_view_test',
 ];
 
 // defer autostart until test modules have been required
 testLib.cancelAutoStart();
 
 setupDOM().then(() => {
-	testModules.forEach(testModule => {
-		try {
-			require(testModule);
-		} catch (err) {
-			console.error('Failed to load test module %s: ', testModule);
-			console.error(err.stack);
-		}
-	});
-	testLib.start();
+    testModules.forEach(testModule => {
+        try {
+            require(testModule);
+        } catch (err) {
+            console.error('Failed to load test module %s: ', testModule);
+            console.error(err.stack);
+        }
+    });
+    testLib.start();
 });

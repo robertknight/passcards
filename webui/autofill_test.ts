@@ -1,4 +1,3 @@
-
 import autofill = require('./autofill');
 import event_stream = require('../lib/base/event_stream');
 import forms = require('./forms');
@@ -10,141 +9,155 @@ import testLib = require('../lib/test');
 import { defer } from '../lib/base/promise_util';
 
 class FakeBrowserAccess implements browser_access.BrowserAccess {
-	formList: forms.FieldGroup[];
-	autofillEntries: forms.AutoFillEntry[];
+    formList: forms.FieldGroup[];
+    autofillEntries: forms.AutoFillEntry[];
 
-	events: event_stream.EventStream<browser_access.BrowserMessage>;
-	currentUrl: string;
+    events: event_stream.EventStream<browser_access.BrowserMessage>;
+    currentUrl: string;
 
-	constructor() {
-		this.formList = [];
-		this.autofillEntries = [];
-		this.events = new event_stream.EventStream<browser_access.BrowserMessage>();
-		this.currentUrl = '';
-	}
+    constructor() {
+        this.formList = [];
+        this.autofillEntries = [];
+        this.events = new event_stream.EventStream<
+            browser_access.BrowserMessage
+        >();
+        this.currentUrl = '';
+    }
 
-	oauthRedirectUrl() {
-		return '';
-	}
+    oauthRedirectUrl() {
+        return '';
+    }
 
-	findForms() {
-		let result = defer<forms.FieldGroup[]>();
-		setTimeout(() => {
-			result.resolve(this.formList);
-		});
-		return result.promise;
-	}
+    findForms() {
+        let result = defer<forms.FieldGroup[]>();
+        setTimeout(() => {
+            result.resolve(this.formList);
+        });
+        return result.promise;
+    }
 
-	autofill(fields: forms.AutoFillEntry[]): Promise<number> {
-		this.autofillEntries = fields;
-		return Promise.resolve(fields.length);
-	}
+    autofill(fields: forms.AutoFillEntry[]): Promise<number> {
+        this.autofillEntries = fields;
+        return Promise.resolve(fields.length);
+    }
 
-	siteInfoProvider(): site_info.SiteInfoProvider {
-		return null;
-	}
+    siteInfoProvider(): site_info.SiteInfoProvider {
+        return null;
+    }
 
-	hidePanel(): void {
-		/* no-op */
-	}
+    hidePanel(): void {
+        /* no-op */
+    }
 }
 
-function itemWithUsernameAndPassword(user: string, password: string): item_store.Item {
-	return new item_builder.Builder(item_store.ItemTypes.LOGIN)
-	.setTitle('Test Item')
-	.addLogin(user)
-	.addPassword(password)
-	.addUrl('mysite.com')
-	.item();
+function itemWithUsernameAndPassword(
+    user: string,
+    password: string
+): item_store.Item {
+    return new item_builder.Builder(item_store.ItemTypes.LOGIN)
+        .setTitle('Test Item')
+        .addLogin(user)
+        .addPassword(password)
+        .addUrl('mysite.com')
+        .item();
 }
 
-testLib.addTest('simple user/password autofill', (assert) => {
-	var item = itemWithUsernameAndPassword('testuser@gmail.com', 'testpass');
-	var fakePage = new FakeBrowserAccess();
+testLib.addTest('simple user/password autofill', assert => {
+    var item = itemWithUsernameAndPassword('testuser@gmail.com', 'testpass');
+    var fakePage = new FakeBrowserAccess();
 
-	var form = {
-		fields: [{
-			key: 'f1',
-			id: 'username',
-			name: 'username',
-			type: forms.FieldType.Text,
-			visible: true
-		}, {
-				key: 'f2',
-				id: '',
-				name: 'password',
-				type: forms.FieldType.Password,
-				visible: true
-			}]
-	};
-	fakePage.formList.push(form);
+    var form = {
+        fields: [
+            {
+                key: 'f1',
+                id: 'username',
+                name: 'username',
+                type: forms.FieldType.Text,
+                visible: true,
+            },
+            {
+                key: 'f2',
+                id: '',
+                name: 'password',
+                type: forms.FieldType.Password,
+                visible: true,
+            },
+        ],
+    };
+    fakePage.formList.push(form);
 
-	var autofiller = new autofill.AutoFiller(fakePage);
-	return autofiller.autofill(item).then((result) => {
-		assert.equal(result.count, 2);
+    var autofiller = new autofill.AutoFiller(fakePage);
+    return autofiller.autofill(item).then(result => {
+        assert.equal(result.count, 2);
 
-		fakePage.autofillEntries.sort((a, b) => {
-			return a.key.localeCompare(b.key);
-		});
+        fakePage.autofillEntries.sort((a, b) => {
+            return a.key.localeCompare(b.key);
+        });
 
-		assert.deepEqual(fakePage.autofillEntries, [
-			{ key: 'f1', value: 'testuser@gmail.com' },
-			{ key: 'f2', value: 'testpass' }
-		]);
-	});
+        assert.deepEqual(fakePage.autofillEntries, [
+            { key: 'f1', value: 'testuser@gmail.com' },
+            { key: 'f2', value: 'testpass' },
+        ]);
+    });
 });
 
-testLib.addTest('ignore hidden fields', (assert) => {
-	var item = itemWithUsernameAndPassword('testuser@gmail.com', 'testpass');
-	var fakePage = new FakeBrowserAccess();
+testLib.addTest('ignore hidden fields', assert => {
+    var item = itemWithUsernameAndPassword('testuser@gmail.com', 'testpass');
+    var fakePage = new FakeBrowserAccess();
 
-	var form = {
-		fields: [{
-			key: 'f1',
-			type: forms.FieldType.Password,
-			visible: true
-		}, {
-				key: 'f2',
-				type: forms.FieldType.Password,
-				visible: false
-			}]
-	};
-	fakePage.formList.push(form);
+    var form = {
+        fields: [
+            {
+                key: 'f1',
+                type: forms.FieldType.Password,
+                visible: true,
+            },
+            {
+                key: 'f2',
+                type: forms.FieldType.Password,
+                visible: false,
+            },
+        ],
+    };
+    fakePage.formList.push(form);
 
-	var autofiller = new autofill.AutoFiller(fakePage);
-	return autofiller.autofill(item).then((result) => {
-		assert.equal(result.count, 1);
-		assert.deepEqual(fakePage.autofillEntries, [
-			{ key: 'f1', value: 'testpass' }
-		]);
-	});
+    var autofiller = new autofill.AutoFiller(fakePage);
+    return autofiller.autofill(item).then(result => {
+        assert.equal(result.count, 1);
+        assert.deepEqual(fakePage.autofillEntries, [
+            { key: 'f1', value: 'testpass' },
+        ]);
+    });
 });
 
-testLib.addTest('find unlabeled username fields', (assert) => {
-	var item = itemWithUsernameAndPassword('testuser@gmail.com', 'testpass');
-	var fakePage = new FakeBrowserAccess();
+testLib.addTest('find unlabeled username fields', assert => {
+    var item = itemWithUsernameAndPassword('testuser@gmail.com', 'testpass');
+    var fakePage = new FakeBrowserAccess();
 
-	var form = {
-		fields: [{
-			key: 'f1',
-			type: forms.FieldType.Text,
-			visible: true
-		}, {
-				key: 'f2',
-				type: forms.FieldType.Password,
-				visible: true
-			}]
-	};
-	fakePage.formList.push(form);
+    var form = {
+        fields: [
+            {
+                key: 'f1',
+                type: forms.FieldType.Text,
+                visible: true,
+            },
+            {
+                key: 'f2',
+                type: forms.FieldType.Password,
+                visible: true,
+            },
+        ],
+    };
+    fakePage.formList.push(form);
 
-	var autofiller = new autofill.AutoFiller(fakePage);
-	return autofiller.autofill(item).then((result) => {
-		assert.equal(result.count, 2);
-		assert.deepEqual(fakePage.autofillEntries, [
-			{ key: 'f2', value: 'testpass' },
-			{ key: 'f1', value: 'testuser@gmail.com' }
-		]);
-	});
+    var autofiller = new autofill.AutoFiller(fakePage);
+    return autofiller.autofill(item).then(result => {
+        assert.equal(result.count, 2);
+        assert.deepEqual(fakePage.autofillEntries, [
+            { key: 'f2', value: 'testpass' },
+            { key: 'f1', value: 'testuser@gmail.com' },
+        ]);
+    });
 });
 
 testLib.start();

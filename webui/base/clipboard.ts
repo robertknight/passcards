@@ -13,7 +13,7 @@ let clipboardDocument = document;
   * and https://bugzilla.mozilla.org/show_bug.cgi?id=1272869
   */
 export function setClipboardDocument(doc: Document) {
-	clipboardDocument = doc;
+    clipboardDocument = doc;
 }
 
 /**
@@ -22,28 +22,28 @@ export function setClipboardDocument(doc: Document) {
   * This may only be called within the context of a user gesture.
   */
 export function copy(mimeType: string, data: string) {
-	// Work around an issue in Chrome where clicking on an unrevealed password
-	// input field and then clicking on a "Copy" button fails to generate a
-	// 'copy' event.
-	//
-	// Clearing the selection before attempting to `execCommand("copy")`
-	// resolves the issue.
-	clipboardDocument.getSelection().removeAllRanges();
+    // Work around an issue in Chrome where clicking on an unrevealed password
+    // input field and then clicking on a "Copy" button fails to generate a
+    // 'copy' event.
+    //
+    // Clearing the selection before attempting to `execCommand("copy")`
+    // resolves the issue.
+    clipboardDocument.getSelection().removeAllRanges();
 
-	// Use the Document#execCommand('copy') API which is available in recent versions
-	// of Firefox, Chrome and iOS >= 10
-	//
-	// Note that this only works if called within the context of a user gesture
-	//
-	// See http://stackoverflow.com/questions/35996460/
-	const listener = (e: ClipboardEvent) => {
-		e.clipboardData.setData(mimeType, data);
-		e.preventDefault();
-	};
-	clipboardDocument.addEventListener('copy', listener);
-	const ok = clipboardDocument.execCommand('copy');
-	clipboardDocument.removeEventListener('copy', listener);
-	if (!ok) {
-		throw new Error('Clipboard copy disallowed');
-	}
+    // Use the Document#execCommand('copy') API which is available in recent versions
+    // of Firefox, Chrome and iOS >= 10
+    //
+    // Note that this only works if called within the context of a user gesture
+    //
+    // See http://stackoverflow.com/questions/35996460/
+    const listener = (e: ClipboardEvent) => {
+        e.clipboardData.setData(mimeType, data);
+        e.preventDefault();
+    };
+    clipboardDocument.addEventListener('copy', listener);
+    const ok = clipboardDocument.execCommand('copy');
+    clipboardDocument.removeEventListener('copy', listener);
+    if (!ok) {
+        throw new Error('Clipboard copy disallowed');
+    }
 }
