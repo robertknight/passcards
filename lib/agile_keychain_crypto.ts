@@ -2,7 +2,7 @@
 var md5 = require('crypto-js/md5');
 var encLatin1 = require('crypto-js/enc-latin1');
 import node_crypto = require('crypto');
-import uuid = require('node-uuid');
+import uuid = require('uuid');
 
 import { btoa } from './base/stringutil';
 import agile_keychain_entries = require('./agile_keychain_entries');
