@@ -344,7 +344,9 @@ class AppView extends react.Component<AppViewProps, AppViewState> {
 
 		if (AUTOFILL_URL_SCHEMES.indexOf(currentUrlProtocol) !== -1) {
 			builder.setTitle(url_util.topLevelDomain(this.itemStoreState().currentUrl));
-			builder.addUrl(this.itemStoreState().currentUrl);
+
+			const url = new URL(this.itemStoreState().currentUrl);
+			builder.addUrl(url.origin);
 		} else {
 			builder.setTitle('New Login');
 		}
