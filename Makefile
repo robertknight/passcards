@@ -97,10 +97,10 @@ format: $(all_srcs)
 clean:
 	@rm -rf build/*
 	@rm -rf webui/scripts/*
-	@cd extensions/chrome && make clean
+	@cd extensions/chrome && $(MAKE) clean
 
 chrome-extension: webui-build
-	cd extensions/chrome && make
+	cd extensions/chrome && $(MAKE)
 
 firefox-extension: chrome-extension
 	@$(NODE_BIN_DIR)/web-ext build $(webext_common_args)
