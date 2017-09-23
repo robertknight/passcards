@@ -1,6 +1,6 @@
 import react = require('react');
 import react_dom = require('react-dom');
-import { findRenderedDOMComponentWithTag } from 'react-addons-test-utils';
+import { findRenderedDOMComponentWithTag } from 'react-dom/test-utils';
 
 import event_stream = require('../lib/base/event_stream');
 import item_icons = require('./item_icons');

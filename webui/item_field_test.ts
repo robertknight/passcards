@@ -1,6 +1,6 @@
 import react = require('react');
 import react_dom = require('react-dom');
-import { scryRenderedComponentsWithType } from 'react-addons-test-utils';
+import { scryRenderedComponentsWithType } from 'react-dom/test-utils';
 
 import button = require('./controls/button');
 import { div } from './base/dom_factory';

@@ -1,5 +1,5 @@
 import { render } from 'react-dom';
-import { findRenderedDOMComponentWithTag } from 'react-addons-test-utils';
+import { findRenderedDOMComponentWithTag } from 'react-dom/test-utils';
 
 import assign = require('../lib/base/assign');
 import { EventStream } from '../lib/base/event_stream';

@@ -1,6 +1,6 @@
 import { load } from 'proxyquire';
 import { Component } from 'react';
-import { scryRenderedComponentsWithType } from 'react-addons-test-utils';
+import { scryRenderedComponentsWithType } from 'react-dom/test-utils';
 import { render } from 'react-dom';
 
 import { addTest, Assert } from '../lib/test';

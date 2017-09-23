@@ -1,5 +1,5 @@
 import react_dom = require('react-dom');
-import test_utils = require('react-addons-test-utils');
+import test_utils = require('react-dom/test-utils');
 import { Component } from 'react';
 
 import item_builder = require('../lib/item_builder');
