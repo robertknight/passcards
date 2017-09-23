@@ -174,10 +174,10 @@ export class DropboxVFS implements vfs.VFS {
     }
 
     rm(path: string) {
-        return this.client.filesDelete({ path });
+        return this.client.filesDelete({ path }) as Promise<undefined>;
     }
 
     mkpath(path: string) {
-        return this.client.filesCreateFolder({ path });
+        return this.client.filesCreateFolder({ path }) as Promise<undefined>;
     }
 }

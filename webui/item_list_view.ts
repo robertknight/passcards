@@ -258,9 +258,7 @@ class ItemList extends react.Component<ItemListProps, ItemListState> {
     }
 
     setSelectedItem(item: item_store.Item, rect: reactutil.Rect) {
-        var state = this.state;
-        state.selectedItem = item;
-        this.setState(state);
+        this.setState({ selectedItem: item });
         this.props.onSelectedItemChanged(item, rect);
     }
 
@@ -288,8 +286,7 @@ class ItemList extends react.Component<ItemListProps, ItemListState> {
 
     focusNextItem() {
         if (this.state.focusedIndex < this.state.matchingItems.length - 1) {
-            ++this.state.focusedIndex;
-            this.setState(this.state);
+            this.setState({ focusedIndex: this.state.focusedIndex + 1 });
 
             if (this.itemList) {
                 this.ensureItemVisible(this.state.focusedIndex);
@@ -299,8 +296,7 @@ class ItemList extends react.Component<ItemListProps, ItemListState> {
 
     focusPrevItem() {
         if (this.state.focusedIndex > 0) {
-            --this.state.focusedIndex;
-            this.setState(this.state);
+            this.setState({ focusedIndex: this.state.focusedIndex - 1 });
 
             if (this.itemList) {
                 this.ensureItemVisible(this.state.focusedIndex);
@@ -531,9 +527,10 @@ class ItemList extends react.Component<ItemListProps, ItemListState> {
             nextFocusedIndex = 0;
         }
 
-        this.state.focusedIndex = nextFocusedIndex;
-        this.state.matchingItems = matchingItems;
-        this.setState(this.state);
+        this.setState({
+            focusedIndex: nextFocusedIndex,
+            matchingItems,
+        });
 
         this.updateVisibleItems();
     }
@@ -708,9 +705,7 @@ export class ItemListView extends react.Component<
     }
 
     private updateFilter(filter: string) {
-        var state = this.state;
-        state.filter = filter;
-        this.setState(state);
+        this.setState({ filter });
     }
 
     render() {
