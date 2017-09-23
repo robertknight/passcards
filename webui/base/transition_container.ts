@@ -1,5 +1,5 @@
 import react = require('react');
-import * as TransitionGroup from 'react-addons-transition-group';
+import { TransitionGroup } from 'react-transition-group';
 
 import { TransitionState } from './reactutil';
 

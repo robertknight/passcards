@@ -1,7 +1,7 @@
 import react = require('react');
 import react_dom = require('react-dom');
-import * as TransitionGroup from 'react-addons-transition-group';
-import * as CSSTransitionGroup from 'react-addons-css-transition-group';
+import { TransitionGroup } from 'react-transition-group';
+import { CSSTransitionGroup } from 'react-transition-group';
 
 import env = require('../../lib/base/env');
 import transition_events = require('./transition_events');
