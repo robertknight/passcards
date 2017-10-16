@@ -1,4 +1,4 @@
-import { Component, DOM, createFactory } from 'react';
+import { Component, createElement, createFactory } from 'react';
 import { render } from 'react-dom';
 
 import { addTest } from '../../lib/test';
@@ -34,7 +34,7 @@ class Child extends Component<ChildProps, {}> {
         if (this.props.transitionStates) {
             this.props.transitionStates.push(this.props.transitionState);
         }
-        return DOM.div();
+        return createElement('div');
     }
 }
 

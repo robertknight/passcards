@@ -397,10 +397,10 @@ class ItemList extends react.Component<ItemListProps, ItemListState> {
                         // rAF() is not needed in Chrome and is not invoked
                         // when called in the context of a background page of a Chrome
                         // extension, so just call updateVisibleItems() directly.
-                        this.updateVisibleItems();
+                        this.updateVisibleItems(this.state.matchingItems);
                     } else {
                         window.requestAnimationFrame(() => {
-                            this.updateVisibleItems();
+                            this.updateVisibleItems(this.state.matchingItems);
                         });
                     }
                 },
@@ -421,9 +421,9 @@ class ItemList extends react.Component<ItemListProps, ItemListState> {
         );
     }
 
-    private updateVisibleItems() {
+    private updateVisibleItems(matchingItems: item_store.Item[]) {
         var itemList = this.itemList;
-        if (this.state.matchingItems.length > 0) {
+        if (matchingItems.length > 0) {
             var topIndex: number = -1;
             var bottomIndex: number = -1;
 
@@ -434,7 +434,7 @@ class ItemList extends react.Component<ItemListProps, ItemListState> {
                         itemList.getBoundingClientRect().height,
             };
 
-            for (var i = 0; i < this.state.matchingItems.length; i++) {
+            for (var i = 0; i < matchingItems.length; i++) {
                 var itemRect = {
                     top: i * this.state.itemHeight,
                     bottom: i * this.state.itemHeight + this.state.itemHeight,
@@ -532,7 +532,7 @@ class ItemList extends react.Component<ItemListProps, ItemListState> {
             matchingItems,
         });
 
-        this.updateVisibleItems();
+        this.updateVisibleItems(matchingItems);
     }
 }
 

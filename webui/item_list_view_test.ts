@@ -24,26 +24,39 @@ var testItems = [
 ];
 
 testLib.addTest('should display store items', assert => {
-    ui_test_utils.runReactTest(element => {
-        var itemList = react_dom.render(
-            item_list_view.ItemListViewF({
-                items: testItems,
-                selectedItem: null,
-                onSelectedItemChanged: (item, rect) => {},
-                currentUrl: '',
-                iconProvider: new item_icons.FakeIconProvider(),
-                focus: false,
-                onLockClicked: () => {},
-                onMenuClicked: e => {},
-            }),
-            element
-        );
+    return ui_test_utils.runReactTest(element => {
+        return new Promise(resolve => {
+            var checkRender = (itemList: React.Component) => {
+                var renderedItems = test_utils.scryRenderedComponentsWithType(
+                    itemList,
+                    item_list_view.Item
+                );
+                assert.equal(renderedItems.length, testItems.length);
+                resolve();
+            };
 
-        var renderedItems = test_utils.scryRenderedComponentsWithType(
-            itemList as any,
-            item_list_view.Item
-        );
-        assert.equal(renderedItems.length, testItems.length);
+            var itemList: React.Component;
+            react_dom.render(
+                item_list_view.ItemListViewF({
+                    items: testItems,
+                    selectedItem: null,
+                    onSelectedItemChanged: (item, rect) => {},
+                    currentUrl: '',
+                    iconProvider: new item_icons.FakeIconProvider(),
+                    focus: false,
+                    ref: (component: any) => itemList = component,
+                    onLockClicked: () => {},
+                    onMenuClicked: e => {},
+                }),
+                element
+            );
+
+            // ItemListView currently updates the list of matching and visible
+            // items asynchronously after the first render. The initial
+            // render will have no visible items and the expected items will
+            // only be present after a second async render.
+            setTimeout(() => checkRender(itemList), 1);
+        });
     });
 });
 
