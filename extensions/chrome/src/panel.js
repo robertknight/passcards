@@ -1,44 +1,5 @@
 var backgroundPage = chrome.extension.getBackgroundPage();
 
-function getInternalReactInstance(node) {
-	// the internal instance is given a randomized key, to discourage
-	// developers from doing things like this :P
-	const internalInstanceKey = Object.keys(node).find(k => k.includes('reactInternalInstance'));
-	if (!internalInstanceKey) {
-		throw new Error('Failed to find internal instance for node');
-	}
-	return node[internalInstanceKey];
-}
-
-function updateOwnerDocument(instance, newOwnerDoc) {
-	// React internal instances maintain a 'container info' struct which holds
-	// cached info about the host container. This contains a reference to the
-	// Document object which is initialized when the instance is mounted but not
-	// updated if the component is subsequently moved to a different Document
-	if (instance._hostContainerInfo &&
-			instance._hostContainerInfo._ownerDocument) {
-		instance._hostContainerInfo._ownerDocument = newOwnerDoc;
-	} else {
-		throw new Error('Failed to retrieve ownerDocument info for instance');
-	}
-	for (let k in instance._renderedChildren) {
-		updateOwnerDocument(instance._renderedChildren[k], newOwnerDoc);
-	}
-}
-
-/**
- * Update the Document associate with React components that were previously
- * mounted into `container`
- *
- * Hack to work around https://github.com/facebook/react/issues/7986
- */
-function fixOwnerDocument(container, newDocument) {
-	Array.from(container.childNodes).forEach(node => {
-		const internalInstance = getInternalReactInstance(node);
-		updateOwnerDocument(internalInstance, newDocument);
-	});
-}
-
 // install helper so app can close background
 // window after autofill is complete
 backgroundPage.hidePanel = function() {
@@ -63,8 +24,6 @@ if (backgroundPage.savedAppView) {
 	document.adoptNode(backgroundPage.savedAppView);
 	appView = backgroundPage.savedAppView;
 	backgroundPage.savedAppView = undefined;
-
-	fixOwnerDocument(appView, document);
 } else {
 	appView = document.createElement('div');
 	appView.id = 'app-view';
@@ -73,7 +32,6 @@ if (backgroundPage.savedAppView) {
 window.addEventListener('unload', function() {
 	backgroundPage.document.adoptNode(appView);
 	backgroundPage.savedAppView = appView;
-	fixOwnerDocument(appView, backgroundPage.document);
 });
 
 document.body.appendChild(appView);
