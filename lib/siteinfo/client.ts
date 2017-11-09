@@ -13,6 +13,8 @@ import site_info = require('./site_info');
 export var DEFAULT_PASSCARDS_SERVICE_URL =
     'https://passcards-robknight.rhcloud.com';
 
+type HttpGetFn = (url: string, opts?: http_client.RequestOptions) => Promise<http_client.Reply>;
+
 function createQueryResult(
     url: string,
     state: site_info.QueryState
@@ -29,13 +31,16 @@ function createQueryResult(
 export class PasscardsClient implements site_info.SiteInfoProvider {
     private cache: Map<string, site_info.QueryResult>;
     private rootUrl: string;
+    private httpGetter: HttpGetFn;
 
     updated: event_stream.EventStream<string>;
 
-    constructor(serviceHost: string = DEFAULT_PASSCARDS_SERVICE_URL) {
+    constructor(serviceHost: string = DEFAULT_PASSCARDS_SERVICE_URL,
+                httpGetter: HttpGetFn = http_client.get) {
         this.cache = new Map<string, site_info.QueryResult>();
         this.rootUrl = serviceHost;
         this.updated = new event_stream.EventStream<string>();
+        this.httpGetter = httpGetter;
     }
 
     lookup(url: string): site_info.QueryResult {
@@ -74,7 +79,7 @@ export class PasscardsClient implements site_info.SiteInfoProvider {
                 selectedIcons.forEach(icon => {
                     let iconUrl = this.rootUrl + icon.dataUrl;
                     pendingIcons.push(
-                        http_client.get(iconUrl).then(reply => {
+                        this.httpGetter(iconUrl).then(reply => {
                             let entry = this.cache.get(domain);
                             if (reply.status == 200) {
                                 entry.info.icons.push({
@@ -128,7 +133,7 @@ export class PasscardsClient implements site_info.SiteInfoProvider {
     ): Promise<client_api.LookupResponse> {
         let TIMEOUT = 3000;
         let url = `${this.rootUrl}/siteinfo/${domain}?timeout=${TIMEOUT}`;
-        return http_client.get(url).then(reply => {
+        return this.httpGetter(url).then(reply => {
             if (reply.status === 200) {
                 return Promise.resolve(
                     <client_api.LookupResponse>JSON.parse(reply.body)
