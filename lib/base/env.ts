@@ -13,7 +13,7 @@ export function isBrowser() {
     // and a DOM is available but isBrowser() returns false
     return (
         typeof window != 'undefined' &&
-        window.navigator.userAgent.indexOf('Node.js') === -1
+        window.navigator.userAgent.indexOf('jsdom') === -1
     );
 }
 

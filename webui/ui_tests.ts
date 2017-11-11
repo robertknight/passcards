@@ -5,7 +5,7 @@
 // tests of the environment when it is first required,
 // so the fake DOM needs to be set up first.
 
-import jsdom = require('jsdom');
+import { JSDOM } from 'jsdom';
 
 import testLib = require('../lib/test');
 import { defer } from '../lib/base/promise_util';
@@ -19,24 +19,19 @@ function setupDOM(): Promise<Window> {
     }
 
     var fakeWindow = defer<Window>();
-    jsdom.env({
+    var dom = new JSDOM(`<div id="app"></div>`, {
         url: 'https://robertknight.github.io/passcards',
-        html: '<div id="app"></div>',
-        done: (errors, window) => {
-            if (errors) {
-                console.log('errors', errors);
-            }
-
-            // expose document and window on app globals
-            // for use by tests
-            var global_: any = global;
-            global_.window = window;
-            global_.document = window.document;
-            global_.navigator = window.navigator;
-
-            fakeWindow.resolve(window);
-        },
     });
+
+    // expose document and window on app globals
+    // for use by tests
+    var global_: any = global;
+    global_.window = dom.window;
+    global_.document = dom.window.document;
+    global_.navigator = dom.window.navigator;
+
+    fakeWindow.resolve(dom.window);
+
     return fakeWindow.promise;
 }
 
@@ -64,4 +59,7 @@ setupDOM().then(() => {
         }
     });
     testLib.start();
+}).catch(err => {
+    console.error('UI test setup failed', err);
+    throw err;
 });
