@@ -17,7 +17,6 @@
 
 import assert = require('assert');
 
-import agile_keychain_crypto = require('./agile_keychain_crypto');
 import asyncutil = require('./base/asyncutil');
 import cached = require('./base/cached');
 import collectionutil = require('./base/collectionutil');
@@ -79,7 +78,6 @@ var SCHEMA_VERSION = 3;
 var KEY_ID_PREFIX = 'key/';
 
 export class Store implements item_store.SyncableStore {
-    private crypto: agile_keychain_crypto.Crypto;
     private database: key_value_store.Database;
     private name: string;
     private keyAgent: key_agent.KeyAgent;
@@ -100,7 +98,6 @@ export class Store implements item_store.SyncableStore {
     ) {
         this.database = database;
         this.keyAgent = keyAgent;
-        this.crypto = agile_keychain_crypto.defaultCrypto;
         this.name = name;
 
         this.onItemUpdated = new event_stream.EventStream<item_store.Item>();

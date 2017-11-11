@@ -358,10 +358,8 @@ export class SiteInfoService implements site_info.SiteInfoProvider {
             .fetch(url)
             .then(links => {
                 var rootUrl = url;
-                var iconLinks = 0;
                 links.forEach(link => {
                     if (isIconLink(link)) {
-                        ++iconLinks;
                         var absoluteLinkUrl = urijs(link.url).absoluteTo(
                             rootUrl
                         );

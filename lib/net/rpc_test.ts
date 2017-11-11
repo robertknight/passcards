@@ -66,11 +66,6 @@ testLib.addTest('simple rpc call and reply', assert => {
         return a + b;
     });
 
-    var message = '';
-    server.on('sayHello', () => {
-        message = 'hello world';
-    });
-
     let done = defer<void>();
     client.call('add', [3, 4], (err, sum) => {
         assert.equal(sum, 7);

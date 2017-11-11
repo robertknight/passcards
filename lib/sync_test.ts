@@ -539,12 +539,10 @@ testLib.addTest('item deleted in cloud and locally', assert => {
 
 testLib.addTest('syncing locked store should fail', assert => {
     var env: Env;
-    var item: item_store.Item;
 
     return setupWithItem()
         .then(_env => {
             env = _env.env;
-            item = _env.item;
             return env.keyAgent.forgetKeys();
         })
         .then(() => {

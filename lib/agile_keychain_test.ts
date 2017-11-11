@@ -820,11 +820,9 @@ function createTestVaultWithNItems(n: number): Promise<TestVault> {
 
 testLib.addTest('listItemStates() matches listItems() output', assert => {
     let vault: agile_keychain.Vault;
-    let items: item_store.Item[];
     return createTestVaultWithNItems(3)
         .then(result => {
             vault = result.vault;
-            items = result.items;
             return asyncutil.all2([vault.listItemStates(), vault.listItems()]);
         })
         .then((items: [item_store.ItemState[], item_store.Item[]]) => {
