@@ -38,7 +38,6 @@
     "prettier": "^1.4.4",
     "proxyquire": "^1.7.2",
     "qunitjs": "^1.19.0",
-    "request": "^2.53.0",
     "s3": "^4.4.0",
     "semver": "^4.3.6",
     "sort-stream": "^1.0.1",
