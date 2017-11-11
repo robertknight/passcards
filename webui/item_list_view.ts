@@ -424,8 +424,8 @@ class ItemList extends react.Component<ItemListProps, ItemListState> {
     private updateVisibleItems(matchingItems: item_store.Item[]) {
         var itemList = this.itemList;
         if (matchingItems.length > 0) {
-            var topIndex: number = -1;
-            var bottomIndex: number = -1;
+            var topIndex = -1;
+            var bottomIndex = -1;
 
             var itemListRect = {
                 top: itemList.scrollTop,
