@@ -101,13 +101,13 @@ interface MenuState {
 
 export interface MenuProps extends react.Props<void> {
     /** The source rect of the icon which triggered the
-	  * menu.
-	  */
+     * menu.
+     */
     sourceRect: reactutil.Rect;
 
     /** The viewport within which the menu is being
-	  * displayed.
-	  */
+     * displayed.
+     */
     viewportRect: reactutil.Rect;
 
     /** List of menu items to display in the menu. */
@@ -142,16 +142,16 @@ function measureText(document: Document, text: string, font: string) {
 }
 
 /** A material-design style menu.
-  *
-  * See http://www.google.co.uk/design/spec/components/menus.html
-  *
-  * On small screens, this component automatically
-  * displays as a bottom sheet
-  * (see http://www.google.co.uk/design/spec/components/bottom-sheets.html)
-  *
-  * This component must be rendered inside a react.TransitionGroup component
-  * for it to be displayed.
-  */
+ *
+ * See http://www.google.co.uk/design/spec/components/menus.html
+ *
+ * On small screens, this component automatically
+ * displays as a bottom sheet
+ * (see http://www.google.co.uk/design/spec/components/bottom-sheets.html)
+ *
+ * This component must be rendered inside a react.TransitionGroup component
+ * for it to be displayed.
+ */
 export class Menu extends react.Component<MenuProps, MenuState> {
     private menu: HTMLElement;
     private transitionListener: reactutil.TransitionEndListener;

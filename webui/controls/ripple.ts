@@ -42,9 +42,9 @@ enum Phase {
 
 export interface InkRippleProps extends react.Props<void> {
     /** Fill style for the expanding ripple.
-	  * The background of the ripple uses a lighter version of
-	  * this color.
-	  */
+     * The background of the ripple uses a lighter version of
+     * this color.
+     */
     color?: string;
     /** Max radius the wave ripple can reach during the touch-down phase */
     radius?: number;
@@ -67,10 +67,10 @@ function easeOut(max: number, value: number) {
 }
 
 /** InkRipple provides a Material Design-style ripple effect when touched or clicked.
-  *
-  * To use an InkRipple, add it as the child of the element which should display
-  * the effect when touched. The ripple will expand to fill its positioned parent.
-  */
+ *
+ * To use an InkRipple, add it as the child of the element which should display
+ * the effect when touched. The ripple will expand to fill its positioned parent.
+ */
 export class InkRipple extends react.Component<InkRippleProps, InkRippleState> {
     private anim: {
         context: CanvasRenderingContext2D;
@@ -201,10 +201,7 @@ export class InkRipple extends react.Component<InkRippleProps, InkRippleState> {
                 className: style.classes(theme.inkRipple),
                 ref: el => (this.canvas = el),
             }),
-            div(
-                style.mixin(theme.inkRipple.container),
-                this.props.children
-            )
+            div(style.mixin(theme.inkRipple.container), this.props.children)
         );
     }
 
@@ -279,9 +276,10 @@ export class InkRipple extends react.Component<InkRippleProps, InkRippleState> {
         );
         ctx.fill();
 
-        var phaseDuration = this.state.phase === Phase.Touch
-            ? TOUCH_PHASE_DURATION
-            : RELEASE_PHASE_DURATION;
+        var phaseDuration =
+            this.state.phase === Phase.Touch
+                ? TOUCH_PHASE_DURATION
+                : RELEASE_PHASE_DURATION;
         if (phaseElapsed < phaseDuration) {
             this.anim.timer = reactutil.requestAnimationFrame(() => {
                 this.stepAnimation();

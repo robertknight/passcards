@@ -19,9 +19,9 @@ export interface ExtendedCSSProperties extends react.CSSProperties {
 }
 
 /** Component factory returned by createFactory(). This extends
-  * React.Factory with an additional property that specifies the
-  * type of component which the factory creates.
-  */
+ * React.Factory with an additional property that specifies the
+ * type of component which the factory creates.
+ */
 export interface Factory<P> extends react.Factory<P> {
     componentClass?: react.ComponentClass<P>;
 }
@@ -30,12 +30,12 @@ export var TransitionGroupF = react.createFactory(TransitionGroup);
 export var CSSTransitionGroupF = react.createFactory(CSSTransitionGroup);
 
 /** Merge props passed to a parent component with those set in a child
-  * component.
-  *
-  * Props set in @p childProps override those set in @p parentProps with
-  * the exception of 'className' where the value in @p parentProps and
-  * the value in @p childProps are concatenated.
-  */
+ * component.
+ *
+ * Props set in @p childProps override those set in @p parentProps with
+ * the exception of 'className' where the value in @p parentProps and
+ * the value in @p childProps are concatenated.
+ */
 export function mergeProps<P, C>(parentProps: P, childProps: C): C {
     var childMap = tsutil.unsafeCast<C, { [index: string]: any }>(childProps);
     var parentMap = tsutil.unsafeCast<P, { [index: string]: any }>(parentProps);
@@ -52,10 +52,10 @@ export function mergeProps<P, C>(parentProps: P, childProps: C): C {
 }
 
 /** Performs a shallow comparison of the properties of two objects and returns
-  * a list of property names of properties which differ between the two.
-  *
-  * Adapted from the 'shallowEqual' module in react
-  */
+ * a list of property names of properties which differ between the two.
+ *
+ * Adapted from the 'shallowEqual' module in react
+ */
 function changedFields(objA: any, objB: any) {
     if (objA === objB) {
         return [];
@@ -82,9 +82,9 @@ function changedFields(objA: any, objB: any) {
 }
 
 /** Returns true if any properties changed between objects 'a' and 'b',
-  * using a shallow comparison of property values and ignoring any properties
-  * listed in ignoredFields.
-  */
+ * using a shallow comparison of property values and ignoring any properties
+ * listed in ignoredFields.
+ */
 export function objectChanged(a: any, b: any, ...ignoredFields: string[]) {
     var changed = changedFields(a, b);
     if (changed.length != ignoredFields.length) {
@@ -116,8 +116,8 @@ export function prefix(style: StyleMap): StyleMap {
 }
 
 /** Wrapper around Window.requestAnimationFrame() which requests
-* execution of a callback
-*/
+ * execution of a callback
+ */
 export function requestAnimationFrame(callback: () => void) {
     if (env.isChromeExtension()) {
         // in Chrome extensions, requestAnimationFrame() never fires in
@@ -156,10 +156,10 @@ export function rectHeight(rect: Rect) {
 }
 
 /** Describes the transition state of a view.
-  *
-  * The state is initially 'WillEnter' and transitions to
-  * 'Entered' a moment afterwards.
-  */
+ *
+ * The state is initially 'WillEnter' and transitions to
+ * 'Entered' a moment afterwards.
+ */
 export enum TransitionState {
     WillEnter,
     Entered,
@@ -172,11 +172,11 @@ export class TransitionEndListener {
     private listener: (e: TransitionEvent) => void;
 
     /** Setup an event handler which is called when the CSS transition
-	  * for a given style @p property finishes on the DOM node for
-	  * a React @p component.
-	  *
-	  * Use remove() to remove the listener when no longer required.
-	  */
+     * for a given style @p property finishes on the DOM node for
+     * a React @p component.
+     *
+     * Use remove() to remove the listener when no longer required.
+     */
     constructor(
         component: react.Component<any, any> | HTMLElement,
         property: string,

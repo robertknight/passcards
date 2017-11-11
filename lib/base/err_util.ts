@@ -5,15 +5,15 @@ interface ES6Function extends Function {
 }
 
 /** Base class for custom errors.
-  *
-  * This provides a concrete implementation of the Error
-  * interface and also provides support for wrapping
-  * errors with additional context information.
-  */
+ *
+ * This provides a concrete implementation of the Error
+ * interface and also provides support for wrapping
+ * errors with additional context information.
+ */
 export class BaseError implements Error {
     /** When wrapping one error with another,
-	  * this is used to store the original error.
-	  */
+     * this is used to store the original error.
+     */
     public sourceErr: Error;
     private err: Error;
 
@@ -53,7 +53,7 @@ export class BaseError implements Error {
 }
 
 /** Base class for errors when querying HTTP-based APIs
-  */
+ */
 export class ApiError extends BaseError {
     constructor(
         public url: string,
@@ -65,9 +65,9 @@ export class ApiError extends BaseError {
 }
 
 /** Returns true if the string @p message appears in @p err's message
-  * or any of the messages in the source error chain for @p err,
-  * if @p err is an instance of BaseError.
-  */
+ * or any of the messages in the source error chain for @p err,
+ * if @p err is an instance of BaseError.
+ */
 export function hasCause(err: Error, message: string): boolean {
     let baseErr = <BaseError>err;
     if (err.message.indexOf(message) !== -1) {

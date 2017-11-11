@@ -7,13 +7,13 @@ function cssPropName(name: string) {
 }
 
 /** Given a map of (property name -> transition duration), returns
-  * a CSS property string for the 'transition' property which animates
-  * each property using the specified durations.
-  *
-  * The durations are all scaled by TRANSITION_SCALE_FACTOR,
-  * which provides an easy way to scale the duration
-  * of all transitions created using this function.
-  */
+ * a CSS property string for the 'transition' property which animates
+ * each property using the specified durations.
+ *
+ * The durations are all scaled by TRANSITION_SCALE_FACTOR,
+ * which provides an easy way to scale the duration
+ * of all transitions created using this function.
+ */
 export function transitionOn(props: { [prop: string]: number }) {
     return Object.keys(props)
         .map(prop => {

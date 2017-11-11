@@ -12,11 +12,11 @@ function mergeOrderedSets<T>(base: T[], a: T[], b: T[]): T[] {
 }
 
 /** Merge the values from a field of two items.
-  *
-  * @param baseValue The last-synced value of the field
-  * @param firstValue The current value of the field in the first item
-  * @param secondValue The current value of the field in the second item
-  */
+ *
+ * @param baseValue The last-synced value of the field
+ * @param firstValue The current value of the field in the first item
+ * @param secondValue The current value of the field in the second item
+ */
 export function mergeField<T>(baseValue: T, firstValue: T, secondValue: T) {
     if (baseValue === firstValue) {
         // unchanged, or only changed in item 'b'
@@ -73,15 +73,15 @@ function uniqueKeys<T>(
 }
 
 /** Merge an array of values from a field of two items.
-  * Items in the three arrays are matched up using a key returned
-  * by keyFunc and matched elements are then merged using mergeField()
-  *
-  * @param baseArray The last-synced value of the field
-  * @param firstArray The current value of the field in the first item
-  * @param secondArray The current value of the field in the second item
-  * @param keyFunc A function which returns a key to match up elements
-  *                from the three arrays.
-  */
+ * Items in the three arrays are matched up using a key returned
+ * by keyFunc and matched elements are then merged using mergeField()
+ *
+ * @param baseArray The last-synced value of the field
+ * @param firstArray The current value of the field in the first item
+ * @param secondArray The current value of the field in the second item
+ * @param keyFunc A function which returns a key to match up elements
+ *                from the three arrays.
+ */
 export function mergeSets<T>(
     baseArray: T[],
     firstArray: T[],

@@ -11,14 +11,15 @@ export function repairItem(
         // item URLs are stored in the overview data and encrypted
         // in the content. Check that the URLs in the overview data
         // match those in the encrypted content
-        var expectedLocation = content.urls.length > 0
-            ? content.urls[0].url
-            : '';
+        var expectedLocation =
+            content.urls.length > 0 ? content.urls[0].url : '';
         var wasRepaired = false;
         if (item.primaryLocation() != expectedLocation) {
             reportError(`${item.title}:`);
             reportError(
-                `  Location mismatch. Actual "${item.primaryLocation()}", expected "${expectedLocation}"`
+                `  Location mismatch. Actual "${item.primaryLocation()}", expected "${
+                    expectedLocation
+                }"`
             );
 
             item.locations = [];

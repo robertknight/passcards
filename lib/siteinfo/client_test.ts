@@ -9,22 +9,30 @@ testLib.addTest('fetch google.com icons', assert => {
     var dataUrl = '/icondata/12345';
     var httpGetter = (url: string) => {
         var body;
-        
-        if (url === 'https://passcards-robknight.rhcloud.com/siteinfo/google.com?timeout=3000') {
+
+        if (
+            url ===
+            'https://passcards-robknight.rhcloud.com/siteinfo/google.com?timeout=3000'
+        ) {
             var iconInfo: client_api.LookupResponse = {
                 domain: 'google.com',
-                icons: [{
-                    width: 128,
-                    height: 128,
-                    sourceUrl: 'https://google.com/someicon.png',
-                    dataUrl,
-                }],
+                icons: [
+                    {
+                        width: 128,
+                        height: 128,
+                        sourceUrl: 'https://google.com/someicon.png',
+                        dataUrl,
+                    },
+                ],
                 lastModified: 0,
                 status: 'foo',
                 submitted: 0,
-            }
+            };
             body = JSON.stringify(iconInfo);
-        } else if (url === 'https://passcards-robknight.rhcloud.com' + dataUrl) {
+        } else if (
+            url ===
+            'https://passcards-robknight.rhcloud.com' + dataUrl
+        ) {
             body = '{ icon bitmap data }';
         } else {
             throw new Error('Unexpected URL ' + url);

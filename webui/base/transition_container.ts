@@ -10,18 +10,18 @@ import { TransitionState } from './reactutil';
  */
 export interface TransitionChildProps extends react.Props<{}> {
     /** The state of the transition, indicating whether the child
-	 * is entering, idle or exiting.
-	 */
+     * is entering, idle or exiting.
+     */
     transitionState?: TransitionState;
     /** When transitionState is TransitionState.Entering, this
-	 * is set to a callback that *must* be invoked by the child
-	 * when the transition completes.
-	 */
+     * is set to a callback that *must* be invoked by the child
+     * when the transition completes.
+     */
     onEntered?: () => void;
     /** When transitionState is TransitionState.Leaving, this
-	 * is set to a callback that *must* be invoked by the child
-	 * when the transition completes.
-	 */
+     * is set to a callback that *must* be invoked by the child
+     * when the transition completes.
+     */
     onLeft?: () => void;
 }
 
@@ -126,8 +126,8 @@ class TransitionContainerChild extends react.Component<
 
 export interface TransitionContainerProps extends react.Props<{}> {
     /** A callback which is invoked when the exit animation
-	 * for a component completes.
-	 */
+     * for a component completes.
+     */
     onComponentRemoved?: (key: string | number) => void;
 }
 

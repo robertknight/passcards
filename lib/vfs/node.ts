@@ -20,9 +20,9 @@ export class FileVFS implements vfs.VFS {
     root: string;
 
     /** Construct a VFS implementation which operates on
-	  * the local filesystem, with all paths treated as
-	  * relative to @p _root
-	  */
+     * the local filesystem, with all paths treated as
+     * relative to @p _root
+     */
     constructor(_root: string) {
         this.root = Path.normalize(_root);
     }

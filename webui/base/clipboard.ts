@@ -1,26 +1,26 @@
 let clipboardDocument = document;
 
 /**
-  * Set the Document used for clipboard access.
-  *
-  * Defaults to the initial document into which the application is loaded.
-  *
-  * In the context of Firefox WebExtensions the clipboard APIs cannot
-  * be used from background pages directly, but must be invoked from
-  * the popup window's document.
-  *
-  * See https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Interact_with_the_clipboard
-  * and https://bugzilla.mozilla.org/show_bug.cgi?id=1272869
-  */
+ * Set the Document used for clipboard access.
+ *
+ * Defaults to the initial document into which the application is loaded.
+ *
+ * In the context of Firefox WebExtensions the clipboard APIs cannot
+ * be used from background pages directly, but must be invoked from
+ * the popup window's document.
+ *
+ * See https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Interact_with_the_clipboard
+ * and https://bugzilla.mozilla.org/show_bug.cgi?id=1272869
+ */
 export function setClipboardDocument(doc: Document) {
     clipboardDocument = doc;
 }
 
 /**
-  * Copy data to the system clipboard.
-  *
-  * This may only be called within the context of a user gesture.
-  */
+ * Copy data to the system clipboard.
+ *
+ * This may only be called within the context of a user gesture.
+ */
 export function copy(mimeType: string, data: string) {
     // Work around an issue in Chrome where clicking on an unrevealed password
     // input field and then clicking on a "Copy" button fails to generate a

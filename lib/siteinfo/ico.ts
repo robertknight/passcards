@@ -171,8 +171,8 @@ function readNthIcon(
 }
 
 /** Reads a .ico file containing one or more icons and returns
-  * an array of the icons found.
-  */
+ * an array of the icons found.
+ */
 export function read(data: DataView): Icon[] {
     var leData = new collectionutil.LittleEndianDataView(data);
 

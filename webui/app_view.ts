@@ -164,7 +164,9 @@ class AppView extends react.Component<AppViewProps, AppViewState> {
                             if (result.failed > 0) {
                                 this.showError(
                                     new Error(
-                                        `Sync completed but ${result.failed} items failed to sync`
+                                        `Sync completed but ${
+                                            result.failed
+                                        } items failed to sync`
                                     )
                                 );
                             }
@@ -197,10 +199,7 @@ class AppView extends react.Component<AppViewProps, AppViewState> {
         );
         children.push(menu);
 
-        return div(
-            style.mixin(theme.appView, { ref: 'app' }),
-            children
-        );
+        return div(style.mixin(theme.appView, { ref: 'app' }), children);
     }
 
     private renderDialogs() {

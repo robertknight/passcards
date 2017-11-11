@@ -215,7 +215,7 @@ export class App {
     }
 
     /** Render the app into the given HTML element.
-	 */
+     */
     renderInto(element: HTMLElement) {
         var rootInputElement = element.ownerDocument.body;
 

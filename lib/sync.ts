@@ -23,14 +23,14 @@ syncLog.level = logging.Level.Warn;
 const REMOTE_STORE = 'cloud';
 
 /** Returns true if two date/times from Item.updatedAt should
-  * be considered equal for the purpose of sync.
-  *
-  * This function accounts for the fact that the resolution
-  * of timestamps varies depending on the store - eg.
-  * the Agile Keychain format uses timestamps with only
-  * second-level resolution whereas local_store.Store supports
-  * millisecond-resolution timestamps.
-  */
+ * be considered equal for the purpose of sync.
+ *
+ * This function accounts for the fact that the resolution
+ * of timestamps varies depending on the store - eg.
+ * the Agile Keychain format uses timestamps with only
+ * second-level resolution whereas local_store.Store supports
+ * millisecond-resolution timestamps.
+ */
 export function itemUpdateTimesEqual(a: Date, b: Date) {
     return (
         dateutil.unixTimestampFromDate(a) == dateutil.unixTimestampFromDate(b)
@@ -78,28 +78,28 @@ interface SyncItem {
 }
 
 /** Interface for syncing encryption keys and items between
-  * a cloud-based store and a local cache.
-  */
+ * a cloud-based store and a local cache.
+ */
 export interface Syncer {
     onProgress: event_stream.EventStream<SyncProgress>;
 
     /** Sync encryption keys from the remote store to the local one.
-	  * This does not require the remote store to be unlocked.
-	  */
+     * This does not require the remote store to be unlocked.
+     */
     syncKeys(): Promise<void>;
 
     /** Sync items between the local and remote stores.
-	  * Returns a promise which is resolved when the current sync completes.
-	  *
-	  * Syncing items requires both local and remote stores
-	  * to be unlocked first.
-	  */
+     * Returns a promise which is resolved when the current sync completes.
+     *
+     * Syncing items requires both local and remote stores
+     * to be unlocked first.
+     */
     syncItems(): Promise<SyncProgress>;
 }
 
 /** Syncer implementation which syncs changes between an item_store.Store
-  * representing a remote store and a local store.
-  */
+ * representing a remote store and a local store.
+ */
 export class CloudStoreSyncer implements Syncer {
     private localStore: item_store.SyncableStore;
     private cloudStore: item_store.Store;

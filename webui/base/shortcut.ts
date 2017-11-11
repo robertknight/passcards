@@ -1,19 +1,19 @@
 /** Shortcut installs key handlers to handle a shortcut
-  * key and invoke a handler in response.
-  *
-  * Shortcuts remain in effect until disabled via remove()
-  */
+ * key and invoke a handler in response.
+ *
+ * Shortcuts remain in effect until disabled via remove()
+ */
 export class Shortcut {
     private element: HTMLElement;
     private listener: (ev: KeyboardEvent) => any;
     private enabled: boolean;
 
     /** Installs a shortcut which listens for a press of @p key
-	  * and invokes @p handler in response.
-	  *
-	  * remove() must be called to uninstall the shortcut if it
-	  * is no longer needed.
-	  */
+     * and invokes @p handler in response.
+     *
+     * remove() must be called to uninstall the shortcut if it
+     * is no longer needed.
+     */
     constructor(element: HTMLElement, keyCode: number, handler: () => void) {
         this.element = element;
         this.listener = e => {

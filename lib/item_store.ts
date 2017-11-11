@@ -18,10 +18,10 @@ import stringutil = require('./base/stringutil');
 export interface ItemType extends String {}
 
 /** Constants for the different types of item
-	* that a vault may contain.
-	*
-	* Item type codes are taken from 1Password v4
-	*/
+ * that a vault may contain.
+ *
+ * Item type codes are taken from 1Password v4
+ */
 export class ItemTypes {
     // The most common type, for logins and other web forms
     static LOGIN = <ItemType>'webforms.WebForm';
@@ -147,8 +147,8 @@ export interface ItemState {
 }
 
 /** A convenience interface for passing around an item
-  * and its contents together.
-  */
+ * and its contents together.
+ */
 export interface ItemAndContent {
     item: Item;
     content: ItemContent;
@@ -171,11 +171,11 @@ export class UnsavedItemError extends err_util.BaseError {
 }
 
 /** Represents the content of an item, usually stored
-  * encrypted in a vault.
-  *
-  * ItemContent and its dependent fields are plain interfaces
-  * to facilitate easy (de-)serialization.
-  */
+ * encrypted in a vault.
+ *
+ * ItemContent and its dependent fields are plain interfaces
+ * to facilitate easy (de-)serialization.
+ */
 export interface ItemContent {
     sections: ItemSection[];
     urls: ItemUrl[];
@@ -187,12 +187,12 @@ export interface ItemContent {
 }
 
 /** Utility functions for creating and extracting
-  * data from ItemContent instances.
-  */
+ * data from ItemContent instances.
+ */
 export let ContentUtil = {
     /** Creates a new ItemContent instance with all
-	  * fields set to default values.
-	  */
+     * fields set to default values.
+     */
     empty(): ItemContent {
         return {
             sections: [],
@@ -206,12 +206,12 @@ export let ContentUtil = {
     },
 
     /** Returns the account name associated with this item.
-	  *
-	  * The field used for the account name depends on the item
-	  * type. For logins, this is the 'username' field.
-	  *
-	  * Returns an empty string if the item has no associated account.
-	  */
+     *
+     * The field used for the account name depends on the item
+     * type. For logins, this is the 'username' field.
+     *
+     * Returns an empty string if the item has no associated account.
+     */
     account(content: ItemContent): string {
         let field = ContentUtil.accountField(content);
         return field ? field.value : '';
@@ -225,13 +225,13 @@ export let ContentUtil = {
     },
 
     /** Returns the primary password associated with this item.
-	  *
-	  * This depends upon the item type. For logins, this is
-	  * the 'password' field.
-	  *
-	  * Returns an empty password if the item has no associated
-	  * account.
-	  */
+     *
+     * This depends upon the item type. For logins, this is
+     * the 'password' field.
+     *
+     * Returns an empty password if the item has no associated
+     * account.
+     */
     password(content: ItemContent): string {
         let field = ContentUtil.passwordField(content);
         return field ? field.value : '';
@@ -252,17 +252,17 @@ export class Item {
     private store: Store;
 
     /** Identifies the version of an item. This is an opaque
-	  * string which is set when an item is saved to a store.
-	  * It will change each time an item is saved.
-	  */
+     * string which is set when an item is saved to a store.
+     * It will change each time an item is saved.
+     */
     revision: string;
 
     /** Identifies the previous version of an item. This is
-	  * an opaque string which is set to the current revision
-	  * just prior to a new version being saved to a store
-	  * which supports item history. It will be updated
-	  * each time an item is saved.
-	  */
+     * an opaque string which is set to the current revision
+     * just prior to a new version being saved to a store
+     * which supports item history. It will be updated
+     * each time an item is saved.
+     */
     parentRevision: string;
 
     /** Unique ID for this item within the vault */
@@ -277,16 +277,16 @@ export class Item {
     createdAt: Date;
 
     /** Item type code for this item. This is one of the values
-	  * in the ItemTypes class.
-	  */
+     * in the ItemTypes class.
+     */
     typeName: ItemType;
 
     /** Main title for this item. */
     title: string;
 
     /** Additional metadata (eg. tags)
-	  * which is stored unencrypted for this item.
-	  */
+     * which is stored unencrypted for this item.
+     */
     openContents: ItemOpenContents;
 
     /** List of URLs that this item is associated with. */
@@ -296,20 +296,20 @@ export class Item {
     account: string;
 
     /** The decrypted content of the item, either set
-	  * via setContent() or decrypted on-demand by
-	  * getContent()
-	  */
+     * via setContent() or decrypted on-demand by
+     * getContent()
+     */
     private content: ItemContent;
 
     /** Create a new item. @p store is the store
-	  * to associate the new item with. This can
-	  * be changed later via saveTo().
-	  *
-	  * When importing an existing item or loading
-	  * an existing item from the store, @p uuid may be non-null.
-	  * Otherwise a random new UUID will be allocated for
-	  * the item.
-	  */
+     * to associate the new item with. This can
+     * be changed later via saveTo().
+     *
+     * When importing an existing item or loading
+     * an existing item from the store, @p uuid may be non-null.
+     * Otherwise a random new UUID will be allocated for
+     * the item.
+     */
     constructor(store?: Store, uuid?: string) {
         this.store = store;
 
@@ -323,17 +323,17 @@ export class Item {
     }
 
     /** Retrieves and decrypts the content of a 1Password item.
-	  *
-	  * In the Agile Keychain format, items are stored in two parts.
-	  * The overview data is stored in both contents.js and replicated
-	  * in the <UUID>.1password file for the item and is unencrypted.
-	  *
-	  * The item content is stored in the <UUID>.1password file and
-	  * is encrypted using the store's master key.
-	  *
-	  * The item's store must be unlocked using Store.unlock() before
-	  * item content can be retrieved.
-	  */
+     *
+     * In the Agile Keychain format, items are stored in two parts.
+     * The overview data is stored in both contents.js and replicated
+     * in the <UUID>.1password file for the item and is unencrypted.
+     *
+     * The item content is stored in the <UUID>.1password file and
+     * is encrypted using the store's master key.
+     *
+     * The item's store must be unlocked using Store.unlock() before
+     * item content can be retrieved.
+     */
     getContent(): Promise<ItemContent> {
         if (this.content) {
             return Promise.resolve(this.content);
@@ -350,8 +350,8 @@ export class Item {
     }
 
     /** Return the raw decrypted JSON data for an item.
-	  * This is only available for saved items.
-	  */
+     * This is only available for saved items.
+     */
     getRawDecryptedData(): Promise<string> {
         if (!this.store) {
             return Promise.reject<string>(new UnsavedItemError());
@@ -379,9 +379,9 @@ export class Item {
     }
 
     /** Remove the item from the store.
-	  * This erases all of the item's data and leaves behind a 'tombstone'
-	  * entry for syncing purposes.
-	  */
+     * This erases all of the item's data and leaves behind a 'tombstone'
+     * entry for syncing purposes.
+     */
     remove(): Promise<void> {
         if (!this.store) {
             return Promise.reject<void>(new UnsavedItemError());
@@ -399,26 +399,26 @@ export class Item {
     }
 
     /** Returns true if this is a 'tombstone' entry remaining from
-	  * a deleted item. When an item is deleted, all of the properties except
-	  * the UUID are erased and the item's type is changed to 'system.Tombstone'.
-	  *
-	  * These 'tombstone' markers are preserved so that deletions are synced between
-	  * different 1Password clients.
-	  */
+     * a deleted item. When an item is deleted, all of the properties except
+     * the UUID are erased and the item's type is changed to 'system.Tombstone'.
+     *
+     * These 'tombstone' markers are preserved so that deletions are synced between
+     * different 1Password clients.
+     */
     isTombstone(): boolean {
         return this.typeName == ItemTypes.TOMBSTONE;
     }
 
     /** Returns true if this is a regular item - ie. not a folder,
-	  * tombstone or saved search.
-	  */
+     * tombstone or saved search.
+     */
     isRegularItem(): boolean {
         return !stringutil.startsWith(<string>this.typeName, 'system.');
     }
 
     /** Returns a shortened version of the item's UUID, suitable for disambiguation
-	  * between different items with the same type and title.
-	  */
+     * between different items with the same type and title.
+     */
     shortID(): string {
         return this.uuid.slice(0, 4);
     }
@@ -438,9 +438,9 @@ export class Item {
     }
 
     /** Set the last-modified time for the item to the current time.
-	  * If the created time for the item has not been initialized, it
-	  * is also set to the current time.
-	  */
+     * If the created time for the item has not been initialized, it
+     * is also set to the current time.
+     */
     updateTimestamps() {
         if (!this.createdAt) {
             this.createdAt = new Date();
@@ -461,8 +461,8 @@ export class Item {
     }
 
     /** Returns the main URL associated with this item or an empty
-	  * string if there are no associated URLs.
-	  */
+     * string if there are no associated URLs.
+     */
     primaryLocation(): string {
         if (this.locations.length > 0) {
             return this.locations[0];
@@ -472,10 +472,10 @@ export class Item {
     }
 
     /** Update item overview metadata to match the complete
-	  * content of an item.
-	  *
-	  * This updates the URL list for an item.
-	  */
+     * content of an item.
+     *
+     * This updates the URL list for an item.
+     */
     updateOverviewFromContent(content: ItemContent) {
         this.locations = [];
         content.urls.forEach(url => {
@@ -487,15 +487,15 @@ export class Item {
 }
 
 /** Content of an item which is usually stored unencrypted
-  * as part of the overview data.
-  */
+ * as part of the overview data.
+ */
 export interface ItemOpenContents {
     tags: string[];
 
     /** Indicates where this item will be displayed.
-	  * Known values are 'Always' (show everywhere)
-	  * and 'Never' (never shown in browser)
-	  */
+     * Known values are 'Always' (show everywhere)
+     * and 'Never' (never shown in browser)
+     */
     scope: string;
 }
 
@@ -510,10 +510,10 @@ export interface ItemSection {
 }
 
 /** A specific property/attribute of an item.
-  *
-  * Each field has a data type, an internal name/ID for the field,
-  * a user-visible title and a current value.
-  */
+ *
+ * Each field has a data type, an internal name/ID for the field,
+ * a user-visible title and a current value.
+ */
 export interface ItemField {
     kind: FieldType;
     name: string;
@@ -527,7 +527,7 @@ export function fieldValueString(field: ItemField) {
             return dateutil.dateFromUnixTimestamp(field.value).toString();
         case FieldType.MonthYear:
             var month = field.value % 100;
-            var year = field.value / 100 % 100;
+            var year = (field.value / 100) % 100;
             return sprintf('%02d/%d', month, year);
         default:
             return field.value;
@@ -551,8 +551,8 @@ export interface WebFormField {
     id: string;
 
     /** Name of the field. For web forms this is the 'name'
-	  * attribute of the <input> element.
-	  */
+     * attribute of the <input> element.
+     */
     name: string;
 
     /** Type of input element used for this form field */
@@ -569,9 +569,9 @@ export interface ItemUrl {
 }
 
 /** Type of data stored in a field.
-  * The set of types comes originally from those used
-  * in the 1Password Agile Keychain format.
-  */
+ * The set of types comes originally from those used
+ * in the 1Password Agile Keychain format.
+ */
 export enum FieldType {
     Text,
     Password,
@@ -588,13 +588,13 @@ export enum FieldType {
 
 export interface ListItemsOptions {
     /** Include 'tombstone' items which are left in the store
-	  * when an item is removed.
-	  */
+     * when an item is removed.
+     */
     includeTombstones?: boolean;
 }
 
 /** Specifies where an update came from when saving an item.
-  */
+ */
 export enum ChangeSource {
     /** Indicates a change resulting from a sync with another store. */
     Sync,
@@ -603,15 +603,15 @@ export enum ChangeSource {
 }
 
 /** Interface for a store of encrypted items.
-  *
-  * A Store consists of a set of Item(s), identified by unique ID,
-  * plus a set of encryption keys used to encrypt the contents of
-  * those items.
-  *
-  * Items are versioned with an implementation-specific revision.
-  * Stores may keep only the last revision of an item or they
-  * may keep previous revisions as well.
-  */
+ *
+ * A Store consists of a set of Item(s), identified by unique ID,
+ * plus a set of encryption keys used to encrypt the contents of
+ * those items.
+ *
+ * Items are versioned with an implementation-specific revision.
+ * Stores may keep only the last revision of an item or they
+ * may keep previous revisions as well.
+ */
 export interface Store {
     /** Emits events when items are updated in the store. */
     onItemUpdated: event_stream.EventStream<Item>;
@@ -623,40 +623,40 @@ export interface Store {
     unlock(password: string): Promise<void>;
 
     /** List the states (ID, last update time and whether deleted)
-	  * of all items in the store.
-	  */
+     * of all items in the store.
+     */
     listItemStates(): Promise<ItemState[]>;
 
     /** List all of the items in the store */
     listItems(opts?: ListItemsOptions): Promise<Item[]>;
 
     /** Load the item with a specific ID.
-	  *
-	  * If a revision is specified, load a specific version of an item,
-	  * otherwise load the current version of the item.
-	  *
-	  * loadItem() should report an error if the item has been deleted.
-	  * Deleted items are only available as tombstone entries in the
-	  * list returned by listItemStates().
-	  */
+     *
+     * If a revision is specified, load a specific version of an item,
+     * otherwise load the current version of the item.
+     *
+     * loadItem() should report an error if the item has been deleted.
+     * Deleted items are only available as tombstone entries in the
+     * list returned by listItemStates().
+     */
     loadItem(uuid: string, revision?: string): Promise<ItemAndContent>;
 
     /** Save changes to the overview data and item content
-	  * back to the store. The @p source specifies whether
-	  * this update is a result of syncing changes
-	  * with another store or a local modification.
-	  *
-	  * Saving an item assigns a new revision to it.
-	  */
+     * back to the store. The @p source specifies whether
+     * this update is a result of syncing changes
+     * with another store or a local modification.
+     *
+     * Saving an item assigns a new revision to it.
+     */
     saveItem(item: Item, source?: ChangeSource): Promise<void>;
 
     /** Fetch and decrypt the item's secure contents. */
     getContent(item: Item): Promise<ItemContent>;
 
     /** Fetch and decrypt item's secure contents and return
-	  * as a raw string - ie. without parsing the data and converting
-	  * to an ItemContent instance.
-	  */
+     * as a raw string - ie. without parsing the data and converting
+     * to an ItemContent instance.
+     */
     getRawDecryptedData(item: Item): Promise<string>;
 
     /** Retrieve the master encryption keys for this store. */
@@ -666,7 +666,7 @@ export interface Store {
     saveKeys(keys: key_agent.Key[], hint: string): Promise<void>;
 
     /** Permanently delete all data from the store.
-	  */
+     */
     clear(): Promise<void>;
 
     /** Return the user-provided password hint. */
@@ -674,31 +674,31 @@ export interface Store {
 }
 
 /** Represents a pair of revision strings for
-  * the same revision of an item in the local and cloud
-  * stores.
-  *
-  * Item revision formats are specific to the store
-  * implementation, so the same revision of an item
-  * that is synced between two stores (eg. a local
-  * store in IndexedDB in the browser and a cloud store
-  * in Dropbox) will have different revision strings.
-  */
+ * the same revision of an item in the local and cloud
+ * stores.
+ *
+ * Item revision formats are specific to the store
+ * implementation, so the same revision of an item
+ * that is synced between two stores (eg. a local
+ * store in IndexedDB in the browser and a cloud store
+ * in Dropbox) will have different revision strings.
+ */
 export interface RevisionPair {
     /** The revision of the item in the local store. */
     local: string;
     /** The corresponding revision of the item in the
-	  * external store.
-	  */
+     * external store.
+     */
     external: string;
 }
 
 /** SyncableStore provides methods for storing metadata
-  * to enable syncing this store with other stores.
-  */
+ * to enable syncing this store with other stores.
+ */
 export interface SyncableStore extends Store {
     /** Stores which revision of an item in a store (identified by @p storeID) was
-	  * last synced with this store.
-	  */
+     * last synced with this store.
+     */
     setLastSyncedRevision(
         item: Item,
         storeID: string,
@@ -706,23 +706,23 @@ export interface SyncableStore extends Store {
     ): Promise<void>;
 
     /** Retrieves the revision of an item in a store (identified by @p storeID)
-	  * which was last synced with this store.
-	  */
+     * which was last synced with this store.
+     */
     getLastSyncedRevision(uuid: string, storeID: string): Promise<RevisionPair>;
 
     /** Retrieve a map of (item ID -> last-synced revision) for
-	 * all items in the store which have previously been synced with
-	 * @p storeID.
-	 */
+     * all items in the store which have previously been synced with
+     * @p storeID.
+     */
     lastSyncRevisions(storeID: string): Promise<Map<string, RevisionPair>>;
 }
 
 /** Copy an item and its contents, using @p uuid as the ID for
-  * the new item. If new item is associated with @p store.
-  *
-  * The returned item will have {itemAndContent.item.revision} as
-  * its parentRevision and a null revision property.
-  */
+ * the new item. If new item is associated with @p store.
+ *
+ * The returned item will have {itemAndContent.item.revision} as
+ * its parentRevision and a null revision property.
+ */
 export function cloneItem(
     itemAndContent: ItemAndContent,
     uuid: string,
@@ -754,9 +754,9 @@ export function cloneItem(
 }
 
 /** Generate a content-based revision ID for an item.
-  * Revision IDs are a hash of the item's parent revision,
-  * plus all of its current content.
-  */
+ * Revision IDs are a hash of the item's parent revision,
+ * plus all of its current content.
+ */
 export function generateRevisionId(item: ItemAndContent) {
     var contentMetadata = {
         uuid: item.item.uuid,
@@ -782,10 +782,10 @@ export function generateRevisionId(item: ItemAndContent) {
 }
 
 /** Provides a default implementation of ItemStore.listItemStates() using
-  * ItemStore.listItems(). Since listItemStates() returns a subset of
-  * the information returned by listItems(), stores may be able to
-  * provide more efficient implementations.
-  */
+ * ItemStore.listItems(). Since listItemStates() returns a subset of
+ * the information returned by listItems(), stores may be able to
+ * provide more efficient implementations.
+ */
 export function itemStates(store: Store): Promise<ItemState[]> {
     return store.listItems({ includeTombstones: true }).then(items =>
         items.map(item => ({
@@ -797,8 +797,8 @@ export function itemStates(store: Store): Promise<ItemState[]> {
 }
 
 /** Decrypt the encryption keys for @p store and add
-  * the keys to @p agent.
-  */
+ * the keys to @p agent.
+ */
 export function unlockStore(
     store: Store,
     agent: key_agent.KeyAgent,

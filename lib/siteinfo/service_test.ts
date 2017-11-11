@@ -46,9 +46,9 @@ testLib.addTest('extract page links', assert => {
         {
             content:
                 '<html><head>' +
-                    '<meta property="og:image" content="testicon.png">' +
-                    '<link rel="shortcut icon" href="http://www.foobar.com/icon.png">' +
-                    '</head></html>',
+                '<meta property="og:image" content="testicon.png">' +
+                '<link rel="shortcut icon" href="http://www.foobar.com/icon.png">' +
+                '</head></html>',
             links: [
                 {
                     type: site_info_service.MetaTagType.Meta,
@@ -332,34 +332,30 @@ testLib.addTest('fetch static links', assert => {
 
 testLib.addTest('fetch page links', assert => {
     var sitePath = path.join(TEST_SITE_PATH, 'wikipedia/linked-icons');
-    return serveAndFetchIcons(
-        allocatePort(),
-        sitePath,
-        '/index.html'
-    ).then(result => {
-        assert.equal(result.queryResult.state, site_info.QueryState.Ready);
-        assert.equal(result.queryResult.info.icons.length, 3);
-        result.server.close();
-    });
+    return serveAndFetchIcons(allocatePort(), sitePath, '/index.html').then(
+        result => {
+            assert.equal(result.queryResult.state, site_info.QueryState.Ready);
+            assert.equal(result.queryResult.info.icons.length, 3);
+            result.server.close();
+        }
+    );
 });
 
 testLib.addTest('forget site info', assert => {
     var sitePath = path.join(TEST_SITE_PATH, 'wikipedia/linked-icons');
-    return serveAndFetchIcons(
-        allocatePort(),
-        sitePath,
-        '/index.html'
-    ).then(result => {
-        var queryUrl = result.queryResult.info.url;
-        assert.equal(result.queryResult.state, site_info.QueryState.Ready);
+    return serveAndFetchIcons(allocatePort(), sitePath, '/index.html').then(
+        result => {
+            var queryUrl = result.queryResult.info.url;
+            assert.equal(result.queryResult.state, site_info.QueryState.Ready);
 
-        // ask the provider to forget cached data and repeat the lookup
-        result.provider.forget(queryUrl);
-        var uncachedLookup = result.provider.lookup(queryUrl);
-        assert.equal(uncachedLookup.state, site_info.QueryState.Updating);
+            // ask the provider to forget cached data and repeat the lookup
+            result.provider.forget(queryUrl);
+            var uncachedLookup = result.provider.lookup(queryUrl);
+            assert.equal(uncachedLookup.state, site_info.QueryState.Updating);
 
-        result.server.close();
-    });
+            result.server.close();
+        }
+    );
 });
 
 testLib.addTest('fetch site icon with DuckDuckGo', assert => {

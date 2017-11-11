@@ -11,7 +11,7 @@ import vfs_util = require('./util');
 const PORT = 3002;
 const HOSTNAME = `http://127.0.0.1:${PORT}`;
 
-let fsRoot = (<string>(<any>os).tmpdir()) + '/http-vfs-test';
+let fsRoot = <string>(<any>os).tmpdir() + '/http-vfs-test';
 
 let fileVfs = new nodefs.FileVFS(fsRoot);
 let httpVfsServer = new http_vfs.Server(fileVfs, {

@@ -30,9 +30,9 @@ interface TabChangeInfo {
 const DUMMY_OAUTH_REDIRECT_URL = 'http://localhost:8000/webui/index.html';
 
 /**
-  * Wait for OAuth authentication to complete and redirect to a dummy URL from
-  * which we extract the hash.
-  */
+ * Wait for OAuth authentication to complete and redirect to a dummy URL from
+ * which we extract the hash.
+ */
 function interceptOAuthRedirect() {
     const listener = (tabId: number, change: TabChangeInfo) => {
         if (
@@ -65,16 +65,16 @@ function interceptOAuthRedirect() {
 
 interface OAuthFlowOptions {
     /**
-	  * Function which returns the URL of the OAuth authentication endpoint.
-	  */
+     * Function which returns the URL of the OAuth authentication endpoint.
+     */
     authServerURL(redirectUri: string, state?: string): string;
     /** The URL that the OAuth authorization endpoint will redirect
-	  * back to once authentication is complete.
-	  */
+     * back to once authentication is complete.
+     */
     authRedirectURL?: string;
     /** Window features passed to window.open() for the
-	  * popup window used to present the OAuth authorization dialog.
-	  */
+     * popup window used to present the OAuth authorization dialog.
+     */
     windowSettings?: WindowSettings;
 }
 
@@ -84,8 +84,8 @@ interface OAuthFlowOptions {
 const OAUTH_TOKEN_KEY = 'PASSCARDS_OAUTH_TOKEN';
 
 /** Data structure used by auth window to store token data in
-  * local storage
-  */
+ * local storage
+ */
 interface TokenData {
     accessToken: string;
     state: string;

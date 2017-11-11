@@ -9,8 +9,8 @@ export interface AuthDialogProps extends react.Props<Element> {
     authServerURL: (redirectUrl: string, state?: string) => string;
 
     /** Callback triggered when the user either cancels
-	 * the dialog or completes authentication.
-	 */
+     * the dialog or completes authentication.
+     */
     onComplete: (credentials?: auth.Credentials) => void;
 }
 

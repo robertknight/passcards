@@ -22,13 +22,13 @@ var qunit = require('qunitjs');
 import env = require('./base/env');
 
 /** Interface for testing the values of objects during
-  * a test.
-  *
-  * See http://api.qunitjs.com/category/assert/
-  *
-  * The assert methods throw if an assertion fails. The test harness catches such
-  * failures and outputs diagnostics.
-  */
+ * a test.
+ *
+ * See http://api.qunitjs.com/category/assert/
+ *
+ * The assert methods throw if an assertion fails. The test harness catches such
+ * failures and outputs diagnostics.
+ */
 export interface Assert {
     notEqual<T>(actual: T, notExpected: T, message?: string): void;
     equal<T>(actual: T, expected: T, message?: string): void;
@@ -82,12 +82,12 @@ function packageRoot(filePath: string) {
 }
 
 /** Takes a stack trace returned by Error.stack and returns
-  * a more easily readable version as an array of strings.
-  *
-  * - Path names are expressed relative to the NPM module
-  *   containing the current directory.
-  * - Context snippets are added for each stack frame
-  */
+ * a more easily readable version as an array of strings.
+ *
+ * - Path names are expressed relative to the NPM module
+ *   containing the current directory.
+ * - Context snippets are added for each stack frame
+ */
 function formatStack(trace: string) {
     assert(trace);
     try {
@@ -115,10 +115,9 @@ function formatStack(trace: string) {
                     context = '<source unavailable>';
                 }
                 formattedLines.push(
-                    `  ${path.relative(
-                        rootPath,
-                        filePath
-                    )}:${lineNumber}: ${context}`
+                    `  ${path.relative(rootPath, filePath)}:${lineNumber}: ${
+                        context
+                    }`
                 );
             } else {
                 formattedLines.push(`  ${line}`);
@@ -133,10 +132,10 @@ function formatStack(trace: string) {
 }
 
 /** Add a test which either completes synchronously or returns
-  * a promise.
-  *
-  * See qunit.test()
-  */
+ * a promise.
+ *
+ * See qunit.test()
+ */
 export function addTest(name: string, testFunc: (assert: Assert) => void) {
     testList.push({
         name,
@@ -156,8 +155,8 @@ export function beforeTest(func: (details?: TestStartParams) => void) {
 }
 
 /** Registers a teardown function to be executed once all test cases
-  * have finished.
-  */
+ * have finished.
+ */
 export function teardownSuite(func: () => void) {
     qunit.done(func);
 }
@@ -197,14 +196,14 @@ function requireNodeVersion(version: string) {
 }
 
 /** Start the test suite. The default mode is to run tests added with
-  * addTest().
-  *
-  * The test runner has a command-line parser which provides options
-  * to list available tests, filter which tests are run and adjust
-  * the verbosity of test output.
-  *
-  * @param args Command-line arguments for the test.
-  */
+ * addTest().
+ *
+ * The test runner has a command-line parser which provides options
+ * to list available tests, filter which tests are run and adjust
+ * the verbosity of test output.
+ *
+ * @param args Command-line arguments for the test.
+ */
 export function start(args?: string[]) {
     requireNodeVersion('0.12.0');
 
@@ -262,8 +261,8 @@ export function start(args?: string[]) {
 }
 
 /** Returns the path to a temporary data directory for
-  * use by the current test suite.
-  */
+ * use by the current test suite.
+ */
 export function tempDir() {
     let tmpDir: string;
     if (process.env.TMPDIR) {
@@ -294,7 +293,9 @@ function run(tests: TestCase[]) {
             let message = details.message || 'Assert failed';
             console.log(
                 colors.red(
-                    `ERROR: ${message}, actual: ${details.actual}, expected ${details.expected}`
+                    `ERROR: ${message}, actual: ${details.actual}, expected ${
+                        details.expected
+                    }`
                 )
             );
             if (details.source) {
@@ -374,10 +375,10 @@ export function compareObjects(
 }
 
 /** Check that two objects or arrays are equal.
-  * If the objects or arrays are not equal, print a diff between the two.
-  * If @p properties is specified, only the listed properties are compared
-  * between objects @p a and @p b.
-  */
+ * If the objects or arrays are not equal, print a diff between the two.
+ * If @p properties is specified, only the listed properties are compared
+ * between objects @p a and @p b.
+ */
 export function assertEqual(
     assert: Assert,
     a: any,
@@ -401,9 +402,9 @@ export function assertEqual(
 }
 
 /** Cancel any pending auto-start of the test suite.
-  * This will prevent tests auto-starting after being
-  * added with addTest() or addTest()
-  */
+ * This will prevent tests auto-starting after being
+ * added with addTest() or addTest()
+ */
 export function cancelAutoStart() {
     if (testStartTimer) {
         clearTimeout(testStartTimer);
@@ -412,14 +413,14 @@ export function cancelAutoStart() {
 }
 
 /** Set the global default timeout for individual test cases.
-  */
+ */
 export function setTimeout(timeoutMs: number) {
     qunit.config.testTimeout = timeoutMs;
 }
 
 /** Returns the global default timeout for individual test
-  * cases or undefined to use a default value.
-  */
+ * cases or undefined to use a default value.
+ */
 export function timeout() {
     return qunit.config.testTimeout;
 }

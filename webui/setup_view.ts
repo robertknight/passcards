@@ -164,8 +164,8 @@ interface NavButtonProps extends react.Props<void> {
 }
 
 /** Button displayed at the bottom of the setup view
-  * to go to the previous/next steps.
-  */
+ * to go to the previous/next steps.
+ */
 class NavButton extends react.Component<NavButtonProps, {}> {
     render() {
         return button.ButtonF({
@@ -212,7 +212,7 @@ class CloudStoreList extends react.Component<
                 return;
             }
 
-            var stores = this.state.stores || (<Store[]>[]);
+            var stores = this.state.stores || <Store[]>[];
             stores = stores.concat(
                 files.map(file => {
                     return { path: file.path };
@@ -236,8 +236,9 @@ class CloudStoreList extends react.Component<
             if (this.state.error) {
                 return div(
                     style.mixin(theme.cloudStoreList),
-                    `Unable to search for existing stores: ${this.state.error
-                        .message}`,
+                    `Unable to search for existing stores: ${
+                        this.state.error.message
+                    }`,
                     div(
                         style.mixin(theme.screenButtons),
                         button.ButtonF({
@@ -293,8 +294,8 @@ interface StoreListProps extends react.Props<void> {
 }
 
 /** Displays a list of password stores which have been synced to the
-  * current app.
-  */
+ * current app.
+ */
 class StoreList extends react.Component<StoreListProps, {}> {
     render() {
         var stores: react.ReactElement<any>[] = [];
@@ -316,10 +317,7 @@ class StoreList extends react.Component<StoreListProps, {}> {
                         key: `${cloudService}.${account.id}.${displayPath}`,
                         onClick: () => this.props.onSelectStore(account),
                     }),
-                    div(
-                        style.mixin(theme.storeList.item.path),
-                        displayPath
-                    ),
+                    div(style.mixin(theme.storeList.item.path), displayPath),
                     div(
                         style.mixin(theme.storeList.item.store),
                         `in ${account.name}'s ${cloudService}`
@@ -335,10 +333,7 @@ class StoreList extends react.Component<StoreListProps, {}> {
                     onClick: () => this.props.onAddStore(),
                     key: 'add-store',
                 }),
-                div(
-                    style.mixin(theme.storeList.item.addStore),
-                    'Add Store'
-                ),
+                div(style.mixin(theme.storeList.item.addStore), 'Add Store'),
                 ripple.InkRippleF({})
             )
         );
@@ -498,10 +493,7 @@ class NewStoreForm extends react.Component<
         if (this.state.creatingStore) {
             form = div(
                 style.mixin(theme.newStore),
-                div(
-                    style.mixin(theme.creatingStore.label),
-                    'Creating store...'
-                )
+                div(style.mixin(theme.creatingStore.label), 'Creating store...')
             );
         } else {
             form = this.renderForm();
@@ -574,7 +566,7 @@ function cloudServiceName(cloudService: settings.CloudService) {
 }
 
 /** App setup and onboarding screen.
-  */
+ */
 export class SetupView extends react.Component<SetupViewProps, SetupViewState> {
     constructor(props: SetupViewProps) {
         super(props);
@@ -800,9 +792,9 @@ export class SetupView extends react.Component<SetupViewProps, SetupViewState> {
 
     private renderStoreList() {
         var stores =
-            (<settings.AccountMap>this.props.settings.get(
+            <settings.AccountMap>this.props.settings.get(
                 settings.Setting.Accounts
-            )) || {};
+            ) || {};
         return div(
             {},
             div(style.mixin(theme.header), 'Select Store'),
@@ -860,7 +852,7 @@ export class SetupView extends react.Component<SetupViewProps, SetupViewState> {
 
         var appSettings = this.props.settings;
         var stores =
-            (<settings.AccountMap>appSettings.get(settings.Setting.Accounts)) ||
+            <settings.AccountMap>appSettings.get(settings.Setting.Accounts) ||
             {};
         stores[account.id] = account;
         appSettings.set(settings.Setting.Accounts, stores);

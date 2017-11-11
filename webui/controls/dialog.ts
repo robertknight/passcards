@@ -21,10 +21,10 @@ export interface DialogProps extends TransitionChildProps {
     rejectAction?: Action;
 
     /** Additional styles that are applied to the container of the
-	 * dialog which covers the entire viewport.
-	 *
-	 * This can be used to set the Z index of the dialog for example.
-	 */
+     * dialog which covers the entire viewport.
+     *
+     * This can be used to set the Z index of the dialog for example.
+     */
     containerStyle?: react.CSSProperties;
 }
 
@@ -53,8 +53,8 @@ let theme = style.create(
             // box shadow taken from Angular Material implementation
             boxShadow:
                 '0px 8px 10px -5px rgba(0, 0, 0, 0.14),' +
-                    '0px 16px 24px 2px rgba(0, 0, 0, 0.098),' +
-                    '0px 6px 30px 5px rgba(0, 0, 0, 0.082)',
+                '0px 16px 24px 2px rgba(0, 0, 0, 0.098),' +
+                '0px 6px 30px 5px rgba(0, 0, 0, 0.082)',
 
             opacity: 0.01,
 
@@ -153,11 +153,7 @@ export class Dialog extends react.Component<DialogProps, {}> {
         return div(
             style.mixin(dialogStyles),
             div(style.mixin(theme.contentArea), this.props.children),
-            div(
-                style.mixin(theme.actionsArea),
-                rejectButton,
-                acceptButton
-            )
+            div(style.mixin(theme.actionsArea), rejectButton, acceptButton)
         );
     }
 

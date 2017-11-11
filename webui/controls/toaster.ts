@@ -64,8 +64,8 @@ interface ToasterState {
 }
 
 /** Control for displaying a temporary notification,
-  * with an optional progress indicator.
-  */
+ * with an optional progress indicator.
+ */
 export class Toaster extends react.Component<ToasterProps, ToasterState> {
     constructor(props: ToasterProps) {
         super(props);

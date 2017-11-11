@@ -133,11 +133,11 @@ interface InputForm {
 }
 
 /** Sets up communication between the content script
-  * with access to the DOM of the page that the user
-  * wants to autofill and the main app that stores
-  * login credentials and other items, using @p portRpc
-  * to communicate between the two.
-  */
+ * with access to the DOM of the page that the user
+ * wants to autofill and the main app that stores
+ * login credentials and other items, using @p portRpc
+ * to communicate between the two.
+ */
 export function init(portRpc?: rpc.RpcHandler) {
     // Set of fields returned in the most recent RPC call
     // from the extension to collect the set of fields in the

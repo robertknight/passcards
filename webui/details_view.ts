@@ -376,9 +376,10 @@ export class DetailsView extends react.Component<
                         key: section.name + '.' + field.name,
                         label: field.title,
                         value: field.value,
-                        type: field.kind == item_store.FieldType.Password
-                            ? item_field.FieldType.Password
-                            : item_field.FieldType.Text,
+                        type:
+                            field.kind == item_store.FieldType.Password
+                                ? item_field.FieldType.Password
+                                : item_field.FieldType.Text,
                         clipboard: this.props.clipboard,
                         onChange: newValue => {
                             field.value = newValue;
@@ -396,9 +397,7 @@ export class DetailsView extends react.Component<
                 );
             });
             if (sectionIndex > 0) {
-                sections.push(
-                    div(style.mixin(theme.section.divider))
-                );
+                sections.push(div(style.mixin(theme.section.divider)));
             }
             if (section.title || editing) {
                 if (editing) {
@@ -426,10 +425,7 @@ export class DetailsView extends react.Component<
                     );
                 } else {
                     sections.push(
-                        div(
-                            style.mixin(theme.section.title),
-                            section.title
-                        )
+                        div(style.mixin(theme.section.title), section.title)
                     );
                 }
             }
@@ -743,10 +739,7 @@ export class DetailsView extends react.Component<
             )
         );
 
-        return div(
-            style.mixin(theme.header.toolbar),
-            toolbarControls
-        );
+        return div(style.mixin(theme.header.toolbar), toolbarControls);
     }
 
     private onChangeItem() {

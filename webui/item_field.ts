@@ -84,7 +84,7 @@ export class ItemField extends react.Component<ItemFieldProps, ItemFieldState> {
             this.setState({
                 selected:
                     field.contains(focusedElement) ||
-                        (isSelected && focusedElement.contains(field)),
+                    (isSelected && focusedElement.contains(field)),
             });
         };
         field.ownerDocument.addEventListener(

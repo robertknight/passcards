@@ -47,8 +47,8 @@ export interface ObjectStore {
     remove(key: string): Promise<void>;
 
     /** Iterate over keys in an object store beginning with @p prefix,
-	  * invoking callback() for each match.
-	  */
+     * invoking callback() for each match.
+     */
     iterate<T>(
         prefix: string,
         callback: (key: string, value?: T) => void

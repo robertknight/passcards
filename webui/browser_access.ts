@@ -24,8 +24,8 @@ class ExtensionUrlFetcher {
  */
 export interface ClipboardAccess {
     /** Returns true if the current environment supports interaction
-	 * with the system clipboard.
-	 */
+     * with the system clipboard.
+     */
     clipboardAvailable(): boolean;
     /** Copy data to the system clipboard. */
     copy(mimeType: string, data: string): void;
@@ -50,35 +50,35 @@ export interface TabURLChangeMessage extends BrowserMessage {
  */
 export interface BrowserAccess {
     /** Returns the URI that should be used as the redirect target
-	  * for OAuth authentication requests.
-	  *
-	  * In the Firefox add-on this must be set as redirects
-	  * from external websites back to moz-resource:// URLs are
-	  * disallowed, so a redirect back to a dummy http://
-	  * URL is used, which is intercepted by the add-on.
-	  */
+     * for OAuth authentication requests.
+     *
+     * In the Firefox add-on this must be set as redirects
+     * from external websites back to moz-resource:// URLs are
+     * disallowed, so a redirect back to a dummy http://
+     * URL is used, which is intercepted by the add-on.
+     */
     oauthRedirectUrl(): string;
 
     /** Fetch a list of auto-fillable fields on the current page. */
     findForms(): Promise<forms.FieldGroup[]>;
 
     /** Auto-fill fields on the current page.
-	  * Returns a promise for the number of fields that were auto-filled.
-	  */
+     * Returns a promise for the number of fields that were auto-filled.
+     */
     autofill(fields: forms.AutoFillEntry[]): Promise<number>;
 
     /** Emits notifications about browser events including
-	 * the URL of the current tab changing and
-	 * the extension UI being shown.
-	 */
+     * the URL of the current tab changing and
+     * the extension UI being shown.
+     */
     events: event_stream.EventStream<BrowserMessage>;
 
     /** URL of the active page or tab. */
     currentUrl: string;
 
     /** Interface to retrieve info about URLs associated
-	  * with items.
-	  */
+     * with items.
+     */
     siteInfoProvider(): site_info.SiteInfoProvider;
 
     /** Hide the extension's popup UI. */
@@ -86,19 +86,19 @@ export interface BrowserAccess {
 }
 
 /** Interface exposed by priviledged browser extension code for triggering input field
-  * searches and form autofills on the active tab.
-  *
-  * The extension code communicates back to the unpriviledged front-end
-  * using window.postMessage()
-  */
+ * searches and form autofills on the active tab.
+ *
+ * The extension code communicates back to the unpriviledged front-end
+ * using window.postMessage()
+ */
 export interface ExtensionConnector {
     currentUrl: string;
     oauthRedirectUrl: string;
 }
 
 /** A stub extension connector with no-op findForms()
-  * and autofill() methods.
-  */
+ * and autofill() methods.
+ */
 export class FakeExtensionConnector implements ExtensionConnector {
     currentUrl: string;
     oauthRedirectUrl: string;
@@ -111,10 +111,10 @@ export class FakeExtensionConnector implements ExtensionConnector {
 }
 
 /** Implementation of PageAccess which uses window.postMessage() to
-  * communicate between the UI for an extension and the
-  * priviledged extension code via an ExtensionConnector
-  * which has access to browser tabs etc.
-  */
+ * communicate between the UI for an extension and the
+ * priviledged extension code via an ExtensionConnector
+ * which has access to browser tabs etc.
+ */
 export class ExtensionBrowserAccess implements BrowserAccess {
     private rpc: rpc.RpcHandler;
     private connector: ExtensionConnector;
@@ -141,12 +141,10 @@ export class ExtensionBrowserAccess implements BrowserAccess {
 
         this.rpc.on<void>('pagechanged', (url: string) => {
             this.currentUrl = url;
-            this.events.publish(
-                <TabURLChangeMessage>{
-                    type: MessageType.ActiveTabURLChanged,
-                    url: url,
-                }
-            );
+            this.events.publish(<TabURLChangeMessage>{
+                type: MessageType.ActiveTabURLChanged,
+                url: url,
+            });
         });
         this.rpc.on<void>('show', () => {
             this.events.publish({
@@ -183,14 +181,14 @@ export class ExtensionBrowserAccess implements BrowserAccess {
 }
 
 /** Methods added to the `window` object for notifications
-  * from the popup
-  */
+ * from the popup
+ */
 interface ChromeExtBackgroundWindow extends Window {
     notifyPageChanged(tab: chrome.tabs.Tab): void;
 }
 
 /** Implements BrowserAccess for the Chrome extension.
-  */
+ */
 export class ChromeBrowserAccess implements BrowserAccess {
     private siteInfoService: site_info_service.SiteInfoService;
     private tabPorts: {
@@ -229,12 +227,10 @@ export class ChromeBrowserAccess implements BrowserAccess {
             }
 
             this.currentUrl = currentUrl;
-            this.events.publish(
-                <TabURLChangeMessage>{
-                    type: MessageType.ActiveTabURLChanged,
-                    url: currentUrl,
-                }
-            );
+            this.events.publish(<TabURLChangeMessage>{
+                type: MessageType.ActiveTabURLChanged,
+                url: currentUrl,
+            });
 
             if (currentUrl != '') {
                 // if URL is non-empty, load page script for

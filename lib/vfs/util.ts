@@ -2,8 +2,8 @@ import Path = require('path');
 import vfs = require('./vfs');
 
 /** Utility functions for virtual file system operations,
-  * built on top of the main vfs.VFS interface methods.
-  */
+ * built on top of the main vfs.VFS interface methods.
+ */
 
 /** Remove the directory @p path and all of its contents, if it exists. */
 export function rmrf(fs: vfs.VFS, path: string): Promise<void> {
@@ -78,11 +78,11 @@ export function cp(fs: vfs.VFS, src: vfs.FileInfo, dest: string): Promise<{}> {
 }
 
 /** Search a file system for files whose name matches a given pattern,
-  * using vfs.VFS.list() recursively.
-  *
-  * vfs.VFS.search() should be used by clients instead of this method as
-  * some vfs.VFS implementations may use a faster method.
-  */
+ * using vfs.VFS.list() recursively.
+ *
+ * vfs.VFS.search() should be used by clients instead of this method as
+ * some vfs.VFS implementations may use a faster method.
+ */
 export function searchIn(
     fs: vfs.VFS,
     path: string,
@@ -127,8 +127,8 @@ export function mktemp(
 }
 
 /** Read and parse the contents of a JSON file and return
-  * the result as an object of type T
-  */
+ * the result as an object of type T
+ */
 export function readJSON<T>(fs: vfs.VFS, path: string) {
     return fs.read(path).then(json => <T>JSON.parse(json));
 }

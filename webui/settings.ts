@@ -2,7 +2,9 @@ import event_stream = require('../lib/base/event_stream');
 
 export function accountKey(account: Account) {
     var serviceName = CloudService[account.cloudService];
-    return `${serviceName.toLowerCase()}-${account.cloudAccountId}-${account.storePath}`;
+    return `${serviceName.toLowerCase()}-${account.cloudAccountId}-${
+        account.storePath
+    }`;
 }
 
 export enum CloudService {
@@ -108,9 +110,9 @@ export class LocalStorageStore extends SimpleStore {
 
     private readSettings() {
         var settings =
-            (<SettingsDict>JSON.parse(
+            <SettingsDict>JSON.parse(
                 window.localStorage.getItem(SETTING_KEY)
-            )) || {};
+            ) || {};
 
         // settings migration
         if (Number(settings['Version']) < 1) {

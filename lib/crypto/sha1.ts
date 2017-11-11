@@ -88,11 +88,11 @@ var sha1core = function(stdlib: any, foreign: any, heap: any): any {
             t0 = 0,
             t1 = 0;
 
-        y0 = H[(k + 0) << 2 >> 2] | 0;
-        y1 = H[(k + 1) << 2 >> 2] | 0;
-        y2 = H[(k + 2) << 2 >> 2] | 0;
-        y3 = H[(k + 3) << 2 >> 2] | 0;
-        y4 = H[(k + 4) << 2 >> 2] | 0;
+        y0 = H[((k + 0) << 2) >> 2] | 0;
+        y1 = H[((k + 1) << 2) >> 2] | 0;
+        y2 = H[((k + 2) << 2) >> 2] | 0;
+        y3 = H[((k + 3) << 2) >> 2] | 0;
+        y4 = H[((k + 4) << 2) >> 2] | 0;
 
         for (i = 0; (i | 0) < (k | 0); i = (i + 16) | 0) {
             z0 = y0;
@@ -102,7 +102,7 @@ var sha1core = function(stdlib: any, foreign: any, heap: any): any {
             z4 = y4;
 
             for (j = 0; (j | 0) < 16; j = (j + 1) | 0) {
-                t1 = H[(i + j) << 2 >> 2] | 0;
+                t1 = H[((i + j) << 2) >> 2] | 0;
                 t0 =
                     (((((y0 << 5) | (y0 >>> 27)) + ((y1 & y2) | (~y1 & y3))) |
                         0) +
@@ -113,20 +113,20 @@ var sha1core = function(stdlib: any, foreign: any, heap: any): any {
                 y2 = (y1 << 30) | (y1 >>> 2);
                 y1 = y0;
                 y0 = t0;
-                H[(k + j) << 2 >> 2] = t1;
+                H[((k + j) << 2) >> 2] = t1;
             }
 
             for (j = (k + 16) | 0; (j | 0) < ((k + 20) | 0); j = (j + 1) | 0) {
                 t1 =
-                    ((H[(j - 3) << 2 >> 2] ^
-                        H[(j - 8) << 2 >> 2] ^
-                        H[(j - 14) << 2 >> 2] ^
-                        H[(j - 16) << 2 >> 2]) <<
+                    ((H[((j - 3) << 2) >> 2] ^
+                        H[((j - 8) << 2) >> 2] ^
+                        H[((j - 14) << 2) >> 2] ^
+                        H[((j - 16) << 2) >> 2]) <<
                         1) |
-                    ((H[(j - 3) << 2 >> 2] ^
-                        H[(j - 8) << 2 >> 2] ^
-                        H[(j - 14) << 2 >> 2] ^
-                        H[(j - 16) << 2 >> 2]) >>>
+                    ((H[((j - 3) << 2) >> 2] ^
+                        H[((j - 8) << 2) >> 2] ^
+                        H[((j - 14) << 2) >> 2] ^
+                        H[((j - 16) << 2) >> 2]) >>>
                         31);
                 t0 =
                     (((((y0 << 5) | (y0 >>> 27)) + ((y1 & y2) | (~y1 & y3))) |
@@ -138,20 +138,20 @@ var sha1core = function(stdlib: any, foreign: any, heap: any): any {
                 y2 = (y1 << 30) | (y1 >>> 2);
                 y1 = y0;
                 y0 = t0;
-                H[j << 2 >> 2] = t1;
+                H[(j << 2) >> 2] = t1;
             }
 
             for (j = (k + 20) | 0; (j | 0) < ((k + 40) | 0); j = (j + 1) | 0) {
                 t1 =
-                    ((H[(j - 3) << 2 >> 2] ^
-                        H[(j - 8) << 2 >> 2] ^
-                        H[(j - 14) << 2 >> 2] ^
-                        H[(j - 16) << 2 >> 2]) <<
+                    ((H[((j - 3) << 2) >> 2] ^
+                        H[((j - 8) << 2) >> 2] ^
+                        H[((j - 14) << 2) >> 2] ^
+                        H[((j - 16) << 2) >> 2]) <<
                         1) |
-                    ((H[(j - 3) << 2 >> 2] ^
-                        H[(j - 8) << 2 >> 2] ^
-                        H[(j - 14) << 2 >> 2] ^
-                        H[(j - 16) << 2 >> 2]) >>>
+                    ((H[((j - 3) << 2) >> 2] ^
+                        H[((j - 8) << 2) >> 2] ^
+                        H[((j - 14) << 2) >> 2] ^
+                        H[((j - 16) << 2) >> 2]) >>>
                         31);
                 t0 =
                     (((((y0 << 5) | (y0 >>> 27)) + (y1 ^ y2 ^ y3)) | 0) +
@@ -162,20 +162,20 @@ var sha1core = function(stdlib: any, foreign: any, heap: any): any {
                 y2 = (y1 << 30) | (y1 >>> 2);
                 y1 = y0;
                 y0 = t0;
-                H[j << 2 >> 2] = t1;
+                H[(j << 2) >> 2] = t1;
             }
 
             for (j = (k + 40) | 0; (j | 0) < ((k + 60) | 0); j = (j + 1) | 0) {
                 t1 =
-                    ((H[(j - 3) << 2 >> 2] ^
-                        H[(j - 8) << 2 >> 2] ^
-                        H[(j - 14) << 2 >> 2] ^
-                        H[(j - 16) << 2 >> 2]) <<
+                    ((H[((j - 3) << 2) >> 2] ^
+                        H[((j - 8) << 2) >> 2] ^
+                        H[((j - 14) << 2) >> 2] ^
+                        H[((j - 16) << 2) >> 2]) <<
                         1) |
-                    ((H[(j - 3) << 2 >> 2] ^
-                        H[(j - 8) << 2 >> 2] ^
-                        H[(j - 14) << 2 >> 2] ^
-                        H[(j - 16) << 2 >> 2]) >>>
+                    ((H[((j - 3) << 2) >> 2] ^
+                        H[((j - 8) << 2) >> 2] ^
+                        H[((j - 14) << 2) >> 2] ^
+                        H[((j - 16) << 2) >> 2]) >>>
                         31);
                 t0 =
                     (((((y0 << 5) | (y0 >>> 27)) +
@@ -188,20 +188,20 @@ var sha1core = function(stdlib: any, foreign: any, heap: any): any {
                 y2 = (y1 << 30) | (y1 >>> 2);
                 y1 = y0;
                 y0 = t0;
-                H[j << 2 >> 2] = t1;
+                H[(j << 2) >> 2] = t1;
             }
 
             for (j = (k + 60) | 0; (j | 0) < ((k + 80) | 0); j = (j + 1) | 0) {
                 t1 =
-                    ((H[(j - 3) << 2 >> 2] ^
-                        H[(j - 8) << 2 >> 2] ^
-                        H[(j - 14) << 2 >> 2] ^
-                        H[(j - 16) << 2 >> 2]) <<
+                    ((H[((j - 3) << 2) >> 2] ^
+                        H[((j - 8) << 2) >> 2] ^
+                        H[((j - 14) << 2) >> 2] ^
+                        H[((j - 16) << 2) >> 2]) <<
                         1) |
-                    ((H[(j - 3) << 2 >> 2] ^
-                        H[(j - 8) << 2 >> 2] ^
-                        H[(j - 14) << 2 >> 2] ^
-                        H[(j - 16) << 2 >> 2]) >>>
+                    ((H[((j - 3) << 2) >> 2] ^
+                        H[((j - 8) << 2) >> 2] ^
+                        H[((j - 14) << 2) >> 2] ^
+                        H[((j - 16) << 2) >> 2]) >>>
                         31);
                 t0 =
                     (((((y0 << 5) | (y0 >>> 27)) + (y1 ^ y2 ^ y3)) | 0) +
@@ -212,7 +212,7 @@ var sha1core = function(stdlib: any, foreign: any, heap: any): any {
                 y2 = (y1 << 30) | (y1 >>> 2);
                 y1 = y0;
                 y0 = t0;
-                H[j << 2 >> 2] = t1;
+                H[(j << 2) >> 2] = t1;
             }
 
             y0 = (y0 + z0) | 0;
@@ -233,13 +233,13 @@ var sha1core = function(stdlib: any, foreign: any, heap: any): any {
 };
 
 /** Generic cryptographic hash interface.
-  *
-  * The hash() function takes a typed array
-  * as input and writes the result to a typed array output buffer
-  * to avoid allocating a new buffer on each call, this improves
-  * performance when using the same hashing function large numbers
-  * of times on short inputs, as is the case in PBKDF2 for example.
-  */
+ *
+ * The hash() function takes a typed array
+ * as input and writes the result to a typed array output buffer
+ * to avoid allocating a new buffer on each call, this improves
+ * performance when using the same hashing function large numbers
+ * of times on short inputs, as is the case in PBKDF2 for example.
+ */
 export interface Hash {
     hash(src: Uint8Array, digest: Int32Array): void;
     blockSize(): number;

@@ -87,9 +87,9 @@ export class FieldMatch {
 }
 
 /** Returns true if an item matches a given @p pattern.
-  *
-  * Looks for matches in the title, ID and location of the item.
-  */
+ *
+ * Looks for matches in the title, ID and location of the item.
+ */
 export function matchItem(item: item_store.Item, pattern: string): boolean {
     var tokens = stringutil.parseCommandLine(pattern).map(token => {
         return token.toLowerCase();
@@ -170,9 +170,9 @@ function urlScore(itemUrl: string, url: string) {
 }
 
 /** Returns a score indicating the relevance of an item to a URL.
-  * A positive (> 0) score indicates some relevance. A zero or negative
-  * score indicates no match.
-  */
+ * A positive (> 0) score indicates some relevance. A zero or negative
+ * score indicates no match.
+ */
 export function itemUrlScore(item: item_store.Item, url: string) {
     var maxScore = 0;
     item.locations.forEach(itemUrl => {

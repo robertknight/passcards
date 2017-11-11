@@ -55,11 +55,11 @@ var fieldTypeCodeMap = new collectionutil.BiDiMap<
     .add(item_store.FormFieldType.Input, 'I');
 
 /** Default number of iterations to use in the PBKDF2 password
-  * stretching function used to secure the master key.
-  *
-  * The default value was taken from a recent version of
-  * the official 1Password v4 app for Mac (13/05/14)
-  */
+ * stretching function used to secure the master key.
+ *
+ * The default value was taken from a recent version of
+ * the official 1Password v4 app for Mac (13/05/14)
+ */
 export var DEFAULT_VAULT_PASS_ITERATIONS = 80000;
 
 // TODO: 'SL5' is the default and only used value for items
@@ -70,8 +70,8 @@ export var DEFAULT_VAULT_PASS_ITERATIONS = 80000;
 var DEFAULT_AGILEKEYCHAIN_SECURITY_LEVEL = 'SL5';
 
 /** Convert an item to JSON data for serialization in a .1password file.
-  * @p encryptedData is the encrypted version of the item's content.
-  */
+ * @p encryptedData is the encrypted version of the item's content.
+ */
 export function toAgileKeychainItem(
     item: item_store.Item,
     encryptedData: string
@@ -95,10 +95,10 @@ export function toAgileKeychainItem(
 }
 
 /** Parses an item_store.Item from JSON data in a .1password file.
-  *
-  * The item content is initially encrypted. The decrypted
-  * contents can be retrieved using getContent()
-  */
+ *
+ * The item content is initially encrypted. The decrypted
+ * contents can be retrieved using getContent()
+ */
 export function fromAgileKeychainItem(
     vault: Vault,
     data: agile_keychain_entries.Item
@@ -156,8 +156,8 @@ export function fromAgileKeychainField(
 }
 
 /** Convert an item_store.ItemContent entry into a `contents` blob for storage in
-  * a 1Password item.
-  */
+ * a 1Password item.
+ */
 function toAgileKeychainContent(
     content: item_store.ItemContent
 ): agile_keychain_entries.ItemContent {
@@ -188,8 +188,8 @@ function toAgileKeychainContent(
 }
 
 /** Convert a decrypted JSON `contents` blob from a 1Password item
-  * into an item_store.ItemContent instance.
-  */
+ * into an item_store.ItemContent instance.
+ */
 function fromAgileKeychainContent(
     data: agile_keychain_entries.ItemContent
 ): item_store.ItemContent {
@@ -239,16 +239,17 @@ function toAgileKeychainSection(
 }
 
 /** Convert a section entry from the JSON contents blob for
-  * an item into an item_store.ItemSection instance.
-  */
+ * an item into an item_store.ItemSection instance.
+ */
 function fromAgileKeychainSection(
     data: agile_keychain_entries.ItemSection
 ): item_store.ItemSection {
     return {
         name: data.name,
         title: data.title,
-        fields: (data.fields || [])
-            .map(fieldData => fromAgileKeychainField(fieldData)),
+        fields: (data.fields || []).map(fieldData =>
+            fromAgileKeychainField(fieldData)
+        ),
     };
 }
 
@@ -313,9 +314,9 @@ export class Vault implements item_store.Store {
     onItemUpdated: event_stream.EventStream<item_store.Item>;
 
     /** Setup a vault which is stored at @p path in a filesystem.
-	  * @p fs is the filesystem interface through which the
-	  * files that make up the vault are accessed.
-	  */
+     * @p fs is the filesystem interface through which the
+     * files that make up the vault are accessed.
+     */
     constructor(fs: vfs.VFS, path: string, agent?: key_agent.KeyAgent) {
         this.fs = fs;
         this.path = path;
@@ -390,22 +391,22 @@ export class Vault implements item_store.Store {
     }
 
     /** Unlock the vault using the given master password.
-	  * This must be called before item contents can be decrypted.
-	  */
+     * This must be called before item contents can be decrypted.
+     */
     unlock(pwd: string): Promise<void> {
         return item_store.unlockStore(this, this.keyAgent, pwd);
     }
 
     /** Lock the vault. This discards decrypted master keys for the vault
-	  * created via a call to unlock()
-	  */
+     * created via a call to unlock()
+     */
     lock(): Promise<void> {
         return this.keyAgent.forgetKeys();
     }
 
     /** Returns true if the vault was successfully unlocked using unlock().
-	  * Only once the vault is unlocked can item contents be retrieved using item_store.Item.getContents()
-	  */
+     * Only once the vault is unlocked can item contents be retrieved using item_store.Item.getContents()
+     */
     isLocked(): Promise<boolean> {
         var keyIDs = this.keyAgent.listKeys();
         var keyEntries = this.getKeys();
@@ -426,8 +427,8 @@ export class Vault implements item_store.Store {
     }
 
     /** Returns the path to the file containing the encrypted data
-	  * for an item.
-	  */
+     * for an item.
+     */
     itemPath(uuid: string): string {
         return Path.join(this.path, 'data/default/' + uuid + '.1password');
     }
@@ -659,8 +660,8 @@ export class Vault implements item_store.Store {
     }
 
     /** Returns a list of overview data for all items in the vault,
-	  * and tombstone markers for deleted items.
-	  */
+     * and tombstone markers for deleted items.
+     */
     async listItems(
         opts: item_store.ListItemsOptions = {}
     ): Promise<item_store.Item[]> {
@@ -744,16 +745,16 @@ export class Vault implements item_store.Store {
     }
 
     /** Change the master password for the vault.
-	  *
-	  * This decrypts the existing master key and re-encrypts it with @p newPass.
-	  *
-	  * @param oldPass The current password for the vault
-	  * @param newPass The new password for the vault
-	  * @param newPassHint The user-provided hint for the new password
-	  * @param iterations The number of iterations of the key derivation function
-	  *  to use when generating an encryption key from @p newPass. If not specified,
-	  *  use the same number of iterations as the existing key.
-	  */
+     *
+     * This decrypts the existing master key and re-encrypts it with @p newPass.
+     *
+     * @param oldPass The current password for the vault
+     * @param newPass The new password for the vault
+     * @param newPassHint The user-provided hint for the new password
+     * @param iterations The number of iterations of the key derivation function
+     *  to use when generating an encryption key from @p newPass. If not specified,
+     *  use the same number of iterations as the existing key.
+     */
     async changePassword(
         oldPass: string,
         newPass: string,
@@ -826,8 +827,8 @@ export class Vault implements item_store.Store {
     }
 
     /** Initialize a new empty vault in @p path with
-	  * a given master @p password.
-	  */
+     * a given master @p password.
+     */
     static async createVault(
         fs: vfs.VFS,
         path: string,

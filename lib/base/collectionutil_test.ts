@@ -3,7 +3,10 @@ import testLib = require('../test');
 
 testLib.addTest('add/fetch keys', assert => {
     var map = new collectionutil.BiDiMap<number, string>();
-    map.add(1, 'one').add(2, 'two').add(3, 'three');
+    map
+        .add(1, 'one')
+        .add(2, 'two')
+        .add(3, 'three');
 
     assert.equal(map.get(1), 'one');
     assert.equal(map.get(3), 'three');
@@ -38,27 +41,24 @@ type KeyValueMap = { [index: string]: number };
 testLib.addTest('batched updates', assert => {
     var savedItems: KeyValueMap = {};
 
-    var queue = new collectionutil.BatchedUpdateQueue<
-        KeyValue
-    >((updates: KeyValue[]) => {
-        updates.forEach(pair => {
-            savedItems[pair.key] = pair.value;
-        });
-        return Promise.resolve<void>(null);
-    });
+    var queue = new collectionutil.BatchedUpdateQueue<KeyValue>(
+        (updates: KeyValue[]) => {
+            updates.forEach(pair => {
+                savedItems[pair.key] = pair.value;
+            });
+            return Promise.resolve<void>(null);
+        }
+    );
 
     var update1 = queue.push({ key: 'one', value: 1 });
     var update2 = queue.push({ key: 'one', value: 2 });
     var update3 = queue.push({ key: 'two', value: 3 });
 
     return Promise.all([update1, update2, update3]).then(() => {
-        assert.deepEqual(
-            savedItems,
-            <KeyValueMap>{
-                one: 2,
-                two: 3,
-            }
-        );
+        assert.deepEqual(savedItems, <KeyValueMap>{
+            one: 2,
+            two: 3,
+        });
     });
 });
 

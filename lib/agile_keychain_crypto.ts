@@ -19,12 +19,12 @@ export class SaltedCipherText {
 }
 
 /** Generate encryption keys for an Agile Keychain vault from
-  * a given password.
-  *
-  * This function generates a new random 1024-byte encryption key
-  * for a vault and encrypts it using a key derived from @p password
-  * using @p passIterations iterations of PBKDF2.
-  */
+ * a given password.
+ *
+ * This function generates a new random 1024-byte encryption key
+ * for a vault and encrypts it using a key derived from @p password
+ * using @p passIterations iterations of PBKDF2.
+ */
 export function generateMasterKey(
     password: string,
     passIterations: number
@@ -63,8 +63,8 @@ export function extractSaltAndCipherText(input: string): SaltedCipherText {
 }
 
 /** Derives an AES-128 key and initialization vector from a key of arbitrary length and salt
-  * using.
-  */
+ * using.
+ */
 export async function openSSLKey(
     cryptoImpl: Crypto,
     password: string,
@@ -107,39 +107,42 @@ export async function decryptAgileKeychainItemData(
 }
 
 /** Generate a V4 (random) UUID string in the form used
-  * by items in an Agile Keychain:
-  * - There are no hyphen separators between parts of the UUID
-  * - All chars are upper case
-  */
+ * by items in an Agile Keychain:
+ * - There are no hyphen separators between parts of the UUID
+ * - All chars are upper case
+ */
 export function newUUID(): string {
-    return uuid.v4().toUpperCase().replace(/-/g, '');
+    return uuid
+        .v4()
+        .toUpperCase()
+        .replace(/-/g, '');
 }
 
 /**
-  * Crypto is an interface to common crypto algorithms required to decrypt
-  * Agile Keychain vaults.
-  *
-  * All string parameters and return values are binary strings.
-  */
+ * Crypto is an interface to common crypto algorithms required to decrypt
+ * Agile Keychain vaults.
+ *
+ * All string parameters and return values are binary strings.
+ */
 export interface Crypto {
     /**
-	  * Decrypt @p cipherText using AES-CBC-128 with the given key and initialization vector.
-	  *
-	  * This *may* throw an exception if the key or initialization vector are incorrect.
-	  */
+     * Decrypt @p cipherText using AES-CBC-128 with the given key and initialization vector.
+     *
+     * This *may* throw an exception if the key or initialization vector are incorrect.
+     */
     aesCbcDecrypt(key: string, cipherText: string, iv: string): Promise<string>;
 
     /**
-	  * Encrypt `plainText` using AES-CBC-128 with the given key and initialization vector.
-	  *
-	  * This *may* throw an exception if the key or initialization vector are invalid.
-	  */
+     * Encrypt `plainText` using AES-CBC-128 with the given key and initialization vector.
+     *
+     * This *may* throw an exception if the key or initialization vector are invalid.
+     */
     aesCbcEncrypt(key: string, plainText: string, iv: string): Promise<string>;
 
     /**
-	  * Derive a key of length @p keyLen from a password using @p iterCount iterations
-	  * of PBKDF2
-	  */
+     * Derive a key of length @p keyLen from a password using @p iterCount iterations
+     * of PBKDF2
+     */
     pbkdf2(
         masterPwd: string,
         salt: string,
@@ -222,9 +225,9 @@ if (typeof window !== 'undefined' && window.crypto) {
 }
 
 /**
-  * Implements the Crypto interface using the Web Cryptography API
-  * See https://www.w3.org/TR/WebCryptoAPI/
-  */
+ * Implements the Crypto interface using the Web Cryptography API
+ * See https://www.w3.org/TR/WebCryptoAPI/
+ */
 class WebCrypto implements Crypto {
     private crypto: SubtleCrypto;
 

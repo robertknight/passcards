@@ -49,17 +49,19 @@ let testModules = [
 // defer autostart until test modules have been required
 testLib.cancelAutoStart();
 
-setupDOM().then(() => {
-    testModules.forEach(testModule => {
-        try {
-            require(testModule);
-        } catch (err) {
-            console.error('Failed to load test module %s: ', testModule);
-            console.error(err.stack);
-        }
+setupDOM()
+    .then(() => {
+        testModules.forEach(testModule => {
+            try {
+                require(testModule);
+            } catch (err) {
+                console.error('Failed to load test module %s: ', testModule);
+                console.error(err.stack);
+            }
+        });
+        testLib.start();
+    })
+    .catch(err => {
+        console.error('UI test setup failed', err);
+        throw err;
     });
-    testLib.start();
-}).catch(err => {
-    console.error('UI test setup failed', err);
-    throw err;
-});

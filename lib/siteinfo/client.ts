@@ -13,7 +13,10 @@ import site_info = require('./site_info');
 export var DEFAULT_PASSCARDS_SERVICE_URL =
     'https://passcards-robknight.rhcloud.com';
 
-type HttpGetFn = (url: string, opts?: http_client.RequestOptions) => Promise<http_client.Reply>;
+type HttpGetFn = (
+    url: string,
+    opts?: http_client.RequestOptions
+) => Promise<http_client.Reply>;
 
 function createQueryResult(
     url: string,
@@ -35,8 +38,10 @@ export class PasscardsClient implements site_info.SiteInfoProvider {
 
     updated: event_stream.EventStream<string>;
 
-    constructor(serviceHost: string = DEFAULT_PASSCARDS_SERVICE_URL,
-                httpGetter: HttpGetFn = http_client.get) {
+    constructor(
+        serviceHost: string = DEFAULT_PASSCARDS_SERVICE_URL,
+        httpGetter: HttpGetFn = http_client.get
+    ) {
         this.cache = new Map<string, site_info.QueryResult>();
         this.rootUrl = serviceHost;
         this.updated = new event_stream.EventStream<string>();
@@ -100,11 +105,13 @@ export class PasscardsClient implements site_info.SiteInfoProvider {
                         })
                     );
                 });
-                Promise.all(pendingIcons).catch(() => {}).then(() => {
-                    let entry = this.cache.get(domain);
-                    entry.state = site_info.QueryState.Ready;
-                    this.updated.publish(url);
-                });
+                Promise.all(pendingIcons)
+                    .catch(() => {})
+                    .then(() => {
+                        let entry = this.cache.get(domain);
+                        entry.state = site_info.QueryState.Ready;
+                        this.updated.publish(url);
+                    });
             })
             .catch(err => {
                 console.error(
@@ -135,13 +142,15 @@ export class PasscardsClient implements site_info.SiteInfoProvider {
         let url = `${this.rootUrl}/siteinfo/${domain}?timeout=${TIMEOUT}`;
         return this.httpGetter(url).then(reply => {
             if (reply.status === 200) {
-                return Promise.resolve(
-                    <client_api.LookupResponse>JSON.parse(reply.body)
-                );
+                return Promise.resolve(<client_api.LookupResponse>JSON.parse(
+                    reply.body
+                ));
             } else {
                 return Promise.reject<client_api.LookupResponse>(
                     new Error(
-                        `Failed to query site icons for ${domain}: ${reply.status}`
+                        `Failed to query site icons for ${domain}: ${
+                            reply.status
+                        }`
                     )
                 );
             }

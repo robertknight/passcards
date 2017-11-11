@@ -5,8 +5,8 @@
 // different JS environments
 
 /** Returns true if running in a main browser
-  * environment with DOM access.
-  */
+ * environment with DOM access.
+ */
 export function isBrowser() {
     // when using jsdom for UI testing, global.{window, navigator, document}
     // are defined for the benefit of libraries like React
@@ -18,24 +18,24 @@ export function isBrowser() {
 }
 
 /** Returns true if running from within NodeJS
-  * (or a compatible environment)
-  */
+ * (or a compatible environment)
+ */
 export function isNodeJS() {
     return typeof process === 'object' && process.version;
 }
 
-declare function importScripts(...urls: string[]): void
+declare function importScripts(...urls: string[]): void;
 
 /** Returns true if running from a Web Worker context
-  * in a browser (or a compatible environment)
-  */
+ * in a browser (or a compatible environment)
+ */
 export function isWebWorker() {
     return typeof importScripts != 'undefined';
 }
 
 /** Returns true if running as a content or
-  * background script in a Google Chrome extension
-  */
+ * background script in a Google Chrome extension
+ */
 export function isChromeExtension() {
     return (
         isBrowser() &&
@@ -45,9 +45,9 @@ export function isChromeExtension() {
 }
 
 /** Returns true if (probably) running on a touch-screen device.
-  *
-  * See http://ctrlq.org/code/19616-detect-touch-screen-javascript
-  */
+ *
+ * See http://ctrlq.org/code/19616-detect-touch-screen-javascript
+ */
 export function isTouchDevice() {
     if (!isBrowser()) {
         return false;

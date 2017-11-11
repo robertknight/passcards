@@ -172,10 +172,7 @@ export class Item extends react.Component<ItemProps, {}> {
     render() {
         var focusIndicator: react.ReactElement<any>;
         if (this.props.isFocused) {
-            focusIndicator = div(
-                style.mixin(theme.item.focusIndicator),
-                '>'
-            );
+            focusIndicator = div(style.mixin(theme.item.focusIndicator), '>');
         }
 
         // positioning a rendered item within its parent list could be
@@ -431,7 +428,7 @@ class ItemList extends react.Component<ItemListProps, ItemListState> {
                 top: itemList.scrollTop,
                 bottom:
                     itemList.scrollTop +
-                        itemList.getBoundingClientRect().height,
+                    itemList.getBoundingClientRect().height,
             };
 
             for (var i = 0; i < matchingItems.length; i++) {

@@ -28,13 +28,16 @@ function parseHash(hash: string): ParamsDict {
         .slice(1) // trim leading '#'
         .split('&')
         .map(splitHashParam)
-        .reduce((obj: ParamsDict, [key, value]: [string, string]) => {
-            // the Dropbox OAuth endpoint will URI encode any chars in the
-            // 'state' query string parameter passed to the OAuth /authorize
-            // endpoint, so decode them here
-            obj[key] = decodeURIComponent(value);
-            return obj;
-        }, <ParamsDict>{});
+        .reduce(
+            (obj: ParamsDict, [key, value]: [string, string]) => {
+                // the Dropbox OAuth endpoint will URI encode any chars in the
+                // 'state' query string parameter passed to the OAuth /authorize
+                // endpoint, so decode them here
+                obj[key] = decodeURIComponent(value);
+                return obj;
+            },
+            <ParamsDict>{}
+        );
 }
 
 // store the access token in local storage for the main UI to pick up.

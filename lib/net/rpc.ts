@@ -1,72 +1,72 @@
 /** 'rpc' provides a portable abstraction layer for communicating between
-  * different JavaScript contexts, such as:
-  *
-  * - Browser extension interfaces and content scripts
-  * - Web workers and the main thread
-  * - Different Window objects
-  *
-  * The different contexts communicate with each other via
-  * MessagePort implementations. A MessagePort implementation
-  * must provide two basic methods,
-  * emit() to send messages to the communication channel and on()
-  * to register a handler to be invoked when a message is received.
-  *
-  * Several MessagePort implementations are provided:
-  *
-  * - WorkerMessagePort class implements MessagePort using
-  *   Window.postMessage() and Window.addEventListener('message', ...)
-  *   and can be used for worker <-> main thread communications.
-  * - WindowMessagePort is similar to WorkerMessagePort but is used
-  *   for inter-Window communications.
-  * - ChromeMessagePort handles communication between background pages
-  *   and content scripts in Chrome extensions via chrome.runtime methods.
-  *
-  * On top of the MessagePort abstraction, the RpcHandler class
-  * provides an RPC implementation for making method calls and
-  * receiving the response asynchronously.
-  *
-  * Here is an example of using 'rpc' to simplify communications between
-  * a web worker and the main page of an application:
-  *
-  *   // in main page
-  *   var workerPort = new WorkerMessagePort(worker, 'worker', 'main');
-  *   var workerRpc = new rpc.RpcHandler(workerPort);
-  *
-  *   workerRpc.call('do-some-work', function(err, result) {
-  *     ...
-  *   });
-  *
-  *   // in web worker
-  *   var mainPort = new WorkerMessagePort(self, 'main', 'worker');
-  *   var mainRpc = new rpc.RpcHandler(mainPort);
-  *
-  *   mainRpc.on('do-some-work', function(input) {
-  *    // do something expensive
-  *    return result;
-  *   });
-  *
-  * This module uses callbacks rather than promises for portability
-  * between different Javascript environments (standard browser
-  * context, web workers, priviledged extension scripts, sandboxed
-  * 'content' scripts in browser extensions etc.)
-  */
+ * different JavaScript contexts, such as:
+ *
+ * - Browser extension interfaces and content scripts
+ * - Web workers and the main thread
+ * - Different Window objects
+ *
+ * The different contexts communicate with each other via
+ * MessagePort implementations. A MessagePort implementation
+ * must provide two basic methods,
+ * emit() to send messages to the communication channel and on()
+ * to register a handler to be invoked when a message is received.
+ *
+ * Several MessagePort implementations are provided:
+ *
+ * - WorkerMessagePort class implements MessagePort using
+ *   Window.postMessage() and Window.addEventListener('message', ...)
+ *   and can be used for worker <-> main thread communications.
+ * - WindowMessagePort is similar to WorkerMessagePort but is used
+ *   for inter-Window communications.
+ * - ChromeMessagePort handles communication between background pages
+ *   and content scripts in Chrome extensions via chrome.runtime methods.
+ *
+ * On top of the MessagePort abstraction, the RpcHandler class
+ * provides an RPC implementation for making method calls and
+ * receiving the response asynchronously.
+ *
+ * Here is an example of using 'rpc' to simplify communications between
+ * a web worker and the main page of an application:
+ *
+ *   // in main page
+ *   var workerPort = new WorkerMessagePort(worker, 'worker', 'main');
+ *   var workerRpc = new rpc.RpcHandler(workerPort);
+ *
+ *   workerRpc.call('do-some-work', function(err, result) {
+ *     ...
+ *   });
+ *
+ *   // in web worker
+ *   var mainPort = new WorkerMessagePort(self, 'main', 'worker');
+ *   var mainRpc = new rpc.RpcHandler(mainPort);
+ *
+ *   mainRpc.on('do-some-work', function(input) {
+ *    // do something expensive
+ *    return result;
+ *   });
+ *
+ * This module uses callbacks rather than promises for portability
+ * between different Javascript environments (standard browser
+ * context, web workers, priviledged extension scripts, sandboxed
+ * 'content' scripts in browser extensions etc.)
+ */
 
 /** Client provides a call() method to invoke an RPC
-  * call asynchronously on a 'server' and receive the result
-  * back via a callback.
-  */
+ * call asynchronously on a 'server' and receive the result
+ * back via a callback.
+ */
 export interface Client {
     /** Invoke an RPC call and invoke callback with the results.
-	  * The values in the arguments array are passed to handler registered
-	  * with Server.on() for the given method.
-	  *
-	  * The optional timeout specifies the time interval within which
-	  * a reply should be received if @p callback is specified.
-	  *
-	  * If no reply is received within the timeout, @p callback is invoked
-	  * with a timeout error. If @p timeout is null, a default timeout
-	  * is used.
-	  */
+     * The values in the arguments array are passed to handler registered
+     * with Server.on() for the given method.
+     *
+     * The optional timeout specifies the time interval within which
+     * a reply should be received if @p callback is specified.
+     *
+     * If no reply is received within the timeout, @p callback is invoked
+     * with a timeout error. If @p timeout is null, a default timeout
+     * is used.
+     */
     call<R>(
         method: string,
         args: any[],
@@ -76,21 +76,21 @@ export interface Client {
 }
 
 /** Provides an interface for handling an RPC call.
-  */
+ */
 export interface Server {
     /** Register a synchronous RPC handler. If a client runs Client.call() with
-	  * a matching the method name, @p handler will be invoked with the supplied
-	  * arguments. Any exception thrown will be converted to an error returned
-	  * via the callback passed to Client.call()
-	  */
+     * a matching the method name, @p handler will be invoked with the supplied
+     * arguments. Any exception thrown will be converted to an error returned
+     * via the callback passed to Client.call()
+     */
     on<R>(method: string, handler: (...args: any[]) => R): void;
     /** Register an async RPC handler. This is similar to on() except that
-	  * instead of returning a value or throwing an exception, onAsync()
-	  * should call done() with the error or result when finished.
-	  *
-	  * If the handler throws an exception directly, that is equivalent to
-	  * calling done() with the exception.
-	  */
+     * instead of returning a value or throwing an exception, onAsync()
+     * should call done() with the error or result when finished.
+     *
+     * If the handler throws an exception directly, that is equivalent to
+     * calling done() with the exception.
+     */
     onAsync<R>(
         method: string,
         handler: (done: (err: any, result: R) => void, ...args: any[]) => void
@@ -112,8 +112,8 @@ export interface ReplyMessage extends Message {
 }
 
 /** Interface for sending and receiving messages to/from a remote
-  * object such as a window or web worker.
-  */
+ * object such as a window or web worker.
+ */
 export interface MessagePort<Call, Reply> {
     on(method: string, handler: Function): void;
     on(method: 'rpc-call', handler: (call: Call) => void): void;
@@ -125,8 +125,8 @@ export interface MessagePort<Call, Reply> {
 }
 
 /** Subset of the DOM Window interface related to sending and receiving
-  * messages to/from other windows.
-  */
+ * messages to/from other windows.
+ */
 export interface WindowMessageInterface {
     addEventListener(
         event: string,
@@ -140,14 +140,14 @@ export interface WindowMessageInterface {
 }
 
 /** A MessagePort implementation which uses the Window.postMessage() and
-  * Window.addEventListener() APIs for use with RpcHandler.
-  *
-  * A WindowMessagePort has a send-tag and a receive-tag.
-  * The send-tag is included with all messages emitted via emit().
-  *
-  * The port will only invoke handlers passed to on() if the message's
-  * tag matches the WindowMessagePort's receive-tag.
-  */
+ * Window.addEventListener() APIs for use with RpcHandler.
+ *
+ * A WindowMessagePort has a send-tag and a receive-tag.
+ * The send-tag is included with all messages emitted via emit().
+ *
+ * The port will only invoke handlers passed to on() if the message's
+ * tag matches the WindowMessagePort's receive-tag.
+ */
 export class WindowMessagePort {
     constructor(
         public window: WindowMessageInterface,
@@ -251,16 +251,16 @@ interface PendingRpcCall {
 }
 
 /** Interface for object providing timer APIs, which may
-  * either be 'window' (in a browser context) or 'global' (in Node).
-  */
+ * either be 'window' (in a browser context) or 'global' (in Node).
+ */
 interface Timers {
     setTimeout(callback: () => void, ms: number): any;
     clearTimeout(id: any): void;
 }
 
 /** Simple RPC implementation. RpcHandler implements both the
-  * client and server-sides of an RPC handler.
-  */
+ * client and server-sides of an RPC handler.
+ */
 export class RpcHandler implements Client, Server {
     private id: number;
     private pending: PendingRpcCall[];
@@ -273,14 +273,14 @@ export class RpcHandler implements Client, Server {
     private timers: Timers;
 
     /** A handler responsible for performing any special copying
-	  * of method arguments or replies needed before the data
-	  * is sent to the message port.
-	  */
+     * of method arguments or replies needed before the data
+     * is sent to the message port.
+     */
     clone: (data: any) => any;
 
     /** Construct an RPC handler which uses @p port to send and receive
-	  * messages to/from the other side of the connection.
-	  */
+     * messages to/from the other side of the connection.
+     */
     constructor(port: MessagePort<CallMessage, ReplyMessage>, timers?: Timers) {
         this.port = port;
 
@@ -380,7 +380,9 @@ export class RpcHandler implements Client, Server {
             pending.replyTimerId = this.timers.setTimeout(() => {
                 callback(
                     new Error(
-                        `RPC call ${method} did not receive a reply within ${timeout} ms`
+                        `RPC call ${method} did not receive a reply within ${
+                            timeout
+                        } ms`
                     ),
                     null
                 );

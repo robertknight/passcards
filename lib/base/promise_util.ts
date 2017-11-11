@@ -30,8 +30,8 @@ export function nodeResolver<T>(d: Deferred<T>): (err: any, result: T) => void {
 }
 
 /**
-  * Return a Promise which resolves with `value` after `ms` milliseconds.
-  */
+ * Return a Promise which resolves with `value` after `ms` milliseconds.
+ */
 export function delay<T>(value: T, ms: number) {
     return new Promise<T>(resolve => setTimeout(() => resolve(value), ms));
 }

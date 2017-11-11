@@ -205,14 +205,14 @@ export class Client implements vfs.VFS {
 
 export interface ServerOptions {
     /** Specifies whether HTTP calls must be authenticated via
-	  * an Authentication header.
-	  */
+     * an Authentication header.
+     */
     requireAuthentication?: boolean;
 }
 
 /** Exposes an existing file system (eg. a local file system)
-  * via a REST API for use with HttpVFS
-  */
+ * via a REST API for use with HttpVFS
+ */
 export class Server {
     fs: vfs.VFS;
     server: http.Server;
@@ -265,7 +265,9 @@ Authorize app?
 <button id="authButton">Authorize</button>
 <script>
 document.getElementById('authButton').addEventListener('click', function() {
-	document.location.href = '${redirectURL}#access_token=${accessToken}${stateParam}';
+	document.location.href = '${redirectURL}#access_token=${accessToken}${
+                    stateParam
+                }';
 });
 </script>
 </form>

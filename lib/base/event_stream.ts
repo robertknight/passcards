@@ -11,8 +11,8 @@ export class EventStream<T> {
     private listeners: Array<ListenerAndContext<T>>;
 
     /** Maximum number of listeners for this event. If the number
-	  * of listeners exceeds this value, a warning will be displayed.
-	  */
+     * of listeners exceeds this value, a warning will be displayed.
+     */
     maxListeners: number;
 
     constructor() {
@@ -21,15 +21,15 @@ export class EventStream<T> {
     }
 
     /** Register a new listener for events published on this stream.
-	  *
-	  * Listeners may optionally be associated with a @p context object
-	  * which is unique amongst all listeners.
-	  *
-	  * If a context is provided, any existing listeners associated with
-	  * the same context will be removed before the new listener is added.
-	  *
-	  * Listeners are invoked in the order they were registered.
-	  */
+     *
+     * Listeners may optionally be associated with a @p context object
+     * which is unique amongst all listeners.
+     *
+     * If a context is provided, any existing listeners associated with
+     * the same context will be removed before the new listener is added.
+     *
+     * Listeners are invoked in the order they were registered.
+     */
     listen(callback: EventListener<T>, context?: any): EventListener<T> {
         if (this.listeners.length >= this.maxListeners) {
             // if the number of listeners for a single event stream grows large,
@@ -54,8 +54,8 @@ export class EventStream<T> {
     }
 
     /** Remove all listeners which were added with the given
-	  * @p callback
-	  */
+     * @p callback
+     */
     ignore(callback: EventListener<T>): void {
         this.listeners = this.listeners.filter(listener => {
             return listener.callback !== callback;
@@ -63,8 +63,8 @@ export class EventStream<T> {
     }
 
     /** Remove all listeners which were added with the given
-	  * @p context object
-	  */
+     * @p context object
+     */
     ignoreContext(context: any): void {
         this.listeners = this.listeners.filter(listener => {
             return listener.context !== context;
@@ -72,8 +72,8 @@ export class EventStream<T> {
     }
 
     /** Publish an event to all registered listeners, in the order
-	  * they were registered.
-	  */
+     * they were registered.
+     */
     publish(event: T): void {
         this.listeners.forEach(listener => {
             listener.callback(event);

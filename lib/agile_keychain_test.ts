@@ -23,8 +23,8 @@ class TestCase {
     password: string;
 
     /** Path to .1pif file containing expected
-	  * decrypted data.
-	  */
+     * decrypted data.
+     */
     itemDataPath: string;
 }
 

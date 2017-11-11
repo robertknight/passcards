@@ -24,10 +24,10 @@ export interface AccountInfo {
 
 export interface WriteOptions {
     /** The revision of the file that the client
-	  * is expecting to update. If this is specified
-	  * and does not match the current version of
-	  * the file then the write will fail.
-	  */
+     * is expecting to update. If this is specified
+     * and does not match the current version of
+     * the file then the write will fail.
+     */
     parentRevision?: string;
 }
 
@@ -65,8 +65,8 @@ export interface VFS {
     /** Returns the name of the account which the user is logged in to */
     accountInfo(): Promise<AccountInfo>;
     /** Returns credentials for the logged in account.
-	 * This is an opaque object which can later be restored.
-	 */
+     * This is an opaque object which can later be restored.
+     */
     credentials(): Credentials;
     /** Sets the login credentials */
     setCredentials(credentials: Credentials): void;
@@ -94,9 +94,9 @@ export interface VFS {
     /** Remove a file or directory */
     rm(path: string): Promise<void>;
     /** Create the directory @p path, creating any parent directories
-	  * that do not already exist if necessary.
-	  *
-	  * Fails with an error if @p path already exists.
-	  */
+     * that do not already exist if necessary.
+     *
+     * Fails with an error if @p path already exists.
+     */
     mkpath(path: string): Promise<void>;
 }

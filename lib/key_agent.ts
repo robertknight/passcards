@@ -12,16 +12,16 @@ import event_stream = require('./base/event_stream');
 var AES_128_KEY_LEN = 32; // 16 byte key + 16 byte IV
 
 /** Specifies supported algorithms that key agents can use
-  * to encrypt/decrypt data.
-  */
+ * to encrypt/decrypt data.
+ */
 export enum CryptoAlgorithm {
     /** The algorithm used in the Agile Keychain format to encrypt item
-	  * data.
-	  *
-	  * Data is encrypted using AES-128 with a random salt and encryption key/IV derived
-	  * using onepass_crypto.openSSLKey().
-	  * See onepass_crypto.encryptAgileKeychainItemData()
-	  */
+     * data.
+     *
+     * Data is encrypted using AES-128 with a random salt and encryption key/IV derived
+     * using onepass_crypto.openSSLKey().
+     * See onepass_crypto.encryptAgileKeychainItemData()
+     */
     AES128_OpenSSLKey,
 }
 
@@ -35,18 +35,18 @@ export class CryptoParams {
 
 export enum KeyFormat {
     /** Encryption key format used in the 1Password Agile Keychain format.
-	  *
-	  * Keys in this format are encrypted using AES-CBC-128 using a key
-	  * derived from a master password using PBKDF2.
-	  */
+     *
+     * Keys in this format are encrypted using AES-CBC-128 using a key
+     * derived from a master password using PBKDF2.
+     */
     AgileKeychainKey,
 }
 
 export interface Key {
     /** Format of the encrypted key. This specifies the
-	  * storage format of the encrypted key, the algorithm used
-	  * for password derivation.
-	  */
+     * storage format of the encrypted key, the algorithm used
+     * for password derivation.
+     */
     format: KeyFormat;
 
     /** Unique ID for this encryption key */
@@ -56,8 +56,8 @@ export interface Key {
     data: string;
 
     /** Number of iterations of the password stretching function used
-	  * for this key.
-	  */
+     * for this key.
+     */
     iterations: number;
 
     /** Data used to validate an encrypted key. */
@@ -66,13 +66,13 @@ export interface Key {
 
 export interface EncryptedKey {
     /** The master key for the vault, encrypted with a key derived from the user's
-	  * master password.
-	  */
+     * master password.
+     */
     key: string;
 
     /** A copy of the master key encrypted with itself. This can be used to verify
-	  * successful decryption of the key when it is next decrypted.
-	  */
+     * successful decryption of the key when it is next decrypted.
+     */
     validation: string;
 }
 
@@ -120,9 +120,9 @@ export function decryptKeys(
 }
 
 /** Interface for agent which handles storage of decryption
-  * keys and provides methods to encrypt and decrypt data
-  * using the stored keys.
-  */
+ * keys and provides methods to encrypt and decrypt data
+ * using the stored keys.
+ */
 export interface KeyAgent {
     /** Register a key with the agent for future use when decrypting items. */
     addKey(id: string, key: string): Promise<void>;
@@ -131,20 +131,20 @@ export interface KeyAgent {
     /** Clear all stored keys. */
     forgetKeys(): Promise<void>;
     /** Decrypt data for an item using the given key ID and crypto
-	  * parameters.
-	  *
-	  * Returns a promise for the decrypted plaintext.
-	  */
+     * parameters.
+     *
+     * Returns a promise for the decrypted plaintext.
+     */
     decrypt(
         id: string,
         cipherText: string,
         params: CryptoParams
     ): Promise<string>;
     /** Encrypt data for an item using the given key ID and crypto
-	  * parameters.
-	  *
-	  * Returns a promise for the encrypted text.
-	  */
+     * parameters.
+     *
+     * Returns a promise for the encrypted text.
+     */
     encrypt(
         id: string,
         plainText: string,
@@ -152,15 +152,15 @@ export interface KeyAgent {
     ): Promise<string>;
 
     /** Optional event stream which emits events when forgetKeys() is
-	  * called. Some key agents may not support this.
-	  */
+     * called. Some key agents may not support this.
+     */
     onLock?(): event_stream.EventStream<void>;
 
     /** Reset the timeout for auto-locking this key agent.
-	  * This should be called when the user interacts with the app
-	  * in some way to prevent auto-locking whilst the user is
-	  * interacting with the app.
-	  */
+     * This should be called when the user interacts with the app
+     * in some way to prevent auto-locking whilst the user is
+     * interacting with the app.
+     */
     resetAutoLock(): void;
 }
 
@@ -201,11 +201,11 @@ export class SimpleKeyAgent implements KeyAgent {
     }
 
     /** Set a timeout after which the agent will automatically discard
-	  * its keys, thereby locking the vault.
-	  *
-	  * If timeout is zero or null, auto-lock is disabled.
-	  * Auto-lock is disabled by default in SimpleKeyAgent
-	  */
+     * its keys, thereby locking the vault.
+     *
+     * If timeout is zero or null, auto-lock is disabled.
+     * Auto-lock is disabled by default in SimpleKeyAgent
+     */
     setAutoLockTimeout(timeout: number) {
         this.autoLockTimeout = timeout;
         if (this.lockTimeout) {
@@ -285,13 +285,13 @@ export class SimpleKeyAgent implements KeyAgent {
 }
 
 /** Decrypt the master key for a vault.
-  *
-  * @param derivedKey The encryption key that was used to encrypt @p encryptedKey, this is
-  *   derived from a password using keyFromPassword()
-  * @param encryptedKey The encryption key, encrypted with @p derivedKey
-  * @param validation Validation data used to verify whether decryption was successful.
-  *  This is a copy of the decrypted version of @p encryptedKey, encrypted with itself.
-  */
+ *
+ * @param derivedKey The encryption key that was used to encrypt @p encryptedKey, this is
+ *   derived from a password using keyFromPassword()
+ * @param encryptedKey The encryption key, encrypted with @p derivedKey
+ * @param validation Validation data used to verify whether decryption was successful.
+ *  This is a copy of the decrypted version of @p encryptedKey, encrypted with itself.
+ */
 export async function decryptKey(
     derivedKey: string,
     encryptedKey: string,
@@ -329,9 +329,9 @@ export async function decryptKey(
 }
 
 /** Derive an encryption key from a password for use with decryptKey().
-  * This version is synchronous and will block the UI if @p iterCount
-  * is high.
-  */
+ * This version is synchronous and will block the UI if @p iterCount
+ * is high.
+ */
 export async function keyFromPasswordSync(
     pass: string,
     salt: string,
@@ -346,8 +346,8 @@ export async function keyFromPasswordSync(
 }
 
 /** Derive an encryption key from a password for use with decryptKey()
-  * This version is asynchronous and will not block the UI.
-  */
+ * This version is asynchronous and will not block the UI.
+ */
 export function keyFromPassword(
     pass: string,
     salt: string,
@@ -362,9 +362,9 @@ export function keyFromPassword(
 }
 
 /** Encrypt the master key for a vault.
-  * @param derivedKey An encryption key for the master key, derived from a password using keyFromPassword()
-  * @param decryptedKey The master key for the vault to be encrypted.
-  */
+ * @param derivedKey An encryption key for the master key, derived from a password using keyFromPassword()
+ * @param decryptedKey The master key for the vault to be encrypted.
+ */
 export async function encryptKey(
     derivedKey: string,
     decryptedKey: string
@@ -390,12 +390,11 @@ export async function encryptKey(
         keyParams.iv
     );
 
-    return Promise.all([
-        encryptedKey,
-        validation,
-    ]).then((result: [string, string]) => {
-        let encryptedKey = result[0];
-        let validation = 'Salted__' + validationSalt + result[1];
-        return { key: encryptedKey, validation: validation };
-    });
+    return Promise.all([encryptedKey, validation]).then(
+        (result: [string, string]) => {
+            let encryptedKey = result[0];
+            let validation = 'Salted__' + validationSalt + result[1];
+            return { key: encryptedKey, validation: validation };
+        }
+    );
 }

@@ -6,10 +6,10 @@ export default class PBKDF2 {
     private createMAC: (password: Uint8Array) => MAC;
 
     /** Construct a PBKDF2 instance which uses @p macFn to
-	  * create a MAC implementation for a given password.
-	  *
-	  * If not specified, HMAC-SHA1 is used.
-	  */
+     * create a MAC implementation for a given password.
+     *
+     * If not specified, HMAC-SHA1 is used.
+     */
     constructor(macFn?: (password: Uint8Array) => MAC) {
         this.createMAC = macFn;
         if (!this.createMAC) {
@@ -20,11 +20,11 @@ export default class PBKDF2 {
     }
 
     /** Computes the blockIndex'th block of the PBKDF2 key for a given salt and
-	  * password.
-	  *
-	  * Returns a key block whose length is the output digest size of the HMAC
-	  * function.
-	  */
+     * password.
+     *
+     * Returns a key block whose length is the output digest size of the HMAC
+     * function.
+     */
     keyBlock(
         password: Uint8Array,
         salt: Uint8Array,
@@ -60,8 +60,8 @@ export default class PBKDF2 {
     }
 
     /** Computes a key of length @p derivedKeyLen from a given password and salt using
-	  * @p iterations of the PBKDF2 algorithm.
-	  */
+     * @p iterations of the PBKDF2 algorithm.
+     */
     key(
         password: Uint8Array,
         salt: Uint8Array,

@@ -5,12 +5,12 @@
 // from the internal representations defined in onepass.ts
 
 /** Structure for the encryptionKeys.js file
-  * containing the master key encrypted with
-  * the master password.
-  */
+ * containing the master key encrypted with
+ * the master password.
+ */
 export class EncryptionKeyList {
     /** List of encryption keys in the file.
-	  */
+     */
     list: EncryptionKeyEntry[];
 
     /** Map of security level -> key identifier (string) */
@@ -25,31 +25,31 @@ export class EncryptionKeyEntry {
     identifier: string;
 
     /** Number of iterations of the password derivation
-	  * function used to derive the key from the master
-	  * password.
-	  */
+     * function used to derive the key from the master
+     * password.
+     */
     iterations: number;
 
     /** 'Security level' of the key. This links keys with items
-	  * using the Item.securityLevel field.
-	  */
+     * using the Item.securityLevel field.
+     */
     level: string;
 
     /** Encryption key encrypted with itself as
-	  * a base 64 string.
-	  */
+     * a base 64 string.
+     */
     validation: string;
 }
 
 export class ItemField {
     /** Content-type for the field.
-	  * Known types and value representations are:
-	  *
-	  * 'address' - ItemAddress object
-	  * 'date' - A UNIX timestamp
-	  * 'monthYear' - Date as an integer with digits YYYYMM (eg. 201405)
-	  * 'string', 'URL', 'cctype', 'phone', 'gender', 'email', 'menu'
-	  */
+     * Known types and value representations are:
+     *
+     * 'address' - ItemAddress object
+     * 'date' - A UNIX timestamp
+     * 'monthYear' - Date as an integer with digits YYYYMM (eg. 201405)
+     * 'string', 'URL', 'cctype', 'phone', 'gender', 'email', 'menu'
+     */
     k: string;
     /** Internal name of the field */
     n: string;
@@ -78,9 +78,9 @@ export class ItemSection {
 
 export class ItemUrl {
     /** User-visible label for the URL. The default
-	  * label used for the URL associated with new logins
-	  * is 'website'
-	  */
+     * label used for the URL associated with new logins
+     * is 'website'
+     */
     label: string;
     url: string;
 }
@@ -117,19 +117,19 @@ export class WebFormField {
     id: string;
 
     /** Name of the field. For web forms this is the 'name'
-	 * attribute of the associated <input> element
-	 */
+     * attribute of the associated <input> element
+     */
     name: string;
 
     /** Single char code identifying the type of field value -
-	 * (T)ext, (P)assword, (E)mail, (C)heckbox,
-	 * (I)nput (eg. button)
-	 */
+     * (T)ext, (P)assword, (E)mail, (C)heckbox,
+     * (I)nput (eg. button)
+     */
     type: string;
 
     /** Purpose of the field, main values
-	 * are 'username', 'password'
-	 */
+     * are 'username', 'password'
+     */
     designation: string;
 }
 
@@ -137,9 +137,9 @@ export class ItemOpenContent {
     tags: string[];
 
     /** Indicates which contexts this item should be displayed in.
-	  * Known values are 'Always' (show this item in all UIs) and
-	  * and 'Never' (do not show the item in web browsers).
-	  */
+     * Known values are 'Always' (show this item in all UIs) and
+     * and 'Never' (do not show the item in web browsers).
+     */
     scope: string;
 }
 
@@ -151,23 +151,23 @@ export interface Item {
     typeName: string;
 
     /** Identifies the encryption key used to encrypt
-	  * the data for this item.
-		*
-		* This refers to the `level` field of the EncryptionKeyEntry
-		* object in encryptionKeys.js
-	  */
+     * the data for this item.
+     *
+     * This refers to the `level` field of the EncryptionKeyEntry
+     * object in encryptionKeys.js
+     */
     securityLevel?: string;
 
     /** Identifies the encryption key used to encrypt
-	 * the data for this item.
-	 *
-	 * This refers to the `identifier` field of the EncryptionKeyEntry
-	 * object in encryptionKeys.js
-	 *
-	 * One of the `securityLevel` and `keyID` fields must be
-	 * defined. If both are defined, they should refer to the same
-	 * item.
-	 */
+     * the data for this item.
+     *
+     * This refers to the `identifier` field of the EncryptionKeyEntry
+     * object in encryptionKeys.js
+     *
+     * One of the `securityLevel` and `keyID` fields must be
+     * defined. If both are defined, they should refer to the same
+     * item.
+     */
     keyID?: string;
 
     /** UNIX timestamp specifying the creation date for this item */
@@ -182,14 +182,14 @@ export interface Item {
     encrypted?: string;
 
     /** Tags, 'scope' and other unencrypted metadata
-	  * for the item.
-	  */
+     * for the item.
+     */
     openContents?: ItemOpenContent;
 
     /** When exporting to .1pif format, secureContents contains
-	  * the data that normally appears in the encrypted field as
-	  * a plaintext JSON object.
-	  */
+     * the data that normally appears in the encrypted field as
+     * a plaintext JSON object.
+     */
     secureContents?: ItemContent;
 
     /** Primary location associated with this item. */

@@ -72,40 +72,42 @@ testLib.addTest('should find inputs in document', assert => {
     let done = defer<void>();
 
     page.init(pageScriptRpc);
-    extensionRpc.call<
-        forms.FieldGroup[]
-    >('find-fields', [], (err: Error, fields: forms.FieldGroup[]) => {
-        assert.equal(err, undefined);
-        assert.equal(fields.length, 1);
-        const EXPECTED_FIELDS: forms.InputField[] = [
-            {
-                key: 0,
-                id: 'user_field',
-                name: 'username',
-                type: forms.FieldType.Text,
-                visible: false,
-                placeholder: 'Email',
-            },
-            {
-                key: 1,
-                id: 'pass_field',
-                name: '',
-                type: forms.FieldType.Password,
-                visible: false,
-                placeholder: 'Password',
-            },
-            {
-                key: 2,
-                id: '',
-                name: '',
-                type: forms.FieldType.Button,
-                visible: false,
-                placeholder: 'Sign in',
-            },
-        ];
-        assert.deepEqual(fields[0].fields, EXPECTED_FIELDS);
-        done.resolve(null);
-    });
+    extensionRpc.call<forms.FieldGroup[]>(
+        'find-fields',
+        [],
+        (err: Error, fields: forms.FieldGroup[]) => {
+            assert.equal(err, undefined);
+            assert.equal(fields.length, 1);
+            const EXPECTED_FIELDS: forms.InputField[] = [
+                {
+                    key: 0,
+                    id: 'user_field',
+                    name: 'username',
+                    type: forms.FieldType.Text,
+                    visible: false,
+                    placeholder: 'Email',
+                },
+                {
+                    key: 1,
+                    id: 'pass_field',
+                    name: '',
+                    type: forms.FieldType.Password,
+                    visible: false,
+                    placeholder: 'Password',
+                },
+                {
+                    key: 2,
+                    id: '',
+                    name: '',
+                    type: forms.FieldType.Button,
+                    visible: false,
+                    placeholder: 'Sign in',
+                },
+            ];
+            assert.deepEqual(fields[0].fields, EXPECTED_FIELDS);
+            done.resolve(null);
+        }
+    );
     return done.promise;
 });
 

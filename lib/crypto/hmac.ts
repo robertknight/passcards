@@ -63,9 +63,9 @@ export class HMAC implements MAC {
     }
 
     /** Computes the HMAC of @p message using the password
-	  * supplied in the constructor. The resulting digest
-	  * is stored in @p hmac.
-	  */
+     * supplied in the constructor. The resulting digest
+     * is stored in @p hmac.
+     */
     mac(message: Uint8Array, hmac: Int32Array) {
         // inner key padding
         var workSpaceLen = this.blockSize + message.length;

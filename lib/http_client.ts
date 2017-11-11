@@ -41,9 +41,9 @@ export class RedirectLimitExceeded extends BaseError {
 }
 
 /** Utility function which takes a promise for a reply
-  * and returns a promise for the content of the reply if it has
-  * an expected status code or rejects the promise otherwise.
-  */
+ * and returns a promise for the content of the reply if it has
+ * an expected status code or rejects the promise otherwise.
+ */
 export function expect(reply: Promise<Reply>, status: number): Promise<string> {
     return reply.then(reply => {
         if (reply.status == status) {

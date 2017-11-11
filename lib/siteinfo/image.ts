@@ -18,7 +18,7 @@ export interface ImageInfo {
 }
 
 /** Error thrown if decoding metadata for a recognized image type fails.
-  */
+ */
 export class DecodeError extends err_util.BaseError {
     constructor(message: string) {
         super(message);
@@ -150,15 +150,15 @@ detectors.push(data => {
 });
 
 /** Detects the image type and size of the data in @p data.
-  * Returns the image metadata if successfully detected or
-  * null if there is no match.
-  *
-  * For .ico images, this returns the type of image but not
-  * the width or height, use the 'ico' module for that.
-  *
-  * Throws DecodeError if the image type is recognized but cannot
-  * be decoded.
-  */
+ * Returns the image metadata if successfully detected or
+ * null if there is no match.
+ *
+ * For .ico images, this returns the type of image but not
+ * the width or height, use the 'ico' module for that.
+ *
+ * Throws DecodeError if the image type is recognized but cannot
+ * be decoded.
+ */
 export function getInfo(data: Uint8Array): ImageInfo {
     for (var i = 0; i < detectors.length; i++) {
         var info = detectors[i](data);

@@ -22,13 +22,16 @@ export function parseHash(hash: string): ParamsDict {
         .slice(1) // trim leading '#'
         .split('&')
         .map(splitHashParam)
-        .reduce((obj: ParamsDict, [key, value]: [string, string]) => {
-            // the Dropbox OAuth endpoint will URI encode any chars in the
-            // 'state' query string parameter passed to the OAuth /authorize
-            // endpoint, so decode them here
-            obj[key] = decodeURIComponent(value);
-            return obj;
-        }, <ParamsDict>{});
+        .reduce(
+            (obj: ParamsDict, [key, value]: [string, string]) => {
+                // the Dropbox OAuth endpoint will URI encode any chars in the
+                // 'state' query string parameter passed to the OAuth /authorize
+                // endpoint, so decode them here
+                obj[key] = decodeURIComponent(value);
+                return obj;
+            },
+            <ParamsDict>{}
+        );
 }
 
 // Returns the part of a URL before the query string
@@ -65,8 +68,8 @@ export function normalize(url: string): string {
 }
 
 /** Returns the domain from a URL or an empty string
-  * if @p url does not contain a host.
-  */
+ * if @p url does not contain a host.
+ */
 export function domain(url: string): string {
     if (!url) {
         return '';
@@ -84,8 +87,8 @@ export function domain(url: string): string {
 }
 
 /** Returns the top-level domain for an item.
-  * eg. 'https://www.google.com' -> 'google.com'
-  */
+ * eg. 'https://www.google.com' -> 'google.com'
+ */
 export function topLevelDomain(url: string) {
     return uri_js(url).domain();
 }

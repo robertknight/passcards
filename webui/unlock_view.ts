@@ -240,10 +240,7 @@ export class UnlockView extends react.Component<
                                 },
                             })
                         ),
-                        div(
-                            style.mixin(theme.unlockLabel),
-                            unlockMessage
-                        )
+                        div(style.mixin(theme.unlockLabel), unlockMessage)
                     )
                 )
             );

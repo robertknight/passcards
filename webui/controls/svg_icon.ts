@@ -29,9 +29,13 @@ export function SvgIcon(props: SvgIconProps) {
     return svg(
         reactutil.mergeProps(props, {
             dangerouslySetInnerHTML: {
-                __html: `<use x="0" y="0" fill="${fillAttr}" xlink:href="${hrefAttr}"></use>`,
+                __html: `<use x="0" y="0" fill="${fillAttr}" xlink:href="${
+                    hrefAttr
+                }"></use>`,
             },
-            viewBox: `${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`,
+            viewBox: `${viewBox.x} ${viewBox.y} ${viewBox.width} ${
+                viewBox.height
+            }`,
             width: props.width,
             height: props.height,
         })

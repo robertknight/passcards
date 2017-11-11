@@ -13,8 +13,8 @@ export interface AutoFillResult {
  */
 export interface AutoFillHandler {
     /** Autofill fields on the current page with values from a given @p item.
-	  * Returns a promise for the auto-filled entries.
-	  */
+     * Returns a promise for the auto-filled entries.
+     */
     autofill(item: item_store.Item): Promise<AutoFillResult>;
 }
 

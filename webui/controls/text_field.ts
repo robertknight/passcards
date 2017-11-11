@@ -77,10 +77,10 @@ var theme = style.create(
                 opacity: 0,
                 transition:
                     'left ' +
-                        TRANSITION_DURATION +
-                        ' ease-out, right ' +
-                        TRANSITION_DURATION +
-                        ' ease-out',
+                    TRANSITION_DURATION +
+                    ' ease-out, right ' +
+                    TRANSITION_DURATION +
+                    ' ease-out',
             },
 
             errorUnderline: {
@@ -179,36 +179,36 @@ export interface TextFieldProps extends react.Props<void> {
     type?: string;
 
     /** Initial value of the <input> field, still allowing
-	  * the user to edit it.
-	  */
+     * the user to edit it.
+     */
     defaultValue?: string;
 
     /** Fixed value for the <input> field. */
     value?: string;
 
     /** Specifies whether the placeholder text
-	  * should be shown above the field when it has
-	  * a value.
-	  */
+     * should be shown above the field when it has
+     * a value.
+     */
     floatingLabel?: boolean;
 
     /** A validation error string displayed beneath
-	 * the input area.
-	 */
+     * the input area.
+     */
     error?: string;
 
     /** Label that is displayed in the field when empty.
-	  * If floatingLabel is enabeld, this value will also float above
-	  * the field's content when non-empty.
-	  */
+     * If floatingLabel is enabeld, this value will also float above
+     * the field's content when non-empty.
+     */
     placeHolder?: string;
 
     showUnderline?: boolean;
     readOnly?: boolean;
 
     /** Specifies whether the field should be focused when mounted
-	  * or when this prop changes from false to true.
-	  */
+     * or when this prop changes from false to true.
+     */
     focus?: boolean;
 
     onChange?: react.FormEventHandler<Element>;

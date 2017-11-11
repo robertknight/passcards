@@ -44,7 +44,7 @@ testLib.addTest('should display store items', assert => {
                     currentUrl: '',
                     iconProvider: new item_icons.FakeIconProvider(),
                     focus: false,
-                    ref: (component: any) => itemList = component,
+                    ref: (component: any) => (itemList = component),
                     onLockClicked: () => {},
                     onMenuClicked: e => {},
                 }),

@@ -22,8 +22,8 @@ export function equalIgnoreCase(a: string, b: string): boolean {
 }
 
 /** Returns the part of @p str after the last occurence of @p delimiter
-  * or the whole string otherwise.
-  */
+ * or the whole string otherwise.
+ */
 export function suffix(str: string, delimiter: string): string {
     var idx = str.lastIndexOf(delimiter);
     if (idx == -1) {
@@ -35,8 +35,8 @@ export function suffix(str: string, delimiter: string): string {
 }
 
 /** Returns a space-separated list of all the keys in @p obj which
-  * have truthy values assigned to them.
-  */
+ * have truthy values assigned to them.
+ */
 export function truthyKeys(obj: Object): string {
     var keys: string[] = [];
     Object.keys(obj).forEach(key => {
@@ -65,13 +65,13 @@ export function replaceLast(
 }
 
 /** Splits a space-separated list into tokens in a manner similar to
-  * shell/REPL command parsing.
-  *
-  * Tokens are delimited by spaces except where they are escaped by a backslash
-  * or enclosed within single or double quotes.
-  *
-  * eg. parseCommandLine('one "two three" four\ five six') => ['one', 'two three', 'four five', 'six]
-  */
+ * shell/REPL command parsing.
+ *
+ * Tokens are delimited by spaces except where they are escaped by a backslash
+ * or enclosed within single or double quotes.
+ *
+ * eg. parseCommandLine('one "two three" four\ five six') => ['one', 'two three', 'four five', 'six]
+ */
 export function parseCommandLine(str: string): string[] {
     var tokens: string[] = [];
     var token = '';
@@ -111,8 +111,8 @@ export function parseCommandLine(str: string): string[] {
 }
 
 /** Return a string consisting of @p count consecutive repetition of
-  * @p str.
-  */
+ * @p str.
+ */
 export function repeat(str: string, count: number): string {
     var result = '';
     for (var i = 0; i < count; i++) {

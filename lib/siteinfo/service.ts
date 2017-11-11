@@ -94,18 +94,18 @@ export interface UrlResponse {
 }
 
 /** Interface used by SiteInfoService service for fetching arbitrary URLs.
-  */
+ */
 export interface UrlFetcher {
     fetch(url: string): Promise<UrlResponse>;
 }
 
 /** Determines the type and width/height of an icon fetched from
-  * a URL and returns an Icon object.
-  *
-  * If @p data is in .ico format, the largest icon in the file
-  * is returned and the data in the returned Icon.data field
-  * will be in .bmp format.
-  */
+ * a URL and returns an Icon object.
+ *
+ * If @p data is in .ico format, the largest icon in the file
+ * is returned and the data in the returned Icon.data field
+ * will be in .bmp format.
+ */
 export function iconFromData(url: string, buffer: Uint8Array): site_info.Icon {
     var data = new Uint8Array(<any>buffer);
     if (ico.isIco(data)) {
@@ -154,14 +154,14 @@ interface IconFetchState {
 }
 
 /** IconFetcher fetches and decodes icons from specified URLs.
-  *
-  * URLs are enqueued for fetching using addUrl(). When a URL is fetched,
-  * the 'done' event is emitted.
-  *
-  * IconFetcher remembers the URLs that have been enqueued for fetching
-  * and ignores requests to fetch URLs that have already been fetched
-  * or for which requests are in-flight.
-  */
+ *
+ * URLs are enqueued for fetching using addUrl(). When a URL is fetched,
+ * the 'done' event is emitted.
+ *
+ * IconFetcher remembers the URLs that have been enqueued for fetching
+ * and ignores requests to fetch URLs that have already been fetched
+ * or for which requests are in-flight.
+ */
 class IconFetcher {
     private fetcher: UrlFetcher;
     private queue: IconFetchState[];
@@ -181,15 +181,15 @@ class IconFetcher {
     }
 
     /** Returns the number of outstanding URL fetch requests which
-	  * have not yet completed.
-	  */
+     * have not yet completed.
+     */
     remaining(): number {
         return this.queue.length;
     }
 
     /** Fetch and decode an icon URL. A 'done' event is emitted
-	  * when the fetch completes.
-	  */
+     * when the fetch completes.
+     */
     addUrl(url: string) {
         if (this.fetchedUrls.has(url)) {
             // URL has already been fetched or request
@@ -239,7 +239,9 @@ class IconFetcher {
                         error = reply.body;
                     }
                     console.warn(
-                        `Icon lookup for ${url} failed with status ${reply.status}: ${error}`
+                        `Icon lookup for ${url} failed with status ${
+                            reply.status
+                        }: ${error}`
                     );
                 }
             })
@@ -255,8 +257,8 @@ class IconFetcher {
 }
 
 /** Returns true if a <meta> or <link> element on a page
-  * links to an icon or image for the page or parent domain.
-  */
+ * links to an icon or image for the page or parent domain.
+ */
 export function isIconLink(link: PageLink): boolean {
     var isIcon = false;
     ICON_LINK_TYPES.forEach(linkType => {
@@ -376,21 +378,21 @@ export class SiteInfoService implements site_info.SiteInfoProvider {
 }
 
 /** Represents a link to a related resource listed in
-  * an HTML page, eg. via a <meta> or <link> tag.
-  */
+ * an HTML page, eg. via a <meta> or <link> tag.
+ */
 export interface PageLink {
     type: MetaTagType;
 
     /** The relation of this resource to the page, specified
-	  * via the 'rel' attribute of <link> tags or 'property',
-	  * 'name', 'itemprop' etc. attributes of <meta> tags.
-	  */
+     * via the 'rel' attribute of <link> tags or 'property',
+     * 'name', 'itemprop' etc. attributes of <meta> tags.
+     */
     rel: string;
 
     /** The URL of the linked resource, specified via the
-	  * 'href' attribute of <link> tags or the 'content'
-	  * attribute of <meta> tags.
-	  */
+     * 'href' attribute of <link> tags or the 'content'
+     * attribute of <meta> tags.
+     */
     url?: string;
 }
 
@@ -413,8 +415,8 @@ function isSpace(ch: string) {
 }
 
 /** PageLinkFetcher retrieves an HTML page and
-  * extracts links to related resources from <meta> and <link> tags
-  */
+ * extracts links to related resources from <meta> and <link> tags
+ */
 export class PageLinkFetcher {
     constructor(public fetcher: UrlFetcher) {}
 
@@ -607,14 +609,14 @@ export class PageLinkFetcher {
 }
 
 /** DuckDuckGo fetches an icon associated with a URL using
-  * the DDG instant answer API
-  */
+ * the DDG instant answer API
+ */
 export class DuckDuckGoClient {
     constructor(private fetcher: UrlFetcher) {}
 
     /** Fetch the URL for the icon associated with a given URL's
-	  * domain.
-	  */
+     * domain.
+     */
     fetchIconUrl(url: string): Promise<string> {
         var itemDomain = urijs(url).domain();
         if (itemDomain.length > 0) {

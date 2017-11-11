@@ -18,9 +18,9 @@ export enum OpType {
     Remove,
 
     /** An element was moved within an array. This type of
-	  * operation is only produced when diff-ing sets
-	  * (as opposed to lists)
-	  */
+     * operation is only produced when diff-ing sets
+     * (as opposed to lists)
+     */
     Move,
 }
 
@@ -28,29 +28,29 @@ export interface DiffOp<T> {
     type: OpType;
 
     /** Position in the source array to insert or remove
-	  * an element. For move operations, this specifies
-	  * the location to insert the moved element - a move
-	  * op is equivalent to a remove op at 'prevPos' followed
-	  * by an insert op at 'pos.
-	  */
+     * an element. For move operations, this specifies
+     * the location to insert the moved element - a move
+     * op is equivalent to a remove op at 'prevPos' followed
+     * by an insert op at 'pos.
+     */
     pos: number;
 
     /** The value being inserted, removed or moved. */
     value: T;
 
     /** Previous index of element in the source array.
-	  */
+     */
     prevPos?: number;
 
     /** Used when combining diffs to indicate which source a change
-	  * came from.
-	  */
+     * came from.
+     */
     source?: number;
 }
 
 /** Returns true if a list is a set, ie.
-  * all elements are unique.
-  */
+ * all elements are unique.
+ */
 export function isSet<T>(a: T[]) {
     var sorted = a.slice(0).sort();
     for (var i = 1; i < sorted.length; i++) {
@@ -62,8 +62,8 @@ export function isSet<T>(a: T[]) {
 }
 
 /** Compare two lists and return a set of changes required
-  * to transform the first list into the second list.
-  */
+ * to transform the first list into the second list.
+ */
 export function diffLists<T>(a: T[], b: T[]): DiffOp<T>[] {
     var diff = adiff.diff(a, b);
     var diffOps: DiffOp<T>[] = [];
@@ -94,12 +94,12 @@ export function diffLists<T>(a: T[], b: T[]): DiffOp<T>[] {
 }
 
 /** Compare two ordered sets, represented as arrays of unique
-  * elements and return a list of changes required to transform
-  * the first set into the second set.
-  *
-  * The diff operations for a set can include insertion, removal
-  * and movement of elements.
-  */
+ * elements and return a list of changes required to transform
+ * the first set into the second set.
+ *
+ * The diff operations for a set can include insertion, removal
+ * and movement of elements.
+ */
 export function diffSets<T>(a: T[], b: T[]): DiffOp<T>[] {
     assert(isSet(a));
     assert(isSet(b));
@@ -181,9 +181,9 @@ function transformPatch<T>(patch: DiffOp<T>, applied: DiffOp<T>[]) {
 }
 
 /** Apply a patch to a list or set and return the patched
-  * version. The patches can be created using the diffSets()
-  * or diffLists() functions.
-  */
+ * version. The patches can be created using the diffSets()
+ * or diffLists() functions.
+ */
 export function patch<T>(base: T[], patch_: DiffOp<T>[]): T[] {
     var patched = base.slice(0);
 
@@ -235,16 +235,16 @@ export function patch<T>(base: T[], patch_: DiffOp<T>[]): T[] {
 }
 
 /** Combine two set diffs into a single diff.
-  *
-  * In the event of a conflict between a move on one side and a move/insert/remove
-  * on the other, the change from 'a' wins.
-  *
-  * This can be used to implement a 3-way merge using:
-  *
-  *  patch(base, mergeSetDiffs(diffSets(base, a), diffSets(base, b)))
-  *
-  * Where 'base' is the common ancestor of 'a' and 'b'.
-  */
+ *
+ * In the event of a conflict between a move on one side and a move/insert/remove
+ * on the other, the change from 'a' wins.
+ *
+ * This can be used to implement a 3-way merge using:
+ *
+ *  patch(base, mergeSetDiffs(diffSets(base, a), diffSets(base, b)))
+ *
+ * Where 'base' is the common ancestor of 'a' and 'b'.
+ */
 export function mergeSetDiffs<T>(a: DiffOp<T>[], b: DiffOp<T>[]): DiffOp<T>[] {
     // annotate diff ops with the source diff they came from
     var combined: DiffOp<T>[] = [];

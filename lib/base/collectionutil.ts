@@ -6,16 +6,16 @@ interface BiDiMapEntry<T1, T2> {
 }
 
 /** A convenience interface for working with objects
-  * as key => value dictionaries.
-  */
+ * as key => value dictionaries.
+ */
 export interface OMap<T> {
     [index: string]: T;
 }
 
 /** A bi-directional map between two types of key.
-  *
-  * Currently only suitable for small maps.
-  */
+ *
+ * Currently only suitable for small maps.
+ */
 export class BiDiMap<T1, T2> {
     private entries: BiDiMapEntry<T1, T2>[];
 
@@ -52,8 +52,8 @@ export function prettyJSON(object: any): string {
 }
 
 /** An interface for buffers which is compatible
-  * with ordinary arrays, node Buffers, Uint8Array etc.
-  */
+ * with ordinary arrays, node Buffers, Uint8Array etc.
+ */
 export interface AbstractBuffer {
     [index: number]: number;
     length: number;
@@ -112,8 +112,8 @@ export function stringFromBuffer(buf: AbstractBuffer): string {
 }
 
 /** Convert a Node buffer or typed array into an ordinary
-  * JS array.
-  */
+ * JS array.
+ */
 export function bufferToArray(buffer: AbstractBuffer): number[] {
     var result: number[] = [];
     for (var i = 0; i < buffer.length; i++) {
@@ -123,9 +123,9 @@ export function bufferToArray(buffer: AbstractBuffer): number[] {
 }
 
 /** Compares the first @p length indexes of two buffers and returns 0 if they are equal,
-  * a value < 0 if the first mismatching value is less in @p first or a value > 0
-  * otherwise.
-  */
+ * a value < 0 if the first mismatching value is less in @p first or a value > 0
+ * otherwise.
+ */
 export function compare(
     first: AbstractBuffer,
     second: AbstractBuffer,
@@ -148,8 +148,8 @@ export function compare(
 }
 
 /** A wrapper around a DataView which uses little-endian ordering
-  * for the (get|set)(U)int(16|32)() functions.
-  */
+ * for the (get|set)(U)int(16|32)() functions.
+ */
 export class LittleEndianDataView {
     byteLength: number;
     buffer: ArrayBuffer;
@@ -185,11 +185,11 @@ export class LittleEndianDataView {
 }
 
 /** A function which converts a list of items to a map, using @p keyFunc
-  * to retrieve a key for each item.
-  *
-  * Throws an exception if @p keyFunc returns the same key for more
-  * than one item.
-  */
+ * to retrieve a key for each item.
+ *
+ * Throws an exception if @p keyFunc returns the same key for more
+ * than one item.
+ */
 export function listToMap<K, T>(list: T[], keyFunc: (item: T) => K) {
     var map = new Map<K, T>();
     list.forEach(item => {
@@ -203,26 +203,26 @@ export function listToMap<K, T>(list: T[], keyFunc: (item: T) => K) {
 }
 
 /** BatchedUpdateQueue is a helper for batching updates.
-  *
-  * A queue is constructed with a processing function which
-  * takes a set of items to process and returns a promise
-  * for when the items have been processed.
-  *
-  * When items are added to the queue using push(), it is collected
-  * together with other updates and submitted to the processing function.
-  *
-  * Only one batch of updates will be processed at a time.
-  *
-  * An example use would be for saving updates to a JSON key/value file.
-  * The processing function would take a list of key/value pairs to update,
-  * load the current data file, apply the updates and save the contents back.
-  * The push() function would be invoked with a key/value pair to save.
-  *
-  * If a large number of updates were submitted consecutively, these would
-  * be collected into a small number of batches, so the data file would only
-  * be read/updated/written a small number of times instead of once per
-  * key/value pair submitted.
-  */
+ *
+ * A queue is constructed with a processing function which
+ * takes a set of items to process and returns a promise
+ * for when the items have been processed.
+ *
+ * When items are added to the queue using push(), it is collected
+ * together with other updates and submitted to the processing function.
+ *
+ * Only one batch of updates will be processed at a time.
+ *
+ * An example use would be for saving updates to a JSON key/value file.
+ * The processing function would take a list of key/value pairs to update,
+ * load the current data file, apply the updates and save the contents back.
+ * The push() function would be invoked with a key/value pair to save.
+ *
+ * If a large number of updates were submitted consecutively, these would
+ * be collected into a small number of batches, so the data file would only
+ * be read/updated/written a small number of times instead of once per
+ * key/value pair submitted.
+ */
 export class BatchedUpdateQueue<T> {
     // callback to invoke to process a batch of updates
     private updateFn: (items: T[]) => Promise<void>;
@@ -242,13 +242,13 @@ export class BatchedUpdateQueue<T> {
     private nextFlush: Deferred<void>;
 
     /** Construct a new queue which calls @p updateFn with
-	  * batches of updates to process.
-	  *
-	  * @p updateFn should return a promise which resolves once
-	  * the updates are processed (eg. when the data has been
-	  * saved to disk). Only one batch of updates will be processed
-	  * at a time.
-	  */
+     * batches of updates to process.
+     *
+     * @p updateFn should return a promise which resolves once
+     * the updates are processed (eg. when the data has been
+     * saved to disk). Only one batch of updates will be processed
+     * at a time.
+     */
     constructor(updateFn: (items: T[]) => Promise<void>) {
         this.updateFn = updateFn;
         this.currentFlush = Promise.resolve<void>(null);
@@ -256,11 +256,11 @@ export class BatchedUpdateQueue<T> {
     }
 
     /** Enqueue a new update to process. Returns a promise which is resolved
-	  * when the update has been processed.
-	  *
-	  * Updates are collected together and passed to the processing function
-	  * in batches.
-	  */
+     * when the update has been processed.
+     *
+     * Updates are collected together and passed to the processing function
+     * in batches.
+     */
     push(update: T): Promise<void> {
         this.pendingUpdates.push(update);
         if (this.nextFlush) {

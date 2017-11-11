@@ -15,8 +15,8 @@ export interface State {
     isLocked?: boolean;
 
     /** True if the user is being asked to re-authenticate with the cloud
-	 * storage provider.
-	 */
+     * storage provider.
+     */
     isSigningIn?: boolean;
     authServerURL?: (redirectUrl: string, state?: string) => string;
     onReceiveCredentials?: (credentials: auth.Credentials) => void;
@@ -36,9 +36,9 @@ export interface State {
 }
 
 /** Maintains the state of the application.
-  * TODO - Investigate replacing this with an established Flux implementation
-  * or redux.
-  */
+ * TODO - Investigate replacing this with an established Flux implementation
+ * or redux.
+ */
 export class Store {
     stateChanged: event_stream.EventStream<State>;
     state: State;

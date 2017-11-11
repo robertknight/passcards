@@ -35,7 +35,7 @@
     "mustache": "^2.3.0",
     "node-glob": "^1.2.0",
     "orchestrator": "^0.3.7",
-    "prettier": "^1.4.4",
+    "prettier": "^1.8.2",
     "proxyquire": "^1.7.2",
     "qunitjs": "^1.19.0",
     "s3": "^4.4.0",

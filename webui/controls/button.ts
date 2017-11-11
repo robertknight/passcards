@@ -165,13 +165,13 @@ export interface ButtonProps {
     backgroundColor?: string;
 
     /** Color for the button's text or the fill
-	  * color of the SVG icon.
-	  */
+     * color of the SVG icon.
+     */
     color?: string;
 
     /** Color used for the ripple that fills the button
-	  * when touched.
-	  */
+     * when touched.
+     */
     rippleColor?: string;
 
     /** The URL of the SVG icon for this button */
@@ -266,10 +266,7 @@ export class Button extends react.Component<ButtonProps, {}> {
 
         var label: react.ReactElement<any>;
         if (this.props.value && isRectangular) {
-            label = div(
-                style.mixin(labelStyles, {}),
-                this.props.value
-            );
+            label = div(style.mixin(labelStyles, {}), this.props.value);
         }
 
         return button(
