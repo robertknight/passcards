@@ -96,7 +96,7 @@ format: $(all_srcs)
 
 clean:
 	@rm -rf build/*
-	@rm -rf webui/scripts/*
+	@rm -rf ${webui_dist_dir}
 	@cd extensions/chrome && $(MAKE) clean
 
 chrome-extension: webui-build
