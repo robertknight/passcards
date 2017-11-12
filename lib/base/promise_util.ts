@@ -10,6 +10,13 @@ export interface Deferred<T> {
 export function defer<T>(): Deferred<T> {
     let resolve: (result: T) => void;
     let reject: (err: any) => void;
+
+    // Work around babel-minify issue where `resolve`, `reject` declarations are
+    // moved after `promise` declaration and therefore not visible when the
+    // Promise constructor runs leading to a TDZ error.
+    resolve = null;
+    reject = null;
+
     let promise = new Promise<T>((_resolve, _reject) => {
         resolve = _resolve;
         reject = _reject;

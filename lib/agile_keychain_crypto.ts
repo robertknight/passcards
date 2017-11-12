@@ -297,6 +297,8 @@ class WebCrypto implements Crypto {
             const extracted = await this.crypto.exportKey('raw', derived);
             return stringFromBuffer(new Uint8Array(extracted));
         } catch (err) {
+            err = err; // Work around babel/minify#635
+
             // If the WebCrypto implementation does not support PBKDF2 (eg.
             // Safari <= 10), fall back to our JS implementation.
             const pbkdf2 = new PBKDF2();
