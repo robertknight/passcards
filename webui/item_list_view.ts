@@ -330,7 +330,8 @@ class ItemList extends react.Component<ItemListProps, ItemListState> {
             return null;
         }
 
-        var rect = react_dom.findDOMNode(itemRef).getBoundingClientRect();
+        var itemEl = react_dom.findDOMNode(itemRef) as Element;
+        var rect = itemEl.getBoundingClientRect();
         return {
             left: rect.left,
             top: rect.top,

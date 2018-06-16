@@ -12,7 +12,7 @@ export interface Reply {
     url: string;
     status: number;
     body: string;
-    headers: { [index: string]: string };
+    headers: { [index: string]: string|string[] };
 }
 
 export class BaseError extends err_util.BaseError {
@@ -80,7 +80,7 @@ export function get(url: string, opts?: RequestOptions): Promise<Reply> {
                         if (redirectCount > opts.redirectLimit) {
                             throw new RedirectLimitExceeded(reply);
                         }
-                        currentUrl = reply.headers['location'];
+                        currentUrl = reply.headers['location'] as string;
                         return false;
                     } else {
                         // don't auto-follow redirects

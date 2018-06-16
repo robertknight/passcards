@@ -6,11 +6,11 @@ export const CLIENT_ID = '3lq6pyowxfvad8z';
 
 // Additional properties for the filesDownload() response which are missing
 // from the typings
-interface FileContent extends DropboxTypes.FilesFileMetadata {
+interface FileContent extends DropboxTypes.files.FileMetadata {
     fileBlob: Blob;
 }
 
-function convertMetadata(m: DropboxTypes.FilesMetadata): vfs.FileInfo {
+function convertMetadata(m: DropboxTypes.files.Metadata): vfs.FileInfo {
     let meta: vfs.FileInfo = {
         name: m.name,
         path: m.path_display,
@@ -19,7 +19,7 @@ function convertMetadata(m: DropboxTypes.FilesMetadata): vfs.FileInfo {
     };
 
     if (m['.tag'] === 'file') {
-        const fm = m as DropboxTypes.FilesFileMetadata;
+        const fm = m as DropboxTypes.files.FileMetadata;
         meta.size = fm.size;
         meta.revision = fm.rev;
         meta.lastModified = new Date(fm.server_modified);
@@ -92,7 +92,7 @@ export class DropboxVFS implements vfs.VFS {
                     '.tag': 'filename',
                 },
             })
-            .then((result: DropboxTypes.FilesSearchResult) => {
+            .then((result: DropboxTypes.files.SearchResult) => {
                 // FIXME - If there are multiple pages of results, return subsequent pages
                 // as well
                 const files = result.matches.map(match =>
@@ -122,7 +122,7 @@ export class DropboxVFS implements vfs.VFS {
         contents: string,
         options?: vfs.WriteOptions
     ): Promise<vfs.FileInfo> {
-        let writeMode: DropboxTypes.FilesWriteMode;
+        let writeMode: DropboxTypes.files.WriteMode;
 
         if (options && options.parentRevision) {
             writeMode = { '.tag': 'update', update: options.parentRevision };
@@ -146,7 +146,7 @@ export class DropboxVFS implements vfs.VFS {
 
         let listDir: (cursor?: string) => Promise<vfs.FileInfo[]>;
         listDir = (cursor?: string) => {
-            let result: Promise<DropboxTypes.FilesListFolderResult>;
+            let result: Promise<DropboxTypes.files.ListFolderResult>;
             if (cursor) {
                 result = this.client.filesListFolderContinue({ cursor });
             } else {
